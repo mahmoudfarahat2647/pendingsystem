@@ -19,7 +19,6 @@ import {
     Send,
     Printer,
     Calendar,
-    Folder,
     Trash2,
 } from "lucide-react";
 import {
@@ -39,10 +38,11 @@ import {
 } from "@/components/ui/dialog";
 
 export default function MainSheetPage() {
-    const { rowData, sendToCallList, partStatuses, updatePartStatus } = useAppStore();
+    const { rowData, sendToCallList, partStatuses, updatePartStatus, updateOrder } = useAppStore();
     const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
     const [isLocked, setIsLocked] = useState(true); // Locked by default
     const [showUnlockDialog, setShowUnlockDialog] = useState(false);
+
     const autoLockTimerRef = useRef<NodeJS.Timeout | null>(null);
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const [autoLockCountdown, setAutoLockCountdown] = useState<number | null>(null);
@@ -284,14 +284,7 @@ export default function MainSheetPage() {
                                     <TooltipContent>Filter</TooltipContent>
                                 </Tooltip>
 
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button size="icon" variant="ghost" className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
-                                            <Folder className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Set Path</TooltipContent>
-                                </Tooltip>
+
                             </div>
 
                             {/* Right Group: Actions */}

@@ -79,6 +79,8 @@ export default function OrdersPage() {
     const [bulkText, setBulkText] = useState("");
     const [isPersonalBulkMode, setIsPersonalBulkMode] = useState(false);
     const [personalBulkText, setPersonalBulkText] = useState("");
+    const [showSetPathDialog, setShowSetPathDialog] = useState(false);
+    const [attachmentPath, setAttachmentPath] = useState("");
 
     // Form state
     const [formData, setFormData] = useState({
@@ -345,9 +347,41 @@ export default function OrdersPage() {
 
     const handleCommit = () => {
         if (selectedRows.length === 0) return;
+        
+        // Check if all selected rows have attachment paths
+        const rowsWithoutPaths = selectedRows.filter(row => !row.attachmentPath || row.attachmentPath.trim() === '');
+        
+        if (rowsWithoutPaths.length > 0) {
+            toast.error(`${rowsWithoutPaths.length} order(s) are missing attachment paths. Please set paths before committing.`);
+            return;
+        }
+        
         commitToMainSheet(selectedRows.map(r => r.id));
         setSelectedRows([]);
         toast.success("Committed to Main Sheet");
+    };
+
+    const handleSetPath = () => {
+        setShowSetPathDialog(true);
+    };
+
+    const applyPathToSelectedRows = () => {
+        if (!attachmentPath.trim()) {
+            toast.error("Please enter a valid path");
+            return;
+        }
+
+        // Update all selected rows with the attachment path
+        selectedRows.forEach(row => {
+            updateOrder(row.id, { 
+                attachmentPath: attachmentPath.trim(),
+                hasAttachment: true 
+            });
+        });
+
+        toast.success(`Path applied to ${selectedRows.length} row(s)`);
+        setShowSetPathDialog(false);
+        setAttachmentPath("");
     };
 
     const countdown = useMemo(() => {
@@ -487,7 +521,13 @@ export default function OrdersPage() {
 
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button size="icon" variant="ghost" className="text-blue-400 hover:text-blue-300 h-8 w-8">
+                                        <Button 
+                                            size="icon" 
+                                            variant="ghost" 
+                                            className="text-blue-400 hover:text-blue-300 h-8 w-8"
+                                            onClick={handleSetPath}
+                                            disabled={selectedRows.length === 0}
+                                        >
                                             <Folder className="h-3.5 w-3.5" />
                                         </Button>
                                     </TooltipTrigger>
@@ -1090,6 +1130,52 @@ Example:
                                     </Button>
                                 </div>
                             </div>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Set Path Dialog */}
+                <Dialog open={showSetPathDialog} onOpenChange={setShowSetPathDialog}>
+                    <DialogContent className="sm:max-w-[500px] bg-[#1c1c1e] border border-white/10 text-white">
+                        <DialogHeader>
+                            <DialogTitle>Set Attachment Path</DialogTitle>
+                            <DialogDescription className="text-gray-400">
+                                Set a base directory path for selected rows. This will overwrite existing paths.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <label htmlFor="path" className="text-right text-sm font-medium">
+                                    Path
+                                </label>
+                                <div className="col-span-3">
+                                    <input
+                                        id="path"
+                                        value={attachmentPath}
+                                        onChange={(e) => setAttachmentPath(e.target.value)}
+                                        className="flex h-10 w-full rounded-md border border-white/10 bg-[#2a2a2e] px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        placeholder="C:\\Users\\PartsDept\\Documents\\Orders\\April_2025"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        This path will be applied to {selectedRows.length} selected row(s)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowSetPathDialog(false)}
+                                className="border-white/20 text-white hover:bg-white/10"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={applyPathToSelectedRows}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                            >
+                                Apply Path
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
