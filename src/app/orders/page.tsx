@@ -88,7 +88,10 @@ export default function OrdersPage() {
         setSelectedRows(rows);
     };
 
-    const selectedOrder = selectedRows.length === 1 ? selectedRows[0] : null;
+    const selectedOrderCount = selectedRows.length;
+    const isSingleSelection = selectedOrderCount === 1;
+    const isMultiSelection = selectedOrderCount > 1;
+    const selectedOrder = isSingleSelection ? selectedRows[0] : null;
 
     useEffect(() => {
         if (formData.vin.length >= 6) {
@@ -101,18 +104,28 @@ export default function OrdersPage() {
 
     const handleOpenModal = (edit = false) => {
         setIsEditMode(edit);
-        if (edit && selectedOrder) {
+        if (edit && selectedRows.length > 0) {
+            const first = selectedRows[0];
             setFormData({
-                customerName: selectedOrder.customerName,
-                vin: selectedOrder.vin,
-                mobile: selectedOrder.mobile,
-                cntrRdg: selectedOrder.cntrRdg.toString(),
-                model: selectedOrder.model,
-                repairSystem: selectedOrder.repairSystem,
-                startWarranty: selectedOrder.startWarranty,
-                requester: selectedOrder.requester,
+                customerName: first.customerName,
+                vin: first.vin,
+                mobile: first.mobile,
+                cntrRdg: first.cntrRdg.toString(),
+                model: first.model,
+                repairSystem: first.repairSystem,
+                startWarranty: first.startWarranty,
+                requester: first.requester,
             });
-            setParts(selectedOrder.parts || [{ id: generateId(), partNumber: selectedOrder.partNumber, description: selectedOrder.description }]);
+
+            // Map selected rows to part rows in the modal.
+            // When multiple rows are selected, each row essentially is one part entry in the grid.
+            const initialParts = selectedRows.map(row => ({
+                id: generateId(),
+                partNumber: row.partNumber,
+                description: row.description,
+                rowId: row.id // Important for identifying which row to update
+            }));
+            setParts(initialParts);
         } else {
             setFormData({
                 customerName: "",
@@ -134,9 +147,9 @@ export default function OrdersPage() {
     };
 
     const handleRemovePartRow = (id: string) => {
-        if (parts.length > 1) {
-            setParts(parts.filter(p => p.id !== id));
-        }
+        // We only allow removing if there's more than 1 part or if we're in edit mode 
+        // (removing a row in edit mode might mean we want to delete that entry)
+        setParts(parts.filter(p => p.id !== id));
     };
 
     const handlePartChange = (id: string, field: keyof PartEntry, value: string) => {
@@ -145,22 +158,62 @@ export default function OrdersPage() {
 
     const handleSubmit = () => {
         const warrantyCalc = getCalculatorValues(formData.startWarranty);
-        const baseId = isEditMode && selectedOrder ? selectedOrder.baseId : Date.now().toString().slice(-6);
 
-        if (isEditMode && selectedOrder) {
-            const updatedRow: Partial<PendingRow> = {
-                ...formData,
-                cntrRdg: parseInt(formData.cntrRdg) || 0,
-                endWarranty: warrantyCalc.endDate,
-                remainTime: warrantyCalc.remainTime,
-                parts,
-                // Grid compatibility
-                partNumber: parts[0]?.partNumber || "",
-                description: parts[0]?.description || "",
-            };
-            updateOrder(selectedOrder.id, updatedRow);
-            toast.success("Order updated successfully");
+        if (isEditMode) {
+            const existingRowIdsInModal = new Set(parts.map(p => p.rowId).filter(Boolean));
+
+            // 1. Remove rows that were selected but removed from the modal
+            const removedRowIds = selectedRows
+                .filter(row => !existingRowIdsInModal.has(row.id))
+                .map(row => row.id);
+            if (removedRowIds.length > 0) {
+                deleteOrders(removedRowIds);
+            }
+
+            // 2. Update existing rows and create new ones
+            const newOrders: PendingRow[] = [];
+
+            parts.forEach((part) => {
+                const commonData = {
+                    ...formData,
+                    cntrRdg: parseInt(formData.cntrRdg) || 0,
+                    endWarranty: warrantyCalc.endDate,
+                    remainTime: warrantyCalc.remainTime,
+                };
+
+                if (part.rowId) {
+                    // Update existing
+                    updateOrder(part.rowId, {
+                        ...commonData,
+                        partNumber: part.partNumber,
+                        description: part.description,
+                        parts: [part]
+                    });
+                } else {
+                    // Create new row for part added in bulk mode
+                    const baseId = selectedRows[0]?.baseId || Date.now().toString().slice(-6);
+                    newOrders.push({
+                        id: generateId(),
+                        baseId,
+                        trackingId: `ORD-${baseId}`,
+                        ...commonData,
+                        partNumber: part.partNumber,
+                        description: part.description,
+                        parts: [part],
+                        status: "Ordered",
+                        rDate: new Date().toISOString().split("T")[0],
+                        requester: formData.requester,
+                    });
+                }
+            });
+
+            if (newOrders.length > 0) {
+                addOrders(newOrders);
+            }
+
+            toast.success("Grid entries updated successfully");
         } else {
+            const baseId = Date.now().toString().slice(-6);
             const newOrders: PendingRow[] = parts.map((part, index) => ({
                 id: generateId(),
                 baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
@@ -223,20 +276,38 @@ export default function OrdersPage() {
                                         <Button
                                             className={cn(
                                                 "transition-all duration-300",
-                                                selectedOrder
+                                                selectedOrderCount > 0
                                                     ? "bg-amber-500 hover:bg-amber-600 text-black"
                                                     : "bg-renault-yellow hover:bg-renault-yellow/90 text-black"
                                             )}
                                             size="icon"
-                                            onClick={() => handleOpenModal(!!selectedOrder)}
+                                            onClick={() => handleOpenModal(selectedOrderCount > 0)}
                                         >
-                                            {selectedOrder ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                                            {selectedOrderCount > 0 ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>{selectedOrder ? "Edit Order" : "Create Order"}</TooltipContent>
+                                    <TooltipContent>{selectedOrderCount > 0 ? `Edit ${selectedOrderCount > 1 ? "Orders" : "Order"}` : "Create Order"}</TooltipContent>
+                                </Tooltip>
+
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon" className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8">
+                                            <Tag className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Reserve</TooltipContent>
                                 </Tooltip>
 
                                 <div className="w-px h-5 bg-white/10 mx-1" />
+
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon" variant="ghost" className="text-gray-400 hover:text-white h-8 w-8">
+                                            <Send className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Share to Logistics</TooltipContent>
+                                </Tooltip>
 
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -259,6 +330,42 @@ export default function OrdersPage() {
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>Booking</TooltipContent>
+                                </Tooltip>
+
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon" variant="ghost" className="text-orange-500/80 hover:text-orange-500 h-8 w-8">
+                                            <Phone className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Send to Call List</TooltipContent>
+                                </Tooltip>
+
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon" variant="ghost" className="text-gray-400 hover:text-white h-8 w-8">
+                                            <Download className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Extract</TooltipContent>
+                                </Tooltip>
+
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon" variant="ghost" className="text-gray-400 hover:text-white h-8 w-8">
+                                            <Filter className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Filter</TooltipContent>
+                                </Tooltip>
+
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon" variant="ghost" className="text-blue-400 hover:text-blue-300 h-8 w-8">
+                                            <Folder className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Set Path</TooltipContent>
                                 </Tooltip>
                             </div>
 
@@ -314,9 +421,15 @@ export default function OrdersPage() {
                         )}>
                             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
                                 {isEditMode ? <Pencil className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-                                {isEditMode ? "Edit Order" : "Create New Logistics Entry"}
+                                {isEditMode
+                                    ? (isMultiSelection ? `Bulk Edit ${selectedOrderCount} Entries` : "Edit Order")
+                                    : "Create New Logistics Entry"}
                             </DialogTitle>
-                            <DialogDescription className="text-white/70 text-sm mt-1">High-efficiency command center for complex repairs</DialogDescription>
+                            <DialogDescription className="text-white/70 text-sm mt-1">
+                                {isMultiSelection
+                                    ? `Managing ${selectedOrderCount} entries for this VIN. You can edit, add, or remove parts individually.`
+                                    : "High-efficiency command center for complex repairs"}
+                            </DialogDescription>
                         </div>
 
                         <div className="p-6 grid grid-cols-12 gap-6 max-h-[70vh] overflow-y-auto">
@@ -518,7 +631,9 @@ export default function OrdersPage() {
                                 )}
                                 onClick={handleSubmit}
                             >
-                                {isEditMode ? "Save Changes" : "Create Global Order"}
+                                {isEditMode
+                                    ? (isMultiSelection ? `Update ${selectedOrderCount} Entries` : "Save Changes")
+                                    : "Create Global Order"}
                                 <CheckCircle className="ml-2 h-4 w-4" />
                             </Button>
                         </DialogFooter>

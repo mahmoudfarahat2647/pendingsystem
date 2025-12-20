@@ -11,6 +11,7 @@ export interface PartEntry {
     id: string;
     partNumber: string;
     description: string;
+    rowId?: string; // Links back to a grid row for bulk edits
 }
 
 export interface PendingRow {
