@@ -58,6 +58,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function OrdersPage() {
     const {
+        rowData,
         ordersRowData,
         addOrders,
         updateOrder,
@@ -151,6 +152,7 @@ export default function OrdersPage() {
                 model: "",
                 repairSystem: "Mechanical",
                 startWarranty: new Date().toISOString().split("T")[0],
+                requester: "",
                 sabNumber: "",
                 acceptedBy: "",
             });
@@ -230,6 +232,11 @@ export default function OrdersPage() {
     };
 
     const handleSubmit = () => {
+        if (hasValidationErrors) {
+            toast.error("Please correct mismatched part descriptions before submitting.");
+            return;
+        }
+
         const isHighMileageValid = (parseInt(formData.cntrRdg) || 0) >= 100000;
         const isExpiredValid = countdown?.expired || false;
 
@@ -352,6 +359,22 @@ export default function OrdersPage() {
 
     const isHighMileage = (parseInt(formData.cntrRdg) || 0) >= 100000;
     const isExpired = countdown?.expired || false;
+
+    // Part validation logic
+    const partValidationWarnings = useMemo(() => {
+        const warnings: Record<string, string> = {};
+        parts.forEach(part => {
+            if (!part.partNumber) return;
+            // Search rowData (Main Sheet) for this part number
+            const existingPart = rowData.find(r => r.partNumber === part.partNumber);
+            if (existingPart && existingPart.description.trim().toLowerCase() !== part.description.trim().toLowerCase()) {
+                warnings[part.id] = existingPart.description;
+            }
+        });
+        return warnings;
+    }, [parts, rowData]);
+
+    const hasValidationErrors = Object.keys(partValidationWarnings).length > 0;
 
     return (
         <TooltipProvider>
@@ -874,47 +897,74 @@ Example:
                                                                 animate={{ opacity: 1, y: 0 }}
                                                                 exit={{ opacity: 0, scale: 0.98 }}
                                                             >
-                                                                <div className="flex items-center gap-2 bg-white/[0.02] hover:bg-white/[0.04] p-1.5 rounded-xl border border-white/5 group/row transition-all">
-                                                                    <div className="w-1/3">
-                                                                        <Input
-                                                                            placeholder="REF#"
-                                                                            value={part.partNumber}
-                                                                            onChange={e => handlePartChange(part.id, "partNumber", e.target.value)}
-                                                                            className={cn(
-                                                                                "bg-white/5 border-white/5 h-8 text-[10px] font-mono rounded-lg px-2 focus:ring-1",
-                                                                                isEditMode ? "focus:ring-amber-500/30" : "focus:ring-indigo-500/30"
-                                                                            )}
-                                                                        />
+                                                                <div className={cn(
+                                                                    "flex flex-col gap-1 p-1.5 rounded-xl border transition-all hover:bg-white/[0.04]",
+                                                                    partValidationWarnings[part.id]
+                                                                        ? "bg-red-500/5 border-red-500/20"
+                                                                        : "bg-white/[0.02] border-white/5",
+                                                                    "group/row"
+                                                                )}>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="w-1/3">
+                                                                            <Input
+                                                                                placeholder="REF#"
+                                                                                value={part.partNumber}
+                                                                                onChange={e => handlePartChange(part.id, "partNumber", e.target.value)}
+                                                                                className={cn(
+                                                                                    "bg-white/5 border-white/5 h-8 text-[10px] font-mono rounded-lg px-2 focus:ring-1",
+                                                                                    isEditMode ? "focus:ring-amber-500/30" : "focus:ring-indigo-500/30"
+                                                                                )}
+                                                                            />
+                                                                        </div>
+                                                                        <div className="flex-1">
+                                                                            <Input
+                                                                                ref={(el) => { descriptionRefs.current[index] = el; }}
+                                                                                placeholder="Description"
+                                                                                value={part.description}
+                                                                                onChange={e => handlePartChange(part.id, "description", e.target.value)}
+                                                                                onKeyDown={e => {
+                                                                                    if (e.key === "Enter") {
+                                                                                        e.preventDefault();
+                                                                                        handleAddPartRow();
+                                                                                        setTimeout(() => {
+                                                                                            descriptionRefs.current[index + 1]?.focus();
+                                                                                        }, 0);
+                                                                                    }
+                                                                                }}
+                                                                                className={cn(
+                                                                                    "bg-white/5 border-white/5 h-8 text-[10px] rounded-lg px-2 focus:ring-1",
+                                                                                    isEditMode ? "focus:ring-amber-500/30" : "focus:ring-indigo-500/30"
+                                                                                )}
+                                                                            />
+                                                                        </div>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="h-7 w-7 text-slate-600 hover:text-red-400 opacity-0 group-hover/row:opacity-100 transition-opacity"
+                                                                            onClick={() => handleRemovePartRow(part.id)}
+                                                                        >
+                                                                            <X className="h-3.5 w-3.5" />
+                                                                        </Button>
                                                                     </div>
-                                                                    <div className="flex-1">
-                                                                        <Input
-                                                                            ref={(el) => { descriptionRefs.current[index] = el; }}
-                                                                            placeholder="Description"
-                                                                            value={part.description}
-                                                                            onChange={e => handlePartChange(part.id, "description", e.target.value)}
-                                                                            onKeyDown={e => {
-                                                                                if (e.key === "Enter") {
-                                                                                    e.preventDefault();
-                                                                                    handleAddPartRow();
-                                                                                    setTimeout(() => {
-                                                                                        descriptionRefs.current[index + 1]?.focus();
-                                                                                    }, 0);
-                                                                                }
-                                                                            }}
-                                                                            className={cn(
-                                                                                "bg-white/5 border-white/5 h-8 text-[10px] rounded-lg px-2 focus:ring-1",
-                                                                                isEditMode ? "focus:ring-amber-500/30" : "focus:ring-indigo-500/30"
-                                                                            )}
-                                                                        />
-                                                                    </div>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-7 w-7 text-slate-600 hover:text-red-400 opacity-0 group-hover/row:opacity-100 transition-opacity"
-                                                                        onClick={() => handleRemovePartRow(part.id)}
-                                                                    >
-                                                                        <X className="h-3.5 w-3.5" />
-                                                                    </Button>
+                                                                    {partValidationWarnings[part.id] && (
+                                                                        <div className="px-2 pb-1 flex items-center justify-between">
+                                                                            <div className="flex items-center gap-1.5 text-red-400">
+                                                                                <AlertCircle className="h-3 w-3" />
+                                                                                <span className="text-[9px] font-bold uppercase tracking-tight">
+                                                                                    Existing Name: "{partValidationWarnings[part.id]}"
+                                                                                </span>
+                                                                            </div>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
+                                                                                onClick={() => handlePartChange(part.id, "description", partValidationWarnings[part.id])}
+                                                                                title="Apply existing name"
+                                                                            >
+                                                                                <CheckCircle2 className="h-3 w-3" />
+                                                                            </Button>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </motion.div>
                                                         ))}
@@ -929,6 +979,7 @@ Example:
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
+
                                     </div>
 
                                     {/* Requester Inline */}
@@ -983,6 +1034,24 @@ Example:
                                                                 : "The vehicle's warranty period has expired."}
                                                     </TooltipContent>
                                                 </Tooltip>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    <AnimatePresence>
+                                        {hasValidationErrors && (
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.95 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.95 }}
+                                                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 transition-all cursor-default"
+                                            >
+                                                <AlertCircle className="h-3.5 w-3.5 animate-pulse" />
+                                                <span className="text-[10px] font-black uppercase tracking-wider">
+                                                    {Object.values(partValidationWarnings).length === 1
+                                                        ? `(name is "${Object.values(partValidationWarnings)[0]}")`
+                                                        : `(${Object.values(partValidationWarnings).length} Mismatched Names)`}
+                                                </span>
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
