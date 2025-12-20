@@ -31,6 +31,9 @@ export function detectModelFromVin(vin: string): string | null {
  */
 export function getCalculatorValues(dateStr: string) {
   const startDate = new Date(dateStr);
+  if (isNaN(startDate.getTime())) {
+    return null;
+  }
   const endDate = new Date(startDate);
   endDate.setFullYear(endDate.getFullYear() + 3);
 
@@ -65,15 +68,19 @@ export function getCalculatorValues(dateStr: string) {
   }
 
   // Format as "year - month - day"
-  return {
-    startDate: startDate.toISOString().split("T")[0],
-    endDate: endDate.toISOString().split("T")[0],
-    years,
-    months,
-    days,
-    expired: false,
-    remainTime: `${years} y - ${months} m - ${days} d`,
-  };
+  try {
+    return {
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: endDate.toISOString().split("T")[0],
+      years,
+      months,
+      days,
+      expired: false,
+      remainTime: `${years} Y , ${months} M , ${days} D`,
+    };
+  } catch (e) {
+    return null;
+  }
 }
 
 /**
