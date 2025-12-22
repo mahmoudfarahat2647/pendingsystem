@@ -91,13 +91,21 @@ export const Header = React.memo(function Header() {
                         id="global-search"
                         type="text"
                         placeholder="Search system (Cmd+K)..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        value={useAppStore(state => state.searchTerm)}
+                        onChange={(e) => useAppStore.getState().setSearchTerm(e.target.value)}
                         onFocus={() => setIsSearchFocused(true)}
                         onBlur={() => setIsSearchFocused(false)}
                         className="w-full pl-12 pr-12 py-3 bg-transparent text-sm text-white placeholder:text-gray-600 outline-none"
                     />
                     <div className="absolute right-4 flex items-center gap-2">
+                        {useAppStore(state => state.searchTerm) && (
+                            <button
+                                onClick={() => useAppStore.getState().setSearchTerm("")}
+                                className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+                            >
+                                <X className="h-3 w-3" />
+                            </button>
+                        )}
                         <kbd className="hidden sm:inline-flex h-6 items-center gap-1 rounded border border-white/10 bg-white/5 px-2 font-mono text-[10px] font-medium text-gray-400 opacity-100">
                             <span className="text-xs">⌘</span>K
                         </kbd>
@@ -147,7 +155,7 @@ export const Header = React.memo(function Header() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button 
+                    <button
                         onClick={() => window.location.reload()}
                         className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
                         title="Refresh Page"
@@ -160,7 +168,7 @@ export const Header = React.memo(function Header() {
                         <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0a0a0b]" />
                     </button>
 
-                    <button 
+                    <button
                         onClick={() => setShowSettingsModal(true)}
                         className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
                     >
@@ -170,7 +178,7 @@ export const Header = React.memo(function Header() {
             </div>
 
             {showSettingsModal && (
-                <SettingsModal 
+                <SettingsModal
                     onClose={() => setShowSettingsModal(false)}
                 />
             )}
@@ -205,13 +213,13 @@ const SettingsModal = ({ onClose }: SettingsModalProps) => {
 
     const handleAddStatus = () => {
         if (!newStatusLabel.trim()) return;
-        
+
         const newStatus: PartStatusDef = {
             id: Math.random().toString(36).substring(2, 9),
             label: newStatusLabel.trim(),
             color: selectedColor,
         };
-        
+
         addPartStatusDef(newStatus);
         setNewStatusLabel("");
     };
@@ -226,7 +234,7 @@ const SettingsModal = ({ onClose }: SettingsModalProps) => {
                 <DialogHeader>
                     <DialogTitle>Part Status Settings</DialogTitle>
                 </DialogHeader>
-                
+
                 <div className="space-y-6 py-4">
                     {/* Add New Status */}
                     <div className="space-y-3">
@@ -238,7 +246,7 @@ const SettingsModal = ({ onClose }: SettingsModalProps) => {
                                 placeholder="Enter status label"
                                 className="flex-1 bg-[#2c2c2e] border-white/10"
                             />
-                            <Button 
+                            <Button
                                 onClick={handleAddStatus}
                                 disabled={!newStatusLabel.trim()}
                                 className="bg-renault-yellow hover:bg-renault-yellow/90 text-black"
@@ -246,7 +254,7 @@ const SettingsModal = ({ onClose }: SettingsModalProps) => {
                                 <Plus className="h-4 w-4" />
                             </Button>
                         </div>
-                        
+
                         {/* Color Palette */}
                         <div className="space-y-2">
                             <h4 className="text-xs font-medium text-gray-400">Select Color</h4>
@@ -255,24 +263,23 @@ const SettingsModal = ({ onClose }: SettingsModalProps) => {
                                     <button
                                         key={color}
                                         onClick={() => setSelectedColor(color)}
-                                        className={`w-6 h-6 rounded-full ${color} ${
-                                            selectedColor === color 
-                                                ? "ring-2 ring-white ring-offset-2 ring-offset-[#1c1c1e]" 
+                                        className={`w-6 h-6 rounded-full ${color} ${selectedColor === color
+                                                ? "ring-2 ring-white ring-offset-2 ring-offset-[#1c1c1e]"
                                                 : ""
-                                        }`}
+                                            }`}
                                     />
                                 ))}
                             </div>
                         </div>
                     </div>
-                    
+
                     {/* Existing Statuses */}
                     <div className="space-y-3">
                         <h3 className="text-sm font-medium">Existing Statuses</h3>
                         <div className="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                             {partStatuses.map((status) => (
-                                <div 
-                                    key={status.id} 
+                                <div
+                                    key={status.id}
                                     className="flex items-center justify-between p-3 bg-[#2c2c2e] rounded-lg"
                                 >
                                     <div className="flex items-center gap-3">

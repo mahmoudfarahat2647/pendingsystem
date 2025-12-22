@@ -56,6 +56,10 @@ interface AppActions {
 
     // Reset
     resetStore: () => void;
+
+    // Search
+    searchTerm: string;
+    setSearchTerm: (term: string) => void;
 }
 
 const defaultPartStatuses: PartStatusDef[] = [
@@ -83,6 +87,7 @@ const initialState: AppState = {
     reasonTemplates: ["Wrong part", "Customer cancelled", "Part damaged"],
     commits: [],
     redos: [],
+    searchTerm: "",
 };
 
 export const useAppStore = create<AppState & AppActions>()(
@@ -267,10 +272,15 @@ export const useAppStore = create<AppState & AppActions>()(
 
             // Part Status
             updatePartStatus: (id, partStatus) => {
+                const updateInArray = (arr: PendingRow[]) =>
+                    arr.map((row) => (row.id === id ? { ...row, partStatus } : row));
+
                 set((state) => ({
-                    rowData: state.rowData.map((row) =>
-                        row.id === id ? { ...row, partStatus } : row
-                    ),
+                    rowData: updateInArray(state.rowData),
+                    ordersRowData: updateInArray(state.ordersRowData),
+                    bookingRowData: updateInArray(state.bookingRowData),
+                    callRowData: updateInArray(state.callRowData),
+                    archiveRowData: updateInArray(state.archiveRowData),
                 }));
                 get().addCommit("Update Part Status");
             },
@@ -450,6 +460,10 @@ export const useAppStore = create<AppState & AppActions>()(
                 set(initialState);
                 get().addCommit("Reset Store");
             },
+
+            // Search
+            searchTerm: "",
+            setSearchTerm: (term) => set({ searchTerm: term }),
         }),
         {
             name: "pending-sys-storage",

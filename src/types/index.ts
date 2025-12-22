@@ -5,7 +5,12 @@ export type Status =
     | "Booked"
     | "Archived"
     | "Reorder"
-    | "Call";
+    | "Call"
+    | "Main Sheet"
+    | "Orders"
+    | "Booking"
+    | "Archive"
+    | "Search Result";
 
 export interface PartEntry {
     id: string;
@@ -60,6 +65,7 @@ export interface PendingRow {
         time: string;
         subject: string;
     };
+    sourceType?: string; // For global search identification
 }
 
 export interface TodoItem {
@@ -116,4 +122,5 @@ export interface AppState extends AppStateSnapshot {
     // History
     commits: CommitLog[];
     redos: CommitLog[];
+    searchTerm: string;
 }

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { Header } from "@/components/shared/Header";
+import { MainContentWrapper } from "@/components/shared/MainContentWrapper";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -30,7 +31,9 @@ export default function RootLayout({
                     <div className="flex flex-1 flex-col overflow-hidden">
                         <Header />
                         <main className="flex-1 overflow-y-auto p-6">
-                            {children}
+                            <MainContentWrapper>
+                                {children}
+                            </MainContentWrapper>
                         </main>
                     </div>
                 </div>
