@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/dialog";
 
 export default function MainSheetPage() {
-    const { rowData, sendToCallList, partStatuses, updatePartStatus, updateOrder } = useAppStore();
+    const { rowData, sendToCallList, partStatuses, updatePartStatus, updateOrder, deleteOrders } = useAppStore();
     const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
     const [isLocked, setIsLocked] = useState(true); // Locked by default
     const [showUnlockDialog, setShowUnlockDialog] = useState(false);
@@ -160,8 +160,11 @@ export default function MainSheetPage() {
             toast.error("Please select at least one row");
             return;
         }
-        // Placeholder for delete logic if not yet implemented in store for Main Sheet
-        toast.info("Delete functionality for Main Sheet to be implemented");
+        
+        const ids = selectedRows.map(row => row.id);
+        deleteOrders(ids);
+        setSelectedRows([]);
+        toast.success(`${ids.length} row(s) deleted`);
     };
 
     return (
@@ -296,7 +299,7 @@ export default function MainSheetPage() {
                                             variant="ghost"
                                             className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
                                             onClick={handleDelete}
-                                            disabled={selectedRows.length === 0}
+                                            disabled={isLocked || selectedRows.length === 0}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>

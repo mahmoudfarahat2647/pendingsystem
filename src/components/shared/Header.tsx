@@ -128,7 +128,10 @@ export const Header = React.memo(function Header() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all">
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
+                    >
                         <RefreshCw className="h-5 w-5" />
                     </button>
 
