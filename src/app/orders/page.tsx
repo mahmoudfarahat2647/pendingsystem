@@ -54,7 +54,8 @@ import {
     X,
     MapPin,
     Printer,
-    Calendar
+    Calendar,
+    Link
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -65,6 +66,7 @@ export default function OrdersPage() {
         ordersRowData,
         addOrders,
         updateOrder,
+        updateOrders,
         commitToMainSheet,
         deleteOrders,
         models,
@@ -88,6 +90,7 @@ export default function OrdersPage() {
     const [noteModalOpen, setNoteModalOpen] = useState(false);
     const [reminderModalOpen, setReminderModalOpen] = useState(false);
     const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
+    const [isBulkAttachmentModalOpen, setIsBulkAttachmentModalOpen] = useState(false);
     const [currentNoteRow, setCurrentNoteRow] = useState<PendingRow | null>(null);
     const [currentReminderRow, setCurrentReminderRow] = useState<PendingRow | null>(null);
     const [currentAttachmentRow, setCurrentAttachmentRow] = useState<PendingRow | null>(null);
@@ -150,6 +153,16 @@ export default function OrdersPage() {
             });
             toast.success(path ? "Attachment linked" : "Attachment cleared");
         }
+    };
+
+    const handleSaveBulkAttachment = (path: string | undefined) => {
+        if (selectedRows.length === 0) return;
+        updateOrders(selectedRows.map(r => r.id), {
+            attachmentPath: path,
+            hasAttachment: !!path
+        });
+        toast.success(path ? "Bulk link updated" : "Bulk link cleared");
+        setIsBulkAttachmentModalOpen(false);
     };
 
     const columns = useMemo(() => getOrdersColumns(handleNoteClick, handleReminderClick, handleAttachClick), [handleNoteClick, handleReminderClick, handleAttachClick]);
@@ -497,6 +510,21 @@ export default function OrdersPage() {
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>Share to Logistics</TooltipContent>
+                                </Tooltip>
+
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 h-8 w-8"
+                                            onClick={() => setIsBulkAttachmentModalOpen(true)}
+                                            disabled={selectedRows.length === 0}
+                                        >
+                                            <Link className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Set Link / Path</TooltipContent>
                                 </Tooltip>
 
                                 <Tooltip>
@@ -1073,7 +1101,6 @@ Example:
                                 </div>
                             </div>
                         </div>
-
                         <DialogFooter className="px-6 py-4 bg-white/[0.01] border-t border-white/5">
                             <div className="flex items-center justify-between w-full">
                                 <Button
@@ -1149,7 +1176,7 @@ Example:
                             </div>
                         </DialogFooter>
                     </DialogContent>
-                </Dialog>
+                </Dialog >
 
 
 
@@ -1175,7 +1202,14 @@ Example:
                     initialPath={currentAttachmentRow?.attachmentPath || ""}
                     onSave={handleSaveAttachment}
                 />
-            </div>
-        </TooltipProvider>
+                {/* Bulk Attachment Modal */}
+                <EditAttachmentModal
+                    open={isBulkAttachmentModalOpen}
+                    onOpenChange={setIsBulkAttachmentModalOpen}
+                    initialPath=""
+                    onSave={handleSaveBulkAttachment}
+                />
+            </div >
+        </TooltipProvider >
     );
 }

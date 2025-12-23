@@ -17,6 +17,7 @@ interface AppActions {
     addOrder: (order: PendingRow) => void;
     addOrders: (orders: PendingRow[]) => void;
     updateOrder: (id: string, updates: Partial<PendingRow>) => void;
+    updateOrders: (ids: string[], updates: Partial<PendingRow>) => void;
     deleteOrders: (ids: string[]) => void;
 
     // Dynamic List Actions
@@ -128,6 +129,20 @@ export const useAppStore = create<AppState & AppActions>()(
                     archiveRowData: updateInArray(state.archiveRowData),
                 }));
                 get().addCommit("Update Order");
+            },
+
+            updateOrders: (ids, updates) => {
+                const updateInArray = (arr: PendingRow[]) =>
+                    arr.map((row) => (ids.includes(row.id) ? { ...row, ...updates } : row));
+
+                set((state) => ({
+                    rowData: updateInArray(state.rowData),
+                    ordersRowData: updateInArray(state.ordersRowData),
+                    bookingRowData: updateInArray(state.bookingRowData),
+                    callRowData: updateInArray(state.callRowData),
+                    archiveRowData: updateInArray(state.archiveRowData),
+                }));
+                get().addCommit("Bulk Update Orders");
             },
 
             deleteOrders: (ids) => {

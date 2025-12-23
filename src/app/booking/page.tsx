@@ -7,6 +7,7 @@ import { getBookingColumns } from "@/components/shared/GridConfig";
 import { EditNoteModal } from "@/components/shared/EditNoteModal";
 import { EditReminderModal } from "@/components/shared/EditReminderModal";
 import { EditAttachmentModal } from "@/components/shared/EditAttachmentModal";
+import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -29,6 +30,10 @@ export default function BookingPage() {
     const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
     const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
     const [reorderReason, setReorderReason] = useState("");
+
+    // Rebooking State
+    const [isRebookingModalOpen, setIsRebookingModalOpen] = useState(false);
+    const [rebookingSearchTerm, setRebookingSearchTerm] = useState("");
 
     // Note Modal State
     const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -132,6 +137,38 @@ export default function BookingPage() {
         toast.success(`${ids.length} row(s) deleted`);
     };
 
+    const handleRebooking = () => {
+        if (selectedRows.length !== 1) {
+            toast.error("Please select exactly one booking to reschedule");
+            return;
+        }
+        const row = selectedRows[0];
+        // Use customer name or VIN as the initial search term to show history
+        setRebookingSearchTerm(row.vin || row.customerName || "");
+        setIsRebookingModalOpen(true);
+    };
+
+    const handleConfirmRebooking = (newDate: string, newNote: string) => {
+        if (selectedRows.length !== 1) return;
+        const row = selectedRows[0];
+        const oldDate = row.bookingDate || "Unknown Date";
+
+        // Create a history log entry in the note
+        const historyLog = `Rescheduled from ${oldDate} to ${newDate}.`;
+        const updatedNote = row.bookingNote
+            ? `${row.bookingNote}\n[System]: ${historyLog} ${newNote}`
+            : `[System]: ${historyLog} ${newNote}`;
+
+        updateOrder(row.id, {
+            bookingDate: newDate,
+            bookingNote: updatedNote.trim()
+        });
+
+        setIsRebookingModalOpen(false);
+        setSelectedRows([]);
+        toast.success("Booking rescheduled successfully");
+    };
+
     return (
         <div className="space-y-4">
             {/* Info Label Component */}
@@ -180,6 +217,16 @@ export default function BookingPage() {
                         >
                             <Archive className="h-4 w-4 mr-1" />
                             Archive
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-renault-yellow hover:text-renault-yellow/80 hover:bg-renault-yellow/10 border-renault-yellow/20"
+                            onClick={handleRebooking}
+                            disabled={selectedRows.length !== 1}
+                        >
+                            <Calendar className="h-4 w-4 mr-1" />
+                            Rebooking
                         </Button>
                         <Button
                             variant="outline"
@@ -252,6 +299,15 @@ export default function BookingPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Rebooking Calendar Modal */}
+            <BookingCalendarModal
+                open={isRebookingModalOpen}
+                onOpenChange={setIsRebookingModalOpen}
+                selectedRows={selectedRows}
+                onConfirm={handleConfirmRebooking}
+                initialSearchTerm={rebookingSearchTerm}
+            />
 
             {/* Note Edit Modal */}
             <EditNoteModal

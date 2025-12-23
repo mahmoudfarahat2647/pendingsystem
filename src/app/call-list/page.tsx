@@ -7,18 +7,11 @@ import { getBaseColumns } from "@/components/shared/GridConfig";
 import { EditNoteModal } from "@/components/shared/EditNoteModal";
 import { EditReminderModal } from "@/components/shared/EditReminderModal";
 import { EditAttachmentModal } from "@/components/shared/EditAttachmentModal";
+import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { PendingRow } from "@/types";
 import { Phone, Calendar, Filter, Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,10 +20,6 @@ export default function CallListPage() {
     const { callRowData, sendToBooking, deleteOrders, updateOrder } = useAppStore();
     const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-    const [bookingDate, setBookingDate] = useState(
-        new Date().toISOString().split("T")[0]
-    );
-    const [bookingNote, setBookingNote] = useState("");
 
     // Note Modal State
     const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -99,12 +88,11 @@ export default function CallListPage() {
         setIsBookingModalOpen(true);
     };
 
-    const handleConfirmBooking = () => {
+    const handleConfirmBooking = (date: string, note: string) => {
         const ids = selectedRows.map((r) => r.id);
-        sendToBooking(ids, bookingDate, bookingNote);
+        sendToBooking(ids, date, note);
         setSelectedRows([]);
         setIsBookingModalOpen(false);
-        setBookingNote("");
         toast.success(`${ids.length} row(s) sent to Booking`);
     };
 
@@ -200,43 +188,13 @@ export default function CallListPage() {
                 </CardContent>
             </Card>
 
-            {/* Booking Modal */}
-            <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Schedule Booking</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label>Booking Date</Label>
-                            <Input
-                                type="date"
-                                value={bookingDate}
-                                onChange={(e) => setBookingDate(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <Label>Note (Optional)</Label>
-                            <Input
-                                value={bookingNote}
-                                onChange={(e) => setBookingNote(e.target.value)}
-                                placeholder="Enter booking note"
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsBookingModalOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button variant="renault" onClick={handleConfirmBooking}>
-                            Confirm Booking
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* Booking Calendar Modal */}
+            <BookingCalendarModal
+                open={isBookingModalOpen}
+                onOpenChange={setIsBookingModalOpen}
+                selectedRows={selectedRows}
+                onConfirm={handleConfirmBooking}
+            />
 
             {/* Note Edit Modal */}
             <EditNoteModal
