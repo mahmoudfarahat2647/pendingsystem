@@ -57,7 +57,12 @@ interface AppActions {
     // Reset
     resetStore: () => void;
 
-    // Search
+    // Template Actions
+    addNoteTemplate: (template: string) => void;
+    removeNoteTemplate: (template: string) => void;
+    addReminderTemplate: (template: string) => void;
+    removeReminderTemplate: (template: string) => void;
+
     searchTerm: string;
     setSearchTerm: (term: string) => void;
 }
@@ -455,6 +460,35 @@ export const useAppStore = create<AppState & AppActions>()(
                 get().addCommit("Delete Note");
             },
 
+            // Template Actions
+            addNoteTemplate: (template) => {
+                set((state) => ({
+                    noteTemplates: [...state.noteTemplates, template],
+                }));
+                get().addCommit("Add Note Template");
+            },
+
+            removeNoteTemplate: (template) => {
+                set((state) => ({
+                    noteTemplates: state.noteTemplates.filter((t) => t !== template),
+                }));
+                get().addCommit("Remove Note Template");
+            },
+
+            addReminderTemplate: (template) => {
+                set((state) => ({
+                    reminderTemplates: [...state.reminderTemplates, template],
+                }));
+                get().addCommit("Add Reminder Template");
+            },
+
+            removeReminderTemplate: (template) => {
+                set((state) => ({
+                    reminderTemplates: state.reminderTemplates.filter((t) => t !== template),
+                }));
+                get().addCommit("Remove Reminder Template");
+            },
+
             // Reset
             resetStore: () => {
                 set(initialState);
@@ -481,6 +515,8 @@ export const useAppStore = create<AppState & AppActions>()(
                 partStatuses: state.partStatuses,
                 models: state.models,
                 repairSystems: state.repairSystems,
+                noteTemplates: state.noteTemplates,
+                reminderTemplates: state.reminderTemplates,
             }),
         }
     )

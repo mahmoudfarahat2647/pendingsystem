@@ -4,6 +4,8 @@ import React, { useState, useMemo } from "react";
 import { useAppStore } from "@/store/useStore";
 import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid";
 import { getBookingColumns } from "@/components/shared/GridConfig";
+import { EditNoteModal } from "@/components/shared/EditNoteModal";
+import { EditReminderModal } from "@/components/shared/EditReminderModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -21,13 +23,45 @@ import { Calendar, Archive, RotateCcw, Filter, Download, Trash2 } from "lucide-r
 import { toast } from "sonner";
 
 export default function BookingPage() {
-    const { bookingRowData, sendToArchive, sendToReorder, deleteOrders } =
+    const { bookingRowData, sendToArchive, sendToReorder, deleteOrders, updateOrder } =
         useAppStore();
     const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
     const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
     const [reorderReason, setReorderReason] = useState("");
 
-    const columns = useMemo(() => getBookingColumns(), []);
+    // Note Modal State
+    const [noteModalOpen, setNoteModalOpen] = useState(false);
+    const [reminderModalOpen, setReminderModalOpen] = useState(false);
+    const [currentNoteRow, setCurrentNoteRow] = useState<PendingRow | null>(null);
+    const [currentReminderRow, setCurrentReminderRow] = useState<PendingRow | null>(null);
+
+    // Callback for Note Icon Click
+    const handleNoteClick = React.useCallback((row: PendingRow) => {
+        setCurrentNoteRow(row);
+        setNoteModalOpen(true);
+    }, []);
+
+    // Callback for Reminder Icon Click
+    const handleReminderClick = React.useCallback((row: PendingRow) => {
+        setCurrentReminderRow(row);
+        setReminderModalOpen(true);
+    }, []);
+
+    const handleSaveNote = (content: string) => {
+        if (currentNoteRow) {
+            updateOrder(currentNoteRow.id, { actionNote: content });
+            toast.success("Note saved");
+        }
+    };
+
+    const handleSaveReminder = (data: { date: string; time: string; subject: string } | undefined) => {
+        if (currentReminderRow) {
+            updateOrder(currentReminderRow.id, { reminder: data });
+            toast.success(data ? "Reminder set" : "Reminder cleared");
+        }
+    };
+
+    const columns = useMemo(() => getBookingColumns(handleNoteClick, handleReminderClick), [handleNoteClick, handleReminderClick]);
 
     // Count unique VINs
     const uniqueVins = new Set(bookingRowData.map((r) => r.vin)).size;
@@ -199,6 +233,22 @@ export default function BookingPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Note Edit Modal */}
+            <EditNoteModal
+                open={noteModalOpen}
+                onOpenChange={setNoteModalOpen}
+                initialContent={currentNoteRow?.actionNote || ""}
+                onSave={handleSaveNote}
+            />
+
+            {/* Reminder Edit Modal */}
+            <EditReminderModal
+                open={reminderModalOpen}
+                onOpenChange={setReminderModalOpen}
+                initialData={currentReminderRow?.reminder}
+                onSave={handleSaveReminder}
+            />
         </div>
     );
 }

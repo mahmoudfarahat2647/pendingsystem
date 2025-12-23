@@ -4,6 +4,8 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from "react"
 import { useAppStore } from "@/store/useStore";
 import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid";
 import { getMainSheetColumns } from "@/components/shared/GridConfig";
+import { EditNoteModal } from "@/components/shared/EditNoteModal";
+import { EditReminderModal } from "@/components/shared/EditReminderModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -43,18 +45,50 @@ export default function MainSheetPage() {
     const [isLocked, setIsLocked] = useState(true); // Locked by default
     const [showUnlockDialog, setShowUnlockDialog] = useState(false);
 
+    // Note Modal State
+    const [noteModalOpen, setNoteModalOpen] = useState(false);
+    const [reminderModalOpen, setReminderModalOpen] = useState(false);
+    const [currentNoteRow, setCurrentNoteRow] = useState<PendingRow | null>(null);
+    const [currentReminderRow, setCurrentReminderRow] = useState<PendingRow | null>(null);
+
     const autoLockTimerRef = useRef<NodeJS.Timeout | null>(null);
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const [autoLockCountdown, setAutoLockCountdown] = useState<number | null>(null);
 
-    const columns = useMemo(() => getMainSheetColumns(partStatuses), [partStatuses]);
+    // Callback for Note Icon Click
+    const handleNoteClick = useCallback((row: PendingRow) => {
+        setCurrentNoteRow(row);
+        setNoteModalOpen(true);
+    }, []);
+
+    // Callback for Reminder Icon Click
+    const handleReminderClick = useCallback((row: PendingRow) => {
+        setCurrentReminderRow(row);
+        setReminderModalOpen(true);
+    }, []);
+
+    const handleSaveNote = (content: string) => {
+        if (currentNoteRow) {
+            updateOrder(currentNoteRow.id, { actionNote: content });
+            toast.success("Note saved");
+        }
+    };
+
+    const handleSaveReminder = (data: { date: string; time: string; subject: string } | undefined) => {
+        if (currentReminderRow) {
+            updateOrder(currentReminderRow.id, { reminder: data });
+            toast.success(data ? "Reminder set" : "Reminder cleared");
+        }
+    };
+
+    const columns = useMemo(() => getMainSheetColumns(partStatuses, handleNoteClick, handleReminderClick), [partStatuses, handleNoteClick, handleReminderClick]);
 
     // Auto-lock after 5 minutes of inactivity
     const resetAutoLockTimer = useCallback(() => {
         if (autoLockTimerRef.current) {
             clearTimeout(autoLockTimerRef.current);
         }
-        
+
         if (countdownIntervalRef.current) {
             clearInterval(countdownIntervalRef.current);
         }
@@ -68,11 +102,11 @@ export default function MainSheetPage() {
             }, 5 * 60 * 1000); // 5 minutes
 
             autoLockTimerRef.current = timer;
-            
+
             // Set the countdown timer for UI display
             const countdownStart = 5 * 60; // 5 minutes in seconds
             setAutoLockCountdown(countdownStart);
-            
+
             const countdownTimer = setInterval(() => {
                 setAutoLockCountdown(prev => {
                     if (prev === null || prev <= 1) {
@@ -82,7 +116,7 @@ export default function MainSheetPage() {
                     return prev - 1;
                 });
             }, 1000);
-            
+
             countdownIntervalRef.current = countdownTimer;
         }
     }, [isLocked]);
@@ -94,7 +128,7 @@ export default function MainSheetPage() {
         // Reset timer on any user activity
         const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
         const resetTimer = () => resetAutoLockTimer();
-        
+
         events.forEach(event => document.addEventListener(event, resetTimer));
 
         return () => {
@@ -160,7 +194,7 @@ export default function MainSheetPage() {
             toast.error("Please select at least one row");
             return;
         }
-        
+
         const ids = selectedRows.map(row => row.id);
         deleteOrders(ids);
         setSelectedRows([]);
@@ -188,7 +222,7 @@ export default function MainSheetPage() {
                                 )}
                             </div>
                         )}
-                        
+
                         {/* Toolbar */}
                         <div className="flex items-center justify-between bg-[#141416] p-2 rounded-xl border border-white/5">
                             {/* Left Group */}
@@ -373,6 +407,22 @@ export default function MainSheetPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Note Edit Modal */}
+            <EditNoteModal
+                open={noteModalOpen}
+                onOpenChange={setNoteModalOpen}
+                initialContent={currentNoteRow?.actionNote || ""}
+                onSave={handleSaveNote}
+            />
+
+            {/* Reminder Edit Modal */}
+            <EditReminderModal
+                open={reminderModalOpen}
+                onOpenChange={setReminderModalOpen}
+                initialData={currentReminderRow?.reminder}
+                onSave={handleSaveReminder}
+            />
         </TooltipProvider>
     );
 }

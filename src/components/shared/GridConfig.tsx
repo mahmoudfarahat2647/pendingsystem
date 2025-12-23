@@ -3,7 +3,7 @@
 import React from "react";
 import { getVinColor } from "@/lib/utils";
 import type { PendingRow, PartStatusDef } from "@/types";
-import { Paperclip, StickyNote, History } from "lucide-react";
+import { Paperclip, StickyNote, History, Bell } from "lucide-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 
 // VIN Cell Renderer - applies unique background color based on VIN
@@ -35,10 +35,28 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
                 <Paperclip className="h-3.5 w-3.5" />
             </button>
             <button
-                className={`transition-colors ${data.noteContent ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+                className={`transition-colors ${data.actionNote ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
                 title="Note"
+                onClick={() => {
+                    console.log("Note icon clicked", data);
+                    console.log("onNoteClick exists:", !!params.colDef?.cellRendererParams?.onNoteClick);
+                    if (params.colDef?.cellRendererParams?.onNoteClick) {
+                        params.colDef.cellRendererParams.onNoteClick(data);
+                    }
+                }}
             >
                 <StickyNote className="h-3.5 w-3.5" />
+            </button>
+            <button
+                className={`transition-colors ${data.reminder ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+                title="Reminder"
+                onClick={() => {
+                    if (params.colDef?.cellRendererParams?.onReminderClick) {
+                        params.colDef.cellRendererParams.onReminderClick(data);
+                    }
+                }}
+            >
+                <Bell className="h-3.5 w-3.5" />
             </button>
             <button
                 className={`transition-colors text-gray-600 hover:text-gray-400`}
@@ -152,7 +170,7 @@ export const StatusRenderer = (params: ICellRendererParams<PendingRow>) => {
 };
 
 // Common column definitions
-export const getBaseColumns = (): ColDef<PendingRow>[] => [
+export const getBaseColumns = (onNoteClick?: (row: PendingRow) => void, onReminderClick?: (row: PendingRow) => void): ColDef<PendingRow>[] => [
     {
         headerName: "",
         field: "id",
@@ -172,6 +190,10 @@ export const getBaseColumns = (): ColDef<PendingRow>[] => [
         headerName: "ACTIONS",
         field: "id",
         cellRenderer: ActionCellRenderer,
+        cellRendererParams: {
+            onNoteClick,
+            onReminderClick,
+        },
         width: 100,
         maxWidth: 100,
         sortable: false,
@@ -257,8 +279,8 @@ export const getBaseColumns = (): ColDef<PendingRow>[] => [
     },
 ];
 
-export const getOrdersColumns = (): ColDef<PendingRow>[] => [
-    ...getBaseColumns(),
+export const getOrdersColumns = (onNoteClick?: (row: PendingRow) => void, onReminderClick?: (row: PendingRow) => void): ColDef<PendingRow>[] => [
+    ...getBaseColumns(onNoteClick, onReminderClick),
     {
         headerName: "REQUESTER",
         field: "requester",
@@ -266,8 +288,8 @@ export const getOrdersColumns = (): ColDef<PendingRow>[] => [
     },
 ];
 
-export const getMainSheetColumns = (partStatuses: PartStatusDef[] = []): ColDef<PendingRow>[] => [
-    ...getBaseColumns(),
+export const getMainSheetColumns = (partStatuses: PartStatusDef[] = [], onNoteClick?: (row: PendingRow) => void, onReminderClick?: (row: PendingRow) => void): ColDef<PendingRow>[] => [
+    ...getBaseColumns(onNoteClick, onReminderClick),
     {
         headerName: "PART STATUS",
         field: "partStatus",
@@ -290,8 +312,8 @@ export const getMainSheetColumns = (partStatuses: PartStatusDef[] = []): ColDef<
     },
 ];
 
-export const getBookingColumns = (): ColDef<PendingRow>[] => [
-    ...getBaseColumns(),
+export const getBookingColumns = (onNoteClick?: (row: PendingRow) => void, onReminderClick?: (row: PendingRow) => void): ColDef<PendingRow>[] => [
+    ...getBaseColumns(onNoteClick, onReminderClick),
     {
         headerName: "BOOKING DATE",
         field: "bookingDate",

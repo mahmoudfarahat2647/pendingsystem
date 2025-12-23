@@ -4,6 +4,8 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppStore } from "@/store/useStore";
 import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid";
 import { getOrdersColumns } from "@/components/shared/GridConfig";
+import { EditNoteModal } from "@/components/shared/EditNoteModal";
+import { EditReminderModal } from "@/components/shared/EditReminderModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -82,6 +84,12 @@ export default function OrdersPage() {
     const [showSetPathDialog, setShowSetPathDialog] = useState(false);
     const [attachmentPath, setAttachmentPath] = useState("");
 
+    // Note Modal State
+    const [noteModalOpen, setNoteModalOpen] = useState(false);
+    const [reminderModalOpen, setReminderModalOpen] = useState(false);
+    const [currentNoteRow, setCurrentNoteRow] = useState<PendingRow | null>(null);
+    const [currentReminderRow, setCurrentReminderRow] = useState<PendingRow | null>(null);
+
     // Form state
     const [formData, setFormData] = useState({
         customerName: "",
@@ -99,7 +107,35 @@ export default function OrdersPage() {
     const [parts, setParts] = useState<PartEntry[]>([{ id: generateId(), partNumber: "", description: "" }]);
     const descriptionRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    const columns = useMemo(() => getOrdersColumns(), []);
+
+
+    // Callback for Note Icon Click
+    const handleNoteClick = React.useCallback((row: PendingRow) => {
+        setCurrentNoteRow(row);
+        setNoteModalOpen(true);
+    }, []);
+
+    // Callback for Reminder Icon Click
+    const handleReminderClick = React.useCallback((row: PendingRow) => {
+        setCurrentReminderRow(row);
+        setReminderModalOpen(true);
+    }, []);
+
+    const handleSaveNote = (content: string) => {
+        if (currentNoteRow) {
+            updateOrder(currentNoteRow.id, { actionNote: content });
+            toast.success("Note saved");
+        }
+    };
+
+    const handleSaveReminder = (data: { date: string; time: string; subject: string } | undefined) => {
+        if (currentReminderRow) {
+            updateOrder(currentReminderRow.id, { reminder: data });
+            toast.success(data ? "Reminder set" : "Reminder cleared");
+        }
+    };
+
+    const columns = useMemo(() => getOrdersColumns(handleNoteClick, handleReminderClick), [handleNoteClick, handleReminderClick]);
 
     const handleSelectionChanged = (rows: PendingRow[]) => {
         setSelectedRows(rows);
@@ -347,15 +383,15 @@ export default function OrdersPage() {
 
     const handleCommit = () => {
         if (selectedRows.length === 0) return;
-        
+
         // Check if all selected rows have attachment paths
         const rowsWithoutPaths = selectedRows.filter(row => !row.attachmentPath || row.attachmentPath.trim() === '');
-        
+
         if (rowsWithoutPaths.length > 0) {
             toast.error(`${rowsWithoutPaths.length} order(s) are missing attachment paths. Please set paths before committing.`);
             return;
         }
-        
+
         commitToMainSheet(selectedRows.map(r => r.id));
         setSelectedRows([]);
         toast.success("Committed to Main Sheet");
@@ -373,9 +409,9 @@ export default function OrdersPage() {
 
         // Update all selected rows with the attachment path
         selectedRows.forEach(row => {
-            updateOrder(row.id, { 
+            updateOrder(row.id, {
                 attachmentPath: attachmentPath.trim(),
-                hasAttachment: true 
+                hasAttachment: true
             });
         });
 
@@ -521,9 +557,9 @@ export default function OrdersPage() {
 
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button 
-                                            size="icon" 
-                                            variant="ghost" 
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
                                             className="text-blue-400 hover:text-blue-300 h-8 w-8"
                                             onClick={handleSetPath}
                                             disabled={selectedRows.length === 0}
@@ -1149,12 +1185,12 @@ Example:
                                     Path
                                 </label>
                                 <div className="col-span-3">
-                                    <input
+                                    <Input
                                         id="path"
+                                        placeholder="C:\Users\..."
                                         value={attachmentPath}
                                         onChange={(e) => setAttachmentPath(e.target.value)}
-                                        className="flex h-10 w-full rounded-md border border-white/10 bg-[#2a2a2e] px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        placeholder="C:\\Users\\PartsDept\\Documents\\Orders\\April_2025"
+                                        className="bg-[#2c2c2e] border-white/10"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">
                                         This path will be applied to {selectedRows.length} selected row(s)
@@ -1164,9 +1200,9 @@ Example:
                         </div>
                         <DialogFooter>
                             <Button
-                                variant="outline"
+                                variant="ghost"
                                 onClick={() => setShowSetPathDialog(false)}
-                                className="border-white/20 text-white hover:bg-white/10"
+                                className="text-gray-400 hover:text-white"
                             >
                                 Cancel
                             </Button>
@@ -1179,9 +1215,23 @@ Example:
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+
+                {/* Note Edit Modal */}
+                <EditNoteModal
+                    open={noteModalOpen}
+                    onOpenChange={setNoteModalOpen}
+                    initialContent={currentNoteRow?.actionNote || ""}
+                    onSave={handleSaveNote}
+                />
+
+                {/* Reminder Edit Modal */}
+                <EditReminderModal
+                    open={reminderModalOpen}
+                    onOpenChange={setReminderModalOpen}
+                    initialData={currentReminderRow?.reminder}
+                    onSave={handleSaveReminder}
+                />
             </div>
-        </TooltipProvider >
+        </TooltipProvider>
     );
 }
-
-// Add X icon for deletions if not imported (already imported as X from lucide-react above)

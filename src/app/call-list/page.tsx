@@ -4,6 +4,8 @@ import React, { useState, useMemo } from "react";
 import { useAppStore } from "@/store/useStore";
 import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid";
 import { getBaseColumns } from "@/components/shared/GridConfig";
+import { EditNoteModal } from "@/components/shared/EditNoteModal";
+import { EditReminderModal } from "@/components/shared/EditReminderModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -21,7 +23,7 @@ import { Phone, Calendar, Filter, Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CallListPage() {
-    const { callRowData, sendToBooking, deleteOrders } = useAppStore();
+    const { callRowData, sendToBooking, deleteOrders, updateOrder } = useAppStore();
     const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [bookingDate, setBookingDate] = useState(
@@ -29,7 +31,39 @@ export default function CallListPage() {
     );
     const [bookingNote, setBookingNote] = useState("");
 
-    const columns = useMemo(() => getBaseColumns(), []);
+    // Note Modal State
+    const [noteModalOpen, setNoteModalOpen] = useState(false);
+    const [reminderModalOpen, setReminderModalOpen] = useState(false);
+    const [currentNoteRow, setCurrentNoteRow] = useState<PendingRow | null>(null);
+    const [currentReminderRow, setCurrentReminderRow] = useState<PendingRow | null>(null);
+
+    // Callback for Note Icon Click
+    const handleNoteClick = React.useCallback((row: PendingRow) => {
+        setCurrentNoteRow(row);
+        setNoteModalOpen(true);
+    }, []);
+
+    // Callback for Reminder Icon Click
+    const handleReminderClick = React.useCallback((row: PendingRow) => {
+        setCurrentReminderRow(row);
+        setReminderModalOpen(true);
+    }, []);
+
+    const handleSaveNote = (content: string) => {
+        if (currentNoteRow) {
+            updateOrder(currentNoteRow.id, { actionNote: content });
+            toast.success("Note saved");
+        }
+    };
+
+    const handleSaveReminder = (data: { date: string; time: string; subject: string } | undefined) => {
+        if (currentReminderRow) {
+            updateOrder(currentReminderRow.id, { reminder: data });
+            toast.success(data ? "Reminder set" : "Reminder cleared");
+        }
+    };
+
+    const columns = useMemo(() => getBaseColumns(handleNoteClick, handleReminderClick), [handleNoteClick, handleReminderClick]);
 
     // Count unique VINs
     const uniqueVins = new Set(callRowData.map((r) => r.vin)).size;
@@ -184,6 +218,22 @@ export default function CallListPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Note Edit Modal */}
+            <EditNoteModal
+                open={noteModalOpen}
+                onOpenChange={setNoteModalOpen}
+                initialContent={currentNoteRow?.actionNote || ""}
+                onSave={handleSaveNote}
+            />
+
+            {/* Reminder Edit Modal */}
+            <EditReminderModal
+                open={reminderModalOpen}
+                onOpenChange={setReminderModalOpen}
+                initialData={currentReminderRow?.reminder}
+                onSave={handleSaveReminder}
+            />
         </div>
     );
 }
