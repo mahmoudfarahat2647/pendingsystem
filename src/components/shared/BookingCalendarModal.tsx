@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DialogClose } from "@/components/ui/dialog";
 import {
     ChevronLeft,
     ChevronRight,
@@ -19,6 +20,7 @@ import {
     History as HistoryIcon,
     Package,
     MessageSquare,
+    X,
 } from "lucide-react";
 import {
     Popover,
@@ -304,10 +306,15 @@ export const BookingCalendarModal = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-[#0f0f11] text-gray-300 border-white/5 max-w-6xl p-0 gap-0 overflow-hidden flex h-[85vh] rounded-[2rem] shadow-2xl font-sans">
+            <DialogContent hideClose={true} className="bg-[#0f0f11] text-gray-300 border-white/5 max-w-6xl p-0 gap-0 overflow-hidden flex h-[85vh] rounded-[2rem] shadow-2xl font-sans">
                 <DialogHeader className="sr-only">
                     <DialogTitle>Booking Schedule</DialogTitle>
                 </DialogHeader>
+
+                <DialogClose className="absolute right-6 top-6 z-50 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200 focus:outline-none ring-offset-0 focus:ring-0">
+                    <X className="h-5 w-5" />
+                    <span className="sr-only">Close</span>
+                </DialogClose>
 
                 {/* Left Side: Calendar (Reservers) */}
                 <div className="flex-1 p-10 flex flex-col bg-[#050505]">
@@ -317,13 +324,13 @@ export const BookingCalendarModal = ({
                             <h3 className="text-sm font-bold text-gray-500 uppercase tracking-[0.2em]">Reservers</h3>
                         </div>
 
-                        <div className="relative w-72">
-                            <Search className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600" />
+                        <div className="relative w-80">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                             <Input
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search..."
-                                className="pl-8 h-8 bg-transparent border-none border-b border-white/10 rounded-none focus:ring-0 focus:border-white/30 placeholder:text-gray-700 text-sm transition-all px-0"
+                                placeholder="Search by name, VIN, or part..."
+                                className="pl-10 h-10 bg-white/[0.03] border-white/10 rounded-full focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder:text-gray-600 text-sm transition-all"
                             />
                         </div>
                     </div>
@@ -336,24 +343,27 @@ export const BookingCalendarModal = ({
 
                     {/* Booking Action Area */}
                     <div className="mt-12 flex items-center gap-6">
-                        <Input
-                            value={bookingNote}
-                            onChange={(e) => setBookingNote(e.target.value)}
-                            placeholder={selectedRows.length === 0 ? "View Mode: History" : "Add a note..."}
-                            disabled={selectedRows.length === 0}
-                            className="flex-1 bg-transparent border-b border-white/10 rounded-none focus:ring-0 px-0 h-10 text-gray-400 placeholder:text-gray-800 disabled:opacity-50"
-                        />
+                        <div className="flex-1 relative">
+                            <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600 pointer-events-none" />
+                            <Input
+                                value={bookingNote}
+                                onChange={(e) => setBookingNote(e.target.value)}
+                                placeholder={selectedRows.length === 0 ? "View Mode: History" : "Add a note for this booking..."}
+                                disabled={selectedRows.length === 0}
+                                className="w-full pl-11 bg-white/[0.03] border-white/10 rounded-full focus:ring-1 focus:ring-white/20 focus:border-white/20 h-12 text-gray-300 placeholder:text-gray-700 disabled:opacity-30 transition-all"
+                            />
+                        </div>
                         <Button
                             onClick={handleConfirmBooking}
                             disabled={!!searchQuery || selectedRows.length === 0}
                             className={cn(
-                                "h-10 px-8 rounded-full font-medium transition-all text-xs tracking-wider border",
+                                "h-12 px-10 rounded-full font-bold transition-all text-xs tracking-[0.1em] uppercase border shadow-lg",
                                 (searchQuery || selectedRows.length === 0)
                                     ? "bg-transparent border-white/5 text-gray-700 cursor-not-allowed"
-                                    : "bg-white text-black border-white hover:bg-gray-200"
+                                    : "bg-white text-black border-white hover:bg-gray-100 active:scale-95 translate-y-0 hover:-translate-y-0.5"
                             )}
                         >
-                            {selectedRows.length === 0 ? "View Only" : (searchQuery ? "Clear Search" : "Book Date")}
+                            {selectedRows.length === 0 ? "View Mode" : (searchQuery ? "Clear Search" : "Book Date")}
                         </Button>
                     </div>
                 </div>
