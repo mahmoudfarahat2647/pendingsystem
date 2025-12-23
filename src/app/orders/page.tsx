@@ -60,6 +60,7 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 export default function OrdersPage() {
     const {
@@ -99,6 +100,9 @@ export default function OrdersPage() {
 
     // Booking Modal State
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
+    // Delete Confirmation State
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -411,6 +415,10 @@ export default function OrdersPage() {
             toast.error("Please select at least one order");
             return;
         }
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
         deleteOrders(selectedRows.map(r => r.id));
         setSelectedRows([]);
         toast.success("Order(s) deleted");
@@ -1229,6 +1237,15 @@ Example:
                     onOpenChange={setIsBookingModalOpen}
                     onConfirm={handleConfirmBooking}
                     selectedRows={selectedRows}
+                />
+
+                <ConfirmDialog
+                    open={showDeleteConfirm}
+                    onOpenChange={setShowDeleteConfirm}
+                    onConfirm={confirmDelete}
+                    title="Delete Orders"
+                    description={`Are you sure you want to delete ${selectedRows.length} selected order(s)? This action cannot be undone.`}
+                    confirmText="Delete"
                 />
             </div >
         </TooltipProvider >

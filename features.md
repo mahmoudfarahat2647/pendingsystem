@@ -39,11 +39,23 @@
 
 ## Customer Communication (Call List)
 - **Booking Calendar**:
-  - "Premium" dark-themed calendar interface.
+  - **Premium Dark-Themed Interface**: Modern calendar with glassmorphic design and smooth animations.
+  - **Universal Booking**: Works from Orders, Main Sheet, and Call List tabs - rows automatically move to Booking tab.
+  - **Multi-Customer Visual Indicators**: Stacked, color-coded dots (max 3) for days with multiple customers, grouped by VIN.
+  - **Booking Status System**: Customizable status definitions (Add, Cancel, Done, Reschedule, etc.) with color coding.
+  - **Pre-Booking Edits**: Set initial note and status in sidebar *before* confirming booking.
+  - **Large Purple Action Button**: Premium pill-shaped "Book [Date]" button with hover elevations.
   - **Smart Navigation**: Jumping to a customer highlights their booked dates and auto-selects the relevant month.
-  - **History Tracking**: Clickable "pill" badges for past booking dates to quickly review history.
-  - **Search**: Filter bookings by customer name/VIN with visual fade effects for non-matches.
-  - **3-Section Layout**: Reserver List | Details Card | History Footer.
+  - **History Tracking**: 
+    - Includes archived bookings as historical markers on calendar.
+    - Clickable "pill" badges for past booking dates to quickly review history.
+  - **Search**: Filter bookings by customer name/VIN/part with visual fade effects for non-matches.
+  - **3-Section Sidebar Layout**: 
+    - Pre-booking setup (when creating new booking)
+    - Customer list with selection
+    - Details card with VIN, parts, and status dropdown
+    - History footer with past booking dates
+  - **Workflow Optimization**: Modal stays open after booking for immediate status updates and note additions.
 - **Booking Actions**:
   - **Rebooking**: Dedicated button to reschedule, automatically opening the calendar with pre-filled search and history.
   - System logs "Rescheduled from X to Y" notes automatically.
@@ -61,3 +73,6 @@
 - **Accessibility**:
   - Tooltips for all icon-only buttons.
   - Keyboard navigation support in grids.
+- **Safety**:
+  - **Delete Confirmation**: Reusable high-fidelity dialog (ConfirmDialog) for all destructive actions.
+  - Required confirmation (Yes/No) for row deletions in all tabs.

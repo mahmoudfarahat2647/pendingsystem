@@ -8,6 +8,7 @@ import { EditNoteModal } from "@/components/shared/EditNoteModal";
 import { EditReminderModal } from "@/components/shared/EditReminderModal";
 import { EditAttachmentModal } from "@/components/shared/EditAttachmentModal";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -20,6 +21,7 @@ export default function CallListPage() {
     const { callRowData, sendToBooking, deleteOrders, updateOrder } = useAppStore();
     const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Note Modal State
     const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -96,6 +98,10 @@ export default function CallListPage() {
             toast.error("Please select at least one row");
             return;
         }
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
         const ids = selectedRows.map((r) => r.id);
         deleteOrders(ids);
         setSelectedRows([]);
@@ -200,6 +206,14 @@ export default function CallListPage() {
                 onConfirm={handleConfirmBooking}
             />
 
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                onConfirm={confirmDelete}
+                title="Delete Call List Items"
+                description={`Are you sure you want to delete ${selectedRows.length} selected item(s)? This action cannot be undone.`}
+                confirmText="Delete"
+            />
             {/* Note Edit Modal */}
             <EditNoteModal
                 open={noteModalOpen}

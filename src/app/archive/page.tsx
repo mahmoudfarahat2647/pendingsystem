@@ -8,6 +8,7 @@ import { EditNoteModal } from "@/components/shared/EditNoteModal";
 import { EditReminderModal } from "@/components/shared/EditReminderModal";
 import { EditAttachmentModal } from "@/components/shared/EditAttachmentModal";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import type { PendingRow } from "@/types";
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 export default function ArchivePage() {
     const { archiveRowData, deleteOrders, updateOrder } = useAppStore();
     const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Note Modal State
     const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -91,6 +93,10 @@ export default function ArchivePage() {
             toast.error("Please select at least one row");
             return;
         }
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
         const ids = selectedRows.map((r) => r.id);
         deleteOrders(ids);
         setSelectedRows([]);
@@ -187,6 +193,15 @@ export default function ArchivePage() {
                 onOpenChange={setAttachmentModalOpen}
                 initialPath={currentAttachmentRow?.attachmentPath || ""}
                 onSave={handleSaveAttachment}
+            />
+
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                onConfirm={confirmDelete}
+                title="Delete Archived Records"
+                description={`Are you sure you want to permanently delete ${selectedRows.length} selected record(s)? This action cannot be undone.`}
+                confirmText="Permanently Delete"
             />
         </div>
     );

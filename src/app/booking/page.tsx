@@ -8,6 +8,7 @@ import { EditNoteModal } from "@/components/shared/EditNoteModal";
 import { EditReminderModal } from "@/components/shared/EditReminderModal";
 import { EditAttachmentModal } from "@/components/shared/EditAttachmentModal";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -35,6 +36,7 @@ export default function BookingPage() {
     // Rebooking State
     const [isRebookingModalOpen, setIsRebookingModalOpen] = useState(false);
     const [rebookingSearchTerm, setRebookingSearchTerm] = useState("");
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Note Modal State
     const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -132,6 +134,10 @@ export default function BookingPage() {
             toast.error("Please select at least one row");
             return;
         }
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
         const ids = selectedRows.map((r) => r.id);
         deleteOrders(ids);
         setSelectedRows([]);
@@ -318,13 +324,22 @@ export default function BookingPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Rebooking Calendar Modal */}
+            {/* Booking Calendar Modal for Rebooking */}
             <BookingCalendarModal
                 open={isRebookingModalOpen}
                 onOpenChange={setIsRebookingModalOpen}
                 selectedRows={selectedRows}
-                onConfirm={handleConfirmRebooking}
                 initialSearchTerm={rebookingSearchTerm}
+                onConfirm={handleConfirmRebooking}
+            />
+
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                onConfirm={confirmDelete}
+                title="Delete Bookings"
+                description={`Are you sure you want to delete ${selectedRows.length} selected booking(s)? This action cannot be undone.`}
+                confirmText="Delete"
             />
 
             {/* Note Edit Modal */}

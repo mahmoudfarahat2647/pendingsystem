@@ -40,6 +40,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 export default function MainSheetPage() {
     const { rowData, sendToCallList, partStatuses, updatePartStatus, updateOrder, deleteOrders, sendToBooking } = useAppStore();
@@ -57,6 +58,9 @@ export default function MainSheetPage() {
 
     // Booking Modal State
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
+    // Delete Confirmation State
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const autoLockTimerRef = useRef<NodeJS.Timeout | null>(null);
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -217,7 +221,10 @@ export default function MainSheetPage() {
             toast.error("Please select at least one row");
             return;
         }
+        setShowDeleteConfirm(true);
+    };
 
+    const confirmDelete = () => {
         const ids = selectedRows.map(row => row.id);
         deleteOrders(ids);
         setSelectedRows([]);
@@ -473,6 +480,15 @@ export default function MainSheetPage() {
                 onOpenChange={setIsBookingModalOpen}
                 onConfirm={handleConfirmBooking}
                 selectedRows={selectedRows}
+            />
+
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                onConfirm={confirmDelete}
+                title="Delete Records"
+                description={`Are you sure you want to delete ${selectedRows.length} selected record(s)? This action cannot be undone.`}
+                confirmText="Delete"
             />
         </TooltipProvider>
     );
