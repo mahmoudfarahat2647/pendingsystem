@@ -29,6 +29,11 @@ Project Organization:
 - Use proper directories: src/components/, src/hooks/, src/utils/, src/services/, etc.
 - If a file exceeds ~250 lines or multiple responsibilities, suggest splitting it.
 
+State Management (Zustand):
+- Always use selective selectors to prevent unnecessary re-renders (e.g., `useAppStore(state => state.data)` instead of `useAppStore()`).
+- Use the internal `debouncedCommit` for frequent data updates to group history snapshots.
+- Avoid storing derived state in the store; use `useMemo` in components or selectors.
+
 Workflow (always follow):
 1. Analyze request and code carefully.
 2. Identify exact changes needed and why.

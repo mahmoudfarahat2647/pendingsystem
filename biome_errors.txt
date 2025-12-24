@@ -1,0 +1,1485 @@
+src\app\page.tsx:35:3 lint/correctness/noUnusedVariables ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This variable bookingRowData is unused.
+  
+    33 │ 		rowData,
+    34 │ 		callRowData,
+  > 35 │ 		bookingRowData,
+       │ 		^^^^^^^^^^^^^^
+    36 │ 		archiveRowData,
+    37 │ 	} = useAppStore();
+  
+  i Unused variables are often the result of typos, incomplete refactors, or other sources of bugs.
+  
+
+src\app\page.tsx:36:3 lint/correctness/noUnusedVariables ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This variable archiveRowData is unused.
+  
+    34 │ 		callRowData,
+    35 │ 		bookingRowData,
+  > 36 │ 		archiveRowData,
+       │ 		^^^^^^^^^^^^^^
+    37 │ 	} = useAppStore();
+    38 │ 
+  
+  i Unused variables are often the result of typos, incomplete refactors, or other sources of bugs.
+  
+
+src\components\shared\DataGrid.tsx:15:32 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    13 │ 	onSelectionChanged?: (selectedRows: PendingRow[]) => void;
+    14 │ 	onGridReady?: (api: GridApi) => void;
+  > 15 │ 	onCellValueChanged?: (params: any) => void;
+       │ 	                              ^^^
+    16 │ 	height?: string;
+    17 │ 	readOnly?: boolean;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:7:57 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    6 │ const PieChartResolved = dynamic(
+  > 7 │ 	() => import("recharts").then((mod) => mod.PieChart as any),
+      │ 	                                                       ^^^
+    8 │ 	{
+    9 │ 		ssr: false,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:12:26 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    10 │ 		loading: () => <Skeleton className="h-full w-full rounded-full" />,
+    11 │ 	},
+  > 12 │ ) as React.ComponentType<any>;
+       │                          ^^^
+    13 │ const Pie = dynamic(() => import("recharts").then((mod) => mod.Pie as any), {
+    14 │ 	ssr: false,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:13:71 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    11 │ 	},
+    12 │ ) as React.ComponentType<any>;
+  > 13 │ const Pie = dynamic(() => import("recharts").then((mod) => mod.Pie as any), {
+       │                                                                       ^^^
+    14 │ 	ssr: false,
+    15 │ }) as React.ComponentType<any>;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:15:27 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    13 │ const Pie = dynamic(() => import("recharts").then((mod) => mod.Pie as any), {
+    14 │ 	ssr: false,
+  > 15 │ }) as React.ComponentType<any>;
+       │                           ^^^
+    16 │ const Cell = dynamic(() => import("recharts").then((mod) => mod.Cell as any), {
+    17 │ 	ssr: false,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:16:73 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    14 │ 	ssr: false,
+    15 │ }) as React.ComponentType<any>;
+  > 16 │ const Cell = dynamic(() => import("recharts").then((mod) => mod.Cell as any), {
+       │                                                                         ^^^
+    17 │ 	ssr: false,
+    18 │ }) as React.ComponentType<any>;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:18:27 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    16 │ const Cell = dynamic(() => import("recharts").then((mod) => mod.Cell as any), {
+    17 │ 	ssr: false,
+  > 18 │ }) as React.ComponentType<any>;
+       │                           ^^^
+    19 │ const ResponsiveContainer = dynamic(
+    20 │ 	() => import("recharts").then((mod) => mod.ResponsiveContainer as any),
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:20:68 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    18 │ }) as React.ComponentType<any>;
+    19 │ const ResponsiveContainer = dynamic(
+  > 20 │ 	() => import("recharts").then((mod) => mod.ResponsiveContainer as any),
+       │ 	                                                                  ^^^
+    21 │ 	{ ssr: false },
+    22 │ ) as React.ComponentType<any>;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:22:26 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    20 │ 	() => import("recharts").then((mod) => mod.ResponsiveContainer as any),
+    21 │ 	{ ssr: false },
+  > 22 │ ) as React.ComponentType<any>;
+       │                          ^^^
+    23 │ const BarChartResolved = dynamic(
+    24 │ 	() => import("recharts").then((mod) => mod.BarChart as any),
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:24:57 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    22 │ ) as React.ComponentType<any>;
+    23 │ const BarChartResolved = dynamic(
+  > 24 │ 	() => import("recharts").then((mod) => mod.BarChart as any),
+       │ 	                                                       ^^^
+    25 │ 	{
+    26 │ 		ssr: false,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:29:26 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    27 │ 		loading: () => <Skeleton className="h-full w-full rounded-lg" />,
+    28 │ 	},
+  > 29 │ ) as React.ComponentType<any>;
+       │                          ^^^
+    30 │ const Bar = dynamic(() => import("recharts").then((mod) => mod.Bar as any), {
+    31 │ 	ssr: false,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:30:71 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    28 │ 	},
+    29 │ ) as React.ComponentType<any>;
+  > 30 │ const Bar = dynamic(() => import("recharts").then((mod) => mod.Bar as any), {
+       │                                                                       ^^^
+    31 │ 	ssr: false,
+    32 │ }) as React.ComponentType<any>;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:32:27 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    30 │ const Bar = dynamic(() => import("recharts").then((mod) => mod.Bar as any), {
+    31 │ 	ssr: false,
+  > 32 │ }) as React.ComponentType<any>;
+       │                           ^^^
+    33 │ const XAxis = dynamic(
+    34 │ 	() => import("recharts").then((mod) => mod.XAxis as any),
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:34:54 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    32 │ }) as React.ComponentType<any>;
+    33 │ const XAxis = dynamic(
+  > 34 │ 	() => import("recharts").then((mod) => mod.XAxis as any),
+       │ 	                                                    ^^^
+    35 │ 	{ ssr: false },
+    36 │ ) as React.ComponentType<any>;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:36:26 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    34 │ 	() => import("recharts").then((mod) => mod.XAxis as any),
+    35 │ 	{ ssr: false },
+  > 36 │ ) as React.ComponentType<any>;
+       │                          ^^^
+    37 │ const YAxis = dynamic(
+    38 │ 	() => import("recharts").then((mod) => mod.YAxis as any),
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:38:54 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    36 │ ) as React.ComponentType<any>;
+    37 │ const YAxis = dynamic(
+  > 38 │ 	() => import("recharts").then((mod) => mod.YAxis as any),
+       │ 	                                                    ^^^
+    39 │ 	{ ssr: false },
+    40 │ ) as React.ComponentType<any>;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:40:26 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    38 │ 	() => import("recharts").then((mod) => mod.YAxis as any),
+    39 │ 	{ ssr: false },
+  > 40 │ ) as React.ComponentType<any>;
+       │                          ^^^
+    41 │ const Tooltip = dynamic(
+    42 │ 	() => import("recharts").then((mod) => mod.Tooltip as any),
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:42:56 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    40 │ ) as React.ComponentType<any>;
+    41 │ const Tooltip = dynamic(
+  > 42 │ 	() => import("recharts").then((mod) => mod.Tooltip as any),
+       │ 	                                                      ^^^
+    43 │ 	{ ssr: false },
+    44 │ ) as React.ComponentType<any>;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\DynamicCharts.tsx:44:26 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    42 │ 	() => import("recharts").then((mod) => mod.Tooltip as any),
+    43 │ 	{ ssr: false },
+  > 44 │ ) as React.ComponentType<any>;
+       │                          ^^^
+    45 │ 
+    46 │ export {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\SearchResultsView.tsx:19:33 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    18 │ // Custom renderer for Source Tag
+  > 19 │ const SourceRenderer = (params: any) => {
+       │                                 ^^^
+    20 │ 	const source = params.value;
+    21 │ 	let colorClass = "bg-gray-500/10 text-gray-500 border-gray-500/20";
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\__tests__\PartStatusRenderer.test.tsx:19:16 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    17 │ 	data: {} as PendingRow,
+    18 │ 	node: {} as any,
+  > 19 │ 	colDef: {} as any,
+       │ 	              ^^^
+    20 │ 	column: {} as any,
+    21 │ 	api: {} as any,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\__tests__\PartStatusRenderer.test.tsx:18:14 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    16 │ 	value,
+    17 │ 	data: {} as PendingRow,
+  > 18 │ 	node: {} as any,
+       │ 	            ^^^
+    19 │ 	colDef: {} as any,
+    20 │ 	column: {} as any,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\__tests__\PartStatusRenderer.test.tsx:20:16 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    18 │ 	node: {} as any,
+    19 │ 	colDef: {} as any,
+  > 20 │ 	column: {} as any,
+       │ 	              ^^^
+    21 │ 	api: {} as any,
+    22 │ 	context: {},
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\__tests__\PartStatusRenderer.test.tsx:21:13 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    19 │ 	colDef: {} as any,
+    20 │ 	column: {} as any,
+  > 21 │ 	api: {} as any,
+       │ 	           ^^^
+    22 │ 	context: {},
+    23 │ 	refreshCell: () => {},
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\__tests__\PartStatusRenderer.test.tsx:24:19 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    22 │ 	context: {},
+    23 │ 	refreshCell: () => {},
+  > 24 │ 	eGridCell: {} as any,
+       │ 	                 ^^^
+    25 │ 	eParentOfValue: {} as any,
+    26 │ 	getValue: () => value,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\components\shared\__tests__\PartStatusRenderer.test.tsx:25:24 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    23 │ 	refreshCell: () => {},
+    24 │ 	eGridCell: {} as any,
+  > 25 │ 	eParentOfValue: {} as any,
+       │ 	                      ^^^
+    26 │ 	getValue: () => value,
+    27 │ 	setValue: () => {},
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+src\app\globals.css:73:6 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Tailwind-specific syntax is disabled.
+  
+    72 │   .glass {
+  > 73 │     @apply bg-white/[0.03] backdrop-blur-md border border-white/[0.08];
+       │      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    74 │   }
+    75 │ 
+  
+  i Enable `tailwindDirectives` in the css parser options, or remove this if you are not using Tailwind CSS.
+  
+
+src\app\globals.css:57:6 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Tailwind-specific syntax is disabled.
+  
+    55 │ @layer base {
+    56 │   * {
+  > 57 │     @apply border-border;
+       │      ^^^^^^^^^^^^^^^^^^^^
+    58 │   }
+    59 │ 
+  
+  i Enable `tailwindDirectives` in the css parser options, or remove this if you are not using Tailwind CSS.
+  
+
+src\app\globals.css:61:6 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Tailwind-specific syntax is disabled.
+  
+    60 │   body {
+  > 61 │     @apply bg-background text-foreground antialiased;
+       │      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    62 │     --chart-4: 280 65% 60%;
+    63 │     --chart-5: 340 75% 55%;
+  
+  i Enable `tailwindDirectives` in the css parser options, or remove this if you are not using Tailwind CSS.
+  
+
+src\app\globals.css:73:6 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Tailwind-specific syntax is disabled.
+  
+    72 │   .glass {
+  > 73 │     @apply bg-white/[0.03] backdrop-blur-md border border-white/[0.08];
+       │      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    74 │   }
+    75 │ 
+  
+  i Enable `tailwindDirectives` in the css parser options, or remove this if you are not using Tailwind CSS.
+  
+
+src\app\globals.css:77:6 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Tailwind-specific syntax is disabled.
+  
+    76 │   .glass-card {
+  > 77 │     @apply bg-[#141416]/80 backdrop-blur-xl border border-white/5 shadow-xl;
+       │      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    78 │   }
+    79 │ 
+  
+  i Enable `tailwindDirectives` in the css parser options, or remove this if you are not using Tailwind CSS.
+  
+
+src\app\globals.css:81:6 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Tailwind-specific syntax is disabled.
+  
+    80 │   .text-gradient {
+  > 81 │     @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60;
+       │      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    82 │   }
+    83 │ 
+  
+  i Enable `tailwindDirectives` in the css parser options, or remove this if you are not using Tailwind CSS.
+  
+
+src\app\globals.css format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Code formatting aborted due to parsing errors. To format code with errors, enable the 'formatter.formatWithErrors' option.
+  
+
+src\app\globals.css:77:6 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Tailwind-specific syntax is disabled.
+  
+    76 │   .glass-card {
+  > 77 │     @apply bg-[#141416]/80 backdrop-blur-xl border border-white/5 shadow-xl;
+       │      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    78 │   }
+    79 │ 
+  
+  i Enable `tailwindDirectives` in the css parser options, or remove this if you are not using Tailwind CSS.
+  
+
+src\app\globals.css:81:6 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Tailwind-specific syntax is disabled.
+  
+    80 │   .text-gradient {
+  > 81 │     @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60;
+       │      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    82 │   }
+    83 │ 
+  
+  i Enable `tailwindDirectives` in the css parser options, or remove this if you are not using Tailwind CSS.
+  
+
+src\app\globals.css:1:2 lint/suspicious/noUnknownAtRules ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Unexpected unknown at-rule: tailwind 
+  
+  > 1 │ @tailwind base;
+      │  ^^^^^^^^
+    2 │ @tailwind components;
+    3 │ @tailwind utilities;
+  
+  i tailwind is not a standard CSS at-rule, which may lead to unexpected styling results or failure to interpret the styles as intended.
+  
+  i See MDN web docs for a known list of at-rules.
+  
+  i To fix this issue, consider removing the unknown at-rule.
+  
+
+src\app\globals.css:2:2 lint/suspicious/noUnknownAtRules ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Unexpected unknown at-rule: tailwind 
+  
+    1 │ @tailwind base;
+  > 2 │ @tailwind components;
+      │  ^^^^^^^^
+    3 │ @tailwind utilities;
+    4 │ 
+  
+  i tailwind is not a standard CSS at-rule, which may lead to unexpected styling results or failure to interpret the styles as intended.
+  
+  i See MDN web docs for a known list of at-rules.
+  
+  i To fix this issue, consider removing the unknown at-rule.
+  
+
+src\app\globals.css:57:6 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Tailwind-specific syntax is disabled.
+  
+    55 │ @layer base {
+    56 │   * {
+  > 57 │     @apply border-border;
+       │      ^^^^^^^^^^^^^^^^^^^^
+    58 │   }
+    59 │ 
+  
+  i Enable `tailwindDirectives` in the css parser options, or remove this if you are not using Tailwind CSS.
+  
+
+src\app\globals.css:61:6 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Tailwind-specific syntax is disabled.
+  
+    60 │   body {
+  > 61 │     @apply bg-background text-foreground antialiased;
+       │      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    62 │     --chart-4: 280 65% 60%;
+    63 │     --chart-5: 340 75% 55%;
+  
+  i Enable `tailwindDirectives` in the css parser options, or remove this if you are not using Tailwind CSS.
+  
+
+src\app\globals.css:3:2 lint/suspicious/noUnknownAtRules ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Unexpected unknown at-rule: tailwind 
+  
+    1 │ @tailwind base;
+    2 │ @tailwind components;
+  > 3 │ @tailwind utilities;
+      │  ^^^^^^^^
+    4 │ 
+    5 │ @layer base {
+  
+  i tailwind is not a standard CSS at-rule, which may lead to unexpected styling results or failure to interpret the styles as intended.
+  
+  i See MDN web docs for a known list of at-rules.
+  
+  i To fix this issue, consider removing the unknown at-rule.
+  
+
+src\app\main-sheet\page.tsx:186:10 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    184 │ 		const resetTimer = () => resetAutoLockTimer();
+    185 │ 
+  > 186 │ 		events.forEach((event) => document.addEventListener(event, resetTimer));
+        │ 		       ^^^^^^^
+    187 │ 
+    188 │ 		return () => {
+  
+  i Either remove this return or remove the returned value.
+  
+    184 │ 		const resetTimer = () => resetAutoLockTimer();
+    185 │ 
+  > 186 │ 		events.forEach((event) => document.addEventListener(event, resetTimer));
+        │ 		                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    187 │ 
+    188 │ 		return () => {
+  
+
+src\app\main-sheet\page.tsx:189:11 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    188 │ 		return () => {
+  > 189 │ 			events.forEach((event) =>
+        │ 			       ^^^^^^^
+    190 │ 				document.removeEventListener(event, resetTimer),
+    191 │ 			);
+  
+  i Either remove this return or remove the returned value.
+  
+    188 │ 		return () => {
+    189 │ 			events.forEach((event) =>
+  > 190 │ 				document.removeEventListener(event, resetTimer),
+        │ 				^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    191 │ 			);
+    192 │ 			if (autoLockTimerRef.current) clearTimeout(autoLockTimerRef.current);
+  
+
+src\app\page.tsx:154:15 lint/suspicious/noArrayIndexKey ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Avoid using the index of an array as key property in an element.
+  
+    152 │ 							{stats.map((stat, i) => (
+    153 │ 								<div
+  > 154 │ 									key={i}
+        │ 									     ^
+    155 │ 									className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-xl p-4 relative group hover:bg-white/[0.06] hover:border-white/10 transition-all duration-200"
+    156 │ 								>
+  
+  i This is the source of the key value.
+  
+    150 │ 						{/* Glass Stats Cards Row - Minimized */}
+    151 │ 						<div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
+  > 152 │ 							{stats.map((stat, i) => (
+        │ 							                  ^
+    153 │ 								<div
+    154 │ 									key={i}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+src\app\page.tsx:188:21 lint/suspicious/noArrayIndexKey ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Avoid using the index of an array as key property in an element.
+  
+    186 │ 							<div className="grid grid-cols-7 gap-0.5 text-center text-[8px] text-gray-500 mb-1">
+    187 │ 								{["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+  > 188 │ 									<span key={i} className="font-bold">
+        │ 									           ^
+    189 │ 										{d}
+    190 │ 									</span>
+  
+  i This is the source of the key value.
+  
+    185 │ 							</div>
+    186 │ 							<div className="grid grid-cols-7 gap-0.5 text-center text-[8px] text-gray-500 mb-1">
+  > 187 │ 								{["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+        │ 								                                             ^
+    188 │ 									<span key={i} className="font-bold">
+    189 │ 										{d}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+src\app\page.tsx:201:17 lint/suspicious/noArrayIndexKey ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Avoid using the index of an array as key property in an element.
+  
+    199 │ 									return (
+    200 │ 										<span
+  > 201 │ 											key={i}
+        │ 											     ^
+    202 │ 											className={cn(
+    203 │ 												"w-4 h-4 flex items-center justify-center rounded-full",
+  
+  i This is the source of the key value.
+  
+    192 │ 							</div>
+    193 │ 							<div className="grid grid-cols-7 gap-0.5 text-center text-[9px]">
+  > 194 │ 								{Array.from({ length: 35 }, (_, i) => {
+        │ 								                                ^
+    195 │ 									const day = i - calendarData.firstDay + 1;
+    196 │ 									const isToday = day === calendarData.today;
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+src\app\page.tsx:243:31 lint/suspicious/noArrayIndexKey ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Avoid using the index of an array as key property in an element.
+  
+    241 │ 									>
+    242 │ 										{pieData.map((entry, index) => (
+  > 243 │ 											<Cell key={`cell-${index}`} fill={entry.color} />
+        │ 											                   ^^^^^
+    244 │ 										))}
+    245 │ 									</Pie>
+  
+  i This is the source of the key value.
+  
+    240 │ 										stroke="none"
+    241 │ 									>
+  > 242 │ 										{pieData.map((entry, index) => (
+        │ 										                     ^^^^^
+    243 │ 											<Cell key={`cell-${index}`} fill={entry.color} />
+    244 │ 										))}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+src\components\shared\BookingCalendarModal.tsx:443:12 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    441 │ 									<Popover>
+    442 │ 										<PopoverTrigger asChild>
+  > 443 │ 											<button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all group">
+        │ 											^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    444 │ 												{preBookingStatus ? (
+    445 │ 													<>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\BookingCalendarModal.tsx:568:15 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    566 │ 												<Popover>
+    567 │ 													<PopoverTrigger asChild>
+  > 568 │ 														<button className="p-1.5 rounded-full hover:bg-white/10 text-gray-500 hover:text-renault-yellow transition-colors">
+        │ 														^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    569 │ 															<MessageSquare className="h-4 w-4" />
+    570 │ 														</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\BookingCalendarModal.tsx:580:24 lint/suspicious/noArrayIndexKey ━━━━━━━━━━━━━━
+
+  × Avoid using the index of an array as key property in an element.
+  
+    578 │ 																{consolidatedNotes.map((note, idx) => (
+    579 │ 																	<div
+  > 580 │ 																		key={idx}
+        │ 																		     ^^^
+    581 │ 																		className="text-sm italic text-gray-400 bg-white/[0.02] p-2 rounded border border-white/5"
+    582 │ 																	>
+  
+  i This is the source of the key value.
+  
+    576 │ 															</div>
+    577 │ 															<div className="space-y-2">
+  > 578 │ 																{consolidatedNotes.map((note, idx) => (
+        │ 																                              ^^^
+    579 │ 																	<div
+    580 │ 																		key={idx}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+src\components\shared\BookingCalendarModal.tsx:622:16 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    620 │ 													<Popover>
+    621 │ 														<PopoverTrigger asChild>
+  > 622 │ 															<button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
+        │ 															^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    623 │ 																{activeBookingRep.bookingStatus ? (
+    624 │ 																	<>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\BookingCalendarModal.tsx:650:18 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    648 │ 															<div className="space-y-1">
+    649 │ 																{bookingStatuses.map((status) => (
+  > 650 │ 																	<button
+        │ 																	^^^^^^^
+  > 651 │ 																		key={status.id}
+         ...
+  > 663 │ 																		)}
+  > 664 │ 																	>
+        │ 																	^
+    665 │ 																		<div
+    666 │ 																			className={cn(
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\BookingCalendarModal.tsx:725:11 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    723 │ 								{activeCustomerHistoryDates.length > 0 ? (
+    724 │ 									activeCustomerHistoryDates.map((date, i) => (
+  > 725 │ 										<button
+        │ 										^^^^^^^
+  > 726 │ 											key={i}
+         ...
+  > 732 │ 											className="inline-flex items-center px-2 py-1 rounded-md bg-white/5 border border-white/5 text-[10px] font-mono text-gray-400 hover:text-white hover:border-white/20 hover:bg-white/10 transition-colors cursor-pointer"
+  > 733 │ 										>
+        │ 										^
+    734 │ 											{format(new Date(date), "MMM d, yyyy")}
+    735 │ 										</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\BookingCalendarModal.tsx:726:17 lint/suspicious/noArrayIndexKey ━━━━━━━━━━━━━━
+
+  × Avoid using the index of an array as key property in an element.
+  
+    724 │ 									activeCustomerHistoryDates.map((date, i) => (
+    725 │ 										<button
+  > 726 │ 											key={i}
+        │ 											     ^
+    727 │ 											onClick={() => {
+    728 │ 												const targetDate = new Date(date);
+  
+  i This is the source of the key value.
+  
+    722 │ 							<div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto custom-scrollbar content-start">
+    723 │ 								{activeCustomerHistoryDates.length > 0 ? (
+  > 724 │ 									activeCustomerHistoryDates.map((date, i) => (
+        │ 									                                      ^
+    725 │ 										<button
+    726 │ 											key={i}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+src\components\shared\BookingCalendarModal.tsx:520:11 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    518 │ 								) : (
+    519 │ 									sidebarGroupedBookings.map((booking) => (
+  > 520 │ 										<button
+        │ 										^^^^^^^
+  > 521 │ 											key={booking.id}
+         ...
+  > 528 │ 											)}
+  > 529 │ 										>
+        │ 										^
+    530 │ 											<span className="text-sm font-medium truncate">
+    531 │ 												{booking.customerName}
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\BookingCalendarModal.tsx:223:5 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    221 │ 		return (
+    222 │ 			<div className="flex items-center justify-between mb-8">
+  > 223 │ 				<button
+        │ 				^^^^^^^
+  > 224 │ 					onClick={prevMonth}
+  > 225 │ 					className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
+  > 226 │ 				>
+        │ 				^
+    227 │ 					<ChevronLeft className="h-6 w-6" />
+    228 │ 				</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\BookingCalendarModal.tsx:232:5 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    230 │ 					{format(currentMonth, "MMMM yyyy")}
+    231 │ 				</h2>
+  > 232 │ 				<button
+        │ 				^^^^^^^
+  > 233 │ 					onClick={nextMonth}
+  > 234 │ 					className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
+  > 235 │ 				>
+        │ 				^
+    236 │ 					<ChevronRight className="h-6 w-6" />
+    237 │ 				</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\BookingCalendarModal.tsx:287:7 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    286 │ 					return (
+  > 287 │ 						<button
+        │ 						^^^^^^^
+  > 288 │ 							key={day.toString()}
+         ...
+  > 308 │ 							)}
+  > 309 │ 						>
+        │ 						^
+    310 │ 							{format(day, "d")}
+    311 │ 
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\BookingCalendarModal.tsx:469:14 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    467 │ 											<div className="space-y-1">
+    468 │ 												{bookingStatuses.map((status) => (
+  > 469 │ 													<button
+        │ 													^^^^^^^
+  > 470 │ 														key={status.id}
+         ...
+  > 477 │ 														)}
+  > 478 │ 													>
+        │ 													^
+    479 │ 														<div
+    480 │ 															className={cn(
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\ClientErrorBoundary.tsx:44:7 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    42 │ 							{this.state.error?.message || "An unknown error occurred"}
+    43 │ 						</p>
+  > 44 │ 						<button
+       │ 						^^^^^^^
+  > 45 │ 							onClick={() => this.setState({ hasError: false, error: null })}
+  > 46 │ 							className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm transition-colors"
+  > 47 │ 						>
+       │ 						^
+    48 │ 							Try Again
+    49 │ 						</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\DynamicDataGrid.tsx:19:22 lint/suspicious/noArrayIndexKey ━━━━━━━━━━━━━━━━━━━━
+
+  × Avoid using the index of an array as key property in an element.
+  
+    17 │ 				<div className="space-y-2">
+    18 │ 					{Array.from({ length: 10 }).map((_, i) => (
+  > 19 │ 						<Skeleton key={i} className="h-12 w-full bg-white/5" />
+       │ 						               ^
+    20 │ 					))}
+    21 │ 				</div>
+  
+  i This is the source of the key value.
+  
+    16 │ 				</div>
+    17 │ 				<div className="space-y-2">
+  > 18 │ 					{Array.from({ length: 10 }).map((_, i) => (
+       │ 					                                    ^
+    19 │ 						<Skeleton key={i} className="h-12 w-full bg-white/5" />
+    20 │ 					))}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+src\components\shared\EditAttachmentModal.tsx:146:7 lint/a11y/noStaticElementInteractions ━━━━━━━━━━
+
+  × Static Elements should not be interactive.
+  
+    144 │ 					<div className="p-6 space-y-6">
+    145 │ 						{/* Drop Zone / Selection Area */}
+  > 146 │ 						<div
+        │ 						^^^^
+  > 147 │ 							className="border-2 border-dashed border-indigo-500/30 rounded-2xl p-8 text-center space-y-4 hover:bg-indigo-500/5 transition-colors cursor-pointer group"
+  > 148 │ 							onClick={() => fileInputRef.current?.click()}
+  > 149 │ 						>
+        │ 						^
+    150 │ 							<input
+    151 │ 								type="file"
+  
+  i To add interactivity such as a mouse or key event listener to a static element, give the element an appropriate role value.
+  
+
+src\components\shared\EditAttachmentModal.tsx:146:7 lint/a11y/useKeyWithClickEvents ━━━━━━━━━━━━━━━━
+
+  × Enforce to have the onClick mouse event with the onKeyUp, the onKeyDown, or the onKeyPress keyboard event.
+  
+    144 │ 					<div className="p-6 space-y-6">
+    145 │ 						{/* Drop Zone / Selection Area */}
+  > 146 │ 						<div
+        │ 						^^^^
+  > 147 │ 							className="border-2 border-dashed border-indigo-500/30 rounded-2xl p-8 text-center space-y-4 hover:bg-indigo-500/5 transition-colors cursor-pointer group"
+  > 148 │ 							onClick={() => fileInputRef.current?.click()}
+  > 149 │ 						>
+        │ 						^
+    150 │ 							<input
+    151 │ 								type="file"
+  
+  i Actions triggered using mouse events should have corresponding keyboard events to account for keyboard-only navigation.
+  
+
+src\components\shared\EditNoteModal.tsx:180:31 lint/suspicious/noArrayIndexKey ━━━━━━━━━━━━━━━━━━━━━
+
+  × Avoid using the index of an array as key property in an element.
+  
+    178 │ 								{noteTemplates.map((template, idx) => (
+    179 │ 									<div
+  > 180 │ 										key={`${template}-${idx}`}
+        │ 										                    ^^^
+    181 │ 										className="group relative flex items-center"
+    182 │ 									>
+  
+  i This is the source of the key value.
+  
+    177 │ 							<div className="grid grid-cols-2 gap-2">
+  > 178 │ 								{noteTemplates.map((template, idx) => (
+        │ 								                              ^^^
+    179 │ 									<div
+    180 │ 										key={`${template}-${idx}`}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+src\components\shared\EditReminderModal.tsx:226:31 lint/suspicious/noArrayIndexKey ━━━━━━━━━━━━━━━━━
+
+  × Avoid using the index of an array as key property in an element.
+  
+    224 │ 								{reminderTemplates.map((template, idx) => (
+    225 │ 									<div
+  > 226 │ 										key={`${template}-${idx}`}
+        │ 										                    ^^^
+    227 │ 										className="group relative flex items-center"
+    228 │ 									>
+  
+  i This is the source of the key value.
+  
+    223 │ 							<div className="grid grid-cols-2 gap-2">
+  > 224 │ 								{reminderTemplates.map((template, idx) => (
+        │ 								                                  ^^^
+    225 │ 									<div
+    226 │ 										key={`${template}-${idx}`}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+src\components\shared\EditReminderModal.tsx:229:11 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    227 │ 										className="group relative flex items-center"
+    228 │ 									>
+  > 229 │ 										<button
+        │ 										^^^^^^^
+  > 230 │ 											className="w-full text-left px-3 py-2 rounded-md text-xs bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border border-transparent hover:border-white/10 truncate pr-8 transition-colors"
+  > 231 │ 											onClick={() => handleTemplateClick(template)}
+  > 232 │ 										>
+        │ 										^
+    233 │ 											{template}
+    234 │ 										</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\EditReminderModal.tsx:235:11 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    233 │ 											{template}
+    234 │ 										</button>
+  > 235 │ 										<button
+        │ 										^^^^^^^
+  > 236 │ 											className="absolute right-1 p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+         ...
+  > 240 │ 											}}
+  > 241 │ 										>
+        │ 										^
+    242 │ 											<Trash2 className="h-3 w-3" />
+    243 │ 										</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\EditReminderModal.tsx:195:9 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    193 │ 									QUICK TEMPLATES
+    194 │ 								</h4>
+  > 195 │ 								<button
+        │ 								^^^^^^^
+  > 196 │ 									onClick={() => setIsAddingTemplate(!isAddingTemplate)}
+  > 197 │ 									className="flex items-center text-renault-yellow hover:text-renault-yellow/80 text-xs transition-colors"
+  > 198 │ 								>
+        │ 								^
+    199 │ 									<Plus className="h-3 w-3 mr-1" />
+    200 │ 									{isAddingTemplate ? "Cancel" : "Add New"}
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\GridConfig.tsx:31:4 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    29 │ 	return (
+    30 │ 		<div className="flex items-center gap-3 h-full px-2">
+  > 31 │ 			<button
+       │ 			^^^^^^^
+  > 32 │ 				className={`transition-colors ${data.hasAttachment ? "text-indigo-400" : "text-gray-600 hover:text-gray-400"}`}
+        ...
+  > 38 │ 				}}
+  > 39 │ 			>
+       │ 			^
+    40 │ 				<Paperclip className="h-3.5 w-3.5" />
+    41 │ 			</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\GridConfig.tsx:42:4 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    40 │ 				<Paperclip className="h-3.5 w-3.5" />
+    41 │ 			</button>
+  > 42 │ 			<button
+       │ 			^^^^^^^
+  > 43 │ 				className={`transition-colors ${data.actionNote ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+        ...
+  > 54 │ 				}}
+  > 55 │ 			>
+       │ 			^
+    56 │ 				<StickyNote className="h-3.5 w-3.5" />
+    57 │ 			</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\GridConfig.tsx:58:4 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    56 │ 				<StickyNote className="h-3.5 w-3.5" />
+    57 │ 			</button>
+  > 58 │ 			<button
+       │ 			^^^^^^^
+  > 59 │ 				className={`transition-colors ${data.reminder ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+        ...
+  > 65 │ 				}}
+  > 66 │ 			>
+       │ 			^
+    67 │ 				<Bell className="h-3.5 w-3.5" />
+    68 │ 			</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\GridConfig.tsx:69:4 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    67 │ 				<Bell className="h-3.5 w-3.5" />
+    68 │ 			</button>
+  > 69 │ 			<button
+       │ 			^^^^^^^
+  > 70 │ 				className={`transition-colors text-gray-600 hover:text-gray-400`}
+  > 71 │ 				title="History"
+  > 72 │ 			>
+       │ 			^
+    73 │ 				<History className="h-3.5 w-3.5" />
+    74 │ 			</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\Header.tsx:74:8 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    72 │ 					<div className="absolute right-4 flex items-center gap-2">
+    73 │ 						{useAppStore((state) => state.searchTerm) && (
+  > 74 │ 							<button
+       │ 							^^^^^^^
+  > 75 │ 								onClick={() => useAppStore.getState().setSearchTerm("")}
+  > 76 │ 								className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+  > 77 │ 							>
+       │ 							^
+    78 │ 								<X className="h-3 w-3" />
+    79 │ 							</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\Header.tsx:92:6 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+     90 │ 				{/* Action Buttons Group */}
+     91 │ 				<div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/5">
+   > 92 │ 					<button
+        │ 					^^^^^^^
+   > 93 │ 						onClick={undo}
+         ...
+  > 101 │ 						title="Undo (Cmd+Z)"
+  > 102 │ 					>
+        │ 					^
+    103 │ 						<Undo2 className="h-4 w-4" />
+    104 │ 					</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\Header.tsx:106:6 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    104 │ 					</button>
+    105 │ 					<div className="w-px h-4 bg-white/10" />
+  > 106 │ 					<button
+        │ 					^^^^^^^
+  > 107 │ 						onClick={redo}
+         ...
+  > 115 │ 						title="Redo (Cmd+Shift+Z)"
+  > 116 │ 					>
+        │ 					^
+    117 │ 						<Redo2 className="h-4 w-4" />
+    118 │ 					</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\Header.tsx:120:6 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    118 │ 					</button>
+    119 │ 					<div className="w-px h-4 bg-white/10" />
+  > 120 │ 					<button
+        │ 					^^^^^^^
+  > 121 │ 						onClick={commitSave}
+  > 122 │ 						className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+  > 123 │ 						title="Save Changes (Cmd+S)"
+  > 124 │ 					>
+        │ 					^
+    125 │ 						<Save className="h-4 w-4" />
+    126 │ 					</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\Header.tsx:130:6 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    129 │ 				<div className="flex items-center gap-2">
+  > 130 │ 					<button
+        │ 					^^^^^^^
+  > 131 │ 						onClick={() => window.location.reload()}
+  > 132 │ 						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
+  > 133 │ 						title="Refresh Page"
+  > 134 │ 					>
+        │ 					^
+    135 │ 						<RefreshCw className="h-5 w-5" />
+    136 │ 					</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\Header.tsx:138:6 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    136 │ 					</button>
+    137 │ 
+  > 138 │ 					<button className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all relative">
+        │ 					^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    139 │ 						<Bell className="h-5 w-5" />
+    140 │ 						<span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0a0a0b]" />
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\SettingsModal.tsx:93:8 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+     91 │ 					<nav className="flex-1 p-3 space-y-1">
+     92 │ 						{navItems.map((item) => (
+   > 93 │ 							<button
+        │ 							^^^^^^^
+   > 94 │ 								key={item.id}
+         ...
+  > 101 │ 								)}
+  > 102 │ 							>
+        │ 							^
+    103 │ 								<item.icon
+    104 │ 									className={cn(
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\SettingsModal.tsx:346:8 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    344 │ 					<div className="flex flex-wrap gap-2">
+    345 │ 						{colorPalette.map((color) => (
+  > 346 │ 							<button
+        │ 							^^^^^^^
+  > 347 │ 								key={color}
+         ...
+  > 355 │ 								)}
+  > 356 │ 							/>
+        │ 							^^
+    357 │ 						))}
+    358 │ 					</div>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\Sidebar.tsx:155:4 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    154 │ 			{/* Collapse Button */}
+  > 155 │ 			<button
+        │ 			^^^^^^^
+  > 156 │ 				onClick={() => setIsCollapsed(!isCollapsed)}
+  > 157 │ 				className="flex items-center justify-center h-12 mx-4 mb-4 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-colors border border-transparent hover:border-white/10"
+  > 158 │ 			>
+        │ 			^
+    159 │ 				{isCollapsed ? (
+    160 │ 					<ChevronRight className="h-5 w-5" />
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\components\shared\Sidebar.tsx:168:5 lint/a11y/useButtonType ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Provide an explicit type prop for the button element.
+  
+    166 │ 			{/* User Profile */}
+    167 │ 			<div className="border-t border-white/10 p-4 bg-black/20">
+  > 168 │ 				<button
+        │ 				^^^^^^^
+  > 169 │ 					onClick={() => setSettingsOpen(true)}
+         ...
+  > 173 │ 					)}
+  > 174 │ 				>
+        │ 				^
+    175 │ 					<div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center relative flex-shrink-0">
+    176 │ 						<div className="absolute inset-0 rounded-full bg-renault-yellow/10 animate-pulse"></div>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+src\hooks\useAutoMoveVins.ts:56:10 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    54 │ 			if (allArrived) {
+    55 │ 				// Collect IDs to move
+  > 56 │ 				rows.forEach((r) => idsToMove.push(r.id));
+       │ 				     ^^^^^^^
+    57 │ 				console.log(
+    58 │ 					`[AutoMove] ✓ Fully arrived VIN: ${vin} (${rows.length} parts)`,
+  
+  i Either remove this return or remove the returned value.
+  
+    54 │ 			if (allArrived) {
+    55 │ 				// Collect IDs to move
+  > 56 │ 				rows.forEach((r) => idsToMove.push(r.id));
+       │ 				                    ^^^^^^^^^^^^^^^^^^^^
+    57 │ 				console.log(
+    58 │ 					`[AutoMove] ✓ Fully arrived VIN: ${vin} (${rows.length} parts)`,
+  
+
+src\hooks\useAutoMoveVins.ts:50:9 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    48 │ 				`[AutoMove] VIN ${vin}: ${rows.length} parts, allArrived=${allArrived}`,
+    49 │ 			);
+  > 50 │ 			rows.forEach((r) =>
+       │ 			     ^^^^^^^
+    51 │ 				console.log(`  - ID: ${r.id}, partStatus: "${r.partStatus}"`),
+    52 │ 			);
+  
+  i Either remove this return or remove the returned value.
+  
+    49 │ 			);
+    50 │ 			rows.forEach((r) =>
+  > 51 │ 				console.log(`  - ID: ${r.id}, partStatus: "${r.partStatus}"`),
+       │ 				^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    52 │ 			);
+    53 │ 
+  
+
+Checked 42 files in 349ms. No fixes applied.
+Found 57 errors.
+Found 28 warnings.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+

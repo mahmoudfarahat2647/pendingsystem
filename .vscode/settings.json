@@ -1,7 +1,7 @@
 {
-    "css.lint.unknownAtRules": "ignore",
-    "files.associations": {
-        "*.css": "tailwindcss"
-    },
-    "typescript.autoClosingTags": false
+	"css.lint.unknownAtRules": "ignore",
+	"files.associations": {
+		"*.css": "tailwindcss"
+	},
+	"typescript.autoClosingTags": false
 }

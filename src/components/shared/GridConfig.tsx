@@ -1,362 +1,360 @@
 "use client";
 
-import React from "react";
-import { getVinColor } from "@/lib/utils";
-import type { PendingRow, PartStatusDef } from "@/types";
-import { useAppStore } from "@/store/useStore";
-import { Paperclip, StickyNote, History, Bell } from "lucide-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import { Bell, History, Paperclip, StickyNote } from "lucide-react";
+import { getVinColor } from "@/lib/utils";
+import { useAppStore } from "@/store/useStore";
+import type { PartStatusDef, PendingRow } from "@/types";
 
 // VIN Cell Renderer - applies unique background color based on VIN
 export const VinCellRenderer = (params: ICellRendererParams<PendingRow>) => {
-    const vin = params.value as string;
-    if (!vin) return null;
+	const vin = params.value as string;
+	if (!vin) return null;
 
-    return (
-        <div
-            className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider"
-            style={{ backgroundColor: getVinColor(vin), color: "#000" }}
-        >
-            {vin}
-        </div>
-    );
+	return (
+		<div
+			className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider"
+			style={{ backgroundColor: getVinColor(vin), color: "#000" }}
+		>
+			{vin}
+		</div>
+	);
 };
 
 // Action Cell Renderer - shows icons for attachment, note, history
 export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
-    const data = params.data;
-    if (!data) return null;
+	const data = params.data;
+	if (!data) return null;
 
-    return (
-        <div className="flex items-center gap-3 h-full px-2">
-            <button
-                className={`transition-colors ${data.hasAttachment ? "text-indigo-400" : "text-gray-600 hover:text-gray-400"}`}
-                title="Attachment"
-                onClick={() => {
-                    if (params.colDef?.cellRendererParams?.onAttachClick) {
-                        params.colDef.cellRendererParams.onAttachClick(data);
-                    }
-                }}
-            >
-                <Paperclip className="h-3.5 w-3.5" />
-            </button>
-            <button
-                className={`transition-colors ${data.actionNote ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
-                title="Note"
-                onClick={() => {
-                    console.log("Note icon clicked", data);
-                    console.log("onNoteClick exists:", !!params.colDef?.cellRendererParams?.onNoteClick);
-                    if (params.colDef?.cellRendererParams?.onNoteClick) {
-                        params.colDef.cellRendererParams.onNoteClick(data);
-                    }
-                }}
-            >
-                <StickyNote className="h-3.5 w-3.5" />
-            </button>
-            <button
-                className={`transition-colors ${data.reminder ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
-                title="Reminder"
-                onClick={() => {
-                    if (params.colDef?.cellRendererParams?.onReminderClick) {
-                        params.colDef.cellRendererParams.onReminderClick(data);
-                    }
-                }}
-            >
-                <Bell className="h-3.5 w-3.5" />
-            </button>
-            <button
-                className={`transition-colors text-gray-600 hover:text-gray-400`}
-                title="History"
-            >
-                <History className="h-3.5 w-3.5" />
-            </button>
-        </div>
-    );
+	return (
+		<div className="flex items-center gap-3 h-full px-2">
+			<button
+				className={`transition-colors ${data.hasAttachment ? "text-indigo-400" : "text-gray-600 hover:text-gray-400"}`}
+				title="Attachment"
+				onClick={() => {
+					if (params.colDef?.cellRendererParams?.onAttachClick) {
+						params.colDef.cellRendererParams.onAttachClick(data);
+					}
+				}}
+			>
+				<Paperclip className="h-3.5 w-3.5" />
+			</button>
+			<button
+				className={`transition-colors ${data.actionNote ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+				title="Note"
+				onClick={() => {
+					if (params.colDef?.cellRendererParams?.onNoteClick) {
+						params.colDef.cellRendererParams.onNoteClick(data);
+					}
+				}}
+			>
+				<StickyNote className="h-3.5 w-3.5" />
+			</button>
+			<button
+				className={`transition-colors ${data.reminder ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+				title="Reminder"
+				onClick={() => {
+					if (params.colDef?.cellRendererParams?.onReminderClick) {
+						params.colDef.cellRendererParams.onReminderClick(data);
+					}
+				}}
+			>
+				<Bell className="h-3.5 w-3.5" />
+			</button>
+			<button
+				className={`transition-colors text-gray-600 hover:text-gray-400`}
+				title="History"
+			>
+				<History className="h-3.5 w-3.5" />
+			</button>
+		</div>
+	);
 };
 
 // Part Status Renderer - shows colored bullet based on status
 interface PartStatusRendererProps extends ICellRendererParams<PendingRow> {
-    partStatuses?: PartStatusDef[];
+	partStatuses?: PartStatusDef[];
 }
 
 export const PartStatusRenderer = (params: PartStatusRendererProps) => {
-    const value = params.value as string;
+	const value = params.value as string;
 
-    // Enhanced null safety: handle undefined, null, or empty partStatuses array
-    const statuses = params.partStatuses || [];
+	// Enhanced null safety: handle undefined, null, or empty partStatuses array
+	const statuses = params.partStatuses || [];
 
-    // Handle empty state - no status selected
-    // Safely check if value is string before calling trim
-    if (!value || (typeof value === 'string' && value.trim() === '') || (typeof value !== 'string' && !String(value).trim())) {
-        return (
-            <div className="flex items-center justify-center h-full w-full gap-1" title="Select status">
-                <span className="text-xs text-gray-500">Select status</span>
-                <div className="text-xs text-gray-400 font-bold">▼</div>
-            </div>
-        );
-    }
+	// Handle empty state - no status selected
+	// Safely check if value is string before calling trim
+	if (
+		!value ||
+		(typeof value === "string" && value.trim() === "") ||
+		(typeof value !== "string" && !String(value).trim())
+	) {
+		return (
+			<div
+				className="flex items-center justify-center h-full w-full gap-1"
+				title="Select status"
+			>
+				<span className="text-xs text-gray-500">Select status</span>
+				<div className="text-xs text-gray-400 font-bold">▼</div>
+			</div>
+		);
+	}
 
-    // Handle selected state - status is selected
-    // Enhanced error handling for missing or invalid status definitions
-    let statusDef: PartStatusDef | undefined;
-    let colorClass = 'bg-gray-400'; // Default fallback color
-    let displayValue = value;
+	// Handle selected state - status is selected
+	// Enhanced error handling for missing or invalid status definitions
+	let statusDef: PartStatusDef | undefined;
+	let colorClass = "bg-gray-400"; // Default fallback color
+	let displayValue = value;
 
-    try {
-        // Safely find the status definition
-        if (Array.isArray(statuses) && statuses.length > 0) {
-            statusDef = statuses.find((s: PartStatusDef) => {
-                // Additional null safety for individual status objects
-                return s && typeof s.label === 'string' && s.label === value;
-            });
-        }
+	try {
+		// Safely find the status definition
+		if (Array.isArray(statuses) && statuses.length > 0) {
+			statusDef = statuses.find((s: PartStatusDef) => {
+				// Additional null safety for individual status objects
+				return s && typeof s.label === "string" && s.label === value;
+			});
+		}
 
-        // Apply color with fallback handling
-        if (statusDef && statusDef.color && typeof statusDef.color === 'string') {
-            // Validate that the color class is not empty
-            const trimmedColor = statusDef.color.trim();
-            if (trimmedColor.length > 0) {
-                colorClass = trimmedColor;
-            } else {
-                // Log warning for empty color definition
-                console.warn(`PartStatusRenderer: Empty color definition for status "${value}"`);
-            }
-        } else {
-            // Log warning for missing status definition
-            if (statuses.length > 0) {
-                console.warn(`PartStatusRenderer: Status "${value}" not found in partStatuses array or has invalid color definition`);
-            }
-        }
+		// Apply color with fallback handling
+		if (statusDef?.color && typeof statusDef.color === "string") {
+			const trimmedColor = statusDef.color.trim();
+			if (trimmedColor.length > 0) {
+				colorClass = trimmedColor;
+			}
+		}
 
-        // Ensure display value is safe
-        if (typeof value !== 'string') {
-            displayValue = String(value || '');
-        }
+		// Ensure display value is safe
+		if (typeof value !== "string") {
+			displayValue = String(value || "");
+		}
+	} catch (_error) {
+		colorClass = "bg-gray-400";
+		displayValue = String(value || "Unknown");
+	}
 
-    } catch (error) {
-        // Catch any unexpected errors and provide fallback
-        console.error('PartStatusRenderer: Error processing status definition:', error);
-        colorClass = 'bg-gray-400';
-        displayValue = String(value || 'Unknown');
-    }
-
-    return (
-        <div className="flex items-center justify-center h-full w-full gap-1.5 px-1" title={displayValue}>
-            <div className={`w-2.5 h-2.5 rounded-full ${colorClass} shadow-sm ring-1 ring-black/10 flex-shrink-0`}></div>
-        </div>
-    );
+	return (
+		<div
+			className="flex items-center justify-center h-full w-full gap-1.5 px-1"
+			title={displayValue}
+		>
+			<div
+				className={`w-2.5 h-2.5 rounded-full ${colorClass} shadow-sm ring-1 ring-black/10 flex-shrink-0`}
+			></div>
+		</div>
+	);
 };
 
 // Warranty Info Renderer - shows remaining time with color coding
 export const WarrantyRenderer = (params: ICellRendererParams<PendingRow>) => {
-    const data = params.data;
-    if (!data) return null;
+	const data = params.data;
+	if (!data) return null;
 
-    const isExpired = data.remainTime === "Expired" || data.remainTime === "";
+	const isExpired = data.remainTime === "Expired" || data.remainTime === "";
 
-    return (
-        <div
-            className={`text-xs font-medium ${isExpired ? "text-red-500" : "text-gray-300"}`}
-            title={`Start: ${data.startWarranty}\nEnd: ${data.endWarranty}`}
-        >
-            {data.remainTime || "N/A"}
-        </div>
-    );
+	return (
+		<div
+			className={`text-xs font-medium ${isExpired ? "text-red-500" : "text-gray-300"}`}
+			title={`Start: ${data.startWarranty}\nEnd: ${data.endWarranty}`}
+		>
+			{data.remainTime || "N/A"}
+		</div>
+	);
 };
 
 // Status Badge Renderer - Minimalist text
 export const StatusRenderer = (params: ICellRendererParams<PendingRow>) => {
-    const value = params.value as string;
-    // Just simple text for the flat look, or minimal coloring if preferred
-    return (
-        <span className="text-gray-400 text-[10px] uppercase tracking-wider font-semibold">
-            {value}
-        </span>
-    );
+	const value = params.value as string;
+	// Just simple text for the flat look, or minimal coloring if preferred
+	return (
+		<span className="text-gray-400 text-[10px] uppercase tracking-wider font-semibold">
+			{value}
+		</span>
+	);
 };
 
 // Common column definitions
 export const getBaseColumns = (
-    onNoteClick?: (row: PendingRow) => void,
-    onReminderClick?: (row: PendingRow) => void,
-    onAttachClick?: (row: PendingRow) => void
+	onNoteClick?: (row: PendingRow) => void,
+	onReminderClick?: (row: PendingRow) => void,
+	onAttachClick?: (row: PendingRow) => void,
 ): ColDef<PendingRow>[] => [
-        {
-            headerName: "",
-            field: "id",
-            checkboxSelection: true,
-            headerCheckboxSelection: true,
-            width: 50,
-            maxWidth: 50,
-            sortable: false,
-            filter: false,
-            resizable: false,
-            pinned: "left",
-            suppressMenu: true,
-            valueFormatter: () => "", // Hide the ID number
-            cellClass: "flex items-center justify-center",
-        },
-        {
-            headerName: "ACTIONS",
-            field: "id",
-            cellRenderer: ActionCellRenderer,
-            cellRendererParams: {
-                onNoteClick,
-                onReminderClick,
-                onAttachClick,
-            },
-            width: 100,
-            maxWidth: 100,
-            sortable: false,
-            filter: false,
-            suppressMenu: true,
-        },
-        {
-            headerName: "STATS",
-            field: "status",
-            cellRenderer: StatusRenderer,
-            width: 80,
-        },
-        {
-            headerName: "R/DATE",
-            field: "rDate",
-            width: 100,
-        },
-        {
-            headerName: "CUSTOMER NAME",
-            field: "customerName",
-            filter: "agTextColumnFilter",
-            minWidth: 140,
-        },
-        {
-            headerName: "VIN NO/",
-            field: "vin",
-            cellRenderer: VinCellRenderer,
-            filter: "agTextColumnFilter",
-            minWidth: 160,
-        },
-        {
-            headerName: "MOBILE",
-            field: "mobile",
-            width: 110,
-        },
-        {
-            headerName: "CNTR RDG",
-            field: "cntrRdg",
-            width: 90,
-        },
-        {
-            headerName: "SAB NO.",
-            field: "sabNumber",
-            width: 110,
-        },
-        {
-            headerName: "ACCEPTED BY",
-            field: "acceptedBy",
-            width: 120,
-        },
-        {
-            headerName: "MODEL",
-            field: "model",
-            width: 100,
-        },
-        {
-            headerName: "PART NUMBER",
-            field: "partNumber",
-            filter: "agTextColumnFilter",
-            minWidth: 120,
-        },
-        {
-            headerName: "DESCRIPTION",
-            field: "description",
-            filter: "agTextColumnFilter",
-            minWidth: 180,
-        },
-        {
-            headerName: "نظام اصلاح",
-            field: "repairSystem",
-            width: 100,
-        },
-        {
-            headerName: "مدة ضمان", // Or "WARRANTY REMAIN" based on image? Keeping Arabic as it matches some image texts usually.
-            field: "remainTime",
-            cellRenderer: WarrantyRenderer,
-            width: 100,
-        },
-        {
-            headerName: "ACTION NO.",
-            field: "actionNote",
-            width: 100,
-        },
-    ];
+	{
+		headerName: "",
+		field: "id",
+		checkboxSelection: true,
+		headerCheckboxSelection: true,
+		width: 50,
+		maxWidth: 50,
+		sortable: false,
+		filter: false,
+		resizable: false,
+		pinned: "left",
+		suppressMenu: true,
+		valueFormatter: () => "", // Hide the ID number
+		cellClass: "flex items-center justify-center",
+	},
+	{
+		headerName: "ACTIONS",
+		field: "id",
+		cellRenderer: ActionCellRenderer,
+		cellRendererParams: {
+			onNoteClick,
+			onReminderClick,
+			onAttachClick,
+		},
+		width: 100,
+		maxWidth: 100,
+		sortable: false,
+		filter: false,
+		suppressMenu: true,
+	},
+	{
+		headerName: "STATS",
+		field: "status",
+		cellRenderer: StatusRenderer,
+		width: 80,
+	},
+	{
+		headerName: "R/DATE",
+		field: "rDate",
+		width: 100,
+	},
+	{
+		headerName: "CUSTOMER NAME",
+		field: "customerName",
+		filter: "agTextColumnFilter",
+		minWidth: 140,
+	},
+	{
+		headerName: "VIN NO/",
+		field: "vin",
+		cellRenderer: VinCellRenderer,
+		filter: "agTextColumnFilter",
+		minWidth: 160,
+	},
+	{
+		headerName: "MOBILE",
+		field: "mobile",
+		width: 110,
+	},
+	{
+		headerName: "CNTR RDG",
+		field: "cntrRdg",
+		width: 90,
+	},
+	{
+		headerName: "SAB NO.",
+		field: "sabNumber",
+		width: 110,
+	},
+	{
+		headerName: "ACCEPTED BY",
+		field: "acceptedBy",
+		width: 120,
+	},
+	{
+		headerName: "MODEL",
+		field: "model",
+		width: 100,
+	},
+	{
+		headerName: "PART NUMBER",
+		field: "partNumber",
+		filter: "agTextColumnFilter",
+		minWidth: 120,
+	},
+	{
+		headerName: "DESCRIPTION",
+		field: "description",
+		filter: "agTextColumnFilter",
+		minWidth: 180,
+	},
+	{
+		headerName: "نظام اصلاح",
+		field: "repairSystem",
+		width: 100,
+	},
+	{
+		headerName: "مدة ضمان", // Or "WARRANTY REMAIN" based on image? Keeping Arabic as it matches some image texts usually.
+		field: "remainTime",
+		cellRenderer: WarrantyRenderer,
+		width: 100,
+	},
+	{
+		headerName: "ACTION NO.",
+		field: "actionNote",
+		width: 100,
+	},
+];
 
 export const getOrdersColumns = (
-    onNoteClick?: (row: PendingRow) => void,
-    onReminderClick?: (row: PendingRow) => void,
-    onAttachClick?: (row: PendingRow) => void
+	onNoteClick?: (row: PendingRow) => void,
+	onReminderClick?: (row: PendingRow) => void,
+	onAttachClick?: (row: PendingRow) => void,
 ): ColDef<PendingRow>[] => [
-        ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
-        {
-            headerName: "REQUESTER",
-            field: "requester",
-            width: 120,
-        },
-    ];
+	...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+	{
+		headerName: "REQUESTER",
+		field: "requester",
+		width: 120,
+	},
+];
 
 export const getMainSheetColumns = (
-    partStatuses: PartStatusDef[] = [],
-    onNoteClick?: (row: PendingRow) => void,
-    onReminderClick?: (row: PendingRow) => void,
-    onAttachClick?: (row: PendingRow) => void
+	partStatuses: PartStatusDef[] = [],
+	onNoteClick?: (row: PendingRow) => void,
+	onReminderClick?: (row: PendingRow) => void,
+	onAttachClick?: (row: PendingRow) => void,
 ): ColDef<PendingRow>[] => [
-        ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
-        {
-            headerName: "PART STATUS",
-            field: "partStatus",
-            width: 70,
-            editable: true,
-            cellRenderer: PartStatusRenderer,
-            cellRendererParams: {
-                partStatuses: Array.isArray(partStatuses) ? partStatuses : [] // Enhanced null safety
-            },
-            cellEditor: 'agSelectCellEditor',
-            cellEditorParams: {
-                // Enhanced error handling for dropdown values
-                values: Array.isArray(partStatuses) && partStatuses.length > 0
-                    ? partStatuses
-                        .filter(s => s && typeof s.label === 'string') // Filter out invalid entries
-                        .map(s => s.label)
-                    : [] // Empty array if no valid statuses
-            },
-            cellClass: 'flex items-center justify-center'
-        },
-    ];
+	...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+	{
+		headerName: "PART STATUS",
+		field: "partStatus",
+		width: 70,
+		editable: true,
+		cellRenderer: PartStatusRenderer,
+		cellRendererParams: {
+			partStatuses: Array.isArray(partStatuses) ? partStatuses : [], // Enhanced null safety
+		},
+		cellEditor: "agSelectCellEditor",
+		cellEditorParams: {
+			// Enhanced error handling for dropdown values
+			values:
+				Array.isArray(partStatuses) && partStatuses.length > 0
+					? partStatuses
+							.filter((s) => s && typeof s.label === "string") // Filter out invalid entries
+							.map((s) => s.label)
+					: [], // Empty array if no valid statuses
+		},
+		cellClass: "flex items-center justify-center",
+	},
+];
 
 export const getBookingColumns = (
-    onNoteClick?: (row: PendingRow) => void,
-    onReminderClick?: (row: PendingRow) => void,
-    onAttachClick?: (row: PendingRow) => void
+	onNoteClick?: (row: PendingRow) => void,
+	onReminderClick?: (row: PendingRow) => void,
+	onAttachClick?: (row: PendingRow) => void,
 ): ColDef<PendingRow>[] => [
-        ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
-        {
-            headerName: "BOOKING DATE",
-            field: "bookingDate",
-            width: 130,
-            cellStyle: { color: "#22c55e", fontWeight: 500 },
-        },
-        {
-            headerName: "STATUS",
-            field: "bookingStatus",
-            width: 70,
-            cellRenderer: PartStatusRenderer,
-            cellRendererParams: {
-                partStatuses: useAppStore.getState().bookingStatuses
-            },
-            cellClass: 'flex items-center justify-center'
-        },
-        {
-            headerName: "BOOKING NOTE",
-            field: "bookingNote",
-            width: 150,
-        },
-    ];
+	...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+	{
+		headerName: "BOOKING DATE",
+		field: "bookingDate",
+		width: 130,
+		cellStyle: { color: "#22c55e", fontWeight: 500 },
+	},
+	{
+		headerName: "STATUS",
+		field: "bookingStatus",
+		width: 70,
+		cellRenderer: PartStatusRenderer,
+		cellRendererParams: {
+			partStatuses: useAppStore.getState().bookingStatuses,
+		},
+		cellClass: "flex items-center justify-center",
+	},
+	{
+		headerName: "BOOKING NOTE",
+		field: "bookingNote",
+		width: 150,
+	},
+];

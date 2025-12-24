@@ -1,0 +1,213 @@
+"use client";
+
+import {
+	Calendar,
+	CheckCircle,
+	Download,
+	Filter,
+	Link,
+	Pencil,
+	Phone,
+	Plus,
+	Printer,
+	Send,
+	Tag,
+	Trash2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+
+interface OrdersToolbarProps {
+	selectedCount: number;
+	onAddEdit: () => void;
+	onDelete: () => void;
+	onCommit: () => void;
+	onBooking: () => void;
+	onBulkAttach: () => void;
+}
+
+export const OrdersToolbar = ({
+	selectedCount,
+	onAddEdit,
+	onDelete,
+	onCommit,
+	onBooking,
+	onBulkAttach,
+}: OrdersToolbarProps) => {
+	return (
+		<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
+			<div className="flex items-center gap-1.5">
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							className={cn(
+								"transition-all duration-300 h-8 w-8",
+								selectedCount > 0
+									? "bg-amber-500 hover:bg-amber-600 text-black"
+									: "bg-renault-yellow hover:bg-renault-yellow/90 text-black",
+							)}
+							size="icon"
+							onClick={onAddEdit}
+						>
+							{selectedCount > 0 ? (
+								<Pencil className="h-4 w-4" />
+							) : (
+								<Plus className="h-4 w-4" />
+							)}
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>
+						{selectedCount > 0
+							? `Edit ${selectedCount > 1 ? "Orders" : "Order"}`
+							: "Create Order"}
+					</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
+						>
+							<Tag className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Reserve</TooltipContent>
+				</Tooltip>
+
+				<div className="w-px h-5 bg-white/10 mx-1" />
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-gray-400 hover:text-white h-8 w-8"
+						>
+							<Send className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Share to Logistics</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 h-8 w-8"
+							onClick={onBulkAttach}
+							disabled={selectedCount === 0}
+						>
+							<Link className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Set Link / Path</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-gray-400 hover:text-white h-8 w-8"
+						>
+							<Printer className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Print Order</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-green-500/80 hover:text-green-500 h-8 w-8"
+							disabled={selectedCount === 0}
+							onClick={onBooking}
+						>
+							<Calendar className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Booking</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
+						>
+							<Phone className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Send to Call List</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-gray-400 hover:text-white h-8 w-8"
+						>
+							<Download className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Extract</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-gray-400 hover:text-white h-8 w-8"
+						>
+							<Filter className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Filter</TooltipContent>
+				</Tooltip>
+			</div>
+
+			<div className="flex items-center gap-1.5">
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+							onClick={onDelete}
+							disabled={selectedCount === 0}
+						>
+							<Trash2 className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Delete</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							className="bg-green-600 hover:bg-green-500 text-white border-none rounded-md h-8 w-8"
+							size="icon"
+							onClick={onCommit}
+							disabled={selectedCount === 0}
+						>
+							<CheckCircle className="h-4 w-4" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Commit to Main Sheet</TooltipContent>
+				</Tooltip>
+			</div>
+		</div>
+	);
+};

@@ -3,202 +3,204 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.75rem;
-  }
+	:root {
+		--background: 0 0% 100%;
+		--foreground: 240 10% 3.9%;
+		--card: 0 0% 100%;
+		--card-foreground: 240 10% 3.9%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 240 10% 3.9%;
+		--primary: 240 5.9% 10%;
+		--primary-foreground: 0 0% 98%;
+		--secondary: 240 4.8% 95.9%;
+		--secondary-foreground: 240 5.9% 10%;
+		--muted: 240 4.8% 95.9%;
+		--muted-foreground: 240 3.8% 46.1%;
+		--accent: 240 4.8% 95.9%;
+		--accent-foreground: 240 5.9% 10%;
+		--destructive: 0 84.2% 60.2%;
+		--destructive-foreground: 0 0% 98%;
+		--border: 240 5.9% 90%;
+		--input: 240 5.9% 90%;
+		--ring: 240 5.9% 10%;
+		--radius: 0.75rem;
+	}
 
-  .dark {
-    --background: 240 10% 4%;
-    /* #0a0a0b */
-    --foreground: 0 0% 98%;
-    --card: 240 10% 6%;
-    /* #0e0e11 */
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 6%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 48 100% 50%;
-    /* Renault Yellow #FFCC00 */
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 48 100% 50%;
-  }
+	.dark {
+		--background: 240 10% 4%;
+		/* #0a0a0b */
+		--foreground: 0 0% 98%;
+		--card: 240 10% 6%;
+		/* #0e0e11 */
+		--card-foreground: 0 0% 98%;
+		--popover: 240 10% 6%;
+		--popover-foreground: 0 0% 98%;
+		--primary: 48 100% 50%;
+		/* Renault Yellow #FFCC00 */
+		--primary-foreground: 240 5.9% 10%;
+		--secondary: 240 3.7% 15.9%;
+		--secondary-foreground: 0 0% 98%;
+		--muted: 240 3.7% 15.9%;
+		--muted-foreground: 240 5% 64.9%;
+		--accent: 240 3.7% 15.9%;
+		--accent-foreground: 0 0% 98%;
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 0 0% 98%;
+		--border: 240 3.7% 15.9%;
+		--input: 240 3.7% 15.9%;
+		--ring: 48 100% 50%;
+	}
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+	* {
+		@apply border-border;
+	}
 
-  body {
-    @apply bg-background text-foreground antialiased;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
+	body {
+		@apply bg-background text-foreground antialiased;
+		--chart-4: 280 65% 60%;
+		--chart-5: 340 75% 55%;
+	}
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+	.text-balance {
+		text-wrap: balance;
+	}
 
-  .glass {
-    @apply bg-white/[0.03] backdrop-blur-md border border-white/[0.08];
-  }
+	.glass {
+		@apply bg-white/[0.03] backdrop-blur-md border border-white/[0.08];
+	}
 
-  .glass-card {
-    @apply bg-[#141416]/80 backdrop-blur-xl border border-white/5 shadow-xl;
-  }
+	.glass-card {
+		@apply bg-[#141416]/80 backdrop-blur-xl border border-white/5 shadow-xl;
+	}
 
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60;
-  }
+	.text-gradient {
+		@apply bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60;
+	}
 
-  .transition-all {
-    will-change: transform, opacity, background-color;
-  }
+	.transition-all {
+		will-change: transform, opacity, background-color;
+	}
 }
 
 /* AG Grid Dark Theme Override */
 /* AG Grid Dark Theme Override - Flat Design */
 .ag-theme-alpine-dark {
-  --ag-background-color: transparent;
-  --ag-header-background-color: transparent;
-  --ag-odd-row-background-color: transparent;
-  --ag-row-hover-color: rgba(255, 255, 255, 0.05);
-  --ag-selected-row-background-color: rgba(255, 255, 255, 0.08);
-  /* White/8% selection */
-  --ag-range-selection-border-color: transparent;
-  --ag-header-foreground-color: #9ca3af;
-  /* Gray-400 */
-  --ag-foreground-color: #ffffff;
-  --ag-border-color: transparent;
-  --ag-row-border-color: rgba(255, 255, 255, 0.1);
-  /* Subtle row separators */
-  --ag-header-column-separator-display: none;
-  --ag-input-focus-border-color: #FFCC00;
-  --ag-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+	--ag-background-color: transparent;
+	--ag-header-background-color: transparent;
+	--ag-odd-row-background-color: transparent;
+	--ag-row-hover-color: rgba(255, 255, 255, 0.05);
+	--ag-selected-row-background-color: rgba(255, 255, 255, 0.08);
+	/* White/8% selection */
+	--ag-range-selection-border-color: transparent;
+	--ag-header-foreground-color: #9ca3af;
+	/* Gray-400 */
+	--ag-foreground-color: #ffffff;
+	--ag-border-color: transparent;
+	--ag-row-border-color: rgba(255, 255, 255, 0.1);
+	/* Subtle row separators */
+	--ag-header-column-separator-display: none;
+	--ag-input-focus-border-color: #ffcc00;
+	--ag-font-family:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+		"Courier New", monospace;
 }
 
 .ag-theme-alpine-dark .ag-header-cell-label {
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  color: #6b7280;
-  /* Gray-500 headers */
+	font-weight: 600;
+	text-transform: uppercase;
+	font-size: 0.7rem;
+	letter-spacing: 0.1em;
+	color: #6b7280;
+	/* Gray-500 headers */
 }
 
 .ag-theme-alpine-dark .ag-cell {
-  display: flex;
-  align-items: center;
-  /* Vertical center */
-  font-size: 0.8rem;
-  letter-spacing: 0.02em;
+	display: flex;
+	align-items: center;
+	/* Vertical center */
+	font-size: 0.8rem;
+	letter-spacing: 0.02em;
 }
 
 .ag-theme-alpine-dark .ag-row {
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
 }
 
 /* Checkbox styling */
 .ag-theme-alpine-dark .ag-checkbox-input-wrapper {
-  width: 18px;
-  height: 18px;
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.03);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	width: 18px;
+	height: 18px;
+	border: 1.5px solid rgba(255, 255, 255, 0.25);
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.03);
+	cursor: pointer;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ag-theme-alpine-dark .ag-checkbox-input-wrapper:hover {
-  border-color: rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.05);
+	border-color: rgba(255, 255, 255, 0.45);
+	background: rgba(255, 255, 255, 0.05);
 }
 
 .ag-theme-alpine-dark .ag-checkbox-input-wrapper.ag-checked {
-  border-color: #FFCC00;
-  background: #FFCC00;
+	border-color: #ffcc00;
+	background: #ffcc00;
 }
 
 .ag-theme-alpine-dark .ag-checkbox-input-wrapper.ag-checked::after {
-  content: "✓";
-  color: #000000;
-  font-size: 12px;
-  font-weight: 900;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+	content: "✓";
+	color: #000000;
+	font-size: 12px;
+	font-weight: 900;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .ag-theme-alpine-dark .ag-checkbox-input-wrapper.ag-indeterminate {
-  border-color: #FFCC00;
-  background: rgba(255, 204, 0, 0.2);
+	border-color: #ffcc00;
+	background: rgba(255, 204, 0, 0.2);
 }
 
 .ag-theme-alpine-dark .ag-checkbox-input-wrapper.ag-indeterminate::after {
-  content: "";
-  width: 10px;
-  height: 2px;
-  background: #FFCC00;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+	content: "";
+	width: 10px;
+	height: 2px;
+	background: #ffcc00;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
 
 .ag-theme-alpine-dark .ag-header-select-all {
-  margin-right: 0 !important;
+	margin-right: 0;
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+	width: 6px;
+	height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+	background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.2);
 }

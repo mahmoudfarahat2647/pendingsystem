@@ -2,75 +2,65 @@
 
 import { useEffect, useRef } from "react";
 import { useAppStore } from "@/store/useStore";
-import { PendingRow } from "@/types";
+import type { PendingRow } from "@/types";
 
 export const useAutoMoveVins = () => {
-    const rowData = useAppStore((state) => state.rowData);
-    const sendToCallList = useAppStore((state) => state.sendToCallList);
+	const rowData = useAppStore((state) => state.rowData);
+	const sendToCallList = useAppStore((state) => state.sendToCallList);
 
-    // Use a ref to track if we're currently processing to avoid loops
-    const isProcessingRef = useRef(false);
+	// Use a ref to track if we're currently processing to avoid loops
+	const isProcessingRef = useRef(false);
 
-    useEffect(() => {
-        // Prevent re-entry during processing
-        if (isProcessingRef.current) return;
+	useEffect(() => {
+		// Prevent re-entry during processing
+		if (isProcessingRef.current) return;
 
-        console.log("[AutoMove] Checking rowData changes, count:", rowData.length);
+		// 1. Group by VIN
+		const vinGroups: Record<string, PendingRow[]> = {};
 
-        // 1. Group by VIN
-        const vinGroups: Record<string, PendingRow[]> = {};
+		for (const row of rowData) {
+			if (row.vin) {
+				const vin = row.vin.trim().toLowerCase();
+				if (!vinGroups[vin]) {
+					vinGroups[vin] = [];
+				}
+				vinGroups[vin].push(row);
+			}
+		}
 
-        rowData.forEach(row => {
-            if (row.vin) {
-                const vin = row.vin.trim().toLowerCase();
-                if (!vinGroups[vin]) {
-                    vinGroups[vin] = [];
-                }
-                vinGroups[vin].push(row);
-            }
-        });
+		// 2. Identify groups where ALL parts are 'Arrived'
+		const idsToMove: string[] = [];
 
-        console.log("[AutoMove] VIN groups found:", Object.keys(vinGroups).length);
+		for (const [_vin, rows] of Object.entries(vinGroups)) {
+			if (rows.length === 0) continue;
 
-        // 2. Identify groups where ALL parts are 'Arrived'
-        const idsToMove: string[] = [];
+			// Check if every row in this group has "Arrived" status
+			const allArrived = rows.every((row) => {
+				const status = (row.partStatus || "").trim().toLowerCase();
+				return status === "arrived";
+			});
 
-        Object.entries(vinGroups).forEach(([vin, rows]) => {
-            if (rows.length === 0) return;
+			if (allArrived) {
+				// Collect IDs to move
+				for (const r of rows) {
+					idsToMove.push(r.id);
+				}
+			}
+		}
 
-            // Check if every row in this group has "Arrived" status
-            const allArrived = rows.every(row => {
-                const status = (row.partStatus || "").trim().toLowerCase();
-                return status === 'arrived';
-            });
+		// 3. Move items if any found
+		if (idsToMove.length > 0) {
+			isProcessingRef.current = true;
 
-            console.log(`[AutoMove] VIN ${vin}: ${rows.length} parts, allArrived=${allArrived}`);
-            rows.forEach(r => console.log(`  - ID: ${r.id}, partStatus: "${r.partStatus}"`));
+			// Use requestAnimationFrame to ensure state update is clean
+			requestAnimationFrame(() => {
+				sendToCallList(idsToMove);
 
-            if (allArrived) {
-                // Collect IDs to move
-                rows.forEach(r => idsToMove.push(r.id));
-                console.log(`[AutoMove] ✓ Fully arrived VIN: ${vin} (${rows.length} parts)`);
-            }
-        });
-
-        // 3. Move items if any found
-        if (idsToMove.length > 0) {
-            console.log(`[AutoMove] Moving ${idsToMove.length} items to Call List:`, idsToMove);
-
-            isProcessingRef.current = true;
-
-            // Use requestAnimationFrame to ensure state update is clean
-            requestAnimationFrame(() => {
-                sendToCallList(idsToMove);
-                console.log(`[AutoMove] ✓ Moved ${idsToMove.length} items to Call List`);
-
-                // Reset processing flag after a short delay
-                setTimeout(() => {
-                    isProcessingRef.current = false;
-                }, 100);
-            });
-        }
-
-    }, [rowData, sendToCallList]);
+				// Reset processing flag after a short delay
+				setTimeout(() => {
+					isProcessingRef.current = false;
+				}, 100);
+			});
+		}
+	}, [rowData, sendToCallList]);
 };
