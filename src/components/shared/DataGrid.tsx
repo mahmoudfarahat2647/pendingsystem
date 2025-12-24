@@ -40,13 +40,32 @@ export const DataGrid = React.memo(function DataGrid({
 		[],
 	);
 
+	// Handle highlighted row from notifications
+	const { highlightedRowId } = useAppStore();
+
+	const highlightRow = useCallback((api: GridApi, rowId: string) => {
+		const node = api.getRowNode(rowId);
+		if (node) {
+			api.deselectAll();
+			node.setSelected(true);
+			api.ensureNodeVisible(node, "middle");
+
+			// Optional: Flash the cells to make it more obvious
+			api.flashCells({ rowNodes: [node] });
+		}
+	}, []);
+
 	const handleGridReady = useCallback(
 		(params: GridReadyEvent) => {
 			if (onGridReady) {
 				onGridReady(params.api);
 			}
+			// Check for highlighted row on mount/ready
+			if (highlightedRowId) {
+				highlightRow(params.api, highlightedRowId);
+			}
 		},
-		[onGridReady],
+		[onGridReady, highlightedRowId, highlightRow],
 	);
 
 	const handleSelectionChanged = useCallback(() => {
@@ -77,20 +96,11 @@ export const DataGrid = React.memo(function DataGrid({
 		[defaultColDef, readOnly],
 	);
 
-	// Handle highlighted row from notifications
-	const { highlightedRowId } = useAppStore();
-
 	useEffect(() => {
 		if (highlightedRowId && gridRef.current?.api) {
-			const api = gridRef.current.api;
-			const node = api.getRowNode(highlightedRowId);
-			if (node) {
-				api.deselectAll();
-				node.setSelected(true);
-				api.ensureNodeVisible(node, "middle");
-			}
+			highlightRow(gridRef.current.api, highlightedRowId);
 		}
-	}, [highlightedRowId]);
+	}, [highlightedRowId, highlightRow]);
 
 	// Refresh cells when rowData changes to update cell renderers
 	useEffect(() => {

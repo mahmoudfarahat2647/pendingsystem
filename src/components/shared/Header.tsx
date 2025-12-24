@@ -74,7 +74,7 @@ export const Header = React.memo(function Header() {
 		checkNotifications(); // Check on mount
 		const interval = setInterval(() => {
 			checkNotifications();
-		}, 60000); // Check every minute
+		}, 10000); // Check every 10 seconds for better responsiveness
 		return () => clearInterval(interval);
 	}, [checkNotifications]);
 
@@ -195,7 +195,11 @@ export const Header = React.memo(function Header() {
 						>
 							<Bell className="h-5 w-5" />
 							{unreadCount > 0 && (
-								<span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0a0a0b]" />
+								<div className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-1 bg-red-500 rounded-full border-2 border-[#0a0a0b] flex items-center justify-center">
+									<span className="text-[9px] font-bold text-white leading-none">
+										{unreadCount > 9 ? "9+" : unreadCount}
+									</span>
+								</div>
 							)}
 						</button>
 
