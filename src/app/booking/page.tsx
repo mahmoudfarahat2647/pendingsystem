@@ -42,12 +42,14 @@ export default function BookingPage() {
 		updateOrder,
 	} = useAppStore();
 
+	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
 	const [isRebookingModalOpen, setIsRebookingModalOpen] = useState(false);
 	const [rebookingSearchTerm, setRebookingSearchTerm] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [showFilters, setShowFilters] = useState(false);
 
 	const {
 		activeModal,
@@ -184,10 +186,10 @@ export default function BookingPage() {
 						>
 							<RotateCcw className="h-4 w-4 mr-1" /> Reorder
 						</Button>
-						<Button variant="outline" size="sm">
+						<Button variant="outline" size="sm" onClick={() => gridApi?.exportDataAsCsv()}>
 							<Download className="h-4 w-4 mr-1" /> Extract
 						</Button>
-						<Button variant="outline" size="sm">
+						<Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
 							<Filter className="h-4 w-4 mr-1" /> Filter
 						</Button>
 					</div>
@@ -200,6 +202,8 @@ export default function BookingPage() {
 						rowData={bookingRowData}
 						columnDefs={columns}
 						onSelectionChanged={setSelectedRows}
+						onGridReady={(api) => setGridApi(api)}
+						showFloatingFilters={showFilters}
 					/>
 				</CardContent>
 			</Card>

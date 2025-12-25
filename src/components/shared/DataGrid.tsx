@@ -16,6 +16,7 @@ export interface DataGridProps {
 	onCellValueChanged?: (params: any) => void;
 	height?: string;
 	readOnly?: boolean;
+	showFloatingFilters?: boolean;
 }
 
 export const DataGrid = React.memo(function DataGrid({
@@ -26,6 +27,7 @@ export const DataGrid = React.memo(function DataGrid({
 	onCellValueChanged,
 	height = "calc(100vh - 280px)",
 	readOnly = false,
+	showFloatingFilters = false,
 }: DataGridProps) {
 	const gridRef = useRef<AgGridReact>(null);
 
@@ -33,11 +35,12 @@ export const DataGrid = React.memo(function DataGrid({
 		() => ({
 			sortable: true,
 			filter: true,
+			floatingFilter: showFloatingFilters,
 			resizable: true,
 			flex: 1,
 			minWidth: 100,
 		}),
-		[],
+		[showFloatingFilters],
 	);
 
 	// Handle highlighted row from notifications

@@ -19,6 +19,7 @@ export default function ArchivePage() {
 	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [showFilters, setShowFilters] = useState(false);
 
 	const {
 		activeModal,
@@ -86,7 +87,7 @@ export default function ArchivePage() {
 						<Button variant="outline" size="sm" onClick={() => gridApi?.exportDataAsCsv()}>
 							<Download className="h-4 w-4 mr-1" /> Extract
 						</Button>
-						<Button variant="outline" size="sm">
+						<Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
 							<Filter className="h-4 w-4 mr-1" /> Filter
 						</Button>
 					</div>
@@ -100,6 +101,7 @@ export default function ArchivePage() {
 						columnDefs={columns}
 						onSelectionChanged={setSelectedRows}
 						onGridReady={(api) => setGridApi(api)}
+						showFloatingFilters={showFilters}
 					/>
 				</CardContent>
 			</Card>

@@ -33,6 +33,7 @@ interface OrdersToolbarProps {
 	onReserve: () => void;
 	onShareToLogistics: () => void;
 	onExtract: () => void;
+	onFilterToggle: () => void;
 }
 
 export const OrdersToolbar = ({
@@ -46,6 +47,7 @@ export const OrdersToolbar = ({
 	onReserve,
 	onShareToLogistics,
 	onExtract,
+	onFilterToggle,
 }: OrdersToolbarProps) => {
 
 	return (
@@ -187,6 +189,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							className="text-gray-400 hover:text-white h-8 w-8"
+							onClick={onFilterToggle}
 						>
 							<Filter className="h-3.5 w-3.5" />
 						</Button>

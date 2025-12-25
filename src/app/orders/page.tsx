@@ -39,6 +39,7 @@ export default function OrdersPage() {
 	const [isBulkAttachmentModalOpen, setIsBulkAttachmentModalOpen] =
 		useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [showFilters, setShowFilters] = useState(false);
 
 	const {
 		activeModal,
@@ -211,6 +212,7 @@ export default function OrdersPage() {
 							onReserve={handleReserve}
 							onShareToLogistics={handleShareToLogistics}
 							onExtract={() => gridApi?.exportDataAsCsv()}
+							onFilterToggle={() => setShowFilters(!showFilters)}
 						/>
 
 						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">
@@ -219,6 +221,7 @@ export default function OrdersPage() {
 								columnDefs={columns}
 								onSelectionChanged={handleSelectionChanged}
 								onGridReady={(api) => setGridApi(api)}
+								showFloatingFilters={showFilters}
 							/>
 						</div>
 					</CardContent>

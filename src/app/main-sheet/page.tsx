@@ -42,6 +42,7 @@ export default function MainSheetPage() {
 	const [showUnlockDialog, setShowUnlockDialog] = useState(false);
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [showFilters, setShowFilters] = useState(false);
 
 	const autoLockTimerRef = useRef<NodeJS.Timeout | null>(null);
 	const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -184,6 +185,7 @@ export default function MainSheetPage() {
 							}}
 							onDelete={() => setShowDeleteConfirm(true)}
 							onExtract={() => gridApi?.exportDataAsCsv()}
+							onFilterToggle={() => setShowFilters(!showFilters)}
 						/>
 					</CardContent>
 				</Card>
@@ -204,6 +206,7 @@ export default function MainSheetPage() {
 							}}
 							readOnly={isLocked}
 							onGridReady={(api) => setGridApi(api)}
+							showFloatingFilters={showFilters}
 						/>
 					</CardContent>
 				</Card>

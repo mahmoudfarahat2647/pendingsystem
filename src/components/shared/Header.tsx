@@ -332,6 +332,6 @@ export const Header = React.memo(function Header() {
 				</div>
 
 			</div>
-		</header >
+		</header>
 	);
 });
