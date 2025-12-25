@@ -27,7 +27,7 @@ interface EditReminderModalProps {
 		date: string;
 		time: string;
 		subject: string;
-	};
+	} | null;
 	onSave: (
 		data: { date: string; time: string; subject: string } | null | undefined,
 	) => void;

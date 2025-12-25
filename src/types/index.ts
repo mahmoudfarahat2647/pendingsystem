@@ -105,6 +105,9 @@ export interface PartStatusDef {
 	color: string;
 }
 
+export type BookingStatus = PartStatusDef;
+export type PartStatus = PartStatusDef;
+
 export interface CommitLog {
 	id: string;
 	actionName: string;

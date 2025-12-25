@@ -29,6 +29,7 @@ interface OrdersToolbarProps {
 	onCommit: () => void;
 	onBooking: () => void;
 	onBulkAttach: () => void;
+	onPrint: () => void;
 }
 
 export const OrdersToolbar = ({
@@ -38,7 +39,9 @@ export const OrdersToolbar = ({
 	onCommit,
 	onBooking,
 	onBulkAttach,
+	onPrint,
 }: OrdersToolbarProps) => {
+
 	return (
 		<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
 			<div className="flex items-center gap-1.5">
@@ -116,12 +119,15 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							className="text-gray-400 hover:text-white h-8 w-8"
+							onClick={onPrint}
+							disabled={selectedCount === 0}
 						>
 							<Printer className="h-3.5 w-3.5" />
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>Print Order</TooltipContent>
 				</Tooltip>
+
 
 				<Tooltip>
 					<TooltipTrigger asChild>

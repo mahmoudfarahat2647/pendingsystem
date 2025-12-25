@@ -11,21 +11,21 @@ import {
 	Users,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
-import {
-	Bar,
-	BarChart,
-	Cell,
-	Pie,
-	PieChart,
-	ResponsiveContainer,
-	Tooltip,
-	XAxis,
-} from "@/components/shared/DynamicCharts";
+import dynamic from "next/dynamic";
+const CapacityChart = dynamic(() => import("@/components/dashboard/CapacityChart"), {
+	ssr: false,
+	loading: () => <div className="h-full w-full bg-white/5 animate-pulse rounded-full" />,
+});
+const DistributionChart = dynamic(() => import("@/components/dashboard/DistributionChart"), {
+	ssr: false,
+	loading: () => <div className="h-full w-full bg-white/5 animate-pulse rounded-lg" />,
+});
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn, getCalculatorValues } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
+import { WarrantyDatePicker } from "@/components/dashboard/WarrantyDatePicker";
 
 export default function DashboardPage() {
 	const { ordersRowData, rowData, callRowData } = useAppStore();
@@ -219,22 +219,7 @@ export default function DashboardPage() {
 							</h3>
 						</div>
 						<div className="h-[180px] w-full relative flex items-center justify-center">
-							<ResponsiveContainer width="100%" height="100%">
-								<PieChart>
-									<Pie
-										data={pieData}
-										innerRadius={60}
-										outerRadius={80}
-										paddingAngle={5}
-										dataKey="value"
-										stroke="none"
-									>
-										{pieData.map((entry, index) => (
-											<Cell key={`cell-${index}`} fill={entry.color} />
-										))}
-									</Pie>
-								</PieChart>
-							</ResponsiveContainer>
+							<CapacityChart data={pieData} />
 							<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
 								<span className="text-2xl font-bold text-white">25</span>
 								<span className="text-xs text-gray-500">Total</span>
@@ -256,31 +241,7 @@ export default function DashboardPage() {
 							<span className="text-[10px] text-gray-500">Live Data</span>
 						</div>
 						<div className="h-[180px] w-full">
-							<ResponsiveContainer width="100%" height="100%">
-								<BarChart data={barData}>
-									<XAxis
-										dataKey="name"
-										axisLine={false}
-										tickLine={false}
-										tick={{ fill: "#6b7280", fontSize: 10 }}
-										dy={10}
-									/>
-									<Tooltip
-										cursor={{ fill: "rgba(255,255,255,0.05)" }}
-										contentStyle={{
-											backgroundColor: "#0a0a0b",
-											borderColor: "rgba(255,255,255,0.1)",
-											borderRadius: "8px",
-										}}
-									/>
-									<Bar
-										dataKey="value"
-										fill="#FFCC00"
-										radius={[4, 4, 0, 0]}
-										barSize={20}
-									/>
-								</BarChart>
-							</ResponsiveContainer>
+							<DistributionChart data={barData} />
 						</div>
 					</CardContent>
 				</Card>
@@ -331,15 +292,11 @@ export default function DashboardPage() {
 									START DATE (D/M)
 								</Label>
 								<div className="relative">
-									<Input
+									<WarrantyDatePicker
 										id="warranty-date"
-										type="date"
 										value={warrantyDate}
-										onChange={(e) => setWarrantyDate(e.target.value)}
-										placeholder="mm/dd/yyyy"
-										className="bg-[#1a1a1c] border-white/[0.08] text-white h-10 rounded-lg focus:border-renault-yellow/30 focus:ring-0 pr-10"
+										onChange={(value) => setWarrantyDate(value)}
 									/>
-									<Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
 								</div>
 							</div>
 

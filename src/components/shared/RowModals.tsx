@@ -12,7 +12,7 @@ interface RowModalsProps {
 	onClose: () => void;
 	onSaveNote: (content: string) => void;
 	onSaveReminder: (
-		reminder: { date: string; time: string; subject: string } | undefined,
+		reminder: { date: string; time: string; subject: string } | null | undefined,
 	) => void;
 	onSaveAttachment: (path: string | undefined) => void;
 }

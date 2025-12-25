@@ -29,6 +29,11 @@ export class ClientErrorBoundary extends Component<Props, State> {
 
 	public render() {
 		if (this.state.hasError) {
+			const isChunkError =
+				this.state.error?.name === "ChunkLoadError" ||
+				this.state.error?.message?.includes("Loading chunk") ||
+				this.state.error?.message?.includes("ChunkLoadError");
+
 			return (
 				<div className="w-full h-full min-h-[200px] flex flex-col items-center justify-center p-6 bg-red-500/5 border border-red-500/20 rounded-xl space-y-4">
 					<div className="p-3 bg-red-500/10 rounded-full">
@@ -36,17 +41,30 @@ export class ClientErrorBoundary extends Component<Props, State> {
 					</div>
 					<div className="text-center">
 						<h3 className="text-lg font-semibold text-white mb-1">
-							{this.props.fallbackTitle || "Component Error"}
+							{isChunkError ? "Connection Interrupted" : (this.props.fallbackTitle || "Component Error")}
 						</h3>
 						<p className="text-sm text-gray-400 font-mono max-w-md break-words mb-4">
-							{this.state.error?.message || "An unknown error occurred"}
+							{isChunkError
+								? "A new version of the app is available or the connection was lost. Please refresh to continue."
+								: (this.state.error?.message || "An unknown error occurred")}
 						</p>
-						<button
-							onClick={() => this.setState({ hasError: false, error: null })}
-							className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm transition-colors"
-						>
-							Try Again
-						</button>
+						<div className="flex gap-3 justify-center">
+							{isChunkError ? (
+								<button
+									onClick={() => window.location.reload()}
+									className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm transition-colors border border-white/20"
+								>
+									Refresh Page
+								</button>
+							) : (
+								<button
+									onClick={() => this.setState({ hasError: false, error: null })}
+									className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm transition-colors"
+								>
+									Try Again
+								</button>
+							)}
+						</div>
 					</div>
 				</div>
 			);

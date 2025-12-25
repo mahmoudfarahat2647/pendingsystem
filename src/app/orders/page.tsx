@@ -17,6 +17,7 @@ import { useRowModals } from "@/hooks/useRowModals";
 import { generateId, getCalculatorValues } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
+import { printOrders } from "@/lib/printUtils";
 
 export default function OrdersPage() {
 	const {
@@ -175,6 +176,11 @@ export default function OrdersPage() {
 		setIsBulkAttachmentModalOpen(false);
 	};
 
+	const handlePrint = () => {
+		if (selectedRows.length === 0) return;
+		printOrders(selectedRows);
+	};
+
 	return (
 		<TooltipProvider>
 			<div className="space-y-6 h-full flex flex-col">
@@ -189,6 +195,7 @@ export default function OrdersPage() {
 							onCommit={handleCommit}
 							onBooking={() => setIsBookingModalOpen(true)}
 							onBulkAttach={() => setIsBulkAttachmentModalOpen(true)}
+							onPrint={handlePrint}
 						/>
 
 						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">

@@ -22,7 +22,10 @@
   - **Commit to Main Sheet**: Validates entries and moves them to the Main Sheet.
 - **Modals**:
   - **Note Modal**: Add/Edit notes with color coding and templates.
-  - **Reminder Modal**: Set reminders with templates and datetime.
+  - **Reminder Modal**: 
+    - Set reminders with templates and datetime.
+    - **Grid Indicator**: Immediate bell icon coloring (Yellow = Active, Gray = None) which updates in real-time.
+    - **Instant Alerts**: Setting a reminder for a past time triggers a notification immediately.
   - **Attachment Modal**: Link files or URLs to specific orders.
 - **Visuals**:
   - Status color coding.
@@ -56,9 +59,21 @@
     - Details card with VIN, parts, and status dropdown
     - History footer with past booking dates
   - **Workflow Optimization**: Modal stays open after booking for immediate status updates and note additions.
-- **Booking Actions**:
-  - **Rebooking**: Dedicated button to reschedule, automatically opening the calendar with pre-filled search and history.
+- **Rebooking**: Dedicated button to reschedule, automatically opening the calendar with pre-filled search and history.
   - System logs "Rescheduled from X to Y" notes automatically.
+
+## Smart Notification System
+- **Responsive Alerts**:
+  - Numbered badge in header showing unread count (with "9+" support for high counts).
+  - 10-second background check interval for near-instant responsiveness.
+- **Direct Navigation & Highlighting**:
+  - Clicking a notification navigates directly to the source tab.
+  - **Auto-Scroll**: Automatically selects and scrolls the specific row into view for the user.
+- **Detailed Metadata**:
+  - Notifications display Due Date, Customer Name, VIN, Tracking ID, and Tab Source for context.
+- **Management**:
+  - Individual "X" delete icon per notification for quick cleanup.
+  - "Clear All" functionality to wipe all alerts at once.
 
 ## Archive & history
 - **Archive Page**: Read-only view of completed historical data.
