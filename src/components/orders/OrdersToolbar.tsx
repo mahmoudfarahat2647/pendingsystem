@@ -30,6 +30,7 @@ interface OrdersToolbarProps {
 	onBooking: () => void;
 	onBulkAttach: () => void;
 	onPrint: () => void;
+	onReserve: () => void;
 }
 
 export const OrdersToolbar = ({
@@ -40,6 +41,7 @@ export const OrdersToolbar = ({
 	onBooking,
 	onBulkAttach,
 	onPrint,
+	onReserve,
 }: OrdersToolbarProps) => {
 
 	return (
@@ -76,6 +78,8 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
+							onClick={onReserve}
+							disabled={selectedCount === 0}
 						>
 							<Tag className="h-3.5 w-3.5" />
 						</Button>
