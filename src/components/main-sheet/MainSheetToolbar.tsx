@@ -48,28 +48,6 @@ export const MainSheetToolbar = ({
 	return (
 		<div className="flex items-center justify-between bg-[#141416] p-2 rounded-xl border border-white/5">
 			<div className="flex items-center gap-2">
-				{partStatuses.map((status) => (
-					<Tooltip key={status.id}>
-						<TooltipTrigger asChild>
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={() => onUpdateStatus(status.label)}
-								disabled={isLocked || selectedCount === 0}
-								className="hover:bg-white/5 h-8 w-8"
-							>
-								<span
-									className="w-3 h-3 rounded-full"
-									style={{ backgroundColor: status.color }}
-								/>
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>Set status: {status.label}</TooltipContent>
-					</Tooltip>
-				))}
-
-				<div className="w-px h-6 bg-white/10 mx-1" />
-
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
@@ -167,23 +145,8 @@ export const MainSheetToolbar = ({
 					</TooltipTrigger>
 					<TooltipContent>Filter</TooltipContent>
 				</Tooltip>
-			</div>
 
-			<div className="flex items-center gap-2">
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Button
-							size="icon"
-							variant="ghost"
-							className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
-							onClick={onDelete}
-							disabled={isLocked || selectedCount === 0}
-						>
-							<Trash2 className="h-4 w-4" />
-						</Button>
-					</TooltipTrigger>
-					<TooltipContent>Delete</TooltipContent>
-				</Tooltip>
+				<div className="w-px h-5 bg-white/10 mx-1" />
 
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -203,6 +166,23 @@ export const MainSheetToolbar = ({
 					<TooltipContent>
 						{isLocked ? "Unlock Sheet" : "Lock Sheet"}
 					</TooltipContent>
+				</Tooltip>
+			</div>
+
+			<div className="flex items-center gap-2">
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+							onClick={onDelete}
+							disabled={isLocked || selectedCount === 0}
+						>
+							<Trash2 className="h-4 w-4" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Delete</TooltipContent>
 				</Tooltip>
 			</div>
 		</div>

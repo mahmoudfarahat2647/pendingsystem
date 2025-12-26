@@ -19,6 +19,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -72,127 +78,141 @@ export default function ArchivePage() {
 	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
 
 	return (
-		<div className="space-y-4">
-			<InfoLabel data={selectedRows[0] || null} />
+		<TooltipProvider>
+			<div className="space-y-4">
+				<InfoLabel data={selectedRows[0] || null} />
 
-			<Card>
-				<CardHeader className="pb-3">
-					<div className="flex items-center justify-between">
-						<div>
-							<CardTitle className="flex items-center gap-2">
-								<Archive className="h-5 w-5" /> Archive
-							</CardTitle>
-							<p className="text-sm text-muted-foreground mt-1">
-								Historical records
-							</p>
-						</div>
-						<div className="text-sm text-muted-foreground">
-							{archiveRowData.length} archived items
-						</div>
+				<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
+					<div className="flex items-center gap-1.5">
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
+									onClick={() => gridApi?.exportDataAsCsv()}
+								>
+									<Download className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Extract</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-gray-400 hover:text-white h-8 w-8"
+									onClick={() => setShowFilters(!showFilters)}
+								>
+									<Filter className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Filter</TooltipContent>
+						</Tooltip>
+
+						<div className="w-px h-5 bg-white/10 mx-1" />
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
+									onClick={() => setIsReorderModalOpen(true)}
+									disabled={selectedRows.length === 0}
+								>
+									<RotateCcw className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Reorder</TooltipContent>
+						</Tooltip>
 					</div>
-				</CardHeader>
-				<CardContent>
-					<div className="flex flex-wrap items-center gap-2">
-						<Button
-							variant="destructive"
-							size="sm"
-							onClick={() => setShowDeleteConfirm(true)}
-							disabled={selectedRows.length === 0}
-						>
-							<Trash2 className="h-4 w-4 mr-1" /> Delete
-						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							className="text-orange-500"
-							onClick={() => setIsReorderModalOpen(true)}
-							disabled={selectedRows.length === 0}
-						>
-							<RotateCcw className="h-4 w-4 mr-1" /> Reorder
-						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => gridApi?.exportDataAsCsv()}
-						>
-							<Download className="h-4 w-4 mr-1" /> Extract
-						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => setShowFilters(!showFilters)}
-						>
-							<Filter className="h-4 w-4 mr-1" /> Filter
-						</Button>
+
+					<div className="flex items-center gap-1.5">
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+									onClick={() => setShowDeleteConfirm(true)}
+									disabled={selectedRows.length === 0}
+								>
+									<Trash2 className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Delete</TooltipContent>
+						</Tooltip>
 					</div>
-				</CardContent>
-			</Card>
+				</div>
 
-			<Card>
-				<CardContent className="p-0">
-					<DataGrid
-						rowData={archiveRowData}
-						columnDefs={columns}
-						onSelectionChanged={setSelectedRows}
-						onGridReady={(api) => setGridApi(api)}
-						showFloatingFilters={showFilters}
-					/>
-				</CardContent>
-			</Card>
+				<Card>
+					<CardContent className="p-0">
+						<DataGrid
+							rowData={archiveRowData}
+							columnDefs={columns}
+							onSelectionChanged={setSelectedRows}
+							onGridReady={(api) => setGridApi(api)}
+							showFloatingFilters={showFilters}
+						/>
+					</CardContent>
+				</Card>
 
-			<RowModals
-				activeModal={activeModal}
-				currentRow={currentRow}
-				onClose={closeModal}
-				onSaveNote={saveNote}
-				onSaveReminder={saveReminder}
-				onSaveAttachment={saveAttachment}
-			/>
+				<RowModals
+					activeModal={activeModal}
+					currentRow={currentRow}
+					onClose={closeModal}
+					onSaveNote={saveNote}
+					onSaveReminder={saveReminder}
+					onSaveAttachment={saveAttachment}
+				/>
 
-			{/* Reorder Reason Modal */}
-			<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Reorder - Reason Required</DialogTitle>
-					</DialogHeader>
-					<div className="grid gap-4 py-4">
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="reason" className="text-right">
-								Reason
-							</Label>
-							<Input
-								id="reason"
-								value={reorderReason}
-								onChange={(e) => setReorderReason(e.target.value)}
-								className="col-span-3"
-								placeholder="e.g., Customer called back, error in archive"
-							/>
+				{/* Reorder Reason Modal */}
+				<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>Reorder - Reason Required</DialogTitle>
+						</DialogHeader>
+						<div className="grid gap-4 py-4">
+							<div className="grid grid-cols-4 items-center gap-4">
+								<Label htmlFor="reason" className="text-right">
+									Reason
+								</Label>
+								<Input
+									id="reason"
+									value={reorderReason}
+									onChange={(e) => setReorderReason(e.target.value)}
+									className="col-span-3"
+									placeholder="e.g., Customer called back, error in archive"
+								/>
+							</div>
 						</div>
-					</div>
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setIsReorderModalOpen(false)}
-						>
-							Cancel
-						</Button>
-						<Button onClick={handleConfirmReorder}>Confirm Reorder</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+						<DialogFooter>
+							<Button
+								variant="outline"
+								onClick={() => setIsReorderModalOpen(false)}
+							>
+								Cancel
+							</Button>
+							<Button onClick={handleConfirmReorder}>Confirm Reorder</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
 
-			<ConfirmDialog
-				open={showDeleteConfirm}
-				onOpenChange={setShowDeleteConfirm}
-				onConfirm={() => {
-					deleteOrders(selectedRows.map((r) => r.id));
-					setSelectedRows([]);
-					toast.success("Archived record(s) deleted");
-				}}
-				title="Delete Archived Records"
-				description={`Are you sure you want to permanently delete ${selectedRows.length} selected record(s)?`}
-				confirmText="Permanently Delete"
-			/>
-		</div>
+				<ConfirmDialog
+					open={showDeleteConfirm}
+					onOpenChange={setShowDeleteConfirm}
+					onConfirm={() => {
+						deleteOrders(selectedRows.map((r) => r.id));
+						setSelectedRows([]);
+						toast.success("Archived record(s) deleted");
+					}}
+					title="Delete Archived Records"
+					description={`Are you sure you want to permanently delete ${selectedRows.length} selected record(s)?`}
+					confirmText="Permanently Delete"
+				/>
+			</div>
+		</TooltipProvider>
 	);
 }

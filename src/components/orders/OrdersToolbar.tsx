@@ -196,6 +196,22 @@ export const OrdersToolbar = ({
 					</TooltipTrigger>
 					<TooltipContent>Filter</TooltipContent>
 				</Tooltip>
+
+				<div className="w-px h-5 bg-white/10 mx-1" />
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							className="bg-green-600 hover:bg-green-500 text-white border-none rounded-md h-8 w-8"
+							size="icon"
+							onClick={onCommit}
+							disabled={selectedCount === 0}
+						>
+							<CheckCircle className="h-4 w-4" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Commit to Main Sheet</TooltipContent>
+				</Tooltip>
 			</div>
 
 			<div className="flex items-center gap-1.5">
@@ -212,20 +228,6 @@ export const OrdersToolbar = ({
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>Delete</TooltipContent>
-				</Tooltip>
-
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Button
-							className="bg-green-600 hover:bg-green-500 text-white border-none rounded-md h-8 w-8"
-							size="icon"
-							onClick={onCommit}
-							disabled={selectedCount === 0}
-						>
-							<CheckCircle className="h-4 w-4" />
-						</Button>
-					</TooltipTrigger>
-					<TooltipContent>Commit to Main Sheet</TooltipContent>
 				</Tooltip>
 			</div>
 		</div>

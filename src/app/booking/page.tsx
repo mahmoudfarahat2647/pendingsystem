@@ -28,6 +28,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -108,173 +114,201 @@ export default function BookingPage() {
 	};
 
 	return (
-		<div className="space-y-4">
-			<InfoLabel data={selectedRows[0] || null} />
+		<TooltipProvider>
+			<div className="space-y-4">
+				<InfoLabel data={selectedRows[0] || null} />
 
-			<Card>
-				<CardHeader className="pb-3">
-					<div className="flex items-center justify-between">
-						<div>
-							<CardTitle className="flex items-center gap-2">
-								<Calendar className="h-5 w-5" /> Service Appointments
-							</CardTitle>
-							<p className="text-sm text-muted-foreground mt-1">
-								Scheduled maintenance
+				<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
+					<div className="flex items-center gap-1.5">
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
+									onClick={() => gridApi?.exportDataAsCsv()}
+								>
+									<Download className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Extract</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-gray-400 hover:text-white h-8 w-8"
+									onClick={() => setShowFilters(!showFilters)}
+								>
+									<Filter className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Filter</TooltipContent>
+						</Tooltip>
+
+						<div className="w-px h-5 bg-white/10 mx-1" />
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-gray-400 hover:text-white h-8 w-8"
+									onClick={() => sendToArchive(selectedRows.map((r) => r.id))}
+									disabled={selectedRows.length === 0}
+								>
+									<Archive className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Archive</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
+									onClick={() => setIsReorderModalOpen(true)}
+									disabled={selectedRows.length === 0}
+								>
+									<RotateCcw className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Reorder</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									className={
+										selectedRows.length === 0
+											? "bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
+											: "bg-renault-yellow hover:bg-renault-yellow/90 text-black border-none rounded-md h-8 w-8"
+									}
+									size="icon"
+									onClick={() => {
+										setRebookingSearchTerm(
+											selectedRows[0]?.vin || selectedRows[0]?.customerName || "",
+										);
+										setIsRebookingModalOpen(true);
+									}}
+									disabled={
+										new Set(selectedRows.map((r) => r.vin)).size > 1
+									}
+								>
+									{selectedRows.length === 0 ? (
+										<HistoryIcon className="h-4 w-4" />
+									) : (
+										<Calendar className="h-4 w-4" />
+									)}
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								{selectedRows.length === 0 ? "History" : "Rebooking"}
+							</TooltipContent>
+						</Tooltip>
+					</div>
+
+					<div className="flex items-center gap-1.5">
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+									onClick={() => setShowDeleteConfirm(true)}
+									disabled={selectedRows.length === 0}
+								>
+									<Trash2 className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Delete</TooltipContent>
+						</Tooltip>
+					</div>
+				</div>
+
+				<Card>
+					<CardContent className="p-0">
+						<DataGrid
+							rowData={bookingRowData}
+							columnDefs={columns}
+							onSelectionChanged={setSelectedRows}
+							onGridReady={(api) => setGridApi(api)}
+							showFloatingFilters={showFilters}
+						/>
+					</CardContent>
+				</Card>
+
+				<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle className="text-orange-500">
+								Reorder - Reason Required
+							</DialogTitle>
+						</DialogHeader>
+						<div className="space-y-4">
+							<div>
+								<Label>Reason for Reorder</Label>
+								<Input
+									value={reorderReason}
+									onChange={(e) => setReorderReason(e.target.value)}
+									placeholder="e.g., Wrong part, Customer cancelled"
+								/>
+							</div>
+							<p className="text-sm text-muted-foreground">
+								This will send the selected items back to the Orders view.
 							</p>
 						</div>
-						<div className="text-sm">
-							<span className="px-2 py-1 bg-purple-500/10 text-purple-500 rounded">
-								Unique Bookings
-							</span>
-							<span className="ml-2 text-renault-yellow font-semibold">
-								{uniqueVins} Unique ({bookingRowData.length} Lines)
-							</span>
-						</div>
-					</div>
-				</CardHeader>
-				<CardContent>
-					<div className="flex flex-wrap items-center gap-2">
-						<Button
-							variant="destructive"
-							size="sm"
-							onClick={() => setShowDeleteConfirm(true)}
-							disabled={selectedRows.length === 0}
-						>
-							<Trash2 className="h-4 w-4 mr-1" /> Delete
-						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => sendToArchive(selectedRows.map((r) => r.id))}
-							disabled={selectedRows.length === 0}
-						>
-							<Archive className="h-4 w-4 mr-1" /> Archive
-						</Button>
-						<Button
-							variant={selectedRows.length === 0 ? "outline" : "outline"}
-							size="sm"
-							className={cn(
-								"border-renault-yellow/20",
-								selectedRows.length === 0
-									? "text-gray-400"
-									: "text-renault-yellow hover:text-renault-yellow/80 hover:bg-renault-yellow/10",
-							)}
-							onClick={() => {
-								setRebookingSearchTerm(
-									selectedRows[0]?.vin || selectedRows[0]?.customerName || "",
-								);
-								setIsRebookingModalOpen(true);
-							}}
-							disabled={new Set(selectedRows.map((r) => r.vin)).size > 1}
-						>
-							{selectedRows.length === 0 ? (
-								<>
-									<HistoryIcon className="h-4 w-4 mr-1" /> History
-								</>
-							) : (
-								<>
-									<Calendar className="h-4 w-4 mr-1" /> Rebooking
-								</>
-							)}
-						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							className="text-orange-500"
-							onClick={() => setIsReorderModalOpen(true)}
-							disabled={selectedRows.length === 0}
-						>
-							<RotateCcw className="h-4 w-4 mr-1" /> Reorder
-						</Button>
-						<Button variant="outline" size="sm" onClick={() => gridApi?.exportDataAsCsv()}>
-							<Download className="h-4 w-4 mr-1" /> Extract
-						</Button>
-						<Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
-							<Filter className="h-4 w-4 mr-1" /> Filter
-						</Button>
-					</div>
-				</CardContent>
-			</Card>
+						<DialogFooter>
+							<Button
+								variant="outline"
+								onClick={() => setIsReorderModalOpen(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="renault"
+								onClick={handleConfirmReorder}
+								disabled={!reorderReason.trim()}
+							>
+								Confirm Reorder
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
 
-			<Card>
-				<CardContent className="p-0">
-					<DataGrid
-						rowData={bookingRowData}
-						columnDefs={columns}
-						onSelectionChanged={setSelectedRows}
-						onGridReady={(api) => setGridApi(api)}
-						showFloatingFilters={showFilters}
-					/>
-				</CardContent>
-			</Card>
+				<BookingCalendarModal
+					open={isRebookingModalOpen}
+					onOpenChange={setIsRebookingModalOpen}
+					selectedRows={selectedRows}
+					initialSearchTerm={rebookingSearchTerm}
+					onConfirm={handleConfirmRebooking}
+				/>
 
-			<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle className="text-orange-500">
-							Reorder - Reason Required
-						</DialogTitle>
-					</DialogHeader>
-					<div className="space-y-4">
-						<div>
-							<Label>Reason for Reorder</Label>
-							<Input
-								value={reorderReason}
-								onChange={(e) => setReorderReason(e.target.value)}
-								placeholder="e.g., Wrong part, Customer cancelled"
-							/>
-						</div>
-						<p className="text-sm text-muted-foreground">
-							This will send the selected items back to the Orders view.
-						</p>
-					</div>
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setIsReorderModalOpen(false)}
-						>
-							Cancel
-						</Button>
-						<Button
-							variant="renault"
-							onClick={handleConfirmReorder}
-							disabled={!reorderReason.trim()}
-						>
-							Confirm Reorder
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+				<RowModals
+					activeModal={activeModal}
+					currentRow={currentRow}
+					onClose={closeModal}
+					onSaveNote={saveNote}
+					onSaveReminder={saveReminder}
+					onSaveAttachment={saveAttachment}
+				/>
 
-			<BookingCalendarModal
-				open={isRebookingModalOpen}
-				onOpenChange={setIsRebookingModalOpen}
-				selectedRows={selectedRows}
-				initialSearchTerm={rebookingSearchTerm}
-				onConfirm={handleConfirmRebooking}
-			/>
-
-			<RowModals
-				activeModal={activeModal}
-				currentRow={currentRow}
-				onClose={closeModal}
-				onSaveNote={saveNote}
-				onSaveReminder={saveReminder}
-				onSaveAttachment={saveAttachment}
-			/>
-
-			<ConfirmDialog
-				open={showDeleteConfirm}
-				onOpenChange={setShowDeleteConfirm}
-				onConfirm={() => {
-					deleteOrders(selectedRows.map((r) => r.id));
-					setSelectedRows([]);
-					toast.success("Booking(s) deleted");
-				}}
-				title="Delete Bookings"
-				description={`Are you sure you want to delete ${selectedRows.length} selected booking(s)?`}
-				confirmText="Delete"
-			/>
-		</div>
+				<ConfirmDialog
+					open={showDeleteConfirm}
+					onOpenChange={setShowDeleteConfirm}
+					onConfirm={() => {
+						deleteOrders(selectedRows.map((r) => r.id));
+						setSelectedRows([]);
+						toast.success("Booking(s) deleted");
+					}}
+					title="Delete Bookings"
+					description={`Are you sure you want to delete ${selectedRows.length} selected booking(s)?`}
+					confirmText="Delete"
+				/>
+			</div >
+		</TooltipProvider >
 	);
 }
