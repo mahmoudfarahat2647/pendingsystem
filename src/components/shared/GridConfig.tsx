@@ -296,15 +296,14 @@ export const getOrdersColumns = (
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
-	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick, isLocked),
+		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
 		{
 			headerName: "PART STATUS",
 			field: "partStatus",
 			width: 100,
 			minWidth: 100,
-			editable: !isLocked,
+			editable: true,
 			cellRenderer: PartStatusRenderer,
 			cellRendererParams: {
 				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
@@ -361,9 +360,8 @@ export const getBookingColumns = (
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
-	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick, isLocked),
+		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
 		{
 			headerName: "BOOKING DATE",
 			field: "bookingDate",

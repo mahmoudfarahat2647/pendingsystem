@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, Download, Filter, RotateCcw, Trash2 } from "lucide-react";
+import { Download, Filter, RotateCcw, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -30,7 +30,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function ArchivePage() {
-	const { archiveRowData, sendToReorder, deleteOrders, updateOrder, isLocked } =
+	const { archiveRowData, sendToReorder, deleteOrders, updateOrder } =
 		useAppStore();
 	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -68,15 +68,14 @@ export default function ArchivePage() {
 		const baseColumns = getBaseColumns(
 			handleNoteClick,
 			handleReminderClick,
-			handleAttachClick,
-			isLocked
+			handleAttachClick
 		);
 		return [
 			...baseColumns.slice(0, 3),
 			{ headerName: "BOOKING", field: "bookingDate", width: 120 },
 			...baseColumns.slice(3),
 		];
-	}, [handleNoteClick, handleReminderClick, handleAttachClick, isLocked]);
+	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
 
 	return (
 		<TooltipProvider>
@@ -121,7 +120,7 @@ export default function ArchivePage() {
 									variant="ghost"
 									className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
 									onClick={() => setIsReorderModalOpen(true)}
-									disabled={selectedRows.length === 0 || isLocked}
+									disabled={selectedRows.length === 0}
 								>
 									<RotateCcw className="h-3.5 w-3.5" />
 								</Button>
@@ -138,7 +137,7 @@ export default function ArchivePage() {
 									variant="ghost"
 									className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 									onClick={() => setShowDeleteConfirm(true)}
-									disabled={selectedRows.length === 0 || isLocked}
+									disabled={selectedRows.length === 0}
 								>
 									<Trash2 className="h-3.5 w-3.5" />
 								</Button>

@@ -30,9 +30,9 @@ export default function OrdersPage() {
 		deleteOrders,
 		sendToBooking,
 		sendToArchive,
+		sendToCallList,
 		partStatuses,
 		updatePartStatus,
-		isLocked,
 	} = useAppStore();
 
 	const [gridApi, setGridApi] = useState<any>(null);
@@ -65,15 +65,13 @@ export default function OrdersPage() {
 				partStatuses,
 				handleNoteClick,
 				handleReminderClick,
-				handleAttachClick,
-				isLocked,
+				handleAttachClick
 			),
 		[
 			partStatuses,
 			handleNoteClick,
 			handleReminderClick,
-			handleAttachClick,
-			isLocked,
+			handleAttachClick
 		],
 	);
 
@@ -218,6 +216,13 @@ export default function OrdersPage() {
 		exportToLogisticsCSV(selectedRows);
 	};
 
+	const handleSendToCallList = () => {
+		if (selectedRows.length === 0) return;
+		sendToCallList(selectedRows.map((r) => r.id));
+		setSelectedRows([]);
+		toast.success(`${selectedRows.length} order(s) sent to Call List`);
+	};
+
 	return (
 		<TooltipProvider>
 			<div className="space-y-6 h-full flex flex-col">
@@ -240,11 +245,11 @@ export default function OrdersPage() {
 								}
 							}}
 							onShareToLogistics={handleShareToLogistics}
+							onCallList={handleSendToCallList}
 							onExtract={() => gridApi?.exportDataAsCsv()}
 							onFilterToggle={() => setShowFilters(!showFilters)}
 							partStatuses={partStatuses}
 							onUpdateStatus={handleUpdatePartStatus}
-							isLocked={isLocked}
 						/>
 
 						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">

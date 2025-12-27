@@ -46,7 +46,7 @@ interface OrdersToolbarProps {
 	onFilterToggle: () => void;
 	partStatuses?: any[];
 	onUpdateStatus?: (status: string) => void;
-	isLocked?: boolean;
+	onCallList: () => void;
 }
 
 export const OrdersToolbar = ({
@@ -64,7 +64,7 @@ export const OrdersToolbar = ({
 	onFilterToggle,
 	partStatuses = [],
 	onUpdateStatus,
-	isLocked = true,
+	onCallList,
 }: OrdersToolbarProps) => {
 
 	return (
@@ -81,7 +81,6 @@ export const OrdersToolbar = ({
 							)}
 							size="icon"
 							onClick={onAddEdit}
-							disabled={isLocked && selectedCount === 0}
 						>
 							{selectedCount > 0 ? (
 								<Pencil className="h-4 w-4" />
@@ -137,7 +136,7 @@ export const OrdersToolbar = ({
 							variant="ghost"
 							className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 h-8 w-8"
 							onClick={onBulkAttach}
-							disabled={selectedCount === 0 || isLocked}
+							disabled={selectedCount === 0}
 						>
 							<Link className="h-3.5 w-3.5" />
 						</Button>
@@ -167,7 +166,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							className="text-gray-400 hover:text-white h-8 w-8"
-							disabled={selectedCount === 0 || isLocked}
+							disabled={selectedCount === 0}
 							onClick={onArchive}
 						>
 							<Archive className="h-3.5 w-3.5" />
@@ -182,7 +181,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							className="text-green-500/80 hover:text-green-500 h-8 w-8"
-							disabled={selectedCount === 0 || isLocked}
+							disabled={selectedCount === 0}
 							onClick={onBooking}
 						>
 							<Calendar className="h-3.5 w-3.5" />
@@ -197,6 +196,8 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
+							onClick={onCallList}
+							disabled={selectedCount === 0}
 						>
 							<Phone className="h-3.5 w-3.5" />
 						</Button>
@@ -240,7 +241,7 @@ export const OrdersToolbar = ({
 							variant="ghost"
 							size="icon"
 							className="text-gray-400 hover:text-white h-8 w-8"
-							disabled={selectedCount === 0 || isLocked}
+							disabled={selectedCount === 0}
 						>
 							<CheckCircle className="h-4 w-4" />
 						</Button>
@@ -267,7 +268,7 @@ export const OrdersToolbar = ({
 						<Button
 							className="bg-green-600 hover:bg-green-500 text-white border-none rounded-md h-8 w-28"
 							onClick={onCommit}
-							disabled={selectedCount === 0 || isLocked}
+							disabled={selectedCount === 0}
 						>
 							<FileCheck className="h-5 w-5" />
 						</Button>
@@ -284,7 +285,7 @@ export const OrdersToolbar = ({
 							variant="ghost"
 							className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 							onClick={onDelete}
-							disabled={selectedCount === 0 || isLocked}
+							disabled={selectedCount === 0}
 						>
 							<Trash2 className="h-3.5 w-3.5" />
 						</Button>

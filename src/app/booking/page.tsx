@@ -45,7 +45,6 @@ export default function BookingPage() {
 		sendToReorder,
 		deleteOrders,
 		updateOrder,
-		isLocked,
 	} = useAppStore();
 
 	const [gridApi, setGridApi] = useState<any>(null);
@@ -76,10 +75,9 @@ export default function BookingPage() {
 			getBookingColumns(
 				handleNoteClick,
 				handleReminderClick,
-				handleAttachClick,
-				isLocked
+				handleAttachClick
 			),
-		[handleNoteClick, handleReminderClick, handleAttachClick, isLocked],
+		[handleNoteClick, handleReminderClick, handleAttachClick],
 	);
 
 	const handleConfirmReorder = () => {
@@ -161,7 +159,7 @@ export default function BookingPage() {
 											handleArchiveClick(selectedRows[0], selectedRows.map(r => r.id));
 										}
 									}}
-									disabled={selectedRows.length === 0 || isLocked}
+									disabled={selectedRows.length === 0}
 								>
 									<Archive className="h-3.5 w-3.5" />
 								</Button>
@@ -176,7 +174,7 @@ export default function BookingPage() {
 									variant="ghost"
 									className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
 									onClick={() => setIsReorderModalOpen(true)}
-									disabled={selectedRows.length === 0 || isLocked}
+									disabled={selectedRows.length === 0}
 								>
 									<RotateCcw className="h-3.5 w-3.5" />
 								</Button>
@@ -200,7 +198,7 @@ export default function BookingPage() {
 										setIsRebookingModalOpen(true);
 									}}
 									disabled={
-										(selectedRows.length > 0 && new Set(selectedRows.map((r) => r.vin)).size > 1) || isLocked
+										(selectedRows.length > 0 && new Set(selectedRows.map((r) => r.vin)).size > 1)
 									}
 								>
 									{selectedRows.length === 0 ? (
@@ -224,7 +222,7 @@ export default function BookingPage() {
 									variant="ghost"
 									className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 									onClick={() => setShowDeleteConfirm(true)}
-									disabled={selectedRows.length === 0 || isLocked}
+									disabled={selectedRows.length === 0}
 								>
 									<Trash2 className="h-3.5 w-3.5" />
 								</Button>

@@ -43,7 +43,10 @@ export const createInventorySlice: StateCreator<
      */
     sendToCallList: (ids) => {
         set((state) => {
-            const rowsToMove = state.rowData.filter((r) => ids.includes(r.id));
+            const rowsFromMain = state.rowData.filter((r) => ids.includes(r.id));
+            const rowsFromOrders = state.ordersRowData.filter((r) => ids.includes(r.id));
+
+            const rowsToMove = [...rowsFromMain, ...rowsFromOrders];
             const updatedRows = rowsToMove.map((r) => ({
                 ...r,
                 status: "Call" as const,
@@ -52,6 +55,7 @@ export const createInventorySlice: StateCreator<
 
             return {
                 rowData: state.rowData.filter((r) => !ids.includes(r.id)),
+                ordersRowData: state.ordersRowData.filter((r) => !ids.includes(r.id)),
                 callRowData: [...state.callRowData, ...updatedRows],
             };
         });
