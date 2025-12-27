@@ -15,6 +15,7 @@ import {
 	Trash2,
 	Archive,
 	ChevronDown,
+	FileCheck,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -110,39 +111,6 @@ export const OrdersToolbar = ({
 					<TooltipContent>Reserve</TooltipContent>
 				</Tooltip>
 
-				<div className="w-px h-5 bg-white/10 mx-1" />
-
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							variant="ghost"
-							size="sm"
-							className="h-8 gap-2 px-2 text-gray-400 hover:text-white"
-							disabled={selectedCount === 0}
-						>
-							<CheckCircle className="h-3.5 w-3.5" />
-							<span className="text-[11px] font-bold uppercase tracking-wider">Status</span>
-							<ChevronDown className="h-3 w-3" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent
-						align="start"
-						className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
-					>
-						{partStatuses.map((status) => (
-							<DropdownMenuItem
-								key={status.id}
-								onClick={() => onUpdateStatus?.(status.label)}
-								className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
-							>
-								<div className={cn("w-2 h-2 rounded-full", status.color)} />
-								<span className="text-xs">{status.label}</span>
-							</DropdownMenuItem>
-						))}
-					</DropdownMenuContent>
-				</DropdownMenu>
-
-				<div className="w-px h-5 bg-white/10 mx-1" />
 
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -263,15 +231,42 @@ export const OrdersToolbar = ({
 
 				<div className="w-px h-5 bg-white/10 mx-1" />
 
-				<Tooltip>
-					<TooltipTrigger asChild>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
 						<Button
-							className="bg-green-600 hover:bg-green-500 text-white border-none rounded-md h-8 w-8"
+							variant="ghost"
 							size="icon"
-							onClick={onCommit}
+							className="text-gray-400 hover:text-white h-8 w-8"
 							disabled={selectedCount === 0}
 						>
 							<CheckCircle className="h-4 w-4" />
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent
+						align="end"
+						className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
+					>
+						{partStatuses.map((status) => (
+							<DropdownMenuItem
+								key={status.id}
+								onClick={() => onUpdateStatus?.(status.label)}
+								className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
+							>
+								<div className={cn("w-2 h-2 rounded-full", status.color)} />
+								<span className="text-xs">{status.label}</span>
+							</DropdownMenuItem>
+						))}
+					</DropdownMenuContent>
+				</DropdownMenu>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							className="bg-green-600 hover:bg-green-500 text-white border-none rounded-md h-8 w-28"
+							onClick={onCommit}
+							disabled={selectedCount === 0}
+						>
+							<FileCheck className="h-5 w-5" />
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>Commit to Main Sheet</TooltipContent>
