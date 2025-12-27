@@ -84,20 +84,20 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 	// Enhanced null safety: handle undefined, null, or empty partStatuses array
 	const statuses = params.partStatuses || [];
 
-	// Handle empty state - no status selected
-	// Safely check if value is string before calling trim
+	// Handle empty state or explicit "No Stats" selection
 	if (
 		!value ||
-		(typeof value === "string" && value.trim() === "") ||
-		(typeof value !== "string" && !String(value).trim())
+		(typeof value === "string" && (value.trim() === "" || value === "No Stats"))
 	) {
+		const noStatsDef = statuses.find(s => s.id === "no_stats");
 		return (
 			<div
 				className="flex items-center justify-center h-full w-full gap-1"
 				title="Select status"
 			>
-				<span className="text-xs text-gray-500">Select status</span>
-				<div className="text-xs text-gray-400 font-bold">▼</div>
+				<span className="text-[10px] text-gray-500 uppercase font-medium tracking-wider">
+					{noStatsDef?.label || "No Stats"}
+				</span>
 			</div>
 		);
 	}

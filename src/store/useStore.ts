@@ -21,7 +21,7 @@ export const useAppStore = create<CombinedStore>()(
 			...createHistorySlice(...a),
 		}),
 		{
-			name: "pending-sys-storage",
+			name: "pending-sys-storage-v1.1",
 			// Only persist necessary state to avoid large local storage operations blocking hydration
 			// We intentionally do NOT persist commits/redos (undo/redo history) to keep localStorage lightweight
 			partialize: (state) => {

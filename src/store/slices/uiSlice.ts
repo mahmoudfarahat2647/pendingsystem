@@ -3,6 +3,8 @@ import type { CombinedStore, UIState, UIActions } from "../types";
 import { generateId } from "@/lib/utils";
 
 const defaultPartStatuses = [
+    { id: "no_stats", label: "No Stats", color: "bg-transparent border border-white/20" },
+    { id: "reserve", label: "Reserve", color: "bg-blue-600" },
     { id: "arrived", label: "Arrived", color: "bg-emerald-500" },
     { id: "not_arrived", label: "Not Arrived", color: "bg-gray-800" },
     { id: "logistics", label: "Logistics Pending", color: "bg-yellow-400" },
@@ -185,6 +187,7 @@ export const createUISlice: StateCreator<
     },
 
     removePartStatusDef: (id) => {
+        if (id === "no_stats") return; // Prevent deleting default option
         set((state) => ({
             partStatuses: state.partStatuses.filter((s) => s.id !== id),
         }));
