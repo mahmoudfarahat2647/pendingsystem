@@ -2,7 +2,7 @@
 
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { Archive, Bell, History, Paperclip, StickyNote } from "lucide-react";
-import { getVinColor } from "@/lib/utils";
+import { getVinColor, cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
 
@@ -34,11 +34,14 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 	const data = params.data;
 	if (!data) return null;
 
+	const isLocked = params.colDef?.cellRendererParams?.isLocked;
+
 	return (
-		<div className="flex items-center gap-3 h-full px-2">
+		<div className={cn("flex items-center gap-3 h-full px-2", isLocked && "opacity-50 grayscale pointer-events-none")}>
 			<button
 				className={`transition-colors ${data.hasAttachment ? "text-indigo-400" : "text-gray-600 hover:text-gray-400"}`}
 				title="Attachment"
+				disabled={isLocked}
 				onClick={() => {
 					if (params.colDef?.cellRendererParams?.onAttachClick) {
 						params.colDef.cellRendererParams.onAttachClick(data);
@@ -50,6 +53,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 			<button
 				className={`transition-colors ${data.actionNote ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
 				title="Note"
+				disabled={isLocked}
 				onClick={() => {
 					if (params.colDef?.cellRendererParams?.onNoteClick) {
 						params.colDef.cellRendererParams.onNoteClick(data);
@@ -61,6 +65,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 			<button
 				className={`transition-colors ${data.reminder ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
 				title="Reminder"
+				disabled={isLocked}
 				onClick={() => {
 					if (params.colDef?.cellRendererParams?.onReminderClick) {
 						params.colDef.cellRendererParams.onReminderClick(data);
@@ -179,6 +184,7 @@ export const getBaseColumns = (
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
+	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
 		{
 			headerName: "",
@@ -203,6 +209,7 @@ export const getBaseColumns = (
 				onNoteClick,
 				onReminderClick,
 				onAttachClick,
+				isLocked,
 			},
 			width: 100,
 			maxWidth: 100,
@@ -277,7 +284,7 @@ export const getBaseColumns = (
 			width: 100,
 		},
 		{
-			headerName: "مدة ضمان", // Or "WARRANTY REMAIN" based on image? Keeping Arabic as it matches some image texts usually.
+			headerName: "مدة ضمان",
 			field: "remainTime",
 			cellRenderer: WarrantyRenderer,
 			width: 100,
@@ -289,14 +296,15 @@ export const getOrdersColumns = (
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
+	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick, isLocked),
 		{
 			headerName: "PART STATUS",
 			field: "partStatus",
 			width: 100,
 			minWidth: 100,
-			editable: true,
+			editable: !isLocked,
 			cellRenderer: PartStatusRenderer,
 			cellRendererParams: {
 				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
@@ -324,26 +332,26 @@ export const getMainSheetColumns = (
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
+	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick, isLocked),
 		{
 			headerName: "PART STATUS",
 			field: "partStatus",
 			width: 70,
-			editable: true,
+			editable: !isLocked,
 			cellRenderer: PartStatusRenderer,
 			cellRendererParams: {
-				partStatuses: Array.isArray(partStatuses) ? partStatuses : [], // Enhanced null safety
+				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
 			},
 			cellEditor: "agSelectCellEditor",
 			cellEditorParams: {
-				// Enhanced error handling for dropdown values
 				values:
 					Array.isArray(partStatuses) && partStatuses.length > 0
 						? partStatuses
-							.filter((s) => s && typeof s.label === "string") // Filter out invalid entries
+							.filter((s) => s && typeof s.label === "string")
 							.map((s) => s.label)
-						: [], // Empty array if no valid statuses
+						: [],
 			},
 			cellClass: "flex items-center justify-center",
 		},
@@ -353,8 +361,9 @@ export const getBookingColumns = (
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
+	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick, isLocked),
 		{
 			headerName: "BOOKING DATE",
 			field: "bookingDate",

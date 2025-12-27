@@ -1,16 +1,18 @@
 "use client";
 
 import {
-	CalendarCheck,
-	History,
+	Lock,
 	Palette,
 	Plus,
 	Settings as SettingsIcon,
 	Tag,
 	Trash2,
 	Undo2,
+	Unlock,
+	CalendarCheck,
+	History,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -31,6 +33,10 @@ type TabType =
 
 export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 	const [activeTab, setActiveTab] = useState<TabType>("part-statuses");
+	const [passwordAttempt, setPasswordAttempt] = useState("");
+	const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+	const passwordInputRef = useRef<HTMLInputElement>(null);
+
 	const {
 		partStatuses,
 		addPartStatusDef,
@@ -39,6 +45,8 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 		addBookingStatusDef,
 		removeBookingStatusDef,
 		commits,
+		isLocked,
+		setIsLocked,
 	} = useAppStore();
 
 	const [newStatusLabel, setNewStatusLabel] = useState("");
@@ -112,11 +120,92 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 							</button>
 						))}
 					</nav>
-					<div className="p-6 border-t border-white/5">
-						<div className="text-[10px] font-mono text-gray-600 tracking-widest uppercase">
-							System Version
+					<div className="p-6 border-t border-white/5 space-y-3">
+						{!showPasswordPrompt ? (
+							<button
+								onClick={() => {
+									if (isLocked) {
+										setShowPasswordPrompt(true);
+										setTimeout(() => passwordInputRef.current?.focus(), 100);
+									} else {
+										setIsLocked(true);
+									}
+								}}
+								className={cn(
+									"w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300",
+									isLocked
+										? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+										: "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20"
+								)}
+							>
+								<div className="flex items-center gap-2">
+									{isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+									<span className="text-xs font-bold uppercase tracking-wider">
+										{isLocked ? "Locked" : "Unlocked"}
+									</span>
+								</div>
+								{!isLocked && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+							</button>
+						) : (
+							<div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
+								<Input
+									ref={passwordInputRef}
+									type="password"
+									placeholder="Password"
+									value={passwordAttempt}
+									onChange={(e) => setPasswordAttempt(e.target.value)}
+									onKeyDown={(e) => {
+										if (e.key === "Enter") {
+											if (passwordAttempt === "1234") {
+												setIsLocked(false);
+												setShowPasswordPrompt(false);
+												setPasswordAttempt("");
+											} else {
+												setPasswordAttempt("");
+											}
+										} else if (e.key === "Escape") {
+											setShowPasswordPrompt(false);
+											setPasswordAttempt("");
+										}
+									}}
+									className="h-9 bg-black/40 border-white/10 text-xs text-center rounded-lg"
+								/>
+								<div className="flex gap-1">
+									<Button
+										variant="ghost"
+										size="sm"
+										className="flex-1 h-7 text-[10px] uppercase font-bold text-gray-400"
+										onClick={() => {
+											setShowPasswordPrompt(false);
+											setPasswordAttempt("");
+										}}
+									>
+										Cancel
+									</Button>
+									<Button
+										size="sm"
+										className="flex-1 h-7 text-[10px] uppercase font-bold bg-emerald-500 hover:bg-emerald-400 text-black"
+										onClick={() => {
+											if (passwordAttempt === "Tot2647tot") {
+												setIsLocked(false);
+												setShowPasswordPrompt(false);
+												setPasswordAttempt("");
+											} else {
+												setPasswordAttempt("");
+											}
+										}}
+									>
+										Unlock
+									</Button>
+								</div>
+							</div>
+						)}
+						<div className="flex items-center justify-between pt-2">
+							<div className="text-[10px] font-mono text-gray-700 tracking-widest uppercase">
+								Version
+							</div>
+							<div className="text-[10px] font-bold text-gray-600">v2.5.0</div>
 						</div>
-						<div className="text-xs font-bold text-gray-400 mt-1">v2.5.0</div>
 					</div>
 				</div>
 
@@ -160,6 +249,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 								}}
 								onRemove={removePartStatusDef}
 								colorPalette={colorPalette}
+								isLocked={isLocked}
 							/>
 						)}
 
@@ -178,6 +268,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 								}}
 								onRemove={removeBookingStatusDef}
 								colorPalette={colorPalette}
+								isLocked={isLocked}
 							/>
 						)}
 
@@ -298,6 +389,7 @@ interface StatusManagementSectionProps {
 	onAdd: (label: string, color: string) => void;
 	onRemove: (id: string) => void;
 	colorPalette: string[];
+	isLocked: boolean;
 }
 
 const StatusManagementSection = ({
@@ -307,6 +399,7 @@ const StatusManagementSection = ({
 	onAdd,
 	onRemove,
 	colorPalette,
+	isLocked,
 }: StatusManagementSectionProps) => {
 	const [newLabel, setNewLabel] = useState("");
 	const [selectedColor, setSelectedColor] = useState("bg-emerald-500");
@@ -314,7 +407,18 @@ const StatusManagementSection = ({
 	return (
 		<div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 			{/* Add New Status */}
-			<div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+			<div className={cn(
+				"p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4 relative transition-all duration-300",
+				isLocked && "grayscale pointer-events-none opacity-50"
+			)}>
+				{isLocked && (
+					<div className="absolute inset-0 flex items-center justify-center z-20">
+						<div className="px-3 py-1.5 bg-black/80 border border-white/10 rounded-full flex items-center gap-2 shadow-2xl backdrop-blur-sm">
+							<Lock className="h-3 w-3 text-red-400" />
+							<span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">Editors Locked</span>
+						</div>
+					</div>
+				)}
 				<h4 className="text-sm font-semibold text-white uppercase tracking-wider">
 					{title}
 				</h4>
@@ -324,13 +428,14 @@ const StatusManagementSection = ({
 						onChange={(e) => setNewLabel(e.target.value)}
 						placeholder="Enter status label (e.g., In Transit)"
 						className="h-12 bg-black/40 border-white/10 rounded-xl focus:ring-renault-yellow/50"
+						disabled={isLocked}
 					/>
 					<Button
 						onClick={() => {
 							onAdd(newLabel, selectedColor);
 							setNewLabel("");
 						}}
-						disabled={!newLabel.trim()}
+						disabled={!newLabel.trim() || isLocked}
 						className="h-12 px-6 bg-renault-yellow hover:bg-renault-yellow/90 text-black font-bold rounded-xl transition-all active:scale-95"
 					>
 						<Plus className="h-5 w-5 mr-2" />
@@ -346,6 +451,7 @@ const StatusManagementSection = ({
 							<button
 								key={color}
 								onClick={() => setSelectedColor(color)}
+								disabled={isLocked}
 								className={cn(
 									"w-8 h-8 rounded-full transition-all duration-200 hover:scale-110 active:scale-90",
 									color,
@@ -382,7 +488,11 @@ const StatusManagementSection = ({
 								variant="ghost"
 								size="icon"
 								onClick={() => onRemove(status.id)}
-								className="h-9 w-9 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all"
+								disabled={isLocked}
+								className={cn(
+									"h-9 w-9 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all",
+									isLocked ? "opacity-0" : "opacity-0 group-hover:opacity-100"
+								)}
 							>
 								<Trash2 className="h-4 w-4" />
 							</Button>

@@ -9,7 +9,7 @@ import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { RowModals } from "@/components/shared/RowModals";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -30,7 +30,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function ArchivePage() {
-	const { archiveRowData, sendToReorder, deleteOrders, updateOrder } =
+	const { archiveRowData, sendToReorder, deleteOrders, updateOrder, isLocked } =
 		useAppStore();
 	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -69,13 +69,14 @@ export default function ArchivePage() {
 			handleNoteClick,
 			handleReminderClick,
 			handleAttachClick,
+			isLocked
 		);
 		return [
 			...baseColumns.slice(0, 3),
 			{ headerName: "BOOKING", field: "bookingDate", width: 120 },
 			...baseColumns.slice(3),
 		];
-	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
+	}, [handleNoteClick, handleReminderClick, handleAttachClick, isLocked]);
 
 	return (
 		<TooltipProvider>
@@ -120,7 +121,7 @@ export default function ArchivePage() {
 									variant="ghost"
 									className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
 									onClick={() => setIsReorderModalOpen(true)}
-									disabled={selectedRows.length === 0}
+									disabled={selectedRows.length === 0 || isLocked}
 								>
 									<RotateCcw className="h-3.5 w-3.5" />
 								</Button>
@@ -137,7 +138,7 @@ export default function ArchivePage() {
 									variant="ghost"
 									className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 									onClick={() => setShowDeleteConfirm(true)}
-									disabled={selectedRows.length === 0}
+									disabled={selectedRows.length === 0 || isLocked}
 								>
 									<Trash2 className="h-3.5 w-3.5" />
 								</Button>
@@ -171,32 +172,41 @@ export default function ArchivePage() {
 
 				{/* Reorder Reason Modal */}
 				<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
-					<DialogContent>
+					<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
 						<DialogHeader>
-							<DialogTitle>Reorder - Reason Required</DialogTitle>
+							<DialogTitle className="text-orange-500">
+								Reorder - Reason Required
+							</DialogTitle>
 						</DialogHeader>
-						<div className="grid gap-4 py-4">
-							<div className="grid grid-cols-4 items-center gap-4">
-								<Label htmlFor="reason" className="text-right">
-									Reason
-								</Label>
+						<div className="space-y-4">
+							<div>
+								<Label>Reason for Reorder</Label>
 								<Input
-									id="reason"
 									value={reorderReason}
 									onChange={(e) => setReorderReason(e.target.value)}
-									className="col-span-3"
 									placeholder="e.g., Customer called back, error in archive"
+									className="bg-white/5 border-white/10 text-white"
 								/>
 							</div>
+							<p className="text-sm text-muted-foreground">
+								This will send the selected items back to the Orders view.
+							</p>
 						</div>
 						<DialogFooter>
 							<Button
 								variant="outline"
 								onClick={() => setIsReorderModalOpen(false)}
+								className="border-white/20 text-white hover:bg-white/10"
 							>
 								Cancel
 							</Button>
-							<Button onClick={handleConfirmReorder}>Confirm Reorder</Button>
+							<Button
+								variant="renault"
+								onClick={handleConfirmReorder}
+								disabled={!reorderReason.trim()}
+							>
+								Confirm Reorder
+							</Button>
 						</DialogFooter>
 					</DialogContent>
 				</Dialog>

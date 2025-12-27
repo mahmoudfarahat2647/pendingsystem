@@ -69,6 +69,7 @@ export interface UIState {
     todos: TodoItem[];
     notes: StickyNote[];
     partStatuses: PartStatusDef[];
+    isLocked: boolean;
 }
 
 export interface UIActions {
@@ -92,6 +93,7 @@ export interface UIActions {
     removeReasonTemplate: (template: string) => void;
     addPartStatusDef: (status: PartStatusDef) => void;
     removePartStatusDef: (id: string) => void;
+    setIsLocked: (isLocked: boolean) => void;
     resetStore: () => void;
 }
 

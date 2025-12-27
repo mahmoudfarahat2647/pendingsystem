@@ -32,6 +32,7 @@ export default function OrdersPage() {
 		sendToArchive,
 		partStatuses,
 		updatePartStatus,
+		isLocked,
 	} = useAppStore();
 
 	const [gridApi, setGridApi] = useState<any>(null);
@@ -65,12 +66,14 @@ export default function OrdersPage() {
 				handleNoteClick,
 				handleReminderClick,
 				handleAttachClick,
+				isLocked,
 			),
 		[
 			partStatuses,
 			handleNoteClick,
 			handleReminderClick,
 			handleAttachClick,
+			isLocked,
 		],
 	);
 
@@ -241,6 +244,7 @@ export default function OrdersPage() {
 							onFilterToggle={() => setShowFilters(!showFilters)}
 							partStatuses={partStatuses}
 							onUpdateStatus={handleUpdatePartStatus}
+							isLocked={isLocked}
 						/>
 
 						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">

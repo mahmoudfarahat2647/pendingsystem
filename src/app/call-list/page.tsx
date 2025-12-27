@@ -1,12 +1,9 @@
 "use client";
 
 import {
-	Archive,
 	Calendar,
 	Download,
 	Filter,
-	History as HistoryIcon,
-	Phone,
 	RotateCcw,
 	Trash2,
 } from "lucide-react";
@@ -19,7 +16,7 @@ import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { RowModals } from "@/components/shared/RowModals";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -29,12 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -43,16 +35,18 @@ export default function CallListPage() {
 	const {
 		callRowData,
 		sendToBooking,
-		sendToArchive,
 		sendToReorder,
 		deleteOrders,
 		updateOrder,
+		sendToArchive,
+		isLocked,
 	} = useAppStore();
+
 	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
-	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
+	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 
@@ -71,12 +65,9 @@ export default function CallListPage() {
 	} = useRowModals(updateOrder, sendToArchive);
 
 	const columns = useMemo(
-		() =>
-			getBaseColumns(handleNoteClick, handleReminderClick, handleAttachClick),
-		[handleNoteClick, handleReminderClick, handleAttachClick],
+		() => getBaseColumns(handleNoteClick, handleReminderClick, handleAttachClick, isLocked),
+		[handleNoteClick, handleReminderClick, handleAttachClick, isLocked],
 	);
-
-	const uniqueVins = new Set(callRowData.map((r) => r.vin)).size;
 
 	const handleConfirmBooking = (
 		date: string,
@@ -151,18 +142,14 @@ export default function CallListPage() {
 								<Button
 									size="icon"
 									variant="ghost"
-									className="text-gray-400 hover:text-white h-8 w-8"
-									onClick={() => {
-										if (selectedRows.length > 0) {
-											handleArchiveClick(selectedRows[0], selectedRows.map(r => r.id));
-										}
-									}}
-									disabled={selectedRows.length === 0}
+									className="text-green-500/80 hover:text-green-500 h-8 w-8"
+									disabled={selectedRows.length === 0 || isLocked}
+									onClick={() => setIsBookingModalOpen(true)}
 								>
-									<Archive className="h-3.5 w-3.5" />
+									<Calendar className="h-3.5 w-3.5" />
 								</Button>
 							</TooltipTrigger>
-							<TooltipContent>Archive</TooltipContent>
+							<TooltipContent>Send to Booking</TooltipContent>
 						</Tooltip>
 
 						<Tooltip>
@@ -171,39 +158,13 @@ export default function CallListPage() {
 									size="icon"
 									variant="ghost"
 									className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
+									disabled={selectedRows.length === 0 || isLocked}
 									onClick={() => setIsReorderModalOpen(true)}
-									disabled={selectedRows.length === 0}
 								>
 									<RotateCcw className="h-3.5 w-3.5" />
 								</Button>
 							</TooltipTrigger>
-							<TooltipContent>Reorder</TooltipContent>
-						</Tooltip>
-
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									className={
-										selectedRows.length === 0
-											? "bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
-											: "bg-green-600 hover:bg-green-500 text-white border-none rounded-md h-8 w-8"
-									}
-									size="icon"
-									onClick={() => setIsBookingModalOpen(true)}
-									disabled={
-										new Set(selectedRows.map((r) => r.vin)).size > 1
-									}
-								>
-									{selectedRows.length === 0 ? (
-										<HistoryIcon className="h-4 w-4" />
-									) : (
-										<Calendar className="h-4 w-4" />
-									)}
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>
-								{selectedRows.length === 0 ? "History" : "Booking"}
-							</TooltipContent>
+							<TooltipContent>Send to Reorder</TooltipContent>
 						</Tooltip>
 					</div>
 
@@ -215,7 +176,7 @@ export default function CallListPage() {
 									variant="ghost"
 									className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 									onClick={handleDelete}
-									disabled={selectedRows.length === 0}
+									disabled={selectedRows.length === 0 || isLocked}
 								>
 									<Trash2 className="h-3.5 w-3.5" />
 								</Button>
@@ -238,7 +199,7 @@ export default function CallListPage() {
 				</Card>
 
 				<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
-					<DialogContent>
+					<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
 						<DialogHeader>
 							<DialogTitle className="text-orange-500">
 								Reorder - Reason Required
@@ -251,6 +212,7 @@ export default function CallListPage() {
 									value={reorderReason}
 									onChange={(e) => setReorderReason(e.target.value)}
 									placeholder="e.g., Wrong part, Customer cancelled"
+									className="bg-white/5 border-white/10 text-white"
 								/>
 							</div>
 							<p className="text-sm text-muted-foreground">
@@ -261,6 +223,7 @@ export default function CallListPage() {
 							<Button
 								variant="outline"
 								onClick={() => setIsReorderModalOpen(false)}
+								className="border-white/20 text-white hover:bg-white/10"
 							>
 								Cancel
 							</Button>
@@ -275,6 +238,13 @@ export default function CallListPage() {
 					</DialogContent>
 				</Dialog>
 
+				<BookingCalendarModal
+					open={isBookingModalOpen}
+					onOpenChange={setIsBookingModalOpen}
+					onConfirm={handleConfirmBooking}
+					selectedRows={selectedRows}
+				/>
+
 				<RowModals
 					activeModal={activeModal}
 					currentRow={currentRow}
@@ -285,13 +255,6 @@ export default function CallListPage() {
 					onSaveArchive={saveArchive}
 				/>
 
-				<BookingCalendarModal
-					open={isBookingModalOpen}
-					onOpenChange={setIsBookingModalOpen}
-					selectedRows={selectedRows}
-					onConfirm={handleConfirmBooking}
-				/>
-
 				<ConfirmDialog
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
@@ -300,8 +263,8 @@ export default function CallListPage() {
 						setSelectedRows([]);
 						toast.success("Row(s) deleted");
 					}}
-					title="Delete Call List Items"
-					description={`Are you sure you want to delete ${selectedRows.length} selected item(s)?`}
+					title="Delete Records"
+					description={`Are you sure you want to delete ${selectedRows.length} selected record(s)?`}
 					confirmText="Delete"
 				/>
 			</div>

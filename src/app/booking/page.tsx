@@ -18,7 +18,7 @@ import { getBookingColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { RowModals } from "@/components/shared/RowModals";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -35,7 +35,6 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
-import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
@@ -46,6 +45,7 @@ export default function BookingPage() {
 		sendToReorder,
 		deleteOrders,
 		updateOrder,
+		isLocked,
 	} = useAppStore();
 
 	const [gridApi, setGridApi] = useState<any>(null);
@@ -77,11 +77,10 @@ export default function BookingPage() {
 				handleNoteClick,
 				handleReminderClick,
 				handleAttachClick,
+				isLocked
 			),
-		[handleNoteClick, handleReminderClick, handleAttachClick],
+		[handleNoteClick, handleReminderClick, handleAttachClick, isLocked],
 	);
-
-	const uniqueVins = new Set(bookingRowData.map((r) => r.vin)).size;
 
 	const handleConfirmReorder = () => {
 		if (!reorderReason.trim()) {
@@ -162,7 +161,7 @@ export default function BookingPage() {
 											handleArchiveClick(selectedRows[0], selectedRows.map(r => r.id));
 										}
 									}}
-									disabled={selectedRows.length === 0}
+									disabled={selectedRows.length === 0 || isLocked}
 								>
 									<Archive className="h-3.5 w-3.5" />
 								</Button>
@@ -177,7 +176,7 @@ export default function BookingPage() {
 									variant="ghost"
 									className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
 									onClick={() => setIsReorderModalOpen(true)}
-									disabled={selectedRows.length === 0}
+									disabled={selectedRows.length === 0 || isLocked}
 								>
 									<RotateCcw className="h-3.5 w-3.5" />
 								</Button>
@@ -201,7 +200,7 @@ export default function BookingPage() {
 										setIsRebookingModalOpen(true);
 									}}
 									disabled={
-										new Set(selectedRows.map((r) => r.vin)).size > 1
+										(selectedRows.length > 0 && new Set(selectedRows.map((r) => r.vin)).size > 1) || isLocked
 									}
 								>
 									{selectedRows.length === 0 ? (
@@ -225,7 +224,7 @@ export default function BookingPage() {
 									variant="ghost"
 									className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 									onClick={() => setShowDeleteConfirm(true)}
-									disabled={selectedRows.length === 0}
+									disabled={selectedRows.length === 0 || isLocked}
 								>
 									<Trash2 className="h-3.5 w-3.5" />
 								</Button>
@@ -248,7 +247,7 @@ export default function BookingPage() {
 				</Card>
 
 				<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
-					<DialogContent>
+					<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
 						<DialogHeader>
 							<DialogTitle className="text-orange-500">
 								Reorder - Reason Required
@@ -261,6 +260,7 @@ export default function BookingPage() {
 									value={reorderReason}
 									onChange={(e) => setReorderReason(e.target.value)}
 									placeholder="e.g., Wrong part, Customer cancelled"
+									className="bg-white/5 border-white/10 text-white"
 								/>
 							</div>
 							<p className="text-sm text-muted-foreground">
@@ -271,6 +271,7 @@ export default function BookingPage() {
 							<Button
 								variant="outline"
 								onClick={() => setIsReorderModalOpen(false)}
+								className="border-white/20 text-white hover:bg-white/10"
 							>
 								Cancel
 							</Button>

@@ -14,6 +14,7 @@ import {
 	Archive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
 	Tooltip,
 	TooltipContent,
@@ -25,7 +26,6 @@ interface MainSheetToolbarProps {
 	isLocked: boolean;
 	selectedCount: number;
 	partStatuses: PartStatus[];
-	onLockToggle: () => void;
 	onUpdateStatus: (status: string) => void;
 	onBooking: () => void;
 	onArchive: () => void;
@@ -33,13 +33,13 @@ interface MainSheetToolbarProps {
 	onDelete: () => void;
 	onExtract: () => void;
 	onFilterToggle: () => void;
+	onLockToggle: () => void;
 }
 
 export const MainSheetToolbar = ({
 	isLocked,
 	selectedCount,
 	partStatuses,
-	onLockToggle,
 	onUpdateStatus,
 	onBooking,
 	onArchive,
@@ -47,10 +47,13 @@ export const MainSheetToolbar = ({
 	onDelete,
 	onExtract,
 	onFilterToggle,
+	onLockToggle,
 }: MainSheetToolbarProps) => {
 	return (
 		<div className="flex items-center justify-between bg-[#141416] p-2 rounded-xl border border-white/5">
 			<div className="flex items-center gap-2">
+				<div className="w-px h-6 bg-white/10 mx-1" />
+
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
@@ -164,30 +167,28 @@ export const MainSheetToolbar = ({
 					<TooltipContent>Filter</TooltipContent>
 				</Tooltip>
 
-				<div className="w-px h-5 bg-white/10 mx-1" />
+			</div>
 
+			<div className="flex items-center gap-2">
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
 							size="icon"
 							variant="ghost"
-							className={`h-8 w-8 ${isLocked ? "text-red-400" : "text-gray-400"} hover:text-white hover:bg-white/5`}
+							className={cn(
+								"h-8 w-8 rounded-lg transition-all duration-200",
+								isLocked
+									? "text-red-500 hover:text-red-400 hover:bg-red-500/10"
+									: "text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+							)}
 							onClick={onLockToggle}
 						>
-							{isLocked ? (
-								<Lock className="h-4 w-4" />
-							) : (
-								<Unlock className="h-4 w-4" />
-							)}
+							{isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
 						</Button>
 					</TooltipTrigger>
-					<TooltipContent>
-						{isLocked ? "Unlock Sheet" : "Lock Sheet"}
-					</TooltipContent>
+					<TooltipContent>{isLocked ? "Unlock Sheet" : "Lock Sheet"}</TooltipContent>
 				</Tooltip>
-			</div>
 
-			<div className="flex items-center gap-2">
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button

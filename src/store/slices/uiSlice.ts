@@ -24,6 +24,7 @@ const initialState: UIState = {
     todos: [],
     notes: [],
     partStatuses: defaultPartStatuses,
+    isLocked: true,
 };
 
 export const createUISlice: StateCreator<
@@ -193,6 +194,8 @@ export const createUISlice: StateCreator<
         }));
         get().addCommit("Remove Part Status Definition");
     },
+
+    setIsLocked: (isLocked) => set({ isLocked }),
 
     resetStore: () => {
         set({
