@@ -56,15 +56,13 @@ export const OrderFormModal = ({
 	selectedRows,
 	onSubmit,
 }: OrderFormModalProps) => {
-	const {
-		rowData,
-		models,
-		addModel,
-		removeModel,
-		repairSystems,
-		addRepairSystem,
-		removeRepairSystem,
-	} = useAppStore();
+	const rowData = useAppStore((state) => state.rowData);
+	const models = useAppStore((state) => state.models);
+	const addModel = useAppStore((state) => state.addModel);
+	const removeModel = useAppStore((state) => state.removeModel);
+	const repairSystems = useAppStore((state) => state.repairSystems);
+	const addRepairSystem = useAppStore((state) => state.addRepairSystem);
+	const removeRepairSystem = useAppStore((state) => state.removeRepairSystem);
 
 	const [isBulkMode, setIsBulkMode] = useState(false);
 	const [bulkText, setBulkText] = useState("");
@@ -244,7 +242,7 @@ export const OrderFormModal = ({
 			if (
 				existingPart &&
 				existingPart.description.trim().toLowerCase() !==
-					part.description.trim().toLowerCase()
+				part.description.trim().toLowerCase()
 			) {
 				warnings[part.id] = {
 					type: "mismatch",
@@ -813,29 +811,29 @@ export const OrderFormModal = ({
 																		<AlertCircle className="h-3 w-3" />
 																		<span className="text-[9px] font-bold uppercase tracking-tight">
 																			{partValidationWarnings[part.id].type ===
-																			"duplicate"
+																				"duplicate"
 																				? partValidationWarnings[part.id].value
 																				: `Existing Name: "${partValidationWarnings[part.id].value}"`}
 																		</span>
 																	</div>
 																	{partValidationWarnings[part.id].type ===
 																		"mismatch" && (
-																		<Button
-																			variant="ghost"
-																			size="icon"
-																			className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
-																			onClick={() =>
-																				handlePartChange(
-																					part.id,
-																					"description",
-																					partValidationWarnings[part.id].value,
-																				)
-																			}
-																			title="Apply existing name"
-																		>
-																			<CheckCircle2 className="h-3 w-3" />
-																		</Button>
-																	)}
+																			<Button
+																				variant="ghost"
+																				size="icon"
+																				className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
+																				onClick={() =>
+																					handlePartChange(
+																						part.id,
+																						"description",
+																						partValidationWarnings[part.id].value,
+																					)
+																				}
+																				title="Apply existing name"
+																			>
+																				<CheckCircle2 className="h-3 w-3" />
+																			</Button>
+																		)}
 																</div>
 															)}
 														</div>

@@ -39,13 +39,11 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function BookingPage() {
-	const {
-		bookingRowData,
-		sendToArchive,
-		sendToReorder,
-		deleteOrders,
-		updateOrder,
-	} = useAppStore();
+	const bookingRowData = useAppStore((state) => state.bookingRowData);
+	const sendToArchive = useAppStore((state) => state.sendToArchive);
+	const sendToReorder = useAppStore((state) => state.sendToReorder);
+	const deleteOrders = useAppStore((state) => state.deleteOrders);
+	const updateOrder = useAppStore((state) => state.updateOrder);
 
 	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -55,6 +53,10 @@ export default function BookingPage() {
 	const [rebookingSearchTerm, setRebookingSearchTerm] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+
+	const handleSelectionChanged = useMemo(() => (rows: PendingRow[]) => {
+		setSelectedRows(rows);
+	}, []);
 
 	const {
 		activeModal,

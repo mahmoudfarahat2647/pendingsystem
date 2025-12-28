@@ -32,14 +32,12 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function CallListPage() {
-	const {
-		callRowData,
-		sendToBooking,
-		sendToReorder,
-		deleteOrders,
-		updateOrder,
-		sendToArchive,
-	} = useAppStore();
+	const callRowData = useAppStore((state) => state.callRowData);
+	const sendToBooking = useAppStore((state) => state.sendToBooking);
+	const sendToReorder = useAppStore((state) => state.sendToReorder);
+	const deleteOrders = useAppStore((state) => state.deleteOrders);
+	const updateOrder = useAppStore((state) => state.updateOrder);
+	const sendToArchive = useAppStore((state) => state.sendToArchive);
 
 	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);

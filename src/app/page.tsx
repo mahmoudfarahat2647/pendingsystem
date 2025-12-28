@@ -28,7 +28,9 @@ import { useAppStore } from "@/store/useStore";
 import { WarrantyDatePicker } from "@/components/dashboard/WarrantyDatePicker";
 
 export default function DashboardPage() {
-	const { ordersRowData, rowData, callRowData } = useAppStore();
+	const ordersRowData = useAppStore((state) => state.ordersRowData);
+	const rowData = useAppStore((state) => state.rowData);
+	const callRowData = useAppStore((state) => state.callRowData);
 
 	const [warrantyDate, setWarrantyDate] = useState("");
 	const [warrantyResult, setWarrantyResult] = useState<ReturnType<

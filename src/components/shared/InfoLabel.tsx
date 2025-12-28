@@ -1,3 +1,4 @@
+import React from "react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -6,8 +7,8 @@ interface InfoLabelProps {
 	data: PendingRow | null;
 }
 
-export const InfoLabel = ({ data }: InfoLabelProps) => {
-	const { bookingStatuses } = useAppStore();
+export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
+	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
 	const {
 		customerName = "-",
 		vin = "-",
@@ -26,6 +27,7 @@ export const InfoLabel = ({ data }: InfoLabelProps) => {
 		? bookingStatuses.find((s) => s.label === bookingStatus)
 		: null;
 	const statsColor = statusDef?.color || "bg-renault-yellow";
+
 	const _bgOpacity = statsColor.includes("/") ? "" : "/10";
 	const _borderOpacity = statsColor.includes("/") ? "" : "/20";
 
@@ -145,4 +147,4 @@ export const InfoLabel = ({ data }: InfoLabelProps) => {
 			</div>
 		</div>
 	);
-};
+});

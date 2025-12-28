@@ -30,8 +30,10 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function ArchivePage() {
-	const { archiveRowData, sendToReorder, deleteOrders, updateOrder } =
-		useAppStore();
+	const archiveRowData = useAppStore((state) => state.archiveRowData);
+	const sendToReorder = useAppStore((state) => state.sendToReorder);
+	const deleteOrders = useAppStore((state) => state.deleteOrders);
+	const updateOrder = useAppStore((state) => state.updateOrder);
 	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);

@@ -43,7 +43,7 @@ export const DataGrid = React.memo(function DataGrid({
 	);
 
 	// Handle highlighted row from notifications
-	const { highlightedRowId } = useAppStore();
+	const highlightedRowId = useAppStore((state) => state.highlightedRowId);
 
 	const highlightRow = useCallback((api: GridApi, rowId: string) => {
 		const node = api.getRowNode(rowId);

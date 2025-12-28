@@ -24,35 +24,48 @@ export const createOrdersSlice: StateCreator<
         get().addCommit("Add Multiple Orders");
     },
 
-    updateOrder: (id, updates) => {
-        const updateInArray = (arr: PendingRow[]) =>
-            arr.map((row) => (row.id === id ? { ...row, ...updates } : row));
+	updateOrder: (id, updates) => {
+		// Optimized: Use index-based lookup instead of full array map
+		const updateInArray = (arr: PendingRow[]) => {
+			const idx = arr.findIndex((row) => row.id === id);
+			if (idx === -1) return arr;
+			const newArr = [...arr];
+			newArr[idx] = { ...newArr[idx], ...updates };
+			return newArr;
+		};
 
-        set((state) => ({
-            rowData: updateInArray(state.rowData),
-            ordersRowData: updateInArray(state.ordersRowData),
-            bookingRowData: updateInArray(state.bookingRowData),
-            callRowData: updateInArray(state.callRowData),
-            archiveRowData: updateInArray(state.archiveRowData),
-        }));
-        get().debouncedCommit(`Update Order: ${id}`);
-    },
+		set((state) => ({
+			rowData: updateInArray(state.rowData),
+			ordersRowData: updateInArray(state.ordersRowData),
+			bookingRowData: updateInArray(state.bookingRowData),
+			callRowData: updateInArray(state.callRowData),
+			archiveRowData: updateInArray(state.archiveRowData),
+		}));
+		get().debouncedCommit(`Update Order: ${id}`);
+	},
 
-    updateOrders: (ids, updates) => {
-        const updateInArray = (arr: PendingRow[]) =>
-            arr.map((row) =>
-                ids.includes(row.id) ? { ...row, ...updates } : row
-            );
+	updateOrders: (ids, updates) => {
+		// Optimized: Create Set for O(1) lookup instead of O(n) includes check
+		const idSet = new Set(ids);
+		const updateInArray = (arr: PendingRow[]) => {
+			const newArr = [...arr];
+			for (let i = 0; i < newArr.length; i++) {
+				if (idSet.has(newArr[i].id)) {
+					newArr[i] = { ...newArr[i], ...updates };
+				}
+			}
+			return newArr;
+		};
 
-        set((state) => ({
-            rowData: updateInArray(state.rowData),
-            ordersRowData: updateInArray(state.ordersRowData),
-            bookingRowData: updateInArray(state.bookingRowData),
-            callRowData: updateInArray(state.callRowData),
-            archiveRowData: updateInArray(state.archiveRowData),
-        }));
-        get().debouncedCommit("Bulk Update Orders");
-    },
+		set((state) => ({
+			rowData: updateInArray(state.rowData),
+			ordersRowData: updateInArray(state.ordersRowData),
+			bookingRowData: updateInArray(state.bookingRowData),
+			callRowData: updateInArray(state.callRowData),
+			archiveRowData: updateInArray(state.archiveRowData),
+		}));
+		get().debouncedCommit("Bulk Update Orders");
+	},
 
     deleteOrders: (ids) => {
         const filterArray = (arr: PendingRow[]) =>

@@ -46,17 +46,15 @@ const SourceRenderer = (params: any) => {
 };
 
 export const SearchResultsView = () => {
-	const {
-		searchTerm,
-		setSearchTerm,
-		rowData, // Main Sheet
-		ordersRowData, // Orders
-		bookingRowData, // Booking
-		callRowData, // Call List
-		archiveRowData, // Archive
-		partStatuses, // Part Status Definitions
-		updatePartStatus, // Action to persist status changes
-	} = useAppStore();
+	const searchTerm = useAppStore((state) => state.searchTerm);
+	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
+	const rowData = useAppStore((state) => state.rowData); // Main Sheet
+	const ordersRowData = useAppStore((state) => state.ordersRowData); // Orders
+	const bookingRowData = useAppStore((state) => state.bookingRowData); // Booking
+	const callRowData = useAppStore((state) => state.callRowData); // Call List
+	const archiveRowData = useAppStore((state) => state.archiveRowData); // Archive
+	const partStatuses = useAppStore((state) => state.partStatuses); // Part Status Definitions
+	const updatePartStatus = useAppStore((state) => state.updatePartStatus); // Action to persist status changes
 
 	// Aggregate Data
 	const searchResults = useMemo(() => {
@@ -142,8 +140,8 @@ export const SearchResultsView = () => {
 					values:
 						Array.isArray(partStatuses) && partStatuses.length > 0
 							? partStatuses
-									.filter((s) => s && typeof s.label === "string")
-									.map((s) => s.label)
+								.filter((s) => s && typeof s.label === "string")
+								.map((s) => s.label)
 							: [],
 				},
 				cellClass: "flex items-center justify-center",

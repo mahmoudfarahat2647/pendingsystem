@@ -49,10 +49,17 @@ export const createNotificationSlice: StateCreator<
             "id" | "timestamp" | "isRead"
         >[] = [];
 
-        const hasWarrantyAlert = (vin: string) =>
-            state.notifications.some(
-                (n) => n.type === "warranty" && n.vin === vin
-            );
+        // Optimized: Cache existing IDs once instead of filtering/mapping multiple times
+        const existingReminders = new Set<string>();
+        const existingWarranties = new Set<string>();
+
+        for (const n of state.notifications) {
+            if (n.type === "reminder") {
+                existingReminders.add(n.referenceId);
+            } else if (n.type === "warranty") {
+                existingWarranties.add(n.vin);
+            }
+        }
 
         const sources = [
             { data: state.rowData, name: "Main Sheet", path: "/main-sheet" },
@@ -68,12 +75,7 @@ export const createNotificationSlice: StateCreator<
                     const reminderDateStr = `${row.reminder.date}T${row.reminder.time || "00:00"}`;
                     const reminderDate = new Date(reminderDateStr);
 
-                    // Check if we already have a notification for this row
-                    const alreadyNotified = state.notifications.some(
-                        (n) => n.type === "reminder" && n.referenceId === row.id
-                    );
-
-                    if (!alreadyNotified && now >= reminderDate) {
+                    if (!existingReminders.has(row.id) && now >= reminderDate) {
                         newNotifications.push({
                             type: "reminder",
                             title: "Reminder Due",
@@ -91,7 +93,7 @@ export const createNotificationSlice: StateCreator<
                 if (
                     row.repairSystem === "ضمان" &&
                     row.startWarranty &&
-                    !hasWarrantyAlert(row.vin)
+                    !existingWarranties.has(row.vin)
                 ) {
                     const values = getCalculatorValues(row.startWarranty);
                     if (values && !values.expired) {
@@ -119,9 +121,20 @@ export const createNotificationSlice: StateCreator<
         }
 
         if (newNotifications.length > 0) {
-            for (const n of newNotifications) {
-                state.addNotification(n);
-            }
+            const timestamp = new Date().toISOString();
+            const notificationsWithIds = newNotifications.map(n => ({
+                ...n,
+                id: generateId(),
+                timestamp,
+                isRead: false
+            }));
+
+            set((state) => ({
+                notifications: [
+                    ...notificationsWithIds,
+                    ...state.notifications,
+                ].slice(0, 100),
+            }));
         }
     },
 });

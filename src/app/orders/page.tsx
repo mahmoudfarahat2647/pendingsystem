@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { OrderFormModal } from "@/components/orders/OrderFormModal";
 import { OrdersToolbar } from "@/components/orders/OrdersToolbar";
@@ -21,19 +21,17 @@ import { printOrderDocument, printReservationLabels } from "@/lib/printing";
 import { exportToLogisticsCSV } from "@/lib/exportUtils";
 
 export default function OrdersPage() {
-	const {
-		ordersRowData,
-		addOrders,
-		updateOrder,
-		updateOrders,
-		commitToMainSheet,
-		deleteOrders,
-		sendToBooking,
-		sendToArchive,
-		sendToCallList,
-		partStatuses,
-		updatePartStatus,
-	} = useAppStore();
+	const ordersRowData = useAppStore((state) => state.ordersRowData);
+	const addOrders = useAppStore((state) => state.addOrders);
+	const updateOrder = useAppStore((state) => state.updateOrder);
+	const updateOrders = useAppStore((state) => state.updateOrders);
+	const commitToMainSheet = useAppStore((state) => state.commitToMainSheet);
+	const deleteOrders = useAppStore((state) => state.deleteOrders);
+	const sendToBooking = useAppStore((state) => state.sendToBooking);
+	const sendToArchive = useAppStore((state) => state.sendToArchive);
+	const sendToCallList = useAppStore((state) => state.sendToCallList);
+	const partStatuses = useAppStore((state) => state.partStatuses);
+	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
 	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -75,9 +73,9 @@ export default function OrdersPage() {
 		],
 	);
 
-	const handleSelectionChanged = (rows: PendingRow[]) => {
+	const handleSelectionChanged = useCallback((rows: PendingRow[]) => {
 		setSelectedRows(rows);
-	};
+	}, []);
 
 	const handleOpenForm = (edit = false) => {
 		setIsEditMode(edit);

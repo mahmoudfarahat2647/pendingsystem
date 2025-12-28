@@ -39,8 +39,11 @@ export const EditReminderModal = ({
 	initialData,
 	onSave,
 }: EditReminderModalProps) => {
-	const { reminderTemplates, addReminderTemplate, removeReminderTemplate } =
-		useAppStore();
+	const reminderTemplates = useAppStore((state) => state.reminderTemplates);
+	const addReminderTemplate = useAppStore((state) => state.addReminderTemplate);
+	const removeReminderTemplate = useAppStore(
+		(state) => state.removeReminderTemplate,
+	);
 	const [date, setDate] = useState("");
 	const [time, setTime] = useState("");
 	const [subject, setSubject] = useState("");

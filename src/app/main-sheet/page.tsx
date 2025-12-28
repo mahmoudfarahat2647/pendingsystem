@@ -17,16 +17,14 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function MainSheetPage() {
-	const {
-		rowData,
-		sendToCallList,
-		partStatuses,
-		updatePartStatus,
-		updateOrder,
-		deleteOrders,
-		sendToBooking,
-		sendToArchive,
-	} = useAppStore();
+	const rowData = useAppStore((state) => state.rowData);
+	const sendToCallList = useAppStore((state) => state.sendToCallList);
+	const partStatuses = useAppStore((state) => state.partStatuses);
+	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
+	const updateOrder = useAppStore((state) => state.updateOrder);
+	const deleteOrders = useAppStore((state) => state.deleteOrders);
+	const sendToBooking = useAppStore((state) => state.sendToBooking);
+	const sendToArchive = useAppStore((state) => state.sendToArchive);
 
 	const [isSheetLocked, setIsSheetLocked] = useState(true);
 	const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
@@ -61,6 +59,10 @@ export default function MainSheetPage() {
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+
+	const handleSelectionChanged = useMemo(() => (rows: PendingRow[]) => {
+		setSelectedRows(rows);
+	}, []);
 
 	const {
 		activeModal,

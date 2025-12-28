@@ -27,7 +27,9 @@ export const EditNoteModal = ({
 	initialContent,
 	onSave,
 }: EditNoteModalProps) => {
-	const { noteTemplates, addNoteTemplate, removeNoteTemplate } = useAppStore();
+	const noteTemplates = useAppStore((state) => state.noteTemplates);
+	const addNoteTemplate = useAppStore((state) => state.addNoteTemplate);
+	const removeNoteTemplate = useAppStore((state) => state.removeNoteTemplate);
 	const [content, setContent] = useState("");
 	const [isAdding, setIsAdding] = useState(false);
 	const [newTemplate, setNewTemplate] = useState("");

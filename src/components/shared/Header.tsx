@@ -13,20 +13,18 @@ export const Header = React.memo(function Header() {
 	const router = useRouter();
 	const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-	const {
-		commits,
-		undoStack,
-		redos,
-		undo,
-		redo,
-		commitSave,
-		notifications,
-		markNotificationAsRead,
-		clearNotifications,
-		checkNotifications,
-		setHighlightedRowId,
-		removeNotification,
-	} = useAppStore();
+	const commits = useAppStore((state) => state.commits);
+	const undoStack = useAppStore((state) => state.undoStack);
+	const redos = useAppStore((state) => state.redos);
+	const undo = useAppStore((state) => state.undo);
+	const redo = useAppStore((state) => state.redo);
+	const commitSave = useAppStore((state) => state.commitSave);
+	const notifications = useAppStore((state) => state.notifications);
+	const markNotificationAsRead = useAppStore((state) => state.markNotificationAsRead);
+	const clearNotifications = useAppStore((state) => state.clearNotifications);
+	const checkNotifications = useAppStore((state) => state.checkNotifications);
+	const setHighlightedRowId = useAppStore((state) => state.setHighlightedRowId);
+	const removeNotification = useAppStore((state) => state.removeNotification);
 
 	const unreadCount = notifications.filter((n) => !n.isRead).length;
 	const [showNotifications, setShowNotifications] = useState(false);
@@ -71,12 +69,21 @@ export const Header = React.memo(function Header() {
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, [undo, redo, commitSave]);
 
-	// Notification Check Interval
+	// Notification Check Interval (Throttled to reduce lag)
 	useEffect(() => {
+		let lastCheck = Date.now();
+		const MIN_INTERVAL = 30000; // 30 seconds instead of 10 to reduce lag spikes
+
+		const throttledCheck = () => {
+			const now = Date.now();
+			if (now - lastCheck >= MIN_INTERVAL) {
+				checkNotifications();
+				lastCheck = now;
+			}
+		};
+
 		checkNotifications(); // Check on mount
-		const interval = setInterval(() => {
-			checkNotifications();
-		}, 10000); // Check every 10 seconds for better responsiveness
+		const interval = setInterval(throttledCheck, 5000); // Check throttle every 5 seconds
 		return () => clearInterval(interval);
 	}, [checkNotifications]);
 

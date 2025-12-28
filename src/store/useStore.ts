@@ -22,10 +22,21 @@ export const useAppStore = create<CombinedStore>()(
 		}),
 		{
 			name: "pending-sys-storage-v1.1",
-			// Only persist necessary state to avoid large local storage operations blocking hydration
-			// We intentionally do NOT persist commits/redos (undo/redo history) to keep localStorage lightweight
+			// Optimize: Only persist critical data to reduce localStorage overhead
 			partialize: (state) => {
-				const { commits, redos, ...rest } = state;
+				// Skip heavy arrays and non-critical state
+				const {
+					commits,
+					redos,
+					undoStack,
+					todos,
+					notes,
+					attachments,
+					templates,
+					searchResults,
+					highlightedRowId,
+					...rest
+				} = state;
 				return rest;
 			},
 		}

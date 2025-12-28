@@ -25,7 +25,9 @@ export const ArchiveReasonModal = ({
     onOpenChange,
     onSave,
 }: ArchiveReasonModalProps) => {
-    const { reasonTemplates, addReasonTemplate, removeReasonTemplate } = useAppStore();
+    const reasonTemplates = useAppStore((state) => state.reasonTemplates);
+    const addReasonTemplate = useAppStore((state) => state.addReasonTemplate);
+    const removeReasonTemplate = useAppStore((state) => state.removeReasonTemplate);
     const [reason, setReason] = useState("");
     const [isAdding, setIsAdding] = useState(false);
     const [newTemplate, setNewTemplate] = useState("");

@@ -37,17 +37,15 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 	const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
 	const passwordInputRef = useRef<HTMLInputElement>(null);
 
-	const {
-		partStatuses,
-		addPartStatusDef,
-		removePartStatusDef,
-		bookingStatuses,
-		addBookingStatusDef,
-		removeBookingStatusDef,
-		commits,
-		isLocked,
-		setIsLocked,
-	} = useAppStore();
+	const partStatuses = useAppStore((state) => state.partStatuses);
+	const addPartStatusDef = useAppStore((state) => state.addPartStatusDef);
+	const removePartStatusDef = useAppStore((state) => state.removePartStatusDef);
+	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
+	const addBookingStatusDef = useAppStore((state) => state.addBookingStatusDef);
+	const removeBookingStatusDef = useAppStore((state) => state.removeBookingStatusDef);
+	const commits = useAppStore((state) => state.commits);
+	const isLocked = useAppStore((state) => state.isLocked);
+	const setIsLocked = useAppStore((state) => state.setIsLocked);
 
 	const [newStatusLabel, setNewStatusLabel] = useState("");
 	const [selectedColor, _setSelectedColor] = useState("bg-emerald-500");

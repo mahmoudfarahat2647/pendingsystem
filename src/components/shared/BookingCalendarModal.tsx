@@ -35,12 +35,10 @@ export const BookingCalendarModal = ({
 	initialSearchTerm = "",
 	bookingOnly = false,
 }: BookingCalendarModalProps) => {
-	const {
-		bookingRowData,
-		archiveRowData,
-		bookingStatuses,
-		updateBookingStatus,
-	} = useAppStore();
+	const bookingRowData = useAppStore((state) => state.bookingRowData);
+	const archiveRowData = useAppStore((state) => state.archiveRowData);
+	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
+	const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
 
 	const [currentMonth, setCurrentMonth] = useState(new Date());
 	const [selectedDate, setSelectedDate] = useState(new Date());
