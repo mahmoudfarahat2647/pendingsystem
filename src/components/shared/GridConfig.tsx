@@ -37,7 +37,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 	const isLocked = params.colDef?.cellRendererParams?.isLocked;
 
 	return (
-		<div className={cn("flex items-center gap-3 h-full px-2", isLocked && "opacity-50 grayscale pointer-events-none")}>
+		<div className={cn("flex items-center gap-3 h-full px-2", isLocked && "pointer-events-none")}>
 			<button
 				className={`transition-colors ${data.hasAttachment ? "text-indigo-400" : "text-gray-600 hover:text-gray-400"}`}
 				title="Attachment"

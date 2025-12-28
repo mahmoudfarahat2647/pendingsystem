@@ -42,17 +42,28 @@ const DataGridComponent = dynamic(
 
 // Preload the grid module during idle time
 if (typeof window !== "undefined") {
-    const preloadGrid = () => {
-        // These imports will be prefetched by the browser
-        import("./DataGrid");
-        import("ag-grid-community");
-        import("ag-grid-react");
+    const preloadGrid = async () => {
+        try {
+            // These imports will be prefetched by the browser
+            await import("./DataGrid");
+            await import("ag-grid-community");
+            await import("ag-grid-react");
+        } catch (err) {
+            // Swallow ChunkLoadError / HMR cache mismatches that may occur during dev
+            // Log for debugging in development only
+            if (process.env.NODE_ENV === "development") {
+                // eslint-disable-next-line no-console
+                console.debug("[preloadGrid] preload failed:", err);
+            }
+        }
     };
 
-    if ("requestIdleCallback" in window) {
-        requestIdleCallback(preloadGrid, { timeout: 2000 });
-    } else {
-        setTimeout(preloadGrid, 1000);
+    if (typeof window !== "undefined") {
+        if ("requestIdleCallback" in window) {
+            requestIdleCallback(preloadGrid, { timeout: 2000 });
+        } else {
+            setTimeout(preloadGrid, 1000);
+        }
     }
 }
 
