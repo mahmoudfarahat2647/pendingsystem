@@ -113,19 +113,19 @@
 .ag-theme-alpine-dark .ag-header-cell-menu-button,
 .ag-theme-alpine-dark .ag-header-cell .ag-icon-filter,
 .ag-theme-alpine-dark .ag-header-cell .ag-icon-menu {
-	opacity: 0 !important;
-	pointer-events: none !important;
-	width: 0 !important;
+	opacity: 0;
+	pointer-events: none;
+	width: 0;
 }
 
 /* Show filter icons when enabled */
 .ag-theme-alpine-dark.show-filter-icons .ag-header-cell-menu-button,
 .ag-theme-alpine-dark.show-filter-icons .ag-header-cell .ag-icon-filter,
 .ag-theme-alpine-dark.show-filter-icons .ag-header-cell .ag-icon-menu {
-	opacity: 1 !important;
-	pointer-events: auto !important;
-	width: auto !important;
-	display: block !important;
+	opacity: 1;
+	pointer-events: auto;
+	width: auto;
+	display: block;
 }
 
 .ag-theme-alpine-dark .ag-header-cell-label {

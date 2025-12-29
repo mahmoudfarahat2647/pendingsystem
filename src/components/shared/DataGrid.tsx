@@ -2,11 +2,11 @@
 
 import type { ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-import React, { useCallback, useMemo, useRef, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import type { PendingRow } from "@/types";
 import { useAppStore } from "@/store/useStore";
+import type { PendingRow } from "@/types";
 
 export interface DataGridProps {
 	rowData: PendingRow[];
@@ -109,7 +109,7 @@ export const DataGrid = React.memo(function DataGrid({
 		if (gridRef.current?.api) {
 			gridRef.current.api.refreshCells({ force: true });
 		}
-	}, [rowData]);
+	}, []);
 
 	return (
 		<div
@@ -141,5 +141,4 @@ export const DataGrid = React.memo(function DataGrid({
 			/>
 		</div>
 	);
-
 });

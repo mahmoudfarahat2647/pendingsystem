@@ -1,5 +1,6 @@
 "use client";
 
+import type { GridApi } from "ag-grid-community";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { OrderFormModal } from "@/components/orders/OrderFormModal";
@@ -14,11 +15,11 @@ import { RowModals } from "@/components/shared/RowModals";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
+import { exportToLogisticsCSV } from "@/lib/exportUtils";
+import { printOrderDocument, printReservationLabels } from "@/lib/printing";
 import { generateId } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
-import { printOrderDocument, printReservationLabels } from "@/lib/printing";
-import { exportToLogisticsCSV } from "@/lib/exportUtils";
 
 export default function OrdersPage() {
 	const ordersRowData = useAppStore((state) => state.ordersRowData);
@@ -33,7 +34,7 @@ export default function OrdersPage() {
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
-	const [gridApi, setGridApi] = useState<any>(null);
+	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isFormModalOpen, setIsFormModalOpen] = useState(false);
 	const [isEditMode, setIsEditMode] = useState(false);
@@ -63,14 +64,9 @@ export default function OrdersPage() {
 				partStatuses,
 				handleNoteClick,
 				handleReminderClick,
-				handleAttachClick
+				handleAttachClick,
 			),
-		[
-			partStatuses,
-			handleNoteClick,
-			handleReminderClick,
-			handleAttachClick
-		],
+		[partStatuses, handleNoteClick, handleReminderClick, handleAttachClick],
 	);
 
 	const handleSelectionChanged = useCallback((rows: PendingRow[]) => {
@@ -82,7 +78,10 @@ export default function OrdersPage() {
 		setIsFormModalOpen(true);
 	};
 
-	const handleSaveOrder = (formData: any, parts: PartEntry[]) => {
+	const handleSaveOrder = (
+		formData: Record<string, unknown>,
+		parts: PartEntry[],
+	) => {
 		if (isEditMode) {
 			const existingRowIdsInModal = new Set(
 				parts.map((p) => p.rowId).filter(Boolean),
@@ -180,7 +179,9 @@ export default function OrdersPage() {
 
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
-		selectedRows.forEach((row) => updatePartStatus(row.id, status));
+		selectedRows.forEach((row) => {
+			updatePartStatus(row.id, status);
+		});
 		toast.success(`Part status updated to "${status}"`);
 	};
 
@@ -237,7 +238,10 @@ export default function OrdersPage() {
 							onReserve={handleReserve}
 							onArchive={() => {
 								if (selectedRows.length > 0) {
-									handleArchiveClick(selectedRows[0], selectedRows.map(r => r.id));
+									handleArchiveClick(
+										selectedRows[0],
+										selectedRows.map((r) => r.id),
+									);
 								}
 							}}
 							onShareToLogistics={handleShareToLogistics}

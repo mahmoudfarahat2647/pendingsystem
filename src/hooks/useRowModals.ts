@@ -3,7 +3,12 @@
 import { useCallback, useState } from "react";
 import type { PendingRow } from "@/types";
 
-export type RowModalType = "note" | "reminder" | "attachment" | "archive" | null;
+export type RowModalType =
+	| "note"
+	| "reminder"
+	| "attachment"
+	| "archive"
+	| null;
 
 export const useRowModals = (
 	onUpdate: (id: string, updates: Partial<PendingRow>) => void,
@@ -51,16 +56,21 @@ export const useRowModals = (
 	);
 
 	const saveReminder = useCallback(
-		(reminder: { date: string; time: string; subject: string } | null | undefined) => {
+		(
+			reminder:
+				| { date: string; time: string; subject: string }
+				| null
+				| undefined,
+		) => {
 			if (currentRow) {
 				onUpdate(currentRow.id, { reminder });
 				closeModal();
 				// Check for notifications immediately after setting a reminder
 				// This ensures the notification appears if the reminder is already due
 				setTimeout(() => {
-					if (typeof window !== 'undefined') {
+					if (typeof window !== "undefined") {
 						// Trigger a global notification check
-						window.dispatchEvent(new Event('check-notifications'));
+						window.dispatchEvent(new Event("check-notifications"));
 					}
 				}, 100);
 			}

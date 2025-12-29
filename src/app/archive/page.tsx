@@ -1,5 +1,6 @@
 "use client";
 
+import type { GridApi } from "ag-grid-community";
 import { Download, Filter, RotateCcw, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -34,7 +35,7 @@ export default function ArchivePage() {
 	const sendToReorder = useAppStore((state) => state.sendToReorder);
 	const deleteOrders = useAppStore((state) => state.deleteOrders);
 	const updateOrder = useAppStore((state) => state.updateOrder);
-	const [gridApi, setGridApi] = useState<any>(null);
+	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
@@ -70,7 +71,7 @@ export default function ArchivePage() {
 		const baseColumns = getBaseColumns(
 			handleNoteClick,
 			handleReminderClick,
-			handleAttachClick
+			handleAttachClick,
 		);
 		return [
 			...baseColumns.slice(0, 3),
@@ -168,7 +169,7 @@ export default function ArchivePage() {
 					onSaveNote={saveNote}
 					onSaveReminder={saveReminder}
 					onSaveAttachment={saveAttachment}
-					onSaveArchive={() => { }}
+					onSaveArchive={() => {}}
 				/>
 
 				{/* Reorder Reason Modal */}

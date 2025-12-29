@@ -12,6 +12,7 @@ import {
 	Plus,
 	User,
 	X,
+	ChevronsUpDown,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -32,11 +33,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-	cn,
-	detectModelFromVin,
-	generateId,
-} from "@/lib/utils";
+import { cn, detectModelFromVin, generateId } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 
@@ -79,6 +76,7 @@ export const OrderFormModal = ({
 		requester: "",
 		sabNumber: "",
 		acceptedBy: "",
+		company: "Renault",
 	});
 
 	const [parts, setParts] = useState<PartEntry[]>([
@@ -103,6 +101,7 @@ export const OrderFormModal = ({
 					requester: first.requester,
 					sabNumber: first.sabNumber || "",
 					acceptedBy: first.acceptedBy || "",
+					company: first.company || "Renault",
 				});
 
 				const initialParts = selectedRows.map((row) => ({
@@ -124,6 +123,7 @@ export const OrderFormModal = ({
 					requester: "",
 					sabNumber: "",
 					acceptedBy: "",
+					company: "Renault",
 				});
 				setParts([{ id: generateId(), partNumber: "", description: "" }]);
 				setIsBulkMode(false);
@@ -254,9 +254,7 @@ export const OrderFormModal = ({
 			return;
 		}
 		if (formData.repairSystem === "ضمان" && isHighMileage) {
-			toast.error(
-				"Ineligible for Warranty: Vehicle exceeds 100,000 KM.",
-			);
+			toast.error("Ineligible for Warranty: Vehicle exceeds 100,000 KM.");
 			return;
 		}
 		onSubmit(formData, parts);
@@ -400,6 +398,32 @@ export const OrderFormModal = ({
 														: "premium-glow-indigo",
 												)}
 											/>
+										</div>
+										<div className="space-y-1 group">
+											<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
+												Company
+											</Label>
+											<div className="relative">
+												<select
+													value={formData.company}
+													onChange={(e) =>
+														setFormData({
+															...formData,
+															company: e.target.value,
+														})
+													}
+													className={cn(
+														"w-full bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all appearance-none outline-none focus:ring-0",
+														isEditMode
+															? "premium-glow-amber text-amber-500"
+															: "premium-glow-indigo text-indigo-400 font-bold",
+													)}
+												>
+													<option value="Renault">Renault</option>
+													<option value="Zeekr">Zeekr</option>
+												</select>
+												<ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500 pointer-events-none" />
+											</div>
 										</div>
 										<div className="grid grid-cols-10 gap-3">
 											<div className="col-span-7 space-y-1 group">

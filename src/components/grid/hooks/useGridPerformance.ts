@@ -1,60 +1,60 @@
-import { useEffect, useRef } from "react";
 import type { GridApi } from "ag-grid-community";
+import { useEffect, useRef } from "react";
 
 interface PerformanceMetrics {
-    gridReadyTime: number;
-    firstDataRenderedTime: number;
-    totalRowCount: number;
-    visibleRowCount: number;
+	gridReadyTime: number;
+	firstDataRenderedTime: number;
+	totalRowCount: number;
+	visibleRowCount: number;
 }
 
 export function useGridPerformance(gridApi: GridApi | null) {
-    const metricsRef = useRef<PerformanceMetrics>({
-        gridReadyTime: 0,
-        firstDataRenderedTime: 0,
-        totalRowCount: 0,
-        visibleRowCount: 0,
-    });
-    const startTimeRef = useRef<number>(performance.now());
+	const metricsRef = useRef<PerformanceMetrics>({
+		gridReadyTime: 0,
+		firstDataRenderedTime: 0,
+		totalRowCount: 0,
+		visibleRowCount: 0,
+	});
+	const startTimeRef = useRef<number>(performance.now());
 
-    useEffect(() => {
-        if (!gridApi) return;
+	useEffect(() => {
+		if (!gridApi) return;
 
-        const updateMetrics = () => {
-            metricsRef.current = {
-                ...metricsRef.current,
-                totalRowCount: gridApi.getDisplayedRowCount(),
-                visibleRowCount: gridApi.getRenderedNodes().length,
-            };
+		const updateMetrics = () => {
+			metricsRef.current = {
+				...metricsRef.current,
+				totalRowCount: gridApi.getDisplayedRowCount(),
+				visibleRowCount: gridApi.getRenderedNodes().length,
+			};
 
-            // Log metrics in development
-            if (process.env.NODE_ENV === "development") {
-                // console.table(metricsRef.current); // Uncomment to debug performance
-            }
-        };
+			// Log metrics in development
+			if (process.env.NODE_ENV === "development") {
+				// console.table(metricsRef.current); // Uncomment to debug performance
+			}
+		};
 
-        gridApi.addEventListener("modelUpdated", updateMetrics);
+		gridApi.addEventListener("modelUpdated", updateMetrics);
 
-        return () => {
-            gridApi.removeEventListener("modelUpdated", updateMetrics);
-        };
-    }, [gridApi]);
+		return () => {
+			gridApi.removeEventListener("modelUpdated", updateMetrics);
+		};
+	}, [gridApi]);
 
-    const markGridReady = () => {
-        const duration = performance.now() - startTimeRef.current;
-        metricsRef.current.gridReadyTime = duration;
-        // console.log(`[Grid Performance] Ready in ${duration.toFixed(2)}ms`);
-    };
+	const markGridReady = () => {
+		const duration = performance.now() - startTimeRef.current;
+		metricsRef.current.gridReadyTime = duration;
+		// console.log(`[Grid Performance] Ready in ${duration.toFixed(2)}ms`);
+	};
 
-    const markFirstDataRendered = () => {
-        const duration = performance.now() - startTimeRef.current;
-        metricsRef.current.firstDataRenderedTime = duration;
-        // console.log(`[Grid Performance] First data rendered in ${duration.toFixed(2)}ms`);
-    };
+	const markFirstDataRendered = () => {
+		const duration = performance.now() - startTimeRef.current;
+		metricsRef.current.firstDataRenderedTime = duration;
+		// console.log(`[Grid Performance] First data rendered in ${duration.toFixed(2)}ms`);
+	};
 
-    return {
-        metrics: metricsRef.current,
-        markGridReady,
-        markFirstDataRendered,
-    };
+	return {
+		metrics: metricsRef.current,
+		markGridReady,
+		markFirstDataRendered,
+	};
 }

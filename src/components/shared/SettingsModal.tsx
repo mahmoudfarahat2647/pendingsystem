@@ -1,6 +1,8 @@
 "use client";
 
 import {
+	CalendarCheck,
+	History,
 	Lock,
 	Palette,
 	Plus,
@@ -9,10 +11,8 @@ import {
 	Trash2,
 	Undo2,
 	Unlock,
-	CalendarCheck,
-	History,
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,9 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 	const removePartStatusDef = useAppStore((state) => state.removePartStatusDef);
 	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
 	const addBookingStatusDef = useAppStore((state) => state.addBookingStatusDef);
-	const removeBookingStatusDef = useAppStore((state) => state.removeBookingStatusDef);
+	const removeBookingStatusDef = useAppStore(
+		(state) => state.removeBookingStatusDef,
+	);
 	const commits = useAppStore((state) => state.commits);
 	const isLocked = useAppStore((state) => state.isLocked);
 	const setIsLocked = useAppStore((state) => state.setIsLocked);
@@ -133,16 +135,22 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									"w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300",
 									isLocked
 										? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
-										: "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20"
+										: "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20",
 								)}
 							>
 								<div className="flex items-center gap-2">
-									{isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+									{isLocked ? (
+										<Lock className="h-4 w-4" />
+									) : (
+										<Unlock className="h-4 w-4" />
+									)}
 									<span className="text-xs font-bold uppercase tracking-wider">
 										{isLocked ? "Locked" : "Unlocked"}
 									</span>
 								</div>
-								{!isLocked && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+								{!isLocked && (
+									<div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+								)}
 							</button>
 						) : (
 							<div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
@@ -405,15 +413,19 @@ const StatusManagementSection = ({
 	return (
 		<div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 			{/* Add New Status */}
-			<div className={cn(
-				"p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4 relative transition-all duration-300",
-				isLocked && "grayscale pointer-events-none opacity-50"
-			)}>
+			<div
+				className={cn(
+					"p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4 relative transition-all duration-300",
+					isLocked && "grayscale pointer-events-none opacity-50",
+				)}
+			>
 				{isLocked && (
 					<div className="absolute inset-0 flex items-center justify-center z-20">
 						<div className="px-3 py-1.5 bg-black/80 border border-white/10 rounded-full flex items-center gap-2 shadow-2xl backdrop-blur-sm">
 							<Lock className="h-3 w-3 text-red-400" />
-							<span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">Editors Locked</span>
+							<span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">
+								Editors Locked
+							</span>
 						</div>
 					</div>
 				)}
@@ -489,7 +501,7 @@ const StatusManagementSection = ({
 								disabled={isLocked}
 								className={cn(
 									"h-9 w-9 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all",
-									isLocked ? "opacity-0" : "opacity-0 group-hover:opacity-100"
+									isLocked ? "opacity-0" : "opacity-0 group-hover:opacity-100",
 								)}
 							>
 								<Trash2 className="h-4 w-4" />

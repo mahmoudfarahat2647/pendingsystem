@@ -2,10 +2,10 @@
 
 import type { RowModalType } from "@/hooks/useRowModals";
 import type { PendingRow } from "@/types";
+import { ArchiveReasonModal } from "./ArchiveReasonModal";
 import { EditAttachmentModal } from "./EditAttachmentModal";
 import { EditNoteModal } from "./EditNoteModal";
 import { EditReminderModal } from "./EditReminderModal";
-import { ArchiveReasonModal } from "./ArchiveReasonModal";
 
 interface RowModalsProps {
 	activeModal: RowModalType;
@@ -13,7 +13,10 @@ interface RowModalsProps {
 	onClose: () => void;
 	onSaveNote: (content: string) => void;
 	onSaveReminder: (
-		reminder: { date: string; time: string; subject: string } | null | undefined,
+		reminder:
+			| { date: string; time: string; subject: string }
+			| null
+			| undefined,
 	) => void;
 	onSaveAttachment: (path: string | undefined) => void;
 	onSaveArchive: (reason: string) => void;

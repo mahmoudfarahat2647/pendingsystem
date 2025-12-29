@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	Archive,
 	Calendar,
 	Download,
 	Filter,
@@ -11,15 +12,14 @@ import {
 	Tag,
 	Trash2,
 	Unlock,
-	Archive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import type { PartStatus } from "@/types";
 
 interface MainSheetToolbarProps {
@@ -170,7 +170,6 @@ export const MainSheetToolbar = ({
 					</TooltipTrigger>
 					<TooltipContent>Filter</TooltipContent>
 				</Tooltip>
-
 			</div>
 
 			<div className="flex items-center gap-2">
@@ -183,14 +182,20 @@ export const MainSheetToolbar = ({
 								"h-8 w-8 rounded-lg transition-all duration-200",
 								isLocked
 									? "text-red-500 hover:text-red-400 hover:bg-red-500/10"
-									: "text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+									: "text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10",
 							)}
 							onClick={onLockToggle}
 						>
-							{isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+							{isLocked ? (
+								<Lock className="h-4 w-4" />
+							) : (
+								<Unlock className="h-4 w-4" />
+							)}
 						</Button>
 					</TooltipTrigger>
-					<TooltipContent>{isLocked ? "Unlock Sheet" : "Lock Sheet"}</TooltipContent>
+					<TooltipContent>
+						{isLocked ? "Unlock Sheet" : "Lock Sheet"}
+					</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

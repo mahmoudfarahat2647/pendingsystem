@@ -1,5 +1,6 @@
 "use client";
 
+import type { GridApi } from "ag-grid-community";
 import {
 	Archive,
 	Calendar,
@@ -36,9 +37,9 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
+import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
-import { printReservationLabels } from "@/lib/printing/reservationLabels";
 
 export default function BookingPage() {
 	const bookingRowData = useAppStore((state) => state.bookingRowData);
@@ -47,7 +48,7 @@ export default function BookingPage() {
 	const deleteOrders = useAppStore((state) => state.deleteOrders);
 	const updateOrder = useAppStore((state) => state.updateOrder);
 
-	const [gridApi, setGridApi] = useState<any>(null);
+	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
@@ -56,9 +57,12 @@ export default function BookingPage() {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 
-	const handleSelectionChanged = useMemo(() => (rows: PendingRow[]) => {
-		setSelectedRows(rows);
-	}, []);
+	const _handleSelectionChanged = useMemo(
+		() => (rows: PendingRow[]) => {
+			setSelectedRows(rows);
+		},
+		[],
+	);
 
 	const {
 		activeModal,
@@ -79,7 +83,7 @@ export default function BookingPage() {
 			getBookingColumns(
 				handleNoteClick,
 				handleReminderClick,
-				handleAttachClick
+				handleAttachClick,
 			),
 		[handleNoteClick, handleReminderClick, handleAttachClick],
 	);
@@ -175,7 +179,10 @@ export default function BookingPage() {
 									className="text-gray-400 hover:text-white h-8 w-8"
 									onClick={() => {
 										if (selectedRows.length > 0) {
-											handleArchiveClick(selectedRows[0], selectedRows.map(r => r.id));
+											handleArchiveClick(
+												selectedRows[0],
+												selectedRows.map((r) => r.id),
+											);
 										}
 									}}
 									disabled={selectedRows.length === 0}
@@ -212,12 +219,15 @@ export default function BookingPage() {
 									size="icon"
 									onClick={() => {
 										setRebookingSearchTerm(
-											selectedRows[0]?.vin || selectedRows[0]?.customerName || "",
+											selectedRows[0]?.vin ||
+												selectedRows[0]?.customerName ||
+												"",
 										);
 										setIsRebookingModalOpen(true);
 									}}
 									disabled={
-										(selectedRows.length > 0 && new Set(selectedRows.map((r) => r.vin)).size > 1)
+										selectedRows.length > 0 &&
+										new Set(selectedRows.map((r) => r.vin)).size > 1
 									}
 								>
 									{selectedRows.length === 0 ? (
@@ -333,7 +343,7 @@ export default function BookingPage() {
 					description={`Are you sure you want to delete ${selectedRows.length} selected booking(s)?`}
 					confirmText="Delete"
 				/>
-			</div >
-		</TooltipProvider >
+			</div>
+		</TooltipProvider>
 	);
 }

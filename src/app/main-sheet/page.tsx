@@ -1,5 +1,6 @@
 "use client";
 
+import type { GridApi } from "ag-grid-community";
 import { Unlock } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -13,9 +14,9 @@ import { RowModals } from "@/components/shared/RowModals";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
+import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
-import { printReservationLabels } from "@/lib/printing/reservationLabels";
 
 export default function MainSheetPage() {
 	const rowData = useAppStore((state) => state.rowData);
@@ -55,15 +56,18 @@ export default function MainSheetPage() {
 		const secs = seconds % 60;
 		return `${mins}:${secs.toString().padStart(2, "0")}`;
 	};
-	const [gridApi, setGridApi] = useState<any>(null);
+	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 
-	const handleSelectionChanged = useMemo(() => (rows: PendingRow[]) => {
-		setSelectedRows(rows);
-	}, []);
+	const _handleSelectionChanged = useMemo(
+		() => (rows: PendingRow[]) => {
+			setSelectedRows(rows);
+		},
+		[],
+	);
 
 	const {
 		activeModal,
@@ -86,14 +90,22 @@ export default function MainSheetPage() {
 				handleNoteClick,
 				handleReminderClick,
 				handleAttachClick,
-				isSheetLocked
+				isSheetLocked,
 			),
-		[partStatuses, handleNoteClick, handleReminderClick, handleAttachClick, isSheetLocked],
+		[
+			partStatuses,
+			handleNoteClick,
+			handleReminderClick,
+			handleAttachClick,
+			isSheetLocked,
+		],
 	);
 
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
-		selectedRows.forEach((row) => updatePartStatus(row.id, status));
+		selectedRows.forEach((row) => {
+			updatePartStatus(row.id, status);
+		});
 		toast.success(`Part status updated to "${status}"`);
 	};
 
@@ -122,7 +134,9 @@ export default function MainSheetPage() {
 									<span>Sheet is unlocked - Editing enabled</span>
 								</div>
 								<div className="flex items-center gap-2 font-mono font-bold">
-									<span className="text-[10px] uppercase tracking-widest text-green-500/50">Auto-lock in</span>
+									<span className="text-[10px] uppercase tracking-widest text-green-500/50">
+										Auto-lock in
+									</span>
 									<span className="text-lg">{formatTime(timeLeft)}</span>
 								</div>
 							</div>
@@ -137,7 +151,10 @@ export default function MainSheetPage() {
 							onBooking={() => setIsBookingModalOpen(true)}
 							onArchive={() => {
 								if (selectedRows.length > 0) {
-									handleArchiveClick(selectedRows[0], selectedRows.map(r => r.id));
+									handleArchiveClick(
+										selectedRows[0],
+										selectedRows.map((r) => r.id),
+									);
 								}
 							}}
 							onSendToCallList={() => {

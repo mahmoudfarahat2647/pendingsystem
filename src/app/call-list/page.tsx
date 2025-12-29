@@ -1,5 +1,6 @@
 "use client";
 
+import type { GridApi } from "ag-grid-community";
 import {
 	Calendar,
 	Download,
@@ -27,11 +28,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
+import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
-import { printReservationLabels } from "@/lib/printing/reservationLabels";
 
 export default function CallListPage() {
 	const callRowData = useAppStore((state) => state.callRowData);
@@ -41,7 +47,7 @@ export default function CallListPage() {
 	const updateOrder = useAppStore((state) => state.updateOrder);
 	const sendToArchive = useAppStore((state) => state.sendToArchive);
 
-	const [gridApi, setGridApi] = useState<any>(null);
+	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
@@ -55,7 +61,6 @@ export default function CallListPage() {
 		handleNoteClick,
 		handleReminderClick,
 		handleAttachClick,
-		handleArchiveClick,
 		closeModal,
 		saveNote,
 		saveReminder,
@@ -67,7 +72,7 @@ export default function CallListPage() {
 		const baseColumns = getBaseColumns(
 			handleNoteClick,
 			handleReminderClick,
-			handleAttachClick
+			handleAttachClick,
 		);
 		return [
 			...baseColumns.slice(0, 3),

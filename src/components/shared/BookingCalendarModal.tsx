@@ -1,12 +1,10 @@
 "use client";
 
 import { format, isAfter, subYears } from "date-fns";
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogClose,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
@@ -237,6 +235,6 @@ export const BookingCalendarModal = ({
 					/>
 				)}
 			</DialogContent>
-		</Dialog >
+		</Dialog>
 	);
 };

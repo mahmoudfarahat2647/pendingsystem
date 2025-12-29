@@ -11,7 +11,6 @@ A premium, high-performance maintenance management system built with Next.js 15 
 - **State Management**: [Zustand 5](https://github.com/pmndrs/zustand) (with Persistence & Slices)
 - **Animations**: [Framer Motion](https://www.framer.com/motion/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **Linting/Formatting**: [Biome](https://biomejs.dev/)
 - **Testing**: [Vitest](https://vitest.dev/)
 
 ## 🛠️ Getting Started

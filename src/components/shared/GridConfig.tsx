@@ -1,8 +1,8 @@
 "use client";
 
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
-import { Archive, Bell, History, Paperclip, StickyNote } from "lucide-react";
-import { getVinColor, cn } from "@/lib/utils";
+import { Bell, Paperclip, StickyNote } from "lucide-react";
+import { cn, getVinColor } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
 
@@ -20,7 +20,7 @@ export const VinCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 				style={{
 					backgroundColor: style.bg,
 					color: style.text,
-					borderColor: style.border
+					borderColor: style.border,
 				}}
 			>
 				{vin}
@@ -37,7 +37,12 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 	const isLocked = params.colDef?.cellRendererParams?.isLocked;
 
 	return (
-		<div className={cn("flex items-center gap-3 h-full px-2", isLocked && "pointer-events-none")}>
+		<div
+			className={cn(
+				"flex items-center gap-3 h-full px-2",
+				isLocked && "pointer-events-none",
+			)}
+		>
 			<button
 				className={`transition-colors ${data.hasAttachment ? "text-indigo-400" : "text-gray-600 hover:text-gray-400"}`}
 				title="Attachment"
@@ -94,7 +99,7 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 		!value ||
 		(typeof value === "string" && (value.trim() === "" || value === "No Stats"))
 	) {
-		const noStatsDef = statuses.find(s => s.id === "no_stats");
+		const noStatsDef = statuses.find((s) => s.id === "no_stats");
 		return (
 			<div
 				className="flex items-center justify-center h-full w-full gap-1"
@@ -227,6 +232,13 @@ export const getBaseColumns = (
 			headerName: "R/DATE",
 			field: "rDate",
 			width: 100,
+		},
+		{
+			headerName: "COMPANY",
+			field: "company",
+			width: 90,
+			cellClass: "font-bold text-center",
+			valueFormatter: (params: any) => params.value || "Renault",
 		},
 		{
 			headerName: "CUSTOMER NAME",

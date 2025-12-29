@@ -2,23 +2,34 @@
 
 import {
 	ArrowUpRight,
-	Calendar,
 	FileSpreadsheet,
 	Phone,
 	ShoppingCart,
 	TrendingUp,
 	Users,
 } from "lucide-react";
-import React, { useMemo } from "react";
 import dynamic from "next/dynamic";
-const CapacityChart = dynamic(() => import("@/components/dashboard/CapacityChart"), {
-	ssr: false,
-	loading: () => <div className="h-full w-full bg-white/5 animate-pulse rounded-full" />,
-});
-const DistributionChart = dynamic(() => import("@/components/dashboard/DistributionChart"), {
-	ssr: false,
-	loading: () => <div className="h-full w-full bg-white/5 animate-pulse rounded-lg" />,
-});
+import { useMemo } from "react";
+
+const CapacityChart = dynamic(
+	() => import("@/components/dashboard/CapacityChart"),
+	{
+		ssr: false,
+		loading: () => (
+			<div className="h-full w-full bg-white/5 animate-pulse rounded-full" />
+		),
+	},
+);
+const DistributionChart = dynamic(
+	() => import("@/components/dashboard/DistributionChart"),
+	{
+		ssr: false,
+		loading: () => (
+			<div className="h-full w-full bg-white/5 animate-pulse rounded-lg" />
+		),
+	},
+);
+
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";

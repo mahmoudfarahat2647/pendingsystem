@@ -1,9 +1,11 @@
 "use client";
 
 import {
+	Archive,
 	Calendar,
 	CheckCircle,
 	Download,
+	FileCheck,
 	Filter,
 	Link,
 	Pencil,
@@ -13,17 +15,14 @@ import {
 	Send,
 	Tag,
 	Trash2,
-	Archive,
-	ChevronDown,
-	FileCheck,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
 	TooltipContent,
@@ -66,7 +65,6 @@ export const OrdersToolbar = ({
 	onUpdateStatus,
 	onCallList,
 }: OrdersToolbarProps) => {
-
 	return (
 		<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
 			<div className="flex items-center gap-1.5">
@@ -113,7 +111,6 @@ export const OrdersToolbar = ({
 					<TooltipContent>Reserve</TooltipContent>
 				</Tooltip>
 
-
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
@@ -158,7 +155,6 @@ export const OrdersToolbar = ({
 					</TooltipTrigger>
 					<TooltipContent>Print Order</TooltipContent>
 				</Tooltip>
-
 
 				<Tooltip>
 					<TooltipTrigger asChild>

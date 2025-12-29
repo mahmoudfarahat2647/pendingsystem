@@ -2,13 +2,13 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CombinedStore } from "./types";
-import { createOrdersSlice } from "./slices/ordersSlice";
-import { createInventorySlice } from "./slices/inventorySlice";
 import { createBookingSlice } from "./slices/bookingSlice";
-import { createNotificationSlice } from "./slices/notificationSlice";
-import { createUISlice } from "./slices/uiSlice";
 import { createHistorySlice } from "./slices/historySlice";
+import { createInventorySlice } from "./slices/inventorySlice";
+import { createNotificationSlice } from "./slices/notificationSlice";
+import { createOrdersSlice } from "./slices/ordersSlice";
+import { createUISlice } from "./slices/uiSlice";
+import type { CombinedStore } from "./types";
 
 export const useAppStore = create<CombinedStore>()(
 	persist(
@@ -39,6 +39,6 @@ export const useAppStore = create<CombinedStore>()(
 				} = state;
 				return rest;
 			},
-		}
-	)
+		},
+	),
 );

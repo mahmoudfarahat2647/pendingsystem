@@ -3,40 +3,40 @@ import type { PendingRow } from "@/types";
 /**
  * @module OrderDocumentPrinter
  * @description Professional spare parts order document generator for Egyptian International Motors (EiM)
- * 
+ *
  * ## Purpose
  * Generates official A4 order request forms (نموذج طلب قطع غيار غير متوفرة) for unavailable spare parts.
  * These documents are used for formal procurement and workshop approval processes.
- * 
+ *
  * ## Features
  * - **VIN Grouping**: Automatically groups orders by vehicle (VIN) for organized processing
  * - **3-Column Grid**: Displays up to 18 parts per page (6 parts × 3 columns)
  * - **RTL Layout**: Arabic-first design with proper right-to-left text flow
  * - **Dual Typography**: Cairo font for Arabic, Inter for technical data (VIN, Part Numbers)
  * - **Signature Sections**: Dedicated approval areas for workshop manager and parts supervisor
- * 
+ *
  * ## Document Structure
  * - Header: EiM branding + current date
  * - Title: "نموذج طلب قطع غيار غير متوفرة"
  * - Customer/Vehicle Information Section
  * - Parts Grid (3 columns)
  * - Footer: Notes, approval stamps, and signatures
- * 
+ *
  * @author Renault System Development Team
  * @since 2025-12-25
  */
 
 /**
  * Prints spare parts order documents grouped by VIN
- * 
+ *
  * @param {PendingRow[]} selected - Array of selected pending rows to print
  * @returns {void}
- * 
+ *
  * @remarks
  * - Each unique VIN generates a separate page
  * - Maximum 18 parts per page (dictated by 3-column × 6-row grid)
  * - Documents open in new window for isolated printing
- * 
+ *
  * @example
  * ```typescript
  * // Print orders for selected rows
@@ -45,26 +45,26 @@ import type { PendingRow } from "@/types";
  * ```
  */
 export const printOrderDocument = (selected: PendingRow[]): void => {
-    // Validation: Ensure orders are selected
-    if (selected.length === 0) {
-        alert("Please select orders to print.");
-        return;
-    }
+	// Validation: Ensure orders are selected
+	if (selected.length === 0) {
+		alert("Please select orders to print.");
+		return;
+	}
 
-    // Group orders by VIN to generate one page per vehicle
-    const grouped: Record<string, PendingRow[]> = {};
-    selected.forEach(row => {
-        const key = row.vin || 'Unknown';
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(row);
-    });
+	// Group orders by VIN to generate one page per vehicle
+	const grouped: Record<string, PendingRow[]> = {};
+	selected.forEach((row) => {
+		const key = row.vin || "Unknown";
+		if (!grouped[key]) grouped[key] = [];
+		grouped[key].push(row);
+	});
 
-    // Open new window for print-isolated context
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+	// Open new window for print-isolated context
+	const printWindow = window.open("", "_blank");
+	if (!printWindow) return;
 
-    // Build complete HTML document
-    let htmlContent = `
+	// Build complete HTML document
+	let htmlContent = `
         <html>
         <head>
             <title>Print Orders - Pending.Sys</title>
@@ -249,33 +249,33 @@ export const printOrderDocument = (selected: PendingRow[]): void => {
         <body>
     `;
 
-    // Generate page content for each VIN
-    Object.keys(grouped).forEach(vin => {
-        const rows = grouped[vin];
-        const info = rows[0];
+	// Generate page content for each VIN
+	Object.keys(grouped).forEach((vin) => {
+		const rows = grouped[vin];
+		const info = rows[0];
 
-        // Distribute parts across 3 columns (6 items per column)
-        const rowsPerCol = 6;
-        const col1 = rows.slice(0, rowsPerCol);
-        const col2 = rows.slice(rowsPerCol, rowsPerCol * 2);
-        const col3 = rows.slice(rowsPerCol * 2, rowsPerCol * 3);
+		// Distribute parts across 3 columns (6 items per column)
+		const rowsPerCol = 6;
+		const col1 = rows.slice(0, rowsPerCol);
+		const col2 = rows.slice(rowsPerCol, rowsPerCol * 2);
+		const col3 = rows.slice(rowsPerCol * 2, rowsPerCol * 3);
 
-        // Helper function to render a single part item
-        const renderPart = (p: PendingRow) => `
+		// Helper function to render a single part item
+		const renderPart = (p: PendingRow) => `
             <div class="part-item">
-                <span class="part-desc">${p.description || '-'}</span>
-                <span class="part-num">${p.partNumber || '-'}</span>
+                <span class="part-desc">${p.description || "-"}</span>
+                <span class="part-num">${p.partNumber || "-"}</span>
             </div>
         `;
 
-        htmlContent += `
+		htmlContent += `
             <div class="page">
                 <div class="header">
                     <div>
                         <div class="logo-text">EiM</div>
                         <div class="logo-sub">EGYPTIAN INTERNATIONAL MOTORS</div>
                     </div>
-                    <div class="date">${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    <div class="date">${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
                 </div>
                 
                 <div class="main-title">نموذج طلب قطع غيار غير متوفرة</div>
@@ -283,7 +283,7 @@ export const printOrderDocument = (selected: PendingRow[]): void => {
                 <div class="section-header">بيانات العميل والسيارة</div>
                 <div class="customer-section">
                     <div class="info-row"><span class="label">اسم العميل</span><span class="value" style="font-size: 15px; font-weight: 900;">${info.customerName}</span></div>
-                    <div class="info-row"><span class="label">رقم أمر الشغل</span><span class="value" style="direction: ltr; text-align: right;">${info.sabNumber || '-'}</span></div>
+                    <div class="info-row"><span class="label">رقم أمر الشغل</span><span class="value" style="direction: ltr; text-align: right;">${info.sabNumber || "-"}</span></div>
                     <div class="info-row"><span class="label">موديل السيارة</span><span class="value">${info.model}</span></div>
                     <div class="info-row"><span class="label">رقم الشاسيه</span><span class="value vin-value">${info.vin}</span></div>
                     <div class="info-row"><span class="label">نظام الاصلاح</span><span class="value">${info.repairSystem}</span></div>
@@ -291,9 +291,9 @@ export const printOrderDocument = (selected: PendingRow[]): void => {
 
                 <div class="section-header">الأجزاء المطلوبة</div>
                 <div class="parts-container">
-                    <div class="parts-col">${col1.map(renderPart).join('')}</div>
-                    <div class="parts-col">${col2.map(renderPart).join('')}</div>
-                    <div class="parts-col">${col3.map(renderPart).join('')}</div>
+                    <div class="parts-col">${col1.map(renderPart).join("")}</div>
+                    <div class="parts-col">${col2.map(renderPart).join("")}</div>
+                    <div class="parts-col">${col3.map(renderPart).join("")}</div>
                 </div>
 
                 <div class="footer">
@@ -310,18 +310,18 @@ export const printOrderDocument = (selected: PendingRow[]): void => {
                 </div>
             </div>
         `;
-    });
+	});
 
-    htmlContent += `</body></html>`;
+	htmlContent += `</body></html>`;
 
-    // Inject HTML and trigger print
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+	// Inject HTML and trigger print
+	printWindow.document.write(htmlContent);
+	printWindow.document.close();
 
-    // Auto-trigger print dialog after font loading
-    setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-    }, 1000);
+	// Auto-trigger print dialog after font loading
+	setTimeout(() => {
+		printWindow.focus();
+		printWindow.print();
+		printWindow.close();
+	}, 1000);
 };

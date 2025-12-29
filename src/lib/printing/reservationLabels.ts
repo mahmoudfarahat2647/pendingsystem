@@ -3,35 +3,35 @@ import type { PendingRow } from "@/types";
 /**
  * @module ReservationLabelPrinter
  * @description Professional reservation label generator for physical part tagging in automotive workshops
- * 
+ *
  * ## Purpose
  * Generates high-quality A4 printable labels (2 per row) for reserved spare parts.
  * Labels are designed to be affixed to physical inventory items in the warehouse.
- * 
+ *
  * ## Features
  * - **Renault Branding**: Official SVG logo with brand consistency
  * - **RTL Layout**: Right-to-left text flow for Arabic language
  * - **High Contrast**: 4px black borders for warehouse visibility
  * - **Grid System**: 2-column layout optimized for A4 printing
  * - **Date Stamping**: Automatic reservation date in DD/MM/YYYY format
- * 
+ *
  * ## Label Layout
  * Each label contains:
  * - Header: Renault logo + "Reserved Part" status
  * - Customer name (large, emphasized)
  * - Part description and reservation date
  * - VIN (monospace for clarity) and part number
- * 
+ *
  * @author Renault System Development Team
  * @since 2025-12-25
  */
 
 /**
  * Prints reservation labels for selected parts
- * 
+ *
  * @param {PendingRow[]} selected - Array of selected pending rows to print labels for
  * @returns {void}
- * 
+ *
  * @example
  * ```typescript
  * // Print labels for selected orders
@@ -40,20 +40,21 @@ import type { PendingRow } from "@/types";
  * ```
  */
 export const printReservationLabels = (selected: PendingRow[]): void => {
-    // Validation: Ensure at least one order is selected
-    if (selected.length === 0) {
-        alert("Please select items to print reservation labels.");
-        return;
-    }
+	// Validation: Ensure at least one order is selected
+	if (selected.length === 0) {
+		alert("Please select items to print reservation labels.");
+		return;
+	}
 
-    // Open new window for print-isolated context (prevents CSS bleeding)
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+	// Open new window for print-isolated context (prevents CSS bleeding)
+	const printWindow = window.open("", "_blank");
+	if (!printWindow) return;
 
-    // Generate HTML for each label
-    const labelsHtml = selected.map(row => {
-        const today = new Date().toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
-        return `
+	// Generate HTML for each label
+	const labelsHtml = selected
+		.map((row) => {
+			const today = new Date().toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
+			return `
             <div class="label-box">
                 <!-- Header: Brand on Left, Status Title on Right -->
                 <div class="header">
@@ -71,14 +72,14 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                 <!-- Row 1: Customer Full Name -->
                 <div class="row name-row">
                     <div class="field-label">اسم العميل (Customer Name)</div>
-                    <div class="field-value large-text">${row.customerName || '-'}</div>
+                    <div class="field-value large-text">${row.customerName || "-"}</div>
                 </div>
 
                 <!-- Row 2: Part Description & Date -->
                 <div class="row split-row">
                     <div class="cell main-cell">
                         <div class="field-label">اسم القطعة (Part Description)</div>
-                        <div class="field-value">${row.description || '-'}</div>
+                        <div class="field-value">${row.description || "-"}</div>
                     </div>
                     <div class="cell side-cell date-cell">
                         <div class="field-label">تاريخ الحجز (Date)</div>
@@ -90,19 +91,20 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                 <div class="row split-row last">
                     <div class="cell main-cell">
                         <div class="field-label">رقم الشاسيه (VIN)</div>
-                        <div class="field-value vin-text">${row.vin || '-'}</div>
+                        <div class="field-value vin-text">${row.vin || "-"}</div>
                     </div>
                     <div class="cell side-cell part-no-cell">
                         <div class="field-label">رقم القطعة (Part No)</div>
-                        <div class="field-value mono-text">${row.partNumber || '-'}</div>
+                        <div class="field-value mono-text">${row.partNumber || "-"}</div>
                     </div>
                 </div>
             </div>
         `;
-    }).join('');
+		})
+		.join("");
 
-    // Complete HTML document with embedded styles
-    const htmlContent = `
+	// Complete HTML document with embedded styles
+	const htmlContent = `
         <!DOCTYPE html>
         <html dir="rtl">
         <head>
@@ -256,7 +258,7 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
         </html>
     `;
 
-    // Inject HTML and trigger print
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+	// Inject HTML and trigger print
+	printWindow.document.write(htmlContent);
+	printWindow.document.close();
 };

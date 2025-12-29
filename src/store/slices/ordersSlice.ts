@@ -1,28 +1,28 @@
 import type { StateCreator } from "zustand";
-import type { CombinedStore, OrdersState, OrdersActions } from "../types";
 import type { PendingRow } from "@/types";
+import type { CombinedStore, OrdersActions, OrdersState } from "../types";
 
 export const createOrdersSlice: StateCreator<
-    CombinedStore,
-    [["zustand/persist", unknown]],
-    [],
-    OrdersState & OrdersActions
+	CombinedStore,
+	[["zustand/persist", unknown]],
+	[],
+	OrdersState & OrdersActions
 > = (set, get) => ({
-    ordersRowData: [],
+	ordersRowData: [],
 
-    addOrder: (order) => {
-        set((state) => ({
-            ordersRowData: [...state.ordersRowData, order],
-        }));
-        get().addCommit("Add Order");
-    },
+	addOrder: (order) => {
+		set((state) => ({
+			ordersRowData: [...state.ordersRowData, order],
+		}));
+		get().addCommit("Add Order");
+	},
 
-    addOrders: (orders) => {
-        set((state) => ({
-            ordersRowData: [...state.ordersRowData, ...orders],
-        }));
-        get().addCommit("Add Multiple Orders");
-    },
+	addOrders: (orders) => {
+		set((state) => ({
+			ordersRowData: [...state.ordersRowData, ...orders],
+		}));
+		get().addCommit("Add Multiple Orders");
+	},
 
 	updateOrder: (id, updates) => {
 		// Optimized: Use index-based lookup instead of full array map
@@ -67,17 +67,17 @@ export const createOrdersSlice: StateCreator<
 		get().debouncedCommit("Bulk Update Orders");
 	},
 
-    deleteOrders: (ids) => {
-        const filterArray = (arr: PendingRow[]) =>
-            arr.filter((row) => !ids.includes(row.id));
+	deleteOrders: (ids) => {
+		const filterArray = (arr: PendingRow[]) =>
+			arr.filter((row) => !ids.includes(row.id));
 
-        set((state) => ({
-            rowData: filterArray(state.rowData),
-            ordersRowData: filterArray(state.ordersRowData),
-            bookingRowData: filterArray(state.bookingRowData),
-            callRowData: filterArray(state.callRowData),
-            archiveRowData: filterArray(state.archiveRowData),
-        }));
-        get().addCommit("Delete Orders");
-    },
+		set((state) => ({
+			rowData: filterArray(state.rowData),
+			ordersRowData: filterArray(state.ordersRowData),
+			bookingRowData: filterArray(state.bookingRowData),
+			callRowData: filterArray(state.callRowData),
+			archiveRowData: filterArray(state.archiveRowData),
+		}));
+		get().addCommit("Delete Orders");
+	},
 });

@@ -6,33 +6,55 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignoreUnknown": true,
-		"includes": [
-			"**",
-			"!**/.next",
-			"!**/node_modules",
-			"!**/*.config.*",
-			"!**/biome_*.txt"
-		]
+		"ignoreUnknown": false
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"formatWithErrors": true
+	},
+	"css": {
+		"parser": {
+			"allowWrongLineComments": true,
+			"tailwindDirectives": true
+		},
+		"formatter": {
+			"indentStyle": "tab"
+		}
 	},
 	"linter": {
 		"enabled": true,
 		"rules": {
 			"recommended": true,
 			"suspicious": {
+				"noUnknownAtRules": "off",
+				"noArrayIndexKey": "off",
 				"noExplicitAny": "warn",
-				"noArrayIndexKey": "warn"
+				"useIterableCallbackReturn": "warn"
+			},
+			"correctness": {
+				"useExhaustiveDependencies": "off",
+				"noUnusedFunctionParameters": "warn"
 			},
 			"a11y": {
 				"useButtonType": "warn",
-				"useKeyWithMouseEvents": "warn"
+				"noLabelWithoutControl": "warn",
+				"noStaticElementInteractions": "warn",
+				"useKeyWithClickEvents": "warn"
 			}
 		}
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "double",
-			"jsxQuoteStyle": "double"
+			"quoteStyle": "double"
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
 		}
 	}
 }

@@ -26,6 +26,7 @@ export interface PendingRow {
 
 	// Customer Info
 	customerName: string;
+	company?: string;
 	vin: string;
 	mobile: string;
 	cntrRdg: number;
@@ -84,8 +85,6 @@ export interface AppNotification {
 	tabName: string;
 	path: string;
 }
-
-
 
 export interface TodoItem {
 	id: string;
@@ -152,5 +151,3 @@ export interface AppState extends AppStateSnapshot {
 	notifications: AppNotification[];
 	highlightedRowId: string | null;
 }
-
-

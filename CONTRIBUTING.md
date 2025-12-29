@@ -23,9 +23,8 @@ Welcome to the Renault System project! This guide provides information for devel
 ## 🏗️ Standards & Practices
 
 ### Code Style
-- We use **Biome** for linting and formatting.
-- Run `npm run lint` before committing.
-- Use `npm run lint:fix` to auto-correct common issues.
+- Ensure consistent code formatting before committing.
+- Follow the project's TypeScript conventions.
 
 ### State Management
 - Use **Zustand** slices for modular state management (`src/store/slices/`).

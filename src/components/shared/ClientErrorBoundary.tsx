@@ -41,12 +41,14 @@ export class ClientErrorBoundary extends Component<Props, State> {
 					</div>
 					<div className="text-center">
 						<h3 className="text-lg font-semibold text-white mb-1">
-							{isChunkError ? "Connection Interrupted" : (this.props.fallbackTitle || "Component Error")}
+							{isChunkError
+								? "Connection Interrupted"
+								: this.props.fallbackTitle || "Component Error"}
 						</h3>
 						<p className="text-sm text-gray-400 font-mono max-w-md break-words mb-4">
 							{isChunkError
 								? "A new version of the app is available or the connection was lost. Please refresh to continue."
-								: (this.state.error?.message || "An unknown error occurred")}
+								: this.state.error?.message || "An unknown error occurred"}
 						</p>
 						<div className="flex gap-3 justify-center">
 							{isChunkError ? (
@@ -58,7 +60,9 @@ export class ClientErrorBoundary extends Component<Props, State> {
 								</button>
 							) : (
 								<button
-									onClick={() => this.setState({ hasError: false, error: null })}
+									onClick={() =>
+										this.setState({ hasError: false, error: null })
+									}
 									className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm transition-colors"
 								>
 									Try Again

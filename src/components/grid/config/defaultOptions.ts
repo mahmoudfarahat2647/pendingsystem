@@ -1,49 +1,49 @@
 import type { GridOptions } from "ag-grid-community";
 
 export const defaultGridOptions: GridOptions = {
-    // Row Virtualization
-    rowBuffer: 10,
-    rowModelType: "clientSide",
+	// Row Virtualization
+	rowBuffer: 10,
+	rowModelType: "clientSide",
 
-    // Performance flags
-    animateRows: false,
-    suppressColumnVirtualisation: false,
-    suppressRowVirtualisation: false,
-    suppressPropertyNamesCheck: true,
+	// Performance flags
+	animateRows: false,
+	suppressColumnVirtualisation: false,
+	suppressRowVirtualisation: false,
+	suppressPropertyNamesCheck: true,
 
-    // Batch processing
-    asyncTransactionWaitMillis: 50,
+	// Batch processing
+	asyncTransactionWaitMillis: 50,
 
-    // DOM optimization
-    suppressCellFocus: false,
-    enableCellTextSelection: true,
-    debounceVerticalScrollbar: true,
+	// DOM optimization
+	suppressCellFocus: false,
+	enableCellTextSelection: true,
+	debounceVerticalScrollbar: true,
 
-    // Selection
-    rowSelection: {
-        mode: "multiRow",
-        checkboxes: true,
-        headerCheckbox: true,
-        enableClickSelection: true,
-    },
+	// Selection
+	rowSelection: {
+		mode: "multiRow",
+		checkboxes: true,
+		headerCheckbox: true,
+		enableClickSelection: true,
+	},
 
-    // Suppress unnecessary features
-    suppressDragLeaveHidesColumns: true,
-    suppressMakeColumnVisibleAfterUnGroup: true,
-    suppressRowClickSelection: false,
+	// Suppress unnecessary features
+	suppressDragLeaveHidesColumns: true,
+	suppressMakeColumnVisibleAfterUnGroup: true,
+	suppressRowClickSelection: false,
 
-    // Loading state
-    suppressLoadingOverlay: false,
-    suppressNoRowsOverlay: false,
+	// Loading state
+	suppressLoadingOverlay: false,
+	suppressNoRowsOverlay: false,
 };
 
 export const defaultColDef = {
-    sortable: true,
-    filter: true,
-    resizable: true,
-    minWidth: 80,
-    filterParams: {
-        debounceMs: 200,
-        buttons: ["reset", "apply"],
-    },
+	sortable: true,
+	filter: true,
+	resizable: true,
+	minWidth: 80,
+	filterParams: {
+		debounceMs: 200,
+		buttons: ["reset", "apply"],
+	},
 };
