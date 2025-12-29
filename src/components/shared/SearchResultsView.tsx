@@ -86,15 +86,20 @@ export const SearchResultsView = () => {
 				row.baseId,
 				row.trackingId,
 				row.model,
+				row.company || "Renault",
 				row.requester,
+				row.sabNumber,
+				row.acceptedBy,
+				row.rDate,
 				row.noteContent,
 				row.repairSystem,
 				row.actionNote,
+				row.bookingDate,
 				row.bookingNote,
+				row.archiveReason,
 			]
-				.filter(Boolean)
-				.join(" ")
-				.toLowerCase();
+				.map((field) => (field ? String(field).toLowerCase() : ""))
+				.join(" ");
 
 			// Check if ALL terms match (AND logic)
 			return terms.every((term) => searchString.includes(term));
@@ -140,8 +145,8 @@ export const SearchResultsView = () => {
 					values:
 						Array.isArray(partStatuses) && partStatuses.length > 0
 							? partStatuses
-									.filter((s) => s && typeof s.label === "string")
-									.map((s) => s.label)
+								.filter((s) => s && typeof s.label === "string")
+								.map((s) => s.label)
 							: [],
 				},
 				cellClass: "flex items-center justify-center",
