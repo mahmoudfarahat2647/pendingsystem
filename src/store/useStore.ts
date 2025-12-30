@@ -31,9 +31,6 @@ export const useAppStore = create<CombinedStore>()(
 					undoStack,
 					todos,
 					notes,
-					attachments,
-					templates,
-					searchResults,
 					highlightedRowId,
 					...rest
 				} = state;

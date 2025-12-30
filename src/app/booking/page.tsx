@@ -18,6 +18,7 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid";
 import { getBookingColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
+import { cn } from "@/lib/utils";
 import { RowModals } from "@/components/shared/RowModals";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

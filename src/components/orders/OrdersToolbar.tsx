@@ -52,7 +52,7 @@ interface OrdersToolbarProps {
 
 export const OrdersToolbar = ({
 	selectedCount,
-	selectedRows,
+	selectedRows = [],
 	onAddEdit,
 	onDelete,
 	onCommit,

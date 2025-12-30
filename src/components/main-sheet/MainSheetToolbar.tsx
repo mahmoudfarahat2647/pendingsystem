@@ -41,7 +41,7 @@ interface MainSheetToolbarProps {
 export const MainSheetToolbar = ({
 	isLocked,
 	selectedCount,
-	selectedRows,
+	selectedRows = [],
 	onBooking,
 	onArchive,
 	onSendToCallList,

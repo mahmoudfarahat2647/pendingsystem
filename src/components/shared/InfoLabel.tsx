@@ -96,17 +96,25 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								{partNumber}
 							</span>
 						</div>
-						<div className="flex items-baseline gap-2">
-							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
-								cnt :
+						<div className="flex items-center gap-2">
+							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
+								order stats :
 							</span>
-							<span className="text-sm font-mono text-gray-300 tracking-wide truncate">
-								{cntrRdg}
+							<span
+								className={cn(
+									"px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+									`${statsColor.replace("bg-", "border-").split(" ")[0]}/20`,
+									statsColor.replace("bg-", "text-").split(" ")[0],
+									statsColor.includes("/") ? statsColor : `${statsColor}/10`,
+									"bg-opacity-10",
+								)}
+							>
+								{bookingStatus || status}
 							</span>
 						</div>
 					</div>
 
-					{/* Column 3: Warranty & Status */}
+					{/* Column 3: Warranty & Part State */}
 					<div className="space-y-1">
 						<div className="flex items-baseline gap-2">
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
@@ -128,19 +136,21 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 						</div>
 						<div className="flex items-center gap-2">
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
-								stats :
+								part state :
 							</span>
-							<span
-								className={cn(
-									"px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest transition-all duration-300",
-									`${statsColor.replace("bg-", "border-").split(" ")[0]}/20`,
-									statsColor.replace("bg-", "text-").split(" ")[0],
-									statsColor.includes("/") ? statsColor : `${statsColor}/10`,
-									"bg-opacity-10", // Force opacity for background if not already present
-								)}
-							>
-								{bookingStatus || status}
-							</span>
+							{data?.partStatus ? (
+								<div className="flex items-center gap-1.5 group/state">
+									<div className={cn(
+										"w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.3)]",
+										useAppStore.getState().partStatuses.find(s => s.label === data.partStatus)?.color.replace("text-", "bg-").split(" ")[0] || "bg-cyan-500"
+									)} />
+									<span className="text-[11px] font-bold text-gray-100 tracking-wider uppercase group-hover/state:text-cyan-400 transition-colors">
+										{data.partStatus}
+									</span>
+								</div>
+							) : (
+								<span className="text-xs text-gray-600 italic">No Status</span>
+							)}
 						</div>
 					</div>
 				</div>

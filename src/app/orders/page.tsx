@@ -3,7 +3,7 @@
 import type { GridApi } from "ag-grid-community";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { OrderFormModal } from "@/components/orders/OrderFormModal";
+import { OrderFormModal, type FormData } from "@/components/orders/OrderFormModal";
 import { OrdersToolbar } from "@/components/orders/OrdersToolbar";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -84,7 +84,7 @@ export default function OrdersPage() {
 	};
 
 	const handleSaveOrder = (
-		formData: Record<string, unknown>,
+		formData: FormData,
 		parts: PartEntry[],
 	) => {
 		if (isEditMode) {

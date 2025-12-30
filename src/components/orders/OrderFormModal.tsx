@@ -37,7 +37,7 @@ import { cn, detectModelFromVin, generateId } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 
-interface FormData {
+export interface FormData {
 	customerName: string;
 	vin: string;
 	mobile: string;
