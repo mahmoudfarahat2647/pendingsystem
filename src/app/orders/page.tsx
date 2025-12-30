@@ -62,11 +62,16 @@ export default function OrdersPage() {
 		() =>
 			getOrdersColumns(
 				partStatuses,
-				handleNoteClick,
+				(row) => handleNoteClick(row, "orders"),
 				handleReminderClick,
 				handleAttachClick,
 			),
-		[partStatuses, handleNoteClick, handleReminderClick, handleAttachClick],
+		[
+			partStatuses,
+			handleNoteClick,
+			handleReminderClick,
+			handleAttachClick,
+		],
 	);
 
 	const handleSelectionChanged = useCallback((rows: PendingRow[]) => {
@@ -288,6 +293,7 @@ export default function OrdersPage() {
 					onSaveReminder={saveReminder}
 					onSaveAttachment={saveAttachment}
 					onSaveArchive={saveArchive}
+					sourceTag="orders"
 				/>
 
 				<EditAttachmentModal

@@ -87,7 +87,7 @@ export default function MainSheetPage() {
 		() =>
 			getMainSheetColumns(
 				partStatuses,
-				handleNoteClick,
+				(row) => handleNoteClick(row, "main sheet"),
 				handleReminderClick,
 				handleAttachClick,
 				isSheetLocked,
@@ -200,6 +200,7 @@ export default function MainSheetPage() {
 				onSaveReminder={saveReminder}
 				onSaveAttachment={saveAttachment}
 				onSaveArchive={saveArchive}
+				sourceTag="main sheet"
 			/>
 
 			<BookingCalendarModal

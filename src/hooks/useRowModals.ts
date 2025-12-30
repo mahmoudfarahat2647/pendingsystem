@@ -17,9 +17,11 @@ export const useRowModals = (
 	const [activeModal, setActiveModal] = useState<RowModalType>(null);
 	const [currentRow, setCurrentRow] = useState<PendingRow | null>(null);
 	const [targetIds, setTargetIds] = useState<string[]>([]);
+	const [sourceTag, setSourceTag] = useState<string>("");
 
-	const handleNoteClick = useCallback((row: PendingRow) => {
+	const handleNoteClick = useCallback((row: PendingRow, tag?: string) => {
 		setCurrentRow(row);
+		setSourceTag(tag || "");
 		setActiveModal("note");
 	}, []);
 
@@ -92,15 +94,25 @@ export const useRowModals = (
 	);
 
 	const saveArchive = useCallback(
-		(reason: string) => {
+		(archiveReason: string) => {
 			if (onArchive && targetIds.length > 0) {
-				onArchive(targetIds, reason);
+				onArchive(targetIds, archiveReason);
 				closeModal();
 			} else if (currentRow) {
+				const tag = "#archive";
+				const reasonText = archiveReason.trim();
+				const newNote = reasonText ? `${reasonText} ${tag}` : "";
+				const combinedNote = currentRow.actionNote
+					? reasonText
+						? `${currentRow.actionNote}\n${newNote}`
+						: currentRow.actionNote
+					: newNote;
+
 				onUpdate(currentRow.id, {
 					status: "Archived",
-					archiveReason: reason,
+					archiveReason: archiveReason,
 					archivedAt: new Date().toISOString(),
+					actionNote: combinedNote,
 				});
 				closeModal();
 			}
@@ -120,5 +132,6 @@ export const useRowModals = (
 		saveReminder,
 		saveAttachment,
 		saveArchive,
+		sourceTag,
 	};
 };

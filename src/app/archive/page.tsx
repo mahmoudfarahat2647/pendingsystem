@@ -69,7 +69,7 @@ export default function ArchivePage() {
 
 	const columns = useMemo(() => {
 		const baseColumns = getBaseColumns(
-			handleNoteClick,
+			(row) => handleNoteClick(row, "archive"),
 			handleReminderClick,
 			handleAttachClick,
 		);
@@ -169,7 +169,8 @@ export default function ArchivePage() {
 					onSaveNote={saveNote}
 					onSaveReminder={saveReminder}
 					onSaveAttachment={saveAttachment}
-					onSaveArchive={() => {}}
+					onSaveArchive={() => { }}
+					sourceTag="archive"
 				/>
 
 				{/* Reorder Reason Modal */}

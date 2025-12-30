@@ -164,8 +164,8 @@ export function useColumnDefs(
 							values:
 								Array.isArray(partStatuses) && partStatuses.length > 0
 									? partStatuses
-											.filter((s) => s && typeof s.label === "string")
-											.map((s) => s.label)
+										.filter((s) => s && typeof s.label === "string")
+										.map((s) => s.label)
 									: [],
 						},
 						cellClass: "flex items-center justify-center",
@@ -200,11 +200,6 @@ export function useColumnDefs(
 							partStatuses: bookingStatuses,
 						},
 						cellClass: "flex items-center justify-center",
-					},
-					{
-						headerName: "BOOKING NOTE",
-						field: "bookingNote",
-						width: 150,
 					},
 				];
 

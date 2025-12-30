@@ -19,6 +19,7 @@ interface EditNoteModalProps {
 	onOpenChange: (open: boolean) => void;
 	initialContent: string;
 	onSave: (content: string) => void;
+	sourceTag?: string;
 }
 
 export const EditNoteModal = ({
@@ -26,30 +27,41 @@ export const EditNoteModal = ({
 	onOpenChange,
 	initialContent,
 	onSave,
+	sourceTag,
 }: EditNoteModalProps) => {
 	const noteTemplates = useAppStore((state) => state.noteTemplates);
 	const addNoteTemplate = useAppStore((state) => state.addNoteTemplate);
 	const removeNoteTemplate = useAppStore((state) => state.removeNoteTemplate);
 	const [content, setContent] = useState("");
+	const [newNote, setNewNote] = useState("");
 	const [isAdding, setIsAdding] = useState(false);
 	const [newTemplate, setNewTemplate] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-	const maxChars = 200;
+	const maxChars = 500; // Increased to accommodate multiple notes
 
 	useEffect(() => {
 		if (open) {
 			setContent(initialContent || "");
+			setNewNote("");
 			setShowDeleteConfirm(false);
 		}
 	}, [open, initialContent]);
 
 	const handleSave = () => {
-		onSave(content);
+		let finalContent = content;
+		if (newNote.trim()) {
+			const taggedNote = `${newNote.trim()} #${sourceTag || "note"}`;
+			finalContent = finalContent
+				? `${finalContent}\n${taggedNote}`
+				: taggedNote;
+		}
+		onSave(finalContent);
 		onOpenChange(false);
 	};
 
 	const handleTemplateClick = (text: string) => {
-		const newContent = content ? `${content}\n${text}` : text;
+		const taggedText = `${text} #${sourceTag || "note"}`;
+		const newContent = content ? `${content}\n${taggedText}` : taggedText;
 		if (newContent.length <= maxChars) {
 			setContent(newContent);
 		}
@@ -73,12 +85,12 @@ export const EditNoteModal = ({
 							size="icon"
 							onClick={() => setShowDeleteConfirm(true)}
 							className="h-8 w-8 text-gray-500 hover:text-red-400 hover:bg-red-400/10"
-							title="Clear Note"
+							title="Clear All Notes"
 						>
 							<Trash2 className="h-4 w-4" />
 						</Button>
 					</div>
-					<DialogTitle className="text-lg font-medium">Edit Note</DialogTitle>
+					<DialogTitle className="text-lg font-medium">Notes</DialogTitle>
 					<div className="flex-1" />
 				</DialogHeader>
 
@@ -94,10 +106,10 @@ export const EditNoteModal = ({
 								</div>
 								<div>
 									<h3 className="text-sm font-semibold text-white">
-										Clear Note?
+										Clear All Notes?
 									</h3>
 									<p className="text-xs text-gray-400 mt-1">
-										This will permanently remove the note from this row.
+										This will permanently remove all notes from this row.
 									</p>
 								</div>
 								<div className="flex gap-3">
@@ -126,57 +138,77 @@ export const EditNoteModal = ({
 					)}
 
 					<div className="p-6 space-y-6">
-						{/* Text Area Section */}
-						<div className="relative">
-							<Textarea
-								value={content}
-								onChange={(e) => setContent(e.target.value)}
-								placeholder="Enter note..."
-								className="min-h-[120px] bg-[#2c2c2e] border-white/10 text-gray-200 resize-none focus-visible:ring-1 focus-visible:ring-renault-yellow focus-visible:ring-offset-0"
-								maxLength={maxChars}
-							/>
-							<div className="absolute bottom-2 right-2 text-xs text-gray-500">
-								{content.length}/{maxChars}
+						{/* Existing Notes Section */}
+						<div className="space-y-2">
+							<h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
+								EXISTING NOTES
+							</h4>
+							<div className="relative">
+								<Textarea
+									value={content}
+									onChange={(e) => setContent(e.target.value)}
+									placeholder="No notes yet..."
+									className="min-h-[100px] bg-transparent border-white/5 text-gray-400 text-xs resize-none focus-visible:ring-0 focus-visible:ring-offset-0 scrollbar-thin"
+								/>
+							</div>
+						</div>
+
+						{/* New Note Section */}
+						<div className="space-y-2">
+							<h4 className="text-[10px] font-bold text-renault-yellow uppercase tracking-[0.2em]">
+								ADD NEW NOTE
+							</h4>
+							<div className="relative">
+								<Textarea
+									value={newNote}
+									onChange={(e) => setNewNote(e.target.value)}
+									placeholder={`Type a note for #${sourceTag}...`}
+									className="min-h-[80px] bg-[#2c2c2e] border-white/10 text-gray-100 text-sm resize-none focus-visible:ring-1 focus-visible:ring-renault-yellow focus-visible:ring-offset-0"
+									autoFocus
+								/>
+								<div className="absolute bottom-2 right-2 text-[10px] text-gray-500 font-mono">
+									Auto-tags with #{sourceTag}
+								</div>
 							</div>
 						</div>
 
 						{/* Quick Templates Section */}
 						<div className="space-y-3">
 							<div className="flex items-center justify-between">
-								<h4 className="text-sm font-semibold text-gray-200 uppercase tracking-wider">
+								<h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
 									QUICK TEMPLATES
 								</h4>
 								<Button
 									variant="ghost"
 									size="sm"
 									onClick={() => setIsAdding(!isAdding)}
-									className="h-6 px-2 text-renault-yellow hover:text-renault-yellow/80 hover:bg-renault-yellow/10 text-xs"
+									className="h-6 px-2 text-renault-yellow hover:text-renault-yellow/80 hover:bg-renault-yellow/10 text-[10px] font-bold"
 								>
 									<Plus className="h-3 w-3 mr-1" />
-									{isAdding ? "Cancel" : "Add New"}
+									{isAdding ? "CANCEL" : "ADD NEW"}
 								</Button>
 							</div>
 
 							{isAdding && (
-								<div className="flex gap-2 mb-2">
+								<div className="flex gap-2 mb-2 animate-in slide-in-from-top-1 duration-200">
 									<Input
 										value={newTemplate}
 										onChange={(e) => setNewTemplate(e.target.value)}
-										placeholder="New template..."
+										placeholder="Template text..."
 										className="h-8 text-xs bg-[#2c2c2e] border-white/10"
 										onKeyDown={(e) => e.key === "Enter" && handleAddTemplate()}
 									/>
 									<Button
 										size="sm"
 										onClick={handleAddTemplate}
-										className="h-8 bg-renault-yellow text-black hover:bg-renault-yellow/90"
+										className="h-8 bg-renault-yellow text-black hover:bg-renault-yellow/90 text-[10px] font-bold"
 									>
-										Add
+										ADD
 									</Button>
 								</div>
 							)}
 
-							<div className="grid grid-cols-2 gap-2">
+							<div className="grid grid-cols-2 gap-2 max-h-[120px] overflow-y-auto pr-1 scrollbar-thin">
 								{noteTemplates.map((template, idx) => (
 									<div
 										key={`${template}-${idx}`}
@@ -184,7 +216,7 @@ export const EditNoteModal = ({
 									>
 										<Button
 											variant="secondary"
-											className="w-full justify-start text-xs h-9 bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border border-transparent hover:border-white/10 truncate pr-8"
+											className="w-full justify-start text-[11px] h-9 bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border border-transparent hover:border-white/10 truncate pr-8"
 											onClick={() => handleTemplateClick(template)}
 										>
 											{template}
@@ -211,15 +243,15 @@ export const EditNoteModal = ({
 					<Button
 						variant="ghost"
 						onClick={() => onOpenChange(false)}
-						className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 w-full"
+						className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 w-full text-xs font-bold"
 					>
-						Cancel
+						CANCEL
 					</Button>
 					<Button
 						onClick={handleSave}
-						className="bg-renault-yellow hover:bg-renault-yellow/90 text-black font-medium w-full"
+						className="bg-renault-yellow hover:bg-renault-yellow/90 text-black font-bold w-full text-xs"
 					>
-						Save Note
+						SAVE NOTES
 					</Button>
 				</DialogFooter>
 			</DialogContent>

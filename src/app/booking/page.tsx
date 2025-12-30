@@ -81,7 +81,7 @@ export default function BookingPage() {
 	const columns = useMemo(
 		() =>
 			getBookingColumns(
-				handleNoteClick,
+				(row) => handleNoteClick(row, "booking"),
 				handleReminderClick,
 				handleAttachClick,
 			),
@@ -220,8 +220,8 @@ export default function BookingPage() {
 									onClick={() => {
 										setRebookingSearchTerm(
 											selectedRows[0]?.vin ||
-												selectedRows[0]?.customerName ||
-												"",
+											selectedRows[0]?.customerName ||
+											"",
 										);
 										setIsRebookingModalOpen(true);
 									}}
@@ -329,6 +329,7 @@ export default function BookingPage() {
 					onSaveReminder={saveReminder}
 					onSaveAttachment={saveAttachment}
 					onSaveArchive={saveArchive}
+					sourceTag="booking"
 				/>
 
 				<ConfirmDialog

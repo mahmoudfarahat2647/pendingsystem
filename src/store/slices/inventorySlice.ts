@@ -84,12 +84,23 @@ export const createInventorySlice: StateCreator<
 				...orderRows,
 			];
 
-			const updatedRows = rowsToMove.map((r) => ({
-				...r,
-				status: "Archived" as const,
-				trackingId: `ARCH-${r.baseId}`,
-				actionNote,
-			}));
+			const updatedRows = rowsToMove.map((r) => {
+				const tag = "#archive";
+				const reason = actionNote?.trim();
+				const newNote = reason ? `${reason} ${tag}` : "";
+				const combinedNote = r.actionNote
+					? reason
+						? `${r.actionNote}\n${newNote}`
+						: r.actionNote
+					: newNote;
+
+				return {
+					...r,
+					status: "Archived" as const,
+					trackingId: `ARCH-${r.baseId}`,
+					actionNote: combinedNote,
+				};
+			});
 
 			return {
 				bookingRowData: state.bookingRowData.filter((r) => !ids.includes(r.id)),
@@ -120,14 +131,25 @@ export const createInventorySlice: StateCreator<
 
 			const rowsToMove = [...bookingRows, ...callRows, ...archiveRows];
 
-			const updatedRows = rowsToMove.map((r) => ({
-				...r,
-				status: "Reorder" as const,
-				trackingId: `ORD-${r.baseId}`,
-				actionNote,
-				bookingDate: undefined,
-				bookingNote: undefined,
-			}));
+			const updatedRows = rowsToMove.map((r) => {
+				const tag = "#reorder";
+				const reason = actionNote?.trim();
+				const newNote = reason ? `${reason} ${tag}` : "";
+				const combinedNote = r.actionNote
+					? reason
+						? `${r.actionNote}\n${newNote}`
+						: r.actionNote
+					: newNote;
+
+				return {
+					...r,
+					status: "Reorder" as const,
+					trackingId: `ORD-${r.baseId}`,
+					actionNote: combinedNote,
+					bookingDate: undefined,
+					bookingNote: undefined,
+				};
+			});
 
 			return {
 				bookingRowData: state.bookingRowData.filter((r) => !ids.includes(r.id)),

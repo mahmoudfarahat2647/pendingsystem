@@ -20,6 +20,7 @@ interface RowModalsProps {
 	) => void;
 	onSaveAttachment: (path: string | undefined) => void;
 	onSaveArchive: (reason: string) => void;
+	sourceTag?: string;
 }
 
 export const RowModals = ({
@@ -30,6 +31,7 @@ export const RowModals = ({
 	onSaveReminder,
 	onSaveAttachment,
 	onSaveArchive,
+	sourceTag,
 }: RowModalsProps) => {
 	if (!currentRow) return null;
 
@@ -40,6 +42,7 @@ export const RowModals = ({
 				onOpenChange={(open) => !open && onClose()}
 				initialContent={currentRow.actionNote || ""}
 				onSave={onSaveNote}
+				sourceTag={sourceTag}
 			/>
 			<EditReminderModal
 				open={activeModal === "reminder"}
