@@ -67,6 +67,7 @@ export const OrderFormModal = ({
 	onSubmit,
 }: OrderFormModalProps) => {
 	const rowData = useAppStore((state) => state.rowData);
+	const ordersRowData = useAppStore((state) => state.ordersRowData);
 	const models = useAppStore((state) => state.models);
 	const addModel = useAppStore((state) => state.addModel);
 	const removeModel = useAppStore((state) => state.removeModel);
@@ -231,19 +232,28 @@ export const OrderFormModal = ({
 		> = {};
 		parts.forEach((part) => {
 			if (!part.partNumber) return;
-			const isDuplicate = rowData.some(
+
+			// Check for duplicates in both Main Sheet and Orders Tab
+			const isDuplicateInMain = rowData.some(
 				(r) => r.vin === formData.vin && r.partNumber === part.partNumber,
 			);
-			if (isDuplicate) {
+			const isDuplicateInOrders = ordersRowData.some(
+				(r) => r.vin === formData.vin && r.partNumber === part.partNumber,
+			);
+
+			if (isDuplicateInMain || isDuplicateInOrders) {
 				warnings[part.id] = {
 					type: "duplicate",
 					value: "The order already exists",
 				};
 				return;
 			}
-			const existingPart = rowData.find(
-				(r) => r.partNumber === part.partNumber,
-			);
+
+			// Check for description mismatch in both lists
+			const existingPart =
+				rowData.find((r) => r.partNumber === part.partNumber) ||
+				ordersRowData.find((r) => r.partNumber === part.partNumber);
+
 			if (
 				existingPart &&
 				existingPart.description.trim().toLowerCase() !==
@@ -256,7 +266,7 @@ export const OrderFormModal = ({
 			}
 		});
 		return warnings;
-	}, [parts, rowData, formData.vin]);
+	}, [parts, rowData, ordersRowData, formData.vin]);
 
 	const hasValidationErrors = Object.keys(partValidationWarnings).length > 0;
 
