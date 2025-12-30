@@ -95,7 +95,7 @@ function scanSliceFile(filePath) {
 	// Find all JSDoc comments
 	const jsDocRegex = /\/\*\*([\s\S]*?)\*\/\s+(\w+):/g;
 
-	for (const match of jsDocRegex[Symbol.iterator]()) {
+	for (const match of _content.matchAll(jsDocRegex)) {
 		const [, jsDocBody, functionName] = match;
 		const jsDocInfo = parseJsDoc(jsDocBody);
 

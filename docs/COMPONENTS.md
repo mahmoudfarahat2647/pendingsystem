@@ -72,7 +72,7 @@ const [open, setOpen] = useState(false);
 
 ### OrderFormModal
 
-**Location**: [`src/components/shared/OrderFormModal.tsx`](../src/components/shared/OrderFormModal.tsx)
+**Location**: [`src/components/orders/OrderFormModal.tsx`](../src/components/orders/OrderFormModal.tsx)
 
 **Purpose**: Bulk order creation interface with multi-part support and VIN validation.
 

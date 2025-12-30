@@ -70,7 +70,7 @@ function validateFile(filename) {
 
 	// Check for broken links
 	const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-	for (const match of linkRegex[Symbol.iterator]()) {
+	for (const match of content.matchAll(linkRegex)) {
 		const [, text, href] = match;
 
 		// Skip external links
@@ -88,7 +88,7 @@ function validateFile(filename) {
 
 	// Check code block syntax (basic check)
 	const codeBlockRegex = /```typescript\n([\s\S]*?)\n```/g;
-	for (const match of codeBlockRegex[Symbol.iterator]()) {
+	for (const match of content.matchAll(codeBlockRegex)) {
 		const code = match[1];
 		// Check for common syntax issues
 		if (code.includes("const {") && !code.includes("}")) {
