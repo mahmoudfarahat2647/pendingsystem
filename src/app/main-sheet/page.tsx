@@ -61,6 +61,12 @@ export default function MainSheetPage() {
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+	const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+	const filteredRowData = useMemo(() => {
+		if (!activeFilter) return rowData;
+		return rowData.filter((row) => row.partStatus === activeFilter);
+	}, [rowData, activeFilter]);
 
 	const _handleSelectionChanged = useMemo(
 		() => (rows: PendingRow[]) => {
@@ -147,6 +153,11 @@ export default function MainSheetPage() {
 							selectedCount={selectedRows.length}
 							selectedRows={selectedRows}
 							partStatuses={partStatuses}
+							activeFilter={activeFilter}
+							onFilterChange={(status) => {
+								setActiveFilter(status === activeFilter ? null : status);
+								if (status) toast.info(`Filtering by: ${status}`);
+							}}
 							onLockToggle={() => setIsSheetLocked(!isSheetLocked)}
 							onUpdateStatus={handleUpdatePartStatus}
 							onBooking={() => setIsBookingModalOpen(true)}
@@ -174,7 +185,7 @@ export default function MainSheetPage() {
 				<Card>
 					<CardContent className="p-0">
 						<DataGrid
-							rowData={rowData}
+							rowData={filteredRowData}
 							columnDefs={columns}
 							onSelectionChanged={setSelectedRows}
 							onCellValueChanged={(params) => {
