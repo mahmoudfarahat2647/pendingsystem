@@ -19,6 +19,7 @@ import React, { useEffect, useState } from "react";
 import { exportWorkbookCSV } from "@/lib/exportUtils";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
+import type { AppNotification } from "@/types";
 
 export const Header = React.memo(function Header() {
 	const _pathname = usePathname();
@@ -43,7 +44,7 @@ export const Header = React.memo(function Header() {
 	const unreadCount = notifications.filter((n) => !n.isRead).length;
 	const [showNotifications, setShowNotifications] = useState(false);
 
-	const handleNotificationClick = (n: any) => {
+	const handleNotificationClick = (n: AppNotification) => {
 		markNotificationAsRead(n.id);
 		setHighlightedRowId(n.referenceId);
 		if (n.path) {
@@ -140,6 +141,7 @@ export const Header = React.memo(function Header() {
 					<div className="absolute right-4 flex items-center gap-2">
 						{useAppStore((state) => state.searchTerm) && (
 							<button
+								type="button"
 								onClick={() => useAppStore.getState().setSearchTerm("")}
 								className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
 							>
@@ -158,6 +160,7 @@ export const Header = React.memo(function Header() {
 				{/* Action Buttons Group */}
 				<div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/5">
 					<button
+						type="button"
 						onClick={undo}
 						disabled={undoStack.length === 0}
 						className={cn(
@@ -172,6 +175,7 @@ export const Header = React.memo(function Header() {
 					</button>
 					<div className="w-px h-4 bg-white/10" />
 					<button
+						type="button"
 						onClick={redo}
 						disabled={redos.length === 0}
 						className={cn(
@@ -186,6 +190,7 @@ export const Header = React.memo(function Header() {
 					</button>
 					<div className="w-px h-4 bg-white/10" />
 					<button
+						type="button"
 						onClick={commitSave}
 						className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
 						title="Save Changes (Cmd+S)"
@@ -196,6 +201,7 @@ export const Header = React.memo(function Header() {
 
 				<div className="flex items-center gap-2">
 					<button
+						type="button"
 						onClick={() => window.location.reload()}
 						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
 						title="Refresh Page"
@@ -204,6 +210,7 @@ export const Header = React.memo(function Header() {
 					</button>
 
 					<button
+						type="button"
 						onClick={() => {
 							const {
 								ordersRowData,
@@ -228,6 +235,7 @@ export const Header = React.memo(function Header() {
 
 					<div className="relative">
 						<button
+							type="button"
 							onClick={() => setShowNotifications(!showNotifications)}
 							className={cn(
 								"p-2.5 rounded-xl transition-all relative",
@@ -250,9 +258,17 @@ export const Header = React.memo(function Header() {
 						<AnimatePresence mode="wait">
 							{showNotifications && (
 								<>
-									<div
+									<button
+										type="button"
+										aria-label="Close notifications"
+										tabIndex={0}
 										className="fixed inset-0 z-40"
 										onClick={() => setShowNotifications(false)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter" || e.key === " ") {
+												setShowNotifications(false);
+											}
+										}}
 									/>
 									<motion.div
 										initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -266,6 +282,7 @@ export const Header = React.memo(function Header() {
 											</h3>
 											{notifications.length > 0 && (
 												<button
+													type="button"
 													onClick={clearNotifications}
 													className="text-[10px] text-gray-500 hover:text-white uppercase font-bold transition-colors"
 												>
@@ -291,6 +308,7 @@ export const Header = React.memo(function Header() {
 															)}
 														>
 															<button
+																type="button"
 																onClick={() => handleNotificationClick(n)}
 																className="flex-1 p-4 text-left flex gap-3 outline-none"
 															>
@@ -341,6 +359,7 @@ export const Header = React.memo(function Header() {
 																</div>
 															</button>
 															<button
+																type="button"
 																onClick={(e) => {
 																	e.stopPropagation();
 																	removeNotification(n.id);

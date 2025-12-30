@@ -3,6 +3,12 @@ tools: ['playwright/*']
 agent: 'agent'
 ---
 
+# Playwright Test Generator Prompt
+
+Use this prompt to generate automated tests for the Renault System using Playwright.
+
+## Instructions
+
 - You are a playwright test generator.
 - You are given a scenario and you need to generate a playwright test for it.
 - DO NOT generate test code based on the scenario alone. 
@@ -15,3 +21,10 @@ agent: 'agent'
 - Execute the test file and iterate until the test passes
 - Include appropriate assertions to verify the expected behavior
 - Structure tests properly with descriptive test titles and comments
+
+## Reference
+
+- Run tests: `npm run e2e`
+- Watch mode: `npm run e2e:ui`
+- Debug mode: `npm run e2e:debug`
+- View reports: `npm run e2e:report`

@@ -1,6 +1,10 @@
 "use client";
 
-import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import type {
+	ColDef,
+	ICellRendererParams,
+	ValueFormatterParams,
+} from "ag-grid-community";
 import { Bell, Paperclip, StickyNote } from "lucide-react";
 import { cn, getVinColor } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -44,6 +48,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 			)}
 		>
 			<button
+				type="button"
 				className={`transition-colors ${data.hasAttachment ? "text-indigo-400" : "text-gray-600 hover:text-gray-400"}`}
 				title="Attachment"
 				disabled={isLocked}
@@ -56,6 +61,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 				<Paperclip className="h-3.5 w-3.5" />
 			</button>
 			<button
+				type="button"
 				className={`transition-colors ${data.actionNote ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
 				title="Note"
 				disabled={isLocked}
@@ -68,6 +74,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 				<StickyNote className="h-3.5 w-3.5" />
 			</button>
 			<button
+				type="button"
 				className={`transition-colors ${data.reminder ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
 				title="Reminder"
 				disabled={isLocked}
@@ -191,117 +198,118 @@ export const getBaseColumns = (
 	onAttachClick?: (row: PendingRow) => void,
 	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-		{
-			headerName: "",
-			field: "id",
-			checkboxSelection: true,
-			headerCheckboxSelection: true,
-			width: 50,
-			maxWidth: 50,
-			sortable: false,
-			filter: false,
-			resizable: false,
-			pinned: "left",
-			suppressMenu: true,
-			valueFormatter: () => "", // Hide the ID number
-			cellClass: "flex items-center justify-center",
+	{
+		headerName: "",
+		field: "id",
+		checkboxSelection: true,
+		headerCheckboxSelection: true,
+		width: 50,
+		maxWidth: 50,
+		sortable: false,
+		filter: false,
+		resizable: false,
+		pinned: "left",
+		suppressMenu: true,
+		valueFormatter: () => "", // Hide the ID number
+		cellClass: "flex items-center justify-center",
+	},
+	{
+		headerName: "ACTIONS",
+		field: "id",
+		cellRenderer: ActionCellRenderer,
+		cellRendererParams: {
+			onNoteClick,
+			onReminderClick,
+			onAttachClick,
+			isLocked,
 		},
-		{
-			headerName: "ACTIONS",
-			field: "id",
-			cellRenderer: ActionCellRenderer,
-			cellRendererParams: {
-				onNoteClick,
-				onReminderClick,
-				onAttachClick,
-				isLocked,
-			},
-			width: 100,
-			maxWidth: 100,
-			sortable: false,
-			filter: false,
-			suppressMenu: true,
-		},
-		{
-			headerName: "STATS",
-			field: "status",
-			cellRenderer: StatusRenderer,
-			width: 80,
-		},
-		{
-			headerName: "R/DATE",
-			field: "rDate",
-			width: 100,
-		},
-		{
-			headerName: "COMPANY",
-			field: "company",
-			width: 90,
-			cellClass: "font-bold text-center",
-			valueFormatter: (params: any) => params.value || "Renault",
-		},
-		{
-			headerName: "CUSTOMER NAME",
-			field: "customerName",
-			filter: "agTextColumnFilter",
-			minWidth: 140,
-		},
-		{
-			headerName: "VIN NO/",
-			field: "vin",
-			cellRenderer: VinCellRenderer,
-			filter: "agTextColumnFilter",
-			minWidth: 170,
-		},
-		{
-			headerName: "MOBILE",
-			field: "mobile",
-			width: 110,
-		},
-		{
-			headerName: "CNTR RDG",
-			field: "cntrRdg",
-			width: 90,
-		},
-		{
-			headerName: "SAB NO.",
-			field: "sabNumber",
-			width: 110,
-		},
-		{
-			headerName: "ACCEPTED BY",
-			field: "acceptedBy",
-			width: 120,
-		},
-		{
-			headerName: "MODEL",
-			field: "model",
-			width: 100,
-		},
-		{
-			headerName: "PART NUMBER",
-			field: "partNumber",
-			filter: "agTextColumnFilter",
-			minWidth: 120,
-		},
-		{
-			headerName: "DESCRIPTION",
-			field: "description",
-			filter: "agTextColumnFilter",
-			minWidth: 180,
-		},
-		{
-			headerName: "نظام اصلاح",
-			field: "repairSystem",
-			width: 100,
-		},
-		{
-			headerName: "مدة ضمان",
-			field: "remainTime",
-			cellRenderer: WarrantyRenderer,
-			width: 100,
-		},
-	];
+		width: 100,
+		maxWidth: 100,
+		sortable: false,
+		filter: false,
+		suppressMenu: true,
+	},
+	{
+		headerName: "STATS",
+		field: "status",
+		cellRenderer: StatusRenderer,
+		width: 80,
+	},
+	{
+		headerName: "R/DATE",
+		field: "rDate",
+		width: 100,
+	},
+	{
+		headerName: "COMPANY",
+		field: "company",
+		width: 90,
+		cellClass: "font-bold text-center",
+		valueFormatter: (params: ValueFormatterParams<PendingRow>) =>
+			params.value || "Renault",
+	},
+	{
+		headerName: "CUSTOMER NAME",
+		field: "customerName",
+		filter: "agTextColumnFilter",
+		minWidth: 140,
+	},
+	{
+		headerName: "VIN NO/",
+		field: "vin",
+		cellRenderer: VinCellRenderer,
+		filter: "agTextColumnFilter",
+		minWidth: 170,
+	},
+	{
+		headerName: "MOBILE",
+		field: "mobile",
+		width: 110,
+	},
+	{
+		headerName: "CNTR RDG",
+		field: "cntrRdg",
+		width: 90,
+	},
+	{
+		headerName: "SAB NO.",
+		field: "sabNumber",
+		width: 110,
+	},
+	{
+		headerName: "ACCEPTED BY",
+		field: "acceptedBy",
+		width: 120,
+	},
+	{
+		headerName: "MODEL",
+		field: "model",
+		width: 100,
+	},
+	{
+		headerName: "PART NUMBER",
+		field: "partNumber",
+		filter: "agTextColumnFilter",
+		minWidth: 120,
+	},
+	{
+		headerName: "DESCRIPTION",
+		field: "description",
+		filter: "agTextColumnFilter",
+		minWidth: 180,
+	},
+	{
+		headerName: "نظام اصلاح",
+		field: "repairSystem",
+		width: 100,
+	},
+	{
+		headerName: "مدة ضمان",
+		field: "remainTime",
+		cellRenderer: WarrantyRenderer,
+		width: 100,
+	},
+];
 
 export const getOrdersColumns = (
 	partStatuses: PartStatusDef[] = [],
@@ -309,34 +317,34 @@ export const getOrdersColumns = (
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
 ): ColDef<PendingRow>[] => [
-		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
-		{
-			headerName: "PART STATUS",
-			field: "partStatus",
-			width: 100,
-			minWidth: 100,
-			editable: true,
-			cellRenderer: PartStatusRenderer,
-			cellRendererParams: {
-				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-			},
-			cellEditor: "agSelectCellEditor",
-			cellEditorParams: {
-				values:
-					Array.isArray(partStatuses) && partStatuses.length > 0
-						? partStatuses
+	...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+	{
+		headerName: "PART STATUS",
+		field: "partStatus",
+		width: 100,
+		minWidth: 100,
+		editable: true,
+		cellRenderer: PartStatusRenderer,
+		cellRendererParams: {
+			partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+		},
+		cellEditor: "agSelectCellEditor",
+		cellEditorParams: {
+			values:
+				Array.isArray(partStatuses) && partStatuses.length > 0
+					? partStatuses
 							.filter((s) => s && typeof s.label === "string")
 							.map((s) => s.label)
-						: [],
-			},
-			cellClass: "flex items-center justify-center",
+					: [],
 		},
-		{
-			headerName: "REQUESTER",
-			field: "requester",
-			width: 120,
-		},
-	];
+		cellClass: "flex items-center justify-center",
+	},
+	{
+		headerName: "REQUESTER",
+		field: "requester",
+		width: 120,
+	},
+];
 
 export const getMainSheetColumns = (
 	partStatuses: PartStatusDef[] = [],
@@ -345,54 +353,54 @@ export const getMainSheetColumns = (
 	onAttachClick?: (row: PendingRow) => void,
 	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick, isLocked),
-		{
-			headerName: "PART STATUS",
-			field: "partStatus",
-			width: 70,
-			editable: !isLocked,
-			cellRenderer: PartStatusRenderer,
-			cellRendererParams: {
-				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-			},
-			cellEditor: "agSelectCellEditor",
-			cellEditorParams: {
-				values:
-					Array.isArray(partStatuses) && partStatuses.length > 0
-						? partStatuses
+	...getBaseColumns(onNoteClick, onReminderClick, onAttachClick, isLocked),
+	{
+		headerName: "PART STATUS",
+		field: "partStatus",
+		width: 70,
+		editable: !isLocked,
+		cellRenderer: PartStatusRenderer,
+		cellRendererParams: {
+			partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+		},
+		cellEditor: "agSelectCellEditor",
+		cellEditorParams: {
+			values:
+				Array.isArray(partStatuses) && partStatuses.length > 0
+					? partStatuses
 							.filter((s) => s && typeof s.label === "string")
 							.map((s) => s.label)
-						: [],
-			},
-			cellClass: "flex items-center justify-center",
+					: [],
 		},
-	];
+		cellClass: "flex items-center justify-center",
+	},
+];
 
 export const getBookingColumns = (
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
 ): ColDef<PendingRow>[] => [
-		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
-		{
-			headerName: "BOOKING DATE",
-			field: "bookingDate",
-			width: 130,
-			cellStyle: { color: "#22c55e", fontWeight: 500 },
+	...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+	{
+		headerName: "BOOKING DATE",
+		field: "bookingDate",
+		width: 130,
+		cellStyle: { color: "#22c55e", fontWeight: 500 },
+	},
+	{
+		headerName: "STATUS",
+		field: "bookingStatus",
+		width: 70,
+		cellRenderer: PartStatusRenderer,
+		cellRendererParams: {
+			partStatuses: useAppStore.getState().bookingStatuses,
 		},
-		{
-			headerName: "STATUS",
-			field: "bookingStatus",
-			width: 70,
-			cellRenderer: PartStatusRenderer,
-			cellRendererParams: {
-				partStatuses: useAppStore.getState().bookingStatuses,
-			},
-			cellClass: "flex items-center justify-center",
-		},
-		{
-			headerName: "BOOKING NOTE",
-			field: "bookingNote",
-			width: 150,
-		},
-	];
+		cellClass: "flex items-center justify-center",
+	},
+	{
+		headerName: "BOOKING NOTE",
+		field: "bookingNote",
+		width: 150,
+	},
+];

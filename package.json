@@ -13,7 +13,11 @@
 		"e2e:ui": "playwright test --ui",
 		"e2e:debug": "playwright test --debug",
 		"e2e:headed": "playwright test --headed",
-		"e2e:report": "playwright show-report"
+		"e2e:report": "playwright show-report",
+		"docs": "echo 'API documentation is maintained in ./docs folder'",
+		"docs:serve": "cd docs && python3 -m http.server 8080 || python -m http.server 8080",
+		"docs:validate": "node scripts/validate-docs.js",
+		"docs:extract": "node scripts/extract-jsdoc.js"
 	},
 	"dependencies": {
 		"@radix-ui/react-checkbox": "^1.1.3",

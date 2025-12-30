@@ -1,6 +1,11 @@
 "use client";
 
-import type { ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
+import type {
+	CellValueChangedEvent,
+	ColDef,
+	GridApi,
+	GridReadyEvent,
+} from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import "ag-grid-community/styles/ag-grid.css";
@@ -13,7 +18,7 @@ export interface DataGridProps {
 	columnDefs: ColDef[];
 	onSelectionChanged?: (selectedRows: PendingRow[]) => void;
 	onGridReady?: (api: GridApi) => void;
-	onCellValueChanged?: (params: any) => void;
+	onCellValueChanged?: (params: CellValueChangedEvent) => void;
 	height?: string;
 	readOnly?: boolean;
 	showFloatingFilters?: boolean;

@@ -99,6 +99,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 					<nav className="flex-1 p-3 space-y-1">
 						{navItems.map((item) => (
 							<button
+								type="button"
 								key={item.id}
 								onClick={() => setActiveTab(item.id as TabType)}
 								className={cn(
@@ -123,6 +124,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 					<div className="p-6 border-t border-white/5 space-y-3">
 						{!showPasswordPrompt ? (
 							<button
+								type="button"
 								onClick={() => {
 									if (isLocked) {
 										setShowPasswordPrompt(true);
@@ -459,6 +461,7 @@ const StatusManagementSection = ({
 					<div className="flex flex-wrap gap-2">
 						{colorPalette.map((color) => (
 							<button
+								type="button"
 								key={color}
 								onClick={() => setSelectedColor(color)}
 								disabled={isLocked}

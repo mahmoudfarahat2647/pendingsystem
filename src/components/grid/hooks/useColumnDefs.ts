@@ -1,4 +1,4 @@
-import type { ColDef } from "ag-grid-community";
+import type { ColDef, ValueFormatterParams } from "ag-grid-community";
 import { useMemo } from "react";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
@@ -79,7 +79,8 @@ export function useColumnDefs(
 			field: "company",
 			width: 90,
 			cellClass: "font-bold text-center",
-			valueFormatter: (params: any) => params.value || "Renault",
+			valueFormatter: (params: ValueFormatterParams) =>
+				params.value || "Renault",
 		},
 		{
 			headerName: "CUSTOMER NAME",
@@ -163,8 +164,8 @@ export function useColumnDefs(
 							values:
 								Array.isArray(partStatuses) && partStatuses.length > 0
 									? partStatuses
-										.filter((s) => s && typeof s.label === "string")
-										.map((s) => s.label)
+											.filter((s) => s && typeof s.label === "string")
+											.map((s) => s.label)
 									: [],
 						},
 						cellClass: "flex items-center justify-center",

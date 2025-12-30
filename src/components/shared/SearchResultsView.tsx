@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { useAppStore } from "@/store/useStore";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import type { ColDef } from "ag-grid-community";
+import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { Search as SearchIcon, X } from "lucide-react";
 import {
 	getBaseColumns,
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 
 // Custom renderer for Source Tag
-const SourceRenderer = (params: any) => {
+const SourceRenderer = (params: ICellRendererParams) => {
 	const source = params.value;
 	let colorClass = "bg-gray-500/10 text-gray-500 border-gray-500/20";
 
@@ -145,8 +145,8 @@ export const SearchResultsView = () => {
 					values:
 						Array.isArray(partStatuses) && partStatuses.length > 0
 							? partStatuses
-								.filter((s) => s && typeof s.label === "string")
-								.map((s) => s.label)
+									.filter((s) => s && typeof s.label === "string")
+									.map((s) => s.label)
 							: [],
 				},
 				cellClass: "flex items-center justify-center",

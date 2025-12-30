@@ -1,5 +1,20 @@
 "use client";
 
+/**
+ * @module BookingCalendarModal
+ * @description Premium dark-themed booking calendar with multi-customer support
+ *
+ * Advanced booking interface for scheduling customer appointments with:
+ * - VIN-based customer grouping
+ * - Visual booking status indicators (color-coded dots)
+ * - Historical booking tracking (2-year retention)
+ * - Pre-booking note and status configuration
+ * - Real-time customer search within calendar
+ *
+ * @see docs/COMPONENTS.md#bookinicalendarmodal
+ * @see docs/STORE_API.md#sentoboking - sendToBooking action
+ */
+
 import { format, isAfter, subYears } from "date-fns";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -25,6 +40,36 @@ interface BookingCalendarModalProps {
 	bookingOnly?: boolean;
 }
 
+/**
+ * BookingCalendarModal component
+ *
+ * @param {boolean} open - Modal visibility state
+ * @param {function} onOpenChange - Callback to update modal visibility
+ * @param {function} onConfirm - Callback when booking is confirmed
+ *   - date: ISO date string (YYYY-MM-DD)
+ *   - note: Booking notes/instructions
+ *   - status: Optional booking status (e.g., "Scheduled", "Confirmed")
+ * @param {PendingRow[]} selectedRows - Orders to book (from grid selection)
+ * @param {string} [initialSearchTerm] - Pre-populate customer search field
+ * @param {boolean} [bookingOnly=false] - Filter to existing bookings only
+ *
+ * @returns {JSX.Element} Modal dialog with calendar interface
+ *
+ * @example
+ * ```tsx
+ * const [open, setOpen] = useState(false);
+ * const selectedOrders = useAppStore(s => s.selectedRows);
+ *
+ * <BookingCalendarModal
+ *   open={open}
+ *   onOpenChange={setOpen}
+ *   onConfirm={(date, note, status) => {
+ *     sendToBooking(selectedIds, date, note, status);
+ *   }}
+ *   selectedRows={selectedOrders}
+ * />
+ * ```
+ */
 export const BookingCalendarModal = ({
 	open,
 	onOpenChange,

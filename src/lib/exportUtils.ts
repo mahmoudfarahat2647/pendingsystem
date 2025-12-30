@@ -31,7 +31,7 @@ export const exportToLogisticsCSV = (selected: PendingRow[]) => {
  * Exports data to a CSV file.
  */
 export const exportToCSV = (
-	data: any[],
+	data: Array<Record<string, unknown>>,
 	filename: string,
 	headers?: string[],
 ) => {
@@ -66,11 +66,11 @@ export const exportToCSV = (
  * Exports all system data to a consolidated CSV workbook.
  */
 export const exportWorkbookCSV = (stores: {
-	orders: any[];
-	mainSheet: any[];
-	booking: any[];
-	callList: any[];
-	archive: any[];
+	orders: PendingRow[];
+	mainSheet: PendingRow[];
+	booking: PendingRow[];
+	callList: PendingRow[];
+	archive: PendingRow[];
 }) => {
 	const timestamp = new Date().toISOString().split("T")[0];
 

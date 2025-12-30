@@ -20,13 +20,10 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { PartStatus } from "@/types";
 
 interface MainSheetToolbarProps {
 	isLocked: boolean;
 	selectedCount: number;
-	partStatuses: PartStatus[];
-	onUpdateStatus: (status: string) => void;
 	onBooking: () => void;
 	onArchive: () => void;
 	onSendToCallList: () => void;
@@ -40,8 +37,6 @@ interface MainSheetToolbarProps {
 export const MainSheetToolbar = ({
 	isLocked,
 	selectedCount,
-	partStatuses,
-	onUpdateStatus,
 	onBooking,
 	onArchive,
 	onSendToCallList,

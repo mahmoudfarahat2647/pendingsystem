@@ -79,11 +79,15 @@ export const ArchiveReasonModal = ({
 
 				<div className="p-6 space-y-4">
 					<div className="space-y-2">
-						<label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+						<label
+							htmlFor="archive-reason"
+							className="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+						>
 							Reason for Archiving
 						</label>
 						<div className="relative">
 							<Textarea
+								id="archive-reason"
 								value={reason}
 								onChange={(e) => setReason(e.target.value)}
 								placeholder="Please enter a reason for archiving this record..."

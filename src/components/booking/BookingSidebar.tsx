@@ -117,6 +117,7 @@ export const BookingSidebar = ({
 								<div className="space-y-1">
 									{bookingStatuses.map((status) => (
 										<button
+											type="button"
 											key={status.id}
 											onClick={() => setPreBookingStatus(status.label)}
 											className={cn(
@@ -163,6 +164,7 @@ export const BookingSidebar = ({
 					) : (
 						sidebarGroupedBookings.map((booking) => (
 							<button
+								type="button"
 								key={booking.id}
 								onClick={() => setSelectedBookingId(booking.id)}
 								className={cn(
@@ -208,7 +210,10 @@ export const BookingSidebar = ({
 								{consolidatedNotes.length > 0 && (
 									<Popover>
 										<PopoverTrigger asChild>
-											<button className="p-1.5 rounded-full hover:bg-white/10 text-gray-500 hover:text-renault-yellow transition-colors">
+											<button
+												type="button"
+												className="p-1.5 rounded-full hover:bg-white/10 text-gray-500 hover:text-renault-yellow transition-colors"
+											>
 												<MessageSquare className="h-4 w-4" />
 											</button>
 										</PopoverTrigger>
@@ -291,12 +296,13 @@ export const BookingSidebar = ({
 												<div className="space-y-1">
 													{bookingStatuses.map((status) => (
 														<button
+															type="button"
 															key={status.id}
-															onClick={() =>
-																activeCustomerBookings.forEach((b) =>
-																	updateBookingStatus(b.id, status.label),
-																)
-															}
+															onClick={() => {
+																activeCustomerBookings.forEach((b) => {
+																	updateBookingStatus(b.id, status.label);
+																});
+															}}
 															className={cn(
 																"w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
 																activeBookingRep.bookingStatus === status.label

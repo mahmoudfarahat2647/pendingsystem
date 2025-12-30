@@ -196,6 +196,7 @@ export const EditReminderModal = ({
 									QUICK TEMPLATES
 								</h4>
 								<button
+									type="button"
 									onClick={() => setIsAddingTemplate(!isAddingTemplate)}
 									className="flex items-center text-renault-yellow hover:text-renault-yellow/80 text-xs transition-colors"
 								>
@@ -230,12 +231,14 @@ export const EditReminderModal = ({
 										className="group relative flex items-center"
 									>
 										<button
+											type="button"
 											className="w-full text-left px-3 py-2 rounded-md text-xs bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border border-transparent hover:border-white/10 truncate pr-8 transition-colors"
 											onClick={() => handleTemplateClick(template)}
 										>
 											{template}
 										</button>
 										<button
+											type="button"
 											className="absolute right-1 p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
 											onClick={(e) => {
 												e.stopPropagation();

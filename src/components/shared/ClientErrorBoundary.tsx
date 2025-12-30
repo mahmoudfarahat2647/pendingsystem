@@ -53,6 +53,7 @@ export class ClientErrorBoundary extends Component<Props, State> {
 						<div className="flex gap-3 justify-center">
 							{isChunkError ? (
 								<button
+									type="button"
 									onClick={() => window.location.reload()}
 									className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm transition-colors border border-white/20"
 								>
@@ -60,6 +61,7 @@ export class ClientErrorBoundary extends Component<Props, State> {
 								</button>
 							) : (
 								<button
+									type="button"
 									onClick={() =>
 										this.setState({ hasError: false, error: null })
 									}

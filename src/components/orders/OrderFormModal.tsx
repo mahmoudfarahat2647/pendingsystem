@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
 	AlertCircle,
 	CheckCircle2,
+	ChevronsUpDown,
 	ClipboardList,
 	FileSpreadsheet,
 	MapPin,
@@ -12,7 +13,6 @@ import {
 	Plus,
 	User,
 	X,
-	ChevronsUpDown,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -37,12 +37,26 @@ import { cn, detectModelFromVin, generateId } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 
+interface FormData {
+	customerName: string;
+	vin: string;
+	mobile: string;
+	cntrRdg: string;
+	model: string;
+	repairSystem: string;
+	startWarranty: string;
+	requester: string;
+	sabNumber: string;
+	acceptedBy: string;
+	company: string;
+}
+
 interface OrderFormModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	isEditMode: boolean;
 	selectedRows: PendingRow[];
-	onSubmit: (formData: any, parts: PartEntry[]) => void;
+	onSubmit: (formData: FormData, parts: PartEntry[]) => void;
 }
 
 export const OrderFormModal = ({
@@ -65,7 +79,7 @@ export const OrderFormModal = ({
 	const [isPersonalBulkMode, setIsPersonalBulkMode] = useState(false);
 	const [personalBulkText, setPersonalBulkText] = useState("");
 
-	const [formData, setFormData] = useState({
+	const [formData, setFormData] = useState<FormData>({
 		customerName: "",
 		vin: "",
 		mobile: "",
@@ -233,7 +247,7 @@ export const OrderFormModal = ({
 			if (
 				existingPart &&
 				existingPart.description.trim().toLowerCase() !==
-				part.description.trim().toLowerCase()
+					part.description.trim().toLowerCase()
 			) {
 				warnings[part.id] = {
 					type: "mismatch",
@@ -822,29 +836,29 @@ export const OrderFormModal = ({
 																		<AlertCircle className="h-3 w-3" />
 																		<span className="text-[9px] font-bold uppercase tracking-tight">
 																			{partValidationWarnings[part.id].type ===
-																				"duplicate"
+																			"duplicate"
 																				? partValidationWarnings[part.id].value
 																				: `Existing Name: "${partValidationWarnings[part.id].value}"`}
 																		</span>
 																	</div>
 																	{partValidationWarnings[part.id].type ===
 																		"mismatch" && (
-																			<Button
-																				variant="ghost"
-																				size="icon"
-																				className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
-																				onClick={() =>
-																					handlePartChange(
-																						part.id,
-																						"description",
-																						partValidationWarnings[part.id].value,
-																					)
-																				}
-																				title="Apply existing name"
-																			>
-																				<CheckCircle2 className="h-3 w-3" />
-																			</Button>
-																		)}
+																		<Button
+																			variant="ghost"
+																			size="icon"
+																			className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
+																			onClick={() =>
+																				handlePartChange(
+																					part.id,
+																					"description",
+																					partValidationWarnings[part.id].value,
+																				)
+																			}
+																			title="Apply existing name"
+																		>
+																			<CheckCircle2 className="h-3 w-3" />
+																		</Button>
+																	)}
 																</div>
 															)}
 														</div>

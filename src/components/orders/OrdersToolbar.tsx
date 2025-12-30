@@ -29,6 +29,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import type { PartStatus } from "@/types";
 
 interface OrdersToolbarProps {
 	selectedCount: number;
@@ -43,7 +44,7 @@ interface OrdersToolbarProps {
 	onShareToLogistics: () => void;
 	onExtract: () => void;
 	onFilterToggle: () => void;
-	partStatuses?: any[];
+	partStatuses?: PartStatus[];
 	onUpdateStatus?: (status: string) => void;
 	onCallList: () => void;
 }

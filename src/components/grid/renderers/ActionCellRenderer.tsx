@@ -1,5 +1,6 @@
 import type { ICellRendererParams } from "ag-grid-community";
 import { Bell, History, Paperclip, StickyNote } from "lucide-react";
+import type React from "react";
 import type { PendingRow } from "@/types";
 
 export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
@@ -10,7 +11,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 	const renderAction = (
 		highlighted: boolean,
 		title: string,
-		Icon: any,
+		Icon: React.ElementType,
 		onClick?: () => void,
 	) => {
 		const highlightClass = highlighted
@@ -45,6 +46,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 
 		return (
 			<button
+				type="button"
 				key={title}
 				className={`transition-colors ${baseClass}`}
 				title={title}
@@ -81,6 +83,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 				</span>
 			) : (
 				<button
+					type="button"
 					className={`transition-colors text-gray-600 hover:text-gray-400`}
 					title="History"
 				>
