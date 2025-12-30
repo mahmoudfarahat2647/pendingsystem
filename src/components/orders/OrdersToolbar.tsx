@@ -29,10 +29,11 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { PartStatus } from "@/types";
+import type { PartStatus, PendingRow } from "@/types";
 
 interface OrdersToolbarProps {
 	selectedCount: number;
+	selectedRows: PendingRow[];
 	onAddEdit: () => void;
 	onDelete: () => void;
 	onCommit: () => void;
@@ -51,6 +52,7 @@ interface OrdersToolbarProps {
 
 export const OrdersToolbar = ({
 	selectedCount,
+	selectedRows,
 	onAddEdit,
 	onDelete,
 	onCommit,
@@ -66,6 +68,9 @@ export const OrdersToolbar = ({
 	onUpdateStatus,
 	onCallList,
 }: OrdersToolbarProps) => {
+	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
+	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
+
 	return (
 		<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
 			<div className="flex items-center gap-1.5">
@@ -177,14 +182,23 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
-							className="text-green-500/80 hover:text-green-500 h-8 w-8"
-							disabled={selectedCount === 0}
+							className={cn(
+								"h-8 w-8 transition-colors",
+								isSingleVin
+									? "text-green-500 hover:text-green-400 hover:bg-green-500/10"
+									: "text-gray-600 cursor-not-allowed opacity-50",
+							)}
+							disabled={!isSingleVin}
 							onClick={onBooking}
 						>
 							<Calendar className="h-3.5 w-3.5" />
 						</Button>
 					</TooltipTrigger>
-					<TooltipContent>Booking</TooltipContent>
+					<TooltipContent>
+						{!isSingleVin && selectedCount > 0
+							? "Select items for a single VIN to book"
+							: "Booking"}
+					</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

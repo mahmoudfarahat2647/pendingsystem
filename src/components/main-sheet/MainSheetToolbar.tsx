@@ -19,11 +19,13 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { PendingRow } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface MainSheetToolbarProps {
 	isLocked: boolean;
 	selectedCount: number;
+	selectedRows: PendingRow[];
 	onBooking: () => void;
 	onArchive: () => void;
 	onSendToCallList: () => void;
@@ -32,11 +34,14 @@ interface MainSheetToolbarProps {
 	onFilterToggle: () => void;
 	onLockToggle: () => void;
 	onReserve: () => void;
+	onUpdateStatus?: (status: string) => void;
+	partStatuses?: any[];
 }
 
 export const MainSheetToolbar = ({
 	isLocked,
 	selectedCount,
+	selectedRows,
 	onBooking,
 	onArchive,
 	onSendToCallList,
@@ -45,7 +50,12 @@ export const MainSheetToolbar = ({
 	onFilterToggle,
 	onLockToggle,
 	onReserve,
+	onUpdateStatus,
+	partStatuses,
 }: MainSheetToolbarProps) => {
+	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
+	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
+
 	return (
 		<div className="flex items-center justify-between bg-[#141416] p-2 rounded-xl border border-white/5">
 			<div className="flex items-center gap-2">
@@ -98,14 +108,25 @@ export const MainSheetToolbar = ({
 						<Button
 							variant="ghost"
 							size="icon"
-							className="text-green-500/80 hover:text-green-500 hover:bg-green-500/10 h-8 w-8"
-							disabled={isLocked || selectedCount === 0}
+							className={cn(
+								"h-8 w-8 transition-colors",
+								isSingleVin && !isLocked
+									? "text-green-500 hover:text-green-400 hover:bg-green-500/10"
+									: "text-gray-600 cursor-not-allowed opacity-50",
+							)}
+							disabled={isLocked || !isSingleVin}
 							onClick={onBooking}
 						>
 							<Calendar className="h-4 w-4" />
 						</Button>
 					</TooltipTrigger>
-					<TooltipContent>Booking</TooltipContent>
+					<TooltipContent>
+						{!isSingleVin && selectedCount > 0
+							? "Select items for a single VIN to book"
+							: isLocked
+								? "Sheet is locked"
+								: "Booking"}
+					</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

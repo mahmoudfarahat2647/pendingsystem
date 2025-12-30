@@ -145,6 +145,7 @@ export default function MainSheetPage() {
 						<MainSheetToolbar
 							isLocked={isSheetLocked}
 							selectedCount={selectedRows.length}
+							selectedRows={selectedRows}
 							partStatuses={partStatuses}
 							onLockToggle={() => setIsSheetLocked(!isSheetLocked)}
 							onUpdateStatus={handleUpdatePartStatus}

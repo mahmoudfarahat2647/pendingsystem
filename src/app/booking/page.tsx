@@ -211,11 +211,13 @@ export default function BookingPage() {
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
-									className={
-										selectedRows.length === 0
-											? "bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
-											: "bg-renault-yellow hover:bg-renault-yellow/90 text-black border-none rounded-md h-8 w-8"
-									}
+									className={cn(
+										"border-none rounded-md h-8 w-8 transition-all duration-300",
+										selectedRows.length > 0 &&
+											new Set(selectedRows.map((r) => r.vin)).size === 1
+											? "bg-renault-yellow hover:bg-renault-yellow/90 text-black shadow-[0_0_15px_rgba(255,206,0,0.2)]"
+											: "bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300",
+									)}
 									size="icon"
 									onClick={() => {
 										setRebookingSearchTerm(
