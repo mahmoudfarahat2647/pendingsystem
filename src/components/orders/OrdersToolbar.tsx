@@ -249,33 +249,47 @@ export const OrdersToolbar = ({
 
 				<div className="w-px h-5 bg-white/10 mx-1" />
 
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="text-gray-400 hover:text-white h-8 w-8"
-							disabled={selectedCount === 0}
-						>
-							<CheckCircle className="h-4 w-4" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent
-						align="end"
-						className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
-					>
-						{partStatuses.map((status) => (
-							<DropdownMenuItem
-								key={status.id}
-								onClick={() => onUpdateStatus?.(status.label)}
-								className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="text-gray-400 hover:text-white h-8 w-8"
+									disabled={selectedCount === 0}
+								>
+									<CheckCircle className="h-4 w-4" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent
+								align="end"
+								className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
 							>
-								<div className={cn("w-2 h-2 rounded-full", status.color)} />
-								<span className="text-xs">{status.label}</span>
-							</DropdownMenuItem>
-						))}
-					</DropdownMenuContent>
-				</DropdownMenu>
+								{partStatuses.map((status) => {
+									const isHex = status.color?.startsWith("#") || status.color?.startsWith("rgb");
+									const dotStyle = isHex ? { backgroundColor: status.color } : undefined;
+									const colorClass = isHex ? "" : status.color;
+
+									return (
+										<DropdownMenuItem
+											key={status.id}
+											onClick={() => onUpdateStatus?.(status.label)}
+											className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
+										>
+											<div
+												className={cn("w-2 h-2 rounded-full", colorClass)}
+												style={dotStyle}
+											/>
+											<span className="text-xs">{status.label}</span>
+										</DropdownMenuItem>
+									);
+								})}
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</TooltipTrigger>
+					<TooltipContent>Update Part Status</TooltipContent>
+				</Tooltip>
 
 				<Tooltip>
 					<TooltipTrigger asChild>

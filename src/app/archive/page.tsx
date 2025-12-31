@@ -1,7 +1,7 @@
 "use client";
 
 import type { GridApi } from "ag-grid-community";
-import { Download, Filter, RotateCcw, Trash2 } from "lucide-react";
+import { CheckCircle, Download, Filter, RotateCcw, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -27,12 +27,19 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function ArchivePage() {
 	const archiveRowData = useAppStore((state) => state.archiveRowData);
+	const partStatuses = useAppStore((state) => state.partStatuses);
 	const sendToReorder = useAppStore((state) => state.sendToReorder);
 	const deleteOrders = useAppStore((state) => state.deleteOrders);
 	const updateOrder = useAppStore((state) => state.updateOrder);
@@ -66,6 +73,14 @@ export default function ArchivePage() {
 		setIsReorderModalOpen(false);
 		setReorderReason("");
 		toast.success(`${ids.length} row(s) sent back to Orders (Reorder)`);
+	};
+
+	const handleUpdatePartStatus = (status: string) => {
+		if (selectedRows.length === 0) return;
+		selectedRows.forEach((row) => {
+			updateOrder(row.id, { partStatus: status });
+		});
+		toast.success(`Updated ${selectedRows.length} item(s) to ${status}`);
 	};
 
 	const columns = useMemo(() => {
@@ -113,6 +128,48 @@ export default function ArchivePage() {
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>Filter</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											size="icon"
+											className="text-gray-400 hover:text-white h-8 w-8"
+											disabled={selectedRows.length === 0}
+										>
+											<CheckCircle className="h-4 w-4" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align="end"
+										className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
+									>
+										{partStatuses?.map((status) => {
+											const isHex = status.color?.startsWith("#") || status.color?.startsWith("rgb");
+											const dotStyle = isHex ? { backgroundColor: status.color } : undefined;
+											const colorClass = isHex ? "" : status.color;
+
+											return (
+												<DropdownMenuItem
+													key={status.id}
+													onClick={() => handleUpdatePartStatus(status.label)}
+													className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
+												>
+													<div
+														className={cn("w-2 h-2 rounded-full", colorClass)}
+														style={dotStyle}
+													/>
+													<span className="text-xs">{status.label}</span>
+												</DropdownMenuItem>
+											);
+										})}
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</TooltipTrigger>
+							<TooltipContent>Update Part Status</TooltipContent>
 						</Tooltip>
 
 						<div className="w-px h-5 bg-white/10 mx-1" />
