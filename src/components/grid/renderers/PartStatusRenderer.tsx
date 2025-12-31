@@ -27,6 +27,7 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 
 	let statusDef: PartStatusDef | undefined;
 	let colorClass = "bg-gray-400";
+	let style: React.CSSProperties | undefined;
 	let displayValue = value;
 
 	try {
@@ -39,7 +40,12 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 		if (statusDef?.color && typeof statusDef.color === "string") {
 			const trimmedColor = statusDef.color.trim();
 			if (trimmedColor.length > 0) {
-				colorClass = trimmedColor;
+				if (trimmedColor.startsWith("#") || trimmedColor.startsWith("rgb")) {
+					colorClass = "";
+					style = { backgroundColor: trimmedColor };
+				} else {
+					colorClass = trimmedColor;
+				}
 			}
 		}
 
@@ -58,6 +64,7 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 		>
 			<div
 				className={`w-2.5 h-2.5 rounded-full ${colorClass} shadow-sm ring-1 ring-black/10 flex-shrink-0`}
+				style={style}
 			></div>
 		</div>
 	);

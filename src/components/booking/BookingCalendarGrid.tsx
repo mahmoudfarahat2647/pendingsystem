@@ -120,9 +120,9 @@ export const BookingCalendarGrid = ({
 								isSearchMatch && !isSelected && "text-emerald-500 font-bold",
 								isFaded && !isSelected && "opacity-20 pointer-events-none",
 								isActiveCustomerDate &&
-									!isSelected &&
-									!isFaded &&
-									"ring-1 ring-emerald-500/40 text-emerald-500",
+								!isSelected &&
+								!isFaded &&
+								"ring-1 ring-emerald-500/40 text-emerald-500",
 							)}
 						>
 							{format(day, "d")}
@@ -134,9 +134,12 @@ export const BookingCalendarGrid = ({
 										);
 										const statusColor = customerBooking
 											? bookingStatuses.find(
-													(s) => s.label === customerBooking.bookingStatus,
-												)?.color || "bg-emerald-500/80"
+												(s) => s.label === customerBooking.bookingStatus,
+											)?.color || "bg-emerald-500/80"
 											: "bg-emerald-500/80";
+
+										const isHex =
+											statusColor.startsWith("#") || statusColor.startsWith("rgb");
 
 										return (
 											<div
@@ -144,10 +147,11 @@ export const BookingCalendarGrid = ({
 												style={{
 													zIndex: 10 - idx,
 													transform: `translateX(${(idx - (customerGroups.length - 1) / 2) * 6}px)`,
+													backgroundColor: isHex ? statusColor : undefined,
 												}}
 												className={cn(
 													"absolute w-3 h-3 rounded-full shadow-lg transition-all duration-300 border border-black/20",
-													statusColor,
+													!isHex && statusColor,
 													isActiveCustomerDate && vin === activeBookingRep?.vin
 														? "ring-1 ring-white/60 scale-110"
 														: "",

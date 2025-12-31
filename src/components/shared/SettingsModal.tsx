@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef } from "@/types";
+import { ColorPicker } from "./ColorPicker";
 
 interface SettingsModalProps {
 	open: boolean;
@@ -50,22 +51,8 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 	const setIsLocked = useAppStore((state) => state.setIsLocked);
 
 	const [newStatusLabel, setNewStatusLabel] = useState("");
-	const [selectedColor, _setSelectedColor] = useState("bg-emerald-500");
-
-	const colorPalette = [
-		"bg-emerald-500",
-		"bg-gray-800",
-		"bg-yellow-400",
-		"bg-amber-800",
-		"bg-red-500",
-		"bg-blue-500",
-		"bg-purple-500",
-		"bg-pink-500",
-		"bg-indigo-500",
-		"bg-green-500",
-		"bg-teal-500",
-		"bg-cyan-500",
-	];
+	// Default to emerald-500 hex
+	const [selectedColor, _setSelectedColor] = useState("#10b981");
 
 	const _handleAddStatus = () => {
 		if (!newStatusLabel.trim()) return;
@@ -256,7 +243,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									addPartStatusDef(newStatus);
 								}}
 								onRemove={removePartStatusDef}
-								colorPalette={colorPalette}
 								isLocked={isLocked}
 							/>
 						)}
@@ -275,7 +261,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									addBookingStatusDef(newStatus);
 								}}
 								onRemove={removeBookingStatusDef}
-								colorPalette={colorPalette}
 								isLocked={isLocked}
 							/>
 						)}
@@ -396,7 +381,6 @@ interface StatusManagementSectionProps {
 	statuses: PartStatusDef[];
 	onAdd: (label: string, color: string) => void;
 	onRemove: (id: string) => void;
-	colorPalette: string[];
 	isLocked: boolean;
 }
 
@@ -406,11 +390,10 @@ const StatusManagementSection = ({
 	statuses,
 	onAdd,
 	onRemove,
-	colorPalette,
 	isLocked,
 }: StatusManagementSectionProps) => {
 	const [newLabel, setNewLabel] = useState("");
-	const [selectedColor, setSelectedColor] = useState("bg-emerald-500");
+	const [selectedColor, setSelectedColor] = useState("#10b981");
 
 	return (
 		<div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -456,25 +439,13 @@ const StatusManagementSection = ({
 				</div>
 				<div className="space-y-3">
 					<p className="text-xs font-medium text-gray-500 uppercase">
-						Select Color Theme
+						Status Color
 					</p>
-					<div className="flex flex-wrap gap-2">
-						{colorPalette.map((color) => (
-							<button
-								type="button"
-								key={color}
-								onClick={() => setSelectedColor(color)}
-								disabled={isLocked}
-								className={cn(
-									"w-8 h-8 rounded-full transition-all duration-200 hover:scale-110 active:scale-90",
-									color,
-									selectedColor === color
-										? "ring-2 ring-white ring-offset-4 ring-offset-[#1c1c1e] scale-110"
-										: "opacity-60 hover:opacity-100",
-								)}
-							/>
-						))}
-					</div>
+					<ColorPicker
+						color={selectedColor}
+						onChange={setSelectedColor}
+						disabled={isLocked}
+					/>
 				</div>
 			</div>
 
@@ -491,7 +462,8 @@ const StatusManagementSection = ({
 						>
 							<div className="flex items-center gap-4">
 								<div
-									className={cn("w-3 h-3 rounded-full shadow-lg", status.color)}
+									className={cn("w-3 h-3 rounded-full shadow-lg", status.color.startsWith("bg-") && status.color)}
+									style={{ backgroundColor: status.color.startsWith("bg-") ? undefined : status.color }}
 								/>
 								<span className="font-medium text-gray-200">
 									{status.label}

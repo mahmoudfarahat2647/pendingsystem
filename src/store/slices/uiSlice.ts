@@ -8,12 +8,12 @@ const defaultPartStatuses = [
 		label: "No Stats",
 		color: "bg-transparent border border-white/20",
 	},
-	{ id: "reserve", label: "Reserve", color: "bg-blue-600" },
-	{ id: "arrived", label: "Arrived", color: "bg-emerald-500" },
-	{ id: "not_arrived", label: "Not Arrived", color: "bg-gray-800" },
-	{ id: "logistics", label: "Logistics Pending", color: "bg-yellow-400" },
-	{ id: "branch", label: "Other Branch", color: "bg-amber-800" },
-	{ id: "issue", label: "Has Issue", color: "bg-red-500" },
+	{ id: "reserve", label: "Reserve", color: "#2563eb" },
+	{ id: "arrived", label: "Arrived", color: "#10b981" },
+	{ id: "not_arrived", label: "Not Arrived", color: "#1f2937" },
+	{ id: "logistics", label: "Logistics Pending", color: "#facc15" },
+	{ id: "branch", label: "Other Branch", color: "#92400e" },
+	{ id: "issue", label: "Has Issue", color: "#ef4444" },
 ];
 
 const initialState: UIState = {

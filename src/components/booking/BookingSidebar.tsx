@@ -93,14 +93,24 @@ export const BookingSidebar = ({
 								>
 									{preBookingStatus ? (
 										<>
-											<div
-												className={cn(
-													"w-2 h-2 rounded-full",
-													bookingStatuses.find(
-														(s) => s.label === preBookingStatus,
-													)?.color || "bg-gray-500",
-												)}
-											/>
+											{(() => {
+												const color =
+													bookingStatuses.find((s) => s.label === preBookingStatus)
+														?.color || "bg-gray-500";
+												const isHex =
+													color.startsWith("#") || color.startsWith("rgb");
+												return (
+													<div
+														className={cn(
+															"w-2 h-2 rounded-full",
+															!isHex && color,
+														)}
+														style={{
+															backgroundColor: isHex ? color : undefined,
+														}}
+													/>
+												);
+											})()}
 											<span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">
 												{preBookingStatus}
 											</span>
@@ -130,8 +140,18 @@ export const BookingSidebar = ({
 											<div
 												className={cn(
 													"w-2 h-2 rounded-full shadow-lg",
-													status.color,
+													!(
+														status.color.startsWith("#") ||
+														status.color.startsWith("rgb")
+													) && status.color,
 												)}
+												style={{
+													backgroundColor:
+														status.color.startsWith("#") ||
+															status.color.startsWith("rgb")
+															? status.color
+															: undefined,
+												}}
 											/>
 											<span className="text-xs font-semibold">
 												{status.label}
@@ -270,16 +290,25 @@ export const BookingSidebar = ({
 												>
 													{activeBookingRep.bookingStatus ? (
 														<>
-															<div
-																className={cn(
-																	"w-2 h-2 rounded-full",
+															{(() => {
+																const color =
 																	bookingStatuses.find(
-																		(s) =>
-																			s.label ===
-																			activeBookingRep.bookingStatus,
-																	)?.color || "bg-gray-500",
-																)}
-															/>
+																		(s) => s.label === activeBookingRep.bookingStatus,
+																	)?.color || "bg-gray-500";
+																const isHex =
+																	color.startsWith("#") || color.startsWith("rgb");
+																return (
+																	<div
+																		className={cn(
+																			"w-2 h-2 rounded-full",
+																			!isHex && color,
+																		)}
+																		style={{
+																			backgroundColor: isHex ? color : undefined,
+																		}}
+																	/>
+																);
+															})()}
 															<span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">
 																{activeBookingRep.bookingStatus}
 															</span>
@@ -313,8 +342,18 @@ export const BookingSidebar = ({
 															<div
 																className={cn(
 																	"w-2 h-2 rounded-full shadow-lg",
-																	status.color,
+																	!(
+																		status.color.startsWith("#") ||
+																		status.color.startsWith("rgb")
+																	) && status.color,
 																)}
+																style={{
+																	backgroundColor:
+																		status.color.startsWith("#") ||
+																			status.color.startsWith("rgb")
+																			? status.color
+																			: undefined,
+																}}
 															/>
 															<span className="text-xs font-semibold">
 																{status.label}

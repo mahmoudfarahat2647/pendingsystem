@@ -10,9 +10,9 @@ export const createBookingSlice: StateCreator<
 > = (set, get) => ({
 	bookingRowData: [],
 	bookingStatuses: [
-		{ id: "add", label: "Add", color: "bg-emerald-500" },
-		{ id: "cancel", label: "Cancel", color: "bg-red-500" },
-		{ id: "reschedule", label: "Reschedule", color: "bg-blue-500" },
+		{ id: "add", label: "Add", color: "#10b981" },
+		{ id: "cancel", label: "Cancel", color: "#ef4444" },
+		{ id: "reschedule", label: "Reschedule", color: "#3b82f6" },
 	],
 
 	/**
