@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { PartStatus, PendingRow } from "@/types";
+import { VINLineCounter } from "@/components/shared/VINLineCounter";
 
 interface OrdersToolbarProps {
 	selectedCount: number;
@@ -48,6 +49,7 @@ interface OrdersToolbarProps {
 	partStatuses?: PartStatus[];
 	onUpdateStatus?: (status: string) => void;
 	onCallList: () => void;
+	rowData?: PendingRow[];
 }
 
 export const OrdersToolbar = ({
@@ -67,6 +69,7 @@ export const OrdersToolbar = ({
 	partStatuses = [],
 	onUpdateStatus,
 	onCallList,
+	rowData = [],
 }: OrdersToolbarProps) => {
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
@@ -288,7 +291,11 @@ export const OrdersToolbar = ({
 				</Tooltip>
 			</div>
 
+
+
 			<div className="flex items-center gap-1.5">
+				<VINLineCounter rows={rowData} />
+
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button

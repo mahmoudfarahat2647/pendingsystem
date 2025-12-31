@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { PendingRow } from "@/types";
 import { cn } from "@/lib/utils";
+import { VINLineCounter } from "@/components/shared/VINLineCounter";
 
 interface MainSheetToolbarProps {
 	isLocked: boolean;
@@ -45,6 +46,7 @@ interface MainSheetToolbarProps {
 	partStatuses?: any[];
 	activeFilter?: string | null;
 	onFilterChange?: (status: string | null) => void;
+	rowData?: PendingRow[];
 }
 
 export const MainSheetToolbar = ({
@@ -63,6 +65,7 @@ export const MainSheetToolbar = ({
 	partStatuses = [],
 	activeFilter,
 	onFilterChange,
+	rowData = [],
 }: MainSheetToolbarProps) => {
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
@@ -215,16 +218,25 @@ export const MainSheetToolbar = ({
 								align="end"
 								className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
 							>
-								{partStatuses?.map((status: any) => (
-									<DropdownMenuItem
-										key={status.id}
-										onClick={() => onUpdateStatus?.(status.label)}
-										className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
-									>
-										<div className={cn("w-2 h-2 rounded-full", status.color)} />
-										<span className="text-xs">{status.label}</span>
-									</DropdownMenuItem>
-								))}
+								{partStatuses?.map((status: any) => {
+									const isHex = status.color?.startsWith("#") || status.color?.startsWith("rgb");
+									const dotStyle = isHex ? { backgroundColor: status.color } : undefined;
+									const colorClass = isHex ? "" : status.color;
+
+									return (
+										<DropdownMenuItem
+											key={status.id}
+											onClick={() => onUpdateStatus?.(status.label)}
+											className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
+										>
+											<div
+												className={cn("w-2 h-2 rounded-full", colorClass)}
+												style={dotStyle}
+											/>
+											<span className="text-xs">{status.label}</span>
+										</DropdownMenuItem>
+									);
+								})}
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</TooltipTrigger>
@@ -234,21 +246,28 @@ export const MainSheetToolbar = ({
 				<div className="w-px h-6 bg-white/10 mx-1" />
 
 				<div className="flex items-center gap-1.5 px-2">
-					{partStatuses?.map((status: any) => (
-						<Tooltip key={status.id}>
-							<TooltipTrigger asChild>
-								<button
-									onClick={() => onFilterChange?.(status.label)}
-									className={cn(
-										"w-3 h-3 rounded-full transition-all duration-200 hover:scale-125 hover:shadow-[0_0_8px_rgba(255,255,255,0.2)]",
-										status.color.replace("text-", "bg-").split(" ")[0],
-										activeFilter === status.label ? "ring-2 ring-white ring-offset-2 ring-offset-[#141416] scale-110" : "opacity-40 grayscale-[0.5] hover:opacity-100 hover:grayscale-0"
-									)}
-								/>
-							</TooltipTrigger>
-							<TooltipContent>{status.label}</TooltipContent>
-						</Tooltip>
-					))}
+					{partStatuses?.map((status: any) => {
+						const isHex = status.color?.startsWith("#") || status.color?.startsWith("rgb");
+						const buttonStyle = isHex ? { backgroundColor: status.color } : undefined;
+						const colorClass = isHex ? "" : status.color?.replace?.("text-", "bg-")?.split?.(" ")?.[0] || "bg-gray-400";
+
+						return (
+							<Tooltip key={status.id}>
+								<TooltipTrigger asChild>
+									<button
+										onClick={() => onFilterChange?.(status.label)}
+										className={cn(
+											"w-3 h-3 rounded-full transition-all duration-200 hover:scale-125 hover:shadow-[0_0_8px_rgba(255,255,255,0.2)]",
+											colorClass,
+											activeFilter === status.label ? "ring-2 ring-white ring-offset-2 ring-offset-[#141416] scale-110" : "opacity-40 grayscale-[0.5] hover:opacity-100 hover:grayscale-0"
+										)}
+										style={buttonStyle}
+									/>
+								</TooltipTrigger>
+								<TooltipContent>{status.label}</TooltipContent>
+							</Tooltip>
+						);
+					})}
 					{activeFilter && (
 						<button
 							onClick={() => onFilterChange?.(null)}
@@ -260,7 +279,11 @@ export const MainSheetToolbar = ({
 				</div>
 			</div>
 
+
+
 			<div className="flex items-center gap-2">
+				<VINLineCounter rows={rowData} />
+
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
@@ -301,6 +324,6 @@ export const MainSheetToolbar = ({
 					<TooltipContent>Delete</TooltipContent>
 				</Tooltip>
 			</div>
-		</div>
+		</div >
 	);
 };

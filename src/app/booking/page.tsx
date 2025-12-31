@@ -19,6 +19,7 @@ import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid
 import { getBookingColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { cn } from "@/lib/utils";
+import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { RowModals } from "@/components/shared/RowModals";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -247,6 +248,7 @@ export default function BookingPage() {
 					</div>
 
 					<div className="flex items-center gap-1.5">
+						<VINLineCounter rows={bookingRowData} />
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
@@ -263,6 +265,8 @@ export default function BookingPage() {
 						</Tooltip>
 					</div>
 				</div>
+
+
 
 				<Card>
 					<CardContent className="p-0">

@@ -47,6 +47,7 @@ export interface BookingActions {
 	) => void;
 	updateBookingStatus: (id: string, bookingStatus: string) => void;
 	addBookingStatusDef: (status: PartStatusDef) => void;
+	updateBookingStatusDef: (id: string, updates: Partial<PartStatusDef>) => void;
 	removeBookingStatusDef: (id: string) => void;
 }
 
@@ -99,6 +100,7 @@ export interface UIActions {
 	addReasonTemplate: (template: string) => void;
 	removeReasonTemplate: (template: string) => void;
 	addPartStatusDef: (status: PartStatusDef) => void;
+	updatePartStatusDef: (id: string, updates: Partial<PartStatusDef>) => void;
 	removePartStatusDef: (id: string) => void;
 	setIsLocked: (isLocked: boolean) => void;
 	resetStore: () => void;

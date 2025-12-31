@@ -1,5 +1,6 @@
 import type { StateCreator } from "zustand";
 import { generateId } from "@/lib/utils";
+import type { PendingRow } from "@/types";
 import type { CombinedStore, UIActions, UIState } from "../types";
 
 const defaultPartStatuses = [
@@ -200,6 +201,39 @@ export const createUISlice: StateCreator<
 			partStatuses: [...state.partStatuses, status],
 		}));
 		get().addCommit("Add Part Status Definition");
+	},
+
+	updatePartStatusDef: (id, updates) => {
+		const state = get();
+		const statusToUpdate = state.partStatuses.find((s) => s.id === id);
+		if (!statusToUpdate) return;
+
+		const oldLabel = statusToUpdate.label;
+		const newLabel = updates.label;
+
+		set((state) => ({
+			partStatuses: state.partStatuses.map((s) =>
+				s.id === id ? { ...s, ...updates } : s,
+			),
+		}));
+
+		// If label changed, bulk update all rows
+		if (newLabel && newLabel !== oldLabel) {
+			const updateRows = (rows: PendingRow[]) =>
+				rows.map((row) =>
+					row.partStatus === oldLabel ? { ...row, partStatus: newLabel } : row,
+				);
+
+			set((state) => ({
+				ordersRowData: updateRows(state.ordersRowData),
+				rowData: updateRows(state.rowData),
+				callRowData: updateRows(state.callRowData),
+				archiveRowData: updateRows(state.archiveRowData),
+				bookingRowData: updateRows(state.bookingRowData),
+			}));
+		}
+
+		get().addCommit("Update Part Status Definition");
 	},
 
 	removePartStatusDef: (id) => {

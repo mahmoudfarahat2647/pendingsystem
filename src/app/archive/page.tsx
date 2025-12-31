@@ -9,6 +9,7 @@ import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { RowModals } from "@/components/shared/RowModals";
+import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -132,7 +133,10 @@ export default function ArchivePage() {
 						</Tooltip>
 					</div>
 
+
+
 					<div className="flex items-center gap-1.5">
+						<VINLineCounter rows={archiveRowData} />
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button

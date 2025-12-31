@@ -2,20 +2,29 @@
 
 import {
 	CalendarCheck,
+	Check,
 	History,
 	Lock,
 	Palette,
+	Pencil,
 	Plus,
 	Settings as SettingsIcon,
 	Tag,
 	Trash2,
 	Undo2,
 	Unlock,
+	X,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef } from "@/types";
@@ -40,15 +49,46 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const addPartStatusDef = useAppStore((state) => state.addPartStatusDef);
+	const updatePartStatusDef = useAppStore((state) => state.updatePartStatusDef);
 	const removePartStatusDef = useAppStore((state) => state.removePartStatusDef);
 	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
 	const addBookingStatusDef = useAppStore((state) => state.addBookingStatusDef);
+	const updateBookingStatusDef = useAppStore((state) => state.updateBookingStatusDef);
 	const removeBookingStatusDef = useAppStore(
 		(state) => state.removeBookingStatusDef,
 	);
 	const commits = useAppStore((state) => state.commits);
 	const isLocked = useAppStore((state) => state.isLocked);
 	const setIsLocked = useAppStore((state) => state.setIsLocked);
+
+	// Data for usage checks
+	const rowData = useAppStore((state) => state.rowData);
+	const ordersRowData = useAppStore((state) => state.ordersRowData);
+	const callRowData = useAppStore((state) => state.callRowData);
+	const archiveRowData = useAppStore((state) => state.archiveRowData);
+	const bookingRowData = useAppStore((state) => state.bookingRowData);
+
+	const getPartStatusUsage = (label: string) => {
+		const allRows = [
+			...rowData,
+			...ordersRowData,
+			...callRowData,
+			...archiveRowData,
+			...bookingRowData,
+		];
+		return allRows.filter((row) => row.partStatus === label).length;
+	};
+
+	const getBookingStatusUsage = (label: string) => {
+		const allRows = [
+			...rowData,
+			...ordersRowData,
+			...callRowData,
+			...archiveRowData,
+			...bookingRowData,
+		];
+		return allRows.filter((row) => row.bookingStatus === label).length;
+	};
 
 	const [newStatusLabel, setNewStatusLabel] = useState("");
 	// Default to emerald-500 hex
@@ -242,7 +282,9 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									};
 									addPartStatusDef(newStatus);
 								}}
+								onUpdate={updatePartStatusDef}
 								onRemove={removePartStatusDef}
+								checkUsage={getPartStatusUsage}
 								isLocked={isLocked}
 							/>
 						)}
@@ -260,7 +302,9 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									};
 									addBookingStatusDef(newStatus);
 								}}
+								onUpdate={updateBookingStatusDef}
 								onRemove={removeBookingStatusDef}
+								checkUsage={getBookingStatusUsage}
 								isLocked={isLocked}
 							/>
 						)}
@@ -380,7 +424,9 @@ interface StatusManagementSectionProps {
 	managedTitle: string;
 	statuses: PartStatusDef[];
 	onAdd: (label: string, color: string) => void;
+	onUpdate: (id: string, updates: Partial<PartStatusDef>) => void;
 	onRemove: (id: string) => void;
+	checkUsage: (label: string) => number;
 	isLocked: boolean;
 }
 
@@ -389,11 +435,35 @@ const StatusManagementSection = ({
 	managedTitle,
 	statuses,
 	onAdd,
+	onUpdate,
 	onRemove,
+	checkUsage,
 	isLocked,
 }: StatusManagementSectionProps) => {
 	const [newLabel, setNewLabel] = useState("");
 	const [selectedColor, setSelectedColor] = useState("#10b981");
+	const [editingId, setEditingId] = useState<string | null>(null);
+	const [editLabel, setEditLabel] = useState("");
+	const [editColor, setEditColor] = useState("");
+
+	const startEditing = (status: PartStatusDef) => {
+		setEditingId(status.id);
+		setEditLabel(status.label);
+		setEditColor(status.color);
+	};
+
+	const cancelEditing = () => {
+		setEditingId(null);
+		setEditLabel("");
+		setEditColor("");
+	};
+
+	const saveEditing = (id: string) => {
+		if (editLabel.trim()) {
+			onUpdate(id, { label: editLabel.trim(), color: editColor });
+			cancelEditing();
+		}
+	};
 
 	return (
 		<div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -455,34 +525,124 @@ const StatusManagementSection = ({
 					{managedTitle}
 				</h4>
 				<div className="grid gap-3">
-					{statuses.map((status) => (
-						<div
-							key={status.id}
-							className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
-						>
-							<div className="flex items-center gap-4">
+					{statuses.map((status) => {
+						const isEditing = editingId === status.id;
+						const usageCount = checkUsage(status.label);
+						const isDeletable = usageCount === 0;
+
+						if (isEditing) {
+							return (
 								<div
-									className={cn("w-3 h-3 rounded-full shadow-lg", status.color.startsWith("bg-") && status.color)}
-									style={{ backgroundColor: status.color.startsWith("bg-") ? undefined : status.color }}
-								/>
-								<span className="font-medium text-gray-200">
-									{status.label}
-								</span>
-							</div>
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={() => onRemove(status.id)}
-								disabled={isLocked}
-								className={cn(
-									"h-9 w-9 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all",
-									isLocked ? "opacity-0" : "opacity-0 group-hover:opacity-100",
-								)}
+									key={status.id}
+									className="p-4 rounded-2xl bg-white/10 border border-renault-yellow/50 ring-1 ring-renault-yellow/20 space-y-4 animate-in fade-in"
+								>
+									<div className="flex gap-4">
+										<Input
+											value={editLabel}
+											onChange={(e) => setEditLabel(e.target.value)}
+											className="h-10 bg-black/40 border-white/10"
+											autoFocus
+										/>
+									</div>
+									<div className="flex justify-between items-center">
+										<ColorPicker color={editColor} onChange={setEditColor} />
+										<div className="flex gap-2">
+											<Button
+												size="sm"
+												variant="ghost"
+												onClick={cancelEditing}
+												className="hover:bg-white/10 text-gray-400"
+											>
+												<X className="h-4 w-4 mr-1" />
+												Cancel
+											</Button>
+											<Button
+												size="sm"
+												onClick={() => saveEditing(status.id)}
+												disabled={!editLabel.trim()}
+												className="bg-emerald-500 hover:bg-emerald-400 text-black font-medium"
+											>
+												<Check className="h-4 w-4 mr-1" />
+												Save
+											</Button>
+										</div>
+									</div>
+								</div>
+							);
+						}
+
+						return (
+							<div
+								key={status.id}
+								className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
 							>
-								<Trash2 className="h-4 w-4" />
-							</Button>
-						</div>
-					))}
+								<div className="flex items-center gap-4">
+									<div
+										className={cn(
+											"w-3 h-3 rounded-full shadow-lg",
+											status.color.startsWith("bg-") && status.color,
+										)}
+										style={{
+											backgroundColor: status.color.startsWith("bg-")
+												? undefined
+												: status.color,
+										}}
+									/>
+									<span className="font-medium text-gray-200">
+										{status.label}
+									</span>
+									{usageCount > 0 && (
+										<span className="text-[10px] bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">
+											{usageCount} used
+										</span>
+									)}
+								</div>
+
+								<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={() => startEditing(status)}
+										disabled={isLocked}
+										className="h-9 w-9 text-gray-500 hover:text-white hover:bg-white/10 rounded-xl"
+									>
+										<Pencil className="h-4 w-4" />
+									</Button>
+
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<span>
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() => onRemove(status.id)}
+														disabled={isLocked || !isDeletable}
+														className={cn(
+															"h-9 w-9 rounded-xl transition-all",
+															!isDeletable
+																? "text-gray-600 cursor-not-allowed"
+																: "text-gray-500 hover:text-red-400 hover:bg-red-400/10",
+														)}
+													>
+														<Trash2 className="h-4 w-4" />
+													</Button>
+												</span>
+											</TooltipTrigger>
+											{!isDeletable && (
+												<TooltipContent>
+													<p>
+														Cannot delete: Currently used by {usageCount} item
+														{usageCount !== 1 ? "s" : ""}
+													</p>
+												</TooltipContent>
+											)}
+										</Tooltip>
+									</TooltipProvider>
+								</div>
+							</div>
+						);
+					})}
 				</div>
 			</div>
 		</div>

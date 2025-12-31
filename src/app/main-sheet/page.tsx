@@ -158,6 +158,7 @@ export default function MainSheetPage() {
 								setActiveFilter(status === activeFilter ? null : status);
 								if (status) toast.info(`Filtering by: ${status}`);
 							}}
+							rowData={filteredRowData}
 							onLockToggle={() => setIsSheetLocked(!isSheetLocked)}
 							onUpdateStatus={handleUpdatePartStatus}
 							onBooking={() => setIsBookingModalOpen(true)}

@@ -123,6 +123,7 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 	// Enhanced error handling for missing or invalid status definitions
 	let statusDef: PartStatusDef | undefined;
 	let colorClass = "bg-gray-400"; // Default fallback color
+	let style: React.CSSProperties | undefined;
 	let displayValue = value;
 
 	try {
@@ -138,7 +139,13 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 		if (statusDef?.color && typeof statusDef.color === "string") {
 			const trimmedColor = statusDef.color.trim();
 			if (trimmedColor.length > 0) {
-				colorClass = trimmedColor;
+				// Check if it's a hex color or rgb color
+				if (trimmedColor.startsWith("#") || trimmedColor.startsWith("rgb")) {
+					colorClass = "";
+					style = { backgroundColor: trimmedColor };
+				} else {
+					colorClass = trimmedColor;
+				}
 			}
 		}
 
@@ -158,6 +165,7 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 		>
 			<div
 				className={`w-2.5 h-2.5 rounded-full ${colorClass} shadow-sm ring-1 ring-black/10 flex-shrink-0`}
+				style={style}
 			></div>
 		</div>
 	);

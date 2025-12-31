@@ -256,6 +256,7 @@ export default function OrdersPage() {
 							onFilterToggle={() => setShowFilters(!showFilters)}
 							partStatuses={partStatuses}
 							onUpdateStatus={handleUpdatePartStatus}
+							rowData={ordersRowData}
 						/>
 
 						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">

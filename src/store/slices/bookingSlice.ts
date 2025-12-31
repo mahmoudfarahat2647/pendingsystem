@@ -91,6 +91,41 @@ export const createBookingSlice: StateCreator<
 	 * Removes a booking status definition from the system by ID.
 	 * @param id - The ID of the status definition to remove.
 	 */
+	updateBookingStatusDef: (id, updates) => {
+		const state = get();
+		const statusToUpdate = state.bookingStatuses.find((s) => s.id === id);
+		if (!statusToUpdate) return;
+
+		const oldLabel = statusToUpdate.label;
+		const newLabel = updates.label;
+
+		set((state) => ({
+			bookingStatuses: state.bookingStatuses.map((s) =>
+				s.id === id ? { ...s, ...updates } : s,
+			),
+		}));
+
+		// If label changed, bulk update all rows
+		if (newLabel && newLabel !== oldLabel) {
+			const updateRows = (rows: PendingRow[]) =>
+				rows.map((row) =>
+					row.bookingStatus === oldLabel
+						? { ...row, bookingStatus: newLabel }
+						: row,
+				);
+
+			set((state) => ({
+				ordersRowData: updateRows(state.ordersRowData),
+				rowData: updateRows(state.rowData),
+				callRowData: updateRows(state.callRowData),
+				archiveRowData: updateRows(state.archiveRowData),
+				bookingRowData: updateRows(state.bookingRowData),
+			}));
+		}
+
+		get().addCommit("Update Booking Status Definition");
+	},
+
 	removeBookingStatusDef: (id) => {
 		set((state) => ({
 			bookingStatuses: state.bookingStatuses.filter((s) => s.id !== id),
