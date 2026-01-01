@@ -37,12 +37,28 @@ import { useRowModals } from "@/hooks/useRowModals";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
+import { useOrdersQuery, useUpdateOrderStageMutation, useDeleteOrderMutation, useSaveOrderMutation } from "@/hooks/queries/useOrdersQuery";
+import { useCallback } from "react";
+import { cn } from "@/lib/utils";
+
 export default function ArchivePage() {
-	const archiveRowData = useAppStore((state) => state.archiveRowData);
+	const { data: archiveRowData = [], isLoading } = useOrdersQuery("archive");
+	const updateStageMutation = useUpdateOrderStageMutation();
+	const deleteOrderMutation = useDeleteOrderMutation();
+	const saveOrderMutation = useSaveOrderMutation();
+
 	const partStatuses = useAppStore((state) => state.partStatuses);
-	const sendToReorder = useAppStore((state) => state.sendToReorder);
-	const deleteOrders = useAppStore((state) => state.deleteOrders);
-	const updateOrder = useAppStore((state) => state.updateOrder);
+	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
+
+	const handleUpdateOrder = useCallback((id: string, updates: Partial<PendingRow>) => {
+		saveOrderMutation.mutate({ id, ...updates, stage: "archive" });
+	}, [saveOrderMutation]);
+
+	const handleSendToArchive = useCallback((ids: string[], reason: string) => {
+		for (const id of ids) {
+			saveOrderMutation.mutate({ id, archiveReason: reason, stage: "archive" });
+		}
+	}, [saveOrderMutation]);
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
@@ -60,19 +76,26 @@ export default function ArchivePage() {
 		saveNote,
 		saveReminder,
 		saveAttachment,
-	} = useRowModals(updateOrder);
+	} = useRowModals(handleUpdateOrder, handleSendToArchive);
 
-	const handleConfirmReorder = () => {
+	const handleConfirmReorder = async () => {
 		if (!reorderReason.trim()) {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = selectedRows.map((r) => r.id);
-		sendToReorder(ids, reorderReason);
+		for (const row of selectedRows) {
+			await updateStageMutation.mutateAsync({ id: row.id, stage: "orders" });
+			await saveOrderMutation.mutateAsync({
+				id: row.id,
+				actionNote: `Reorder Reason: ${reorderReason}`,
+				status: "Reorder",
+				stage: "orders"
+			});
+		}
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");
-		toast.success(`${ids.length} row(s) sent back to Orders (Reorder)`);
+		toast.success(`${selectedRows.length} row(s) sent back to Orders (Reorder)`);
 	};
 
 	const handleUpdatePartStatus = (status: string) => {
@@ -278,10 +301,13 @@ export default function ArchivePage() {
 				<ConfirmDialog
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
-					onConfirm={() => {
-						deleteOrders(selectedRows.map((r) => r.id));
+					onConfirm={async () => {
+						for (const row of selectedRows) {
+							await deleteOrderMutation.mutateAsync(row.id);
+						}
 						setSelectedRows([]);
 						toast.success("Archived record(s) deleted");
+						setShowDeleteConfirm(false);
 					}}
 					title="Delete Archived Records"
 					description={`Are you sure you want to permanently delete ${selectedRows.length} selected record(s)?`}

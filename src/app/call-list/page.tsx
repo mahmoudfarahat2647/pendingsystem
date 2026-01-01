@@ -10,7 +10,7 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -44,16 +44,19 @@ import {
 import { useRowModals } from "@/hooks/useRowModals";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
+import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 
+import { useOrdersQuery, useUpdateOrderStageMutation, useDeleteOrderMutation, useSaveOrderMutation } from "@/hooks/queries/useOrdersQuery";
+
 export default function CallListPage() {
-	const callRowData = useAppStore((state) => state.callRowData);
+	const { data: callRowData = [], isLoading } = useOrdersQuery("call");
+	const updateStageMutation = useUpdateOrderStageMutation();
+	const deleteOrderMutation = useDeleteOrderMutation();
+	const saveOrderMutation = useSaveOrderMutation();
+
 	const partStatuses = useAppStore((state) => state.partStatuses);
-	const sendToBooking = useAppStore((state) => state.sendToBooking);
-	const sendToReorder = useAppStore((state) => state.sendToReorder);
-	const deleteOrders = useAppStore((state) => state.deleteOrders);
-	const updateOrder = useAppStore((state) => state.updateOrder);
-	const sendToArchive = useAppStore((state) => state.sendToArchive);
+	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -62,6 +65,16 @@ export default function CallListPage() {
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+
+	const handleUpdateOrder = useCallback((id: string, updates: Partial<PendingRow>) => {
+		saveOrderMutation.mutate({ id, ...updates, stage: "call" });
+	}, [saveOrderMutation]);
+
+	const handleSendToArchive = useCallback((ids: string[], reason: string) => {
+		for (const id of ids) {
+			saveOrderMutation.mutate({ id, archiveReason: reason, stage: "archive" });
+		}
+	}, [saveOrderMutation]);
 
 	const {
 		activeModal,
@@ -74,7 +87,7 @@ export default function CallListPage() {
 		saveReminder,
 		saveAttachment,
 		saveArchive,
-	} = useRowModals(updateOrder, sendToArchive);
+	} = useRowModals(handleUpdateOrder, handleSendToArchive);
 
 	const columns = useMemo(() => {
 		const baseColumns = getBaseColumns(
@@ -89,28 +102,36 @@ export default function CallListPage() {
 		];
 	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
 
-	const handleConfirmBooking = (
+	const handleConfirmBooking = async (
 		date: string,
-		note: string,
-		status?: string,
+		_note: string,
+		_status?: string,
 	) => {
-		const ids = selectedRows.map((r) => r.id);
-		sendToBooking(ids, date, note, status);
+		for (const row of selectedRows) {
+			await updateStageMutation.mutateAsync({ id: row.id, stage: "booking" });
+		}
 		setSelectedRows([]);
-		toast.success(`${ids.length} row(s) sent to Booking`);
+		toast.success(`${selectedRows.length} row(s) sent to Booking`);
 	};
 
-	const handleConfirmReorder = () => {
+	const handleConfirmReorder = async () => {
 		if (!reorderReason.trim()) {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = selectedRows.map((r) => r.id);
-		sendToReorder(ids, reorderReason);
+		for (const row of selectedRows) {
+			await updateStageMutation.mutateAsync({ id: row.id, stage: "orders" });
+			await saveOrderMutation.mutateAsync({
+				id: row.id,
+				actionNote: `Reorder Reason: ${reorderReason}`,
+				status: "Reorder",
+				stage: "orders"
+			});
+		}
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");
-		toast.success(`${ids.length} row(s) sent back to Orders (Reorder)`);
+		toast.success(`${selectedRows.length} row(s) sent back to Orders (Reorder)`);
 	};
 
 	const handleUpdatePartStatus = (status: string) => {

@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { Header } from "@/components/shared/Header";
 import { MainContentWrapper } from "@/components/shared/MainContentWrapper";
 import { Sidebar } from "@/components/shared/Sidebar";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 const inter = Inter({
 	subsets: ["latin"],
@@ -26,16 +27,18 @@ export default function RootLayout({
 	return (
 		<html lang="en" className="dark" suppressHydrationWarning>
 			<body className={inter.className} suppressHydrationWarning>
-				<div className="flex h-screen overflow-hidden bg-background">
-					<Sidebar />
-					<div className="flex flex-1 flex-col overflow-hidden">
-						<Header />
-						<main className="flex-1 overflow-y-auto p-6">
-							<MainContentWrapper>{children}</MainContentWrapper>
-						</main>
+				<QueryProvider>
+					<div className="flex h-screen overflow-hidden bg-background">
+						<Sidebar />
+						<div className="flex flex-1 flex-col overflow-hidden">
+							<Header />
+							<main className="flex-1 overflow-y-auto p-6">
+								<MainContentWrapper>{children}</MainContentWrapper>
+							</main>
+						</div>
 					</div>
-				</div>
-				<Toaster position="top-right" richColors />
+					<Toaster position="top-right" richColors />
+				</QueryProvider>
 			</body>
 		</html>
 	);

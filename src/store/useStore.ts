@@ -23,18 +23,43 @@ export const useAppStore = create<CombinedStore>()(
 		{
 			name: "pending-sys-storage-v1.1",
 			// Optimize: Only persist critical data to reduce localStorage overhead
+			// Optimize: ONLY persist UI preferences and metadata. 
+			// DATA (Orders, Bookings, etc.) should come from Supabase.
 			partialize: (state) => {
-				// Skip heavy arrays and non-critical state
 				const {
+					// Persisted:
+					partStatuses,
+					bookingStatuses,
+					models,
+					repairSystems,
+					noteTemplates,
+					reminderTemplates,
+					bookingTemplates,
+					reasonTemplates,
+					// Omitted (data now managed by Supabase/React Query):
+					rowData,
+					ordersRowData,
+					bookingRowData,
+					callRowData,
+					archiveRowData,
 					commits,
 					redos,
 					undoStack,
 					todos,
 					notes,
-					highlightedRowId,
-					...rest
+					...uiState
 				} = state;
-				return rest;
+				return {
+					partStatuses,
+					bookingStatuses,
+					models,
+					repairSystems,
+					noteTemplates,
+					reminderTemplates,
+					bookingTemplates,
+					reasonTemplates,
+					...uiState
+				};
 			},
 		},
 	),

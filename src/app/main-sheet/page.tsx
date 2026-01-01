@@ -18,15 +18,27 @@ import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
+import { useOrdersQuery, useUpdateOrderStageMutation, useDeleteOrderMutation, useSaveOrderMutation } from "@/hooks/queries/useOrdersQuery";
+import { useCallback } from "react";
+
 export default function MainSheetPage() {
-	const rowData = useAppStore((state) => state.rowData);
-	const sendToCallList = useAppStore((state) => state.sendToCallList);
+	const { data: rowData = [], isLoading } = useOrdersQuery("main");
+	const updateStageMutation = useUpdateOrderStageMutation();
+	const deleteOrderMutation = useDeleteOrderMutation();
+	const saveOrderMutation = useSaveOrderMutation();
+
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
-	const updateOrder = useAppStore((state) => state.updateOrder);
-	const deleteOrders = useAppStore((state) => state.deleteOrders);
-	const sendToBooking = useAppStore((state) => state.sendToBooking);
-	const sendToArchive = useAppStore((state) => state.sendToArchive);
+
+	const handleUpdateOrder = useCallback((id: string, updates: Partial<PendingRow>) => {
+		saveOrderMutation.mutate({ id, ...updates, stage: "main" });
+	}, [saveOrderMutation]);
+
+	const handleSendToArchive = useCallback((ids: string[], reason: string) => {
+		for (const id of ids) {
+			saveOrderMutation.mutate({ id, archiveReason: reason, stage: "archive" });
+		}
+	}, [saveOrderMutation]);
 
 	const [isSheetLocked, setIsSheetLocked] = useState(true);
 	const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
@@ -87,7 +99,7 @@ export default function MainSheetPage() {
 		saveReminder,
 		saveAttachment,
 		saveArchive,
-	} = useRowModals(updateOrder, sendToArchive);
+	} = useRowModals(handleUpdateOrder, handleSendToArchive);
 
 	const columns = useMemo(
 		() =>
@@ -115,15 +127,16 @@ export default function MainSheetPage() {
 		toast.success(`Part status updated to "${status}"`);
 	};
 
-	const handleConfirmBooking = (
+	const handleConfirmBooking = async (
 		date: string,
-		note: string,
-		status?: string,
+		_note: string,
+		_status?: string,
 	) => {
-		const ids = selectedRows.map((r) => r.id);
-		sendToBooking(ids, date, note, status);
+		for (const row of selectedRows) {
+			await updateStageMutation.mutateAsync({ id: row.id, stage: "booking" });
+		}
 		setSelectedRows([]);
-		toast.success(`${ids.length} row(s) sent to Booking`);
+		toast.success(`${selectedRows.length} row(s) sent to Booking`);
 	};
 
 	return (
@@ -170,8 +183,10 @@ export default function MainSheetPage() {
 									);
 								}
 							}}
-							onSendToCallList={() => {
-								sendToCallList(selectedRows.map((r) => r.id));
+							onSendToCallList={async () => {
+								for (const row of selectedRows) {
+									await updateStageMutation.mutateAsync({ id: row.id, stage: "call" });
+								}
 								setSelectedRows([]);
 								toast.success("Sent to Call List");
 							}}
@@ -226,10 +241,13 @@ export default function MainSheetPage() {
 			<ConfirmDialog
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
-				onConfirm={() => {
-					deleteOrders(selectedRows.map((r) => r.id));
+				onConfirm={async () => {
+					for (const row of selectedRows) {
+						await deleteOrderMutation.mutateAsync(row.id);
+					}
 					setSelectedRows([]);
 					toast.success("Row(s) deleted");
+					setShowDeleteConfirm(false);
 				}}
 				title="Delete Records"
 				description={`Are you sure you want to delete ${selectedRows.length} selected record(s)?`}

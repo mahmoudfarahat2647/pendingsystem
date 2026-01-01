@@ -50,13 +50,27 @@ import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
+import { useOrdersQuery, useUpdateOrderStageMutation, useDeleteOrderMutation, useSaveOrderMutation } from "@/hooks/queries/useOrdersQuery";
+import { useCallback } from "react";
+
 export default function BookingPage() {
-	const bookingRowData = useAppStore((state) => state.bookingRowData);
+	const { data: bookingRowData = [], isLoading } = useOrdersQuery("booking");
+	const updateStageMutation = useUpdateOrderStageMutation();
+	const deleteOrderMutation = useDeleteOrderMutation();
+	const saveOrderMutation = useSaveOrderMutation();
+
 	const partStatuses = useAppStore((state) => state.partStatuses);
-	const sendToArchive = useAppStore((state) => state.sendToArchive);
-	const sendToReorder = useAppStore((state) => state.sendToReorder);
-	const deleteOrders = useAppStore((state) => state.deleteOrders);
-	const updateOrder = useAppStore((state) => state.updateOrder);
+	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
+
+	const handleUpdateOrder = useCallback((id: string, updates: Partial<PendingRow>) => {
+		saveOrderMutation.mutate({ id, ...updates, stage: "booking" });
+	}, [saveOrderMutation]);
+
+	const handleSendToArchive = useCallback((ids: string[], reason: string) => {
+		for (const id of ids) {
+			saveOrderMutation.mutate({ id, archiveReason: reason, stage: "archive" });
+		}
+	}, [saveOrderMutation]);
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -86,7 +100,7 @@ export default function BookingPage() {
 		saveReminder,
 		saveAttachment,
 		saveArchive,
-	} = useRowModals(updateOrder, sendToArchive);
+	} = useRowModals(handleUpdateOrder, handleSendToArchive);
 
 	const columns = useMemo(
 		() =>
@@ -98,33 +112,42 @@ export default function BookingPage() {
 		[handleNoteClick, handleReminderClick, handleAttachClick],
 	);
 
-	const handleConfirmReorder = () => {
+	const handleConfirmReorder = async () => {
 		if (!reorderReason.trim()) {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = selectedRows.map((r) => r.id);
-		sendToReorder(ids, reorderReason);
+		for (const row of selectedRows) {
+			await updateStageMutation.mutateAsync({ id: row.id, stage: "orders" });
+			await saveOrderMutation.mutateAsync({
+				id: row.id,
+				actionNote: `Reorder Reason: ${reorderReason}`,
+				status: "Reorder",
+				stage: "orders"
+			});
+		}
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");
-		toast.success(`${ids.length} row(s) sent back to Orders (Reorder)`);
+		toast.success(`${selectedRows.length} row(s) sent back to Orders (Reorder)`);
 	};
 
-	const handleConfirmRebooking = (newDate: string, newNote: string) => {
+	const handleConfirmRebooking = async (newDate: string, newNote: string) => {
 		if (selectedRows.length === 0) return;
-		selectedRows.forEach((row) => {
+		for (const row of selectedRows) {
 			const oldDate = row.bookingDate || "Unknown Date";
 			const historyLog = `Rescheduled from ${oldDate} to ${newDate}.`;
 			const updatedNote = row.bookingNote
 				? `${row.bookingNote}\n[System]: ${historyLog} ${newNote}`
 				: `[System]: ${historyLog} ${newNote}`;
 
-			updateOrder(row.id, {
+			await saveOrderMutation.mutateAsync({
+				id: row.id,
 				bookingDate: newDate,
 				bookingNote: updatedNote.trim(),
+				stage: "booking"
 			});
-		});
+		}
 		setIsRebookingModalOpen(false);
 		setSelectedRows([]);
 		toast.success(`Rescheduled ${selectedRows.length} booking(s) successfully`);
@@ -400,10 +423,13 @@ export default function BookingPage() {
 				<ConfirmDialog
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
-					onConfirm={() => {
-						deleteOrders(selectedRows.map((r) => r.id));
+					onConfirm={async () => {
+						for (const row of selectedRows) {
+							await deleteOrderMutation.mutateAsync(row.id);
+						}
 						setSelectedRows([]);
 						toast.success("Booking(s) deleted");
+						setShowDeleteConfirm(false);
 					}}
 					title="Delete Bookings"
 					description={`Are you sure you want to delete ${selectedRows.length} selected booking(s)?`}

@@ -20,6 +20,7 @@ import { exportWorkbookCSV } from "@/lib/exportUtils";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { AppNotification } from "@/types";
+import { CloudSync } from "./CloudSync";
 
 export const Header = React.memo(function Header() {
 	const _pathname = usePathname();
@@ -122,7 +123,7 @@ export const Header = React.memo(function Header() {
 						"relative flex items-center rounded-2xl transition-all duration-300",
 						"bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10",
 						isSearchFocused &&
-							"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
+						"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
 					)}
 				>
 					<Search className="absolute left-4 h-5 w-5 text-gray-500" />
@@ -208,6 +209,8 @@ export const Header = React.memo(function Header() {
 					>
 						<RefreshCw className="h-5 w-5" />
 					</button>
+
+					<CloudSync />
 
 					<button
 						type="button"

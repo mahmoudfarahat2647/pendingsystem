@@ -21,16 +21,14 @@ import { generateId } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 
+import { useOrdersQuery, useSaveOrderMutation, useDeleteOrderMutation, useUpdateOrderStageMutation } from "@/hooks/queries/useOrdersQuery";
+
 export default function OrdersPage() {
-	const ordersRowData = useAppStore((state) => state.ordersRowData);
-	const addOrders = useAppStore((state) => state.addOrders);
-	const updateOrder = useAppStore((state) => state.updateOrder);
-	const updateOrders = useAppStore((state) => state.updateOrders);
-	const commitToMainSheet = useAppStore((state) => state.commitToMainSheet);
-	const deleteOrders = useAppStore((state) => state.deleteOrders);
-	const sendToBooking = useAppStore((state) => state.sendToBooking);
-	const sendToArchive = useAppStore((state) => state.sendToArchive);
-	const sendToCallList = useAppStore((state) => state.sendToCallList);
+	const { data: ordersRowData = [], isLoading } = useOrdersQuery("orders");
+	const saveOrderMutation = useSaveOrderMutation();
+	const deleteOrderMutation = useDeleteOrderMutation();
+	const updateStageMutation = useUpdateOrderStageMutation();
+
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
@@ -83,7 +81,7 @@ export default function OrdersPage() {
 		setIsFormModalOpen(true);
 	};
 
-	const handleSaveOrder = (
+	const handleSaveOrder = async (
 		formData: FormData,
 		parts: PartEntry[],
 	) => {
@@ -95,10 +93,13 @@ export default function OrdersPage() {
 				.filter((row) => !existingRowIdsInModal.has(row.id))
 				.map((row) => row.id);
 
-			if (removedRowIds.length > 0) deleteOrders(removedRowIds);
+			if (removedRowIds.length > 0) {
+				for (const id of removedRowIds) {
+					await deleteOrderMutation.mutateAsync(id);
+				}
+			}
 
-			const newOrders: PendingRow[] = [];
-			parts.forEach((part) => {
+			for (const part of parts) {
 				const commonData = {
 					...formData,
 					cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
@@ -107,7 +108,9 @@ export default function OrdersPage() {
 				};
 
 				if (part.rowId) {
-					updateOrder(part.rowId as string, {
+					await saveOrderMutation.mutateAsync({
+						id: part.rowId as string,
+						stage: "orders",
 						...commonData,
 						partNumber: part.partNumber,
 						description: part.description,
@@ -116,8 +119,7 @@ export default function OrdersPage() {
 				} else {
 					const baseId =
 						selectedRows[0]?.baseId || Date.now().toString().slice(-6);
-					newOrders.push({
-						id: generateId(),
+					await saveOrderMutation.mutateAsync({
 						baseId,
 						trackingId: `ORD-${baseId}`,
 						...commonData,
@@ -127,36 +129,39 @@ export default function OrdersPage() {
 						status: "Ordered",
 						rDate: new Date().toISOString().split("T")[0],
 						requester: formData.requester,
+						stage: "orders"
 					});
 				}
-			});
+			}
 
-			if (newOrders.length > 0) addOrders(newOrders);
 			toast.success("Grid entries updated successfully");
 		} else {
 			const baseId = Date.now().toString().slice(-6);
-			const newOrders: PendingRow[] = parts.map((part, index) => ({
-				id: generateId(),
-				baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
-				trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
-				...formData,
-				cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
-				partNumber: part.partNumber,
-				description: part.description,
-				parts: [part],
-				status: "Ordered",
-				rDate: new Date().toISOString().split("T")[0],
-				endWarranty: "",
-				remainTime: "",
-			}));
-			addOrders(newOrders);
-			toast.success(`${newOrders.length} order(s) created`);
+			for (let index = 0; index < parts.length; index++) {
+				const part = parts[index];
+				await saveOrderMutation.mutateAsync({
+					baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
+					trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
+					...formData,
+					cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
+					partNumber: part.partNumber,
+					description: part.description,
+					parts: [part],
+					status: "Ordered",
+					rDate: new Date().toISOString().split("T")[0],
+					endWarranty: "",
+					remainTime: "",
+					stage: "orders"
+				});
+			}
+			toast.success(`${parts.length} order(s) created`);
 		}
 		setIsFormModalOpen(false);
 	};
 
-	const handleCommit = () => {
+	const handleCommit = async () => {
 		if (selectedRows.length === 0) return;
+		// Check for attachment path before moving to main
 		const rowsWithoutPaths = selectedRows.filter(
 			(row) => !row.attachmentPath?.trim(),
 		);
@@ -166,20 +171,31 @@ export default function OrdersPage() {
 			);
 			return;
 		}
-		commitToMainSheet(selectedRows.map((r) => r.id));
+		for (const row of selectedRows) {
+			await updateStageMutation.mutateAsync({ id: row.id, stage: "main" });
+		}
 		setSelectedRows([]);
 		toast.success("Committed to Main Sheet");
 	};
 
-	const handleConfirmBooking = (
+	const handleConfirmBooking = async (
 		date: string,
 		note: string,
-		status?: string,
+		_status?: string,
 	) => {
-		const ids = selectedRows.map((r) => r.id);
-		sendToBooking(ids, date, note, status);
+		for (const row of selectedRows) {
+			await updateStageMutation.mutateAsync({ id: row.id, stage: "booking" });
+			// Note: booking notes/dates should be saved to the bookings table 
+			// I'll implement that in a separate step or via metadata for now
+			await saveOrderMutation.mutateAsync({
+				id: row.id,
+				bookingDate: date,
+				bookingNote: note,
+				stage: "booking"
+			});
+		}
 		setSelectedRows([]);
-		toast.success(`${ids.length} order(s) sent to Booking`);
+		toast.success(`${selectedRows.length} order(s) sent to Booking`);
 	};
 
 	const handleUpdatePartStatus = (status: string) => {
@@ -218,9 +234,11 @@ export default function OrdersPage() {
 		exportToLogisticsCSV(selectedRows);
 	};
 
-	const handleSendToCallList = () => {
+	const handleSendToCallList = async () => {
 		if (selectedRows.length === 0) return;
-		sendToCallList(selectedRows.map((r) => r.id));
+		for (const row of selectedRows) {
+			await updateStageMutation.mutateAsync({ id: row.id, stage: "call" });
+		}
 		setSelectedRows([]);
 		toast.success(`${selectedRows.length} order(s) sent to Call List`);
 	};
@@ -315,10 +333,13 @@ export default function OrdersPage() {
 				<ConfirmDialog
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
-					onConfirm={() => {
-						deleteOrders(selectedRows.map((r) => r.id));
+					onConfirm={async () => {
+						for (const row of selectedRows) {
+							await deleteOrderMutation.mutateAsync(row.id);
+						}
 						setSelectedRows([]);
 						toast.success("Order(s) deleted");
+						setShowDeleteConfirm(false);
 					}}
 					title="Delete Orders"
 					description={`Are you sure you want to delete ${selectedRows.length} selected order(s)? This action cannot be undone.`}

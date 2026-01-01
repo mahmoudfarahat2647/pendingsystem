@@ -32,12 +32,13 @@ const DistributionChart = dynamic(
 
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/useStore";
+
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 
 export default function DashboardPage() {
-	const ordersRowData = useAppStore((state) => state.ordersRowData);
-	const rowData = useAppStore((state) => state.rowData);
-	const callRowData = useAppStore((state) => state.callRowData);
+	const { data: ordersRowData = [] } = useOrdersQuery("orders");
+	const { data: rowData = [] } = useOrdersQuery("main");
+	const { data: callRowData = [] } = useOrdersQuery("call");
 
 	// Memoize stats to prevent recalculation
 	const stats = useMemo(
