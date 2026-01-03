@@ -39,6 +39,11 @@
 - **Workflow Actions**:
   - **Send to Call List**: Moves selected ready items to the Call List.
   - **Archive**: Moves completed items to Archive.
+  - **Auto-Move Automation**: 
+    - When a part status is updated to "Arrived" (in Main Sheet, Orders, or Global Search):
+    - System automatically checks all other parts for the same VIN.
+    - If **ALL** parts for that VIN are "Arrived", the entire group is automatically moved to the Call List.
+    - Protected feature: Critical to workflow efficiency.
 
 ## Customer Communication (Call List)
 - **Booking Calendar**:

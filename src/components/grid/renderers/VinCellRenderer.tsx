@@ -2,6 +2,7 @@ import type { ICellRendererParams } from "ag-grid-community";
 import { getVinColor } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 
+// VIN Cell Renderer - applies unique branded 'tonal' style based on VIN
 export const VinCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 	const vin = params.value as string;
 	if (!vin) return null;

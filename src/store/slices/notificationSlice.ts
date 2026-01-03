@@ -48,22 +48,20 @@ export const createNotificationSlice: StateCreator<
 		const state = get() as CombinedStore;
 		const now = new Date();
 
-		const newNotifications: Omit<
+		// CRITICAL: Notification Sync Strategy
+		// This function implements a strict synchronization strategy.
+		// 1. We identify ONLY reminders that are currently due (now >= reminderDate).
+		// 2. We then REBUILD the notification list to match this exact set.
+		// 3. This automatically handles REMOVAL of notifications if a reminder is:
+		//    a) Deleted
+		//    b) Rescheduled to the future
+		// DO NOT revert to a simple "append only" logic, or future reminders will get stuck in the list.
+
+		// 1. Identify all reminders that should currently be showing
+		const currentlyDueReminders: Omit<
 			AppNotification,
 			"id" | "timestamp" | "isRead"
 		>[] = [];
-
-		// Optimized: Cache existing IDs once instead of filtering/mapping multiple times
-		const existingReminders = new Set<string>();
-		const existingWarranties = new Set<string>();
-
-		for (const n of state.notifications) {
-			if (n.type === "reminder") {
-				existingReminders.add(n.referenceId);
-			} else if (n.type === "warranty") {
-				existingWarranties.add(n.vin);
-			}
-		}
 
 		const sources = [
 			{ data: state.rowData, name: "Main Sheet", path: "/main-sheet" },
@@ -74,13 +72,12 @@ export const createNotificationSlice: StateCreator<
 
 		for (const source of sources) {
 			for (const row of source.data) {
-				// 1. Reminders
 				if (row.reminder) {
 					const reminderDateStr = `${row.reminder.date}T${row.reminder.time || "00:00"}`;
 					const reminderDate = new Date(reminderDateStr);
 
-					if (!existingReminders.has(row.id) && now >= reminderDate) {
-						newNotifications.push({
+					if (now >= reminderDate) {
+						currentlyDueReminders.push({
 							type: "reminder",
 							title: "Reminder Due",
 							description: `Due: ${row.reminder.date} ${row.reminder.time || ""} - ${row.customerName}: ${row.reminder.subject}`,
@@ -95,21 +92,56 @@ export const createNotificationSlice: StateCreator<
 			}
 		}
 
-		if (newNotifications.length > 0) {
-			const timestamp = new Date().toISOString();
-			const notificationsWithIds = newNotifications.map((n) => ({
-				...n,
-				id: generateId(),
-				timestamp,
-				isRead: false,
-			}));
+		// 2. Synchronize store state
+		set((state) => {
+			// Keep non-reminder notifications
+			const nonReminderNotifications = state.notifications.filter(
+				(n) => n.type !== "reminder",
+			);
 
-			set((state) => ({
-				notifications: [...notificationsWithIds, ...state.notifications].slice(
-					0,
-					100,
-				),
-			}));
-		}
+			// Rebuild the reminder notifications list
+			const updatedReminderNotifications: AppNotification[] = [];
+			let hasChanges = false;
+
+			for (const due of currentlyDueReminders) {
+				// Check if we already have a notification for this exact reminder (refId + description)
+				const existing = state.notifications.find(
+					(n) =>
+						n.type === "reminder" &&
+						n.referenceId === due.referenceId &&
+						n.description === due.description,
+				);
+
+				if (existing) {
+					updatedReminderNotifications.push(existing);
+				} else {
+					// New due reminder found
+					updatedReminderNotifications.push({
+						...due,
+						id: generateId(),
+						timestamp: new Date().toISOString(),
+						isRead: false,
+					});
+					hasChanges = true;
+				}
+			}
+
+			// Check if any old reminders were removed
+			const oldReminderCount = state.notifications.filter(
+				(n) => n.type === "reminder",
+			).length;
+			if (updatedReminderNotifications.length !== oldReminderCount) {
+				hasChanges = true;
+			}
+
+			if (!hasChanges) return state;
+
+			return {
+				notifications: [
+					...updatedReminderNotifications,
+					...nonReminderNotifications,
+				].slice(0, 100),
+			};
+		});
 	},
 });

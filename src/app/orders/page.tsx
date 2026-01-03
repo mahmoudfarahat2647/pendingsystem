@@ -1,13 +1,12 @@
 "use client";
 
-import type { GridApi } from "ag-grid-community";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { toast } from "sonner";
-import { OrderFormModal, type FormData } from "@/components/orders/OrderFormModal";
+import { DynamicDataGrid as DataGrid } from "@/components/grid";
+import { OrderFormModal } from "@/components/orders/OrderFormModal";
 import { OrdersToolbar } from "@/components/orders/OrdersToolbar";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid";
 import { EditAttachmentModal } from "@/components/shared/EditAttachmentModal";
 import { getOrdersColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -15,32 +14,46 @@ import { RowModals } from "@/components/shared/RowModals";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
-import { exportToLogisticsCSV } from "@/lib/exportUtils";
-import { printOrderDocument, printReservationLabels } from "@/lib/printing";
-import { generateId } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
-import type { PartEntry, PendingRow } from "@/types";
-
-import { useOrdersQuery, useSaveOrderMutation, useDeleteOrderMutation, useUpdateOrderStageMutation } from "@/hooks/queries/useOrdersQuery";
+import type { PendingRow } from "@/types";
+import { useOrdersPageHandlers } from "./useOrdersPageHandlers";
 
 export default function OrdersPage() {
-	const { data: ordersRowData = [], isLoading } = useOrdersQuery("orders");
-	const saveOrderMutation = useSaveOrderMutation();
-	const deleteOrderMutation = useDeleteOrderMutation();
-	const updateStageMutation = useUpdateOrderStageMutation();
+	const {
+		ordersRowData,
+		gridApi,
+		setGridApi,
+		selectedRows,
+		setSelectedRows,
+		isFormModalOpen,
+		setIsFormModalOpen,
+		isEditMode,
+		setIsEditMode,
+		isBookingModalOpen,
+		setIsBookingModalOpen,
+		isBulkAttachmentModalOpen,
+		setIsBulkAttachmentModalOpen,
+		showDeleteConfirm,
+		setShowDeleteConfirm,
+		showFilters,
+		setShowFilters,
+		handleUpdateOrder,
+		handleSendToArchive,
+		handleSaveOrder,
+		handleCommit,
+		handleConfirmBooking,
+		handleUpdatePartStatus,
+		handleSaveBulkAttachment,
+		handlePrint,
+		handleReserve,
+		handleShareToLogistics,
+		handleSendToCallList,
+		handleDeleteSelected,
+		updateStageMutation,
+	} = useOrdersPageHandlers();
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
-
-	const [gridApi, setGridApi] = useState<GridApi | null>(null);
-	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
-	const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-	const [isEditMode, setIsEditMode] = useState(false);
-	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-	const [isBulkAttachmentModalOpen, setIsBulkAttachmentModalOpen] =
-		useState(false);
-	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-	const [showFilters, setShowFilters] = useState(false);
 
 	const {
 		activeModal,
@@ -54,7 +67,7 @@ export default function OrdersPage() {
 		saveReminder,
 		saveAttachment,
 		saveArchive,
-	} = useRowModals(updateOrder, sendToArchive);
+	} = useRowModals(handleUpdateOrder, handleSendToArchive);
 
 	const columns = useMemo(
 		() =>
@@ -64,183 +77,12 @@ export default function OrdersPage() {
 				handleReminderClick,
 				handleAttachClick,
 			),
-		[
-			partStatuses,
-			handleNoteClick,
-			handleReminderClick,
-			handleAttachClick,
-		],
+		[partStatuses, handleNoteClick, handleReminderClick, handleAttachClick],
 	);
-
-	const handleSelectionChanged = useCallback((rows: PendingRow[]) => {
-		setSelectedRows(rows);
-	}, []);
 
 	const handleOpenForm = (edit = false) => {
 		setIsEditMode(edit);
 		setIsFormModalOpen(true);
-	};
-
-	const handleSaveOrder = async (
-		formData: FormData,
-		parts: PartEntry[],
-	) => {
-		if (isEditMode) {
-			const existingRowIdsInModal = new Set(
-				parts.map((p) => p.rowId).filter(Boolean),
-			);
-			const removedRowIds = selectedRows
-				.filter((row) => !existingRowIdsInModal.has(row.id))
-				.map((row) => row.id);
-
-			if (removedRowIds.length > 0) {
-				for (const id of removedRowIds) {
-					await deleteOrderMutation.mutateAsync(id);
-				}
-			}
-
-			for (const part of parts) {
-				const commonData = {
-					...formData,
-					cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
-					endWarranty: "",
-					remainTime: "",
-				};
-
-				if (part.rowId) {
-					await saveOrderMutation.mutateAsync({
-						id: part.rowId as string,
-						stage: "orders",
-						...commonData,
-						partNumber: part.partNumber,
-						description: part.description,
-						parts: [part],
-					});
-				} else {
-					const baseId =
-						selectedRows[0]?.baseId || Date.now().toString().slice(-6);
-					await saveOrderMutation.mutateAsync({
-						baseId,
-						trackingId: `ORD-${baseId}`,
-						...commonData,
-						partNumber: part.partNumber,
-						description: part.description,
-						parts: [part],
-						status: "Ordered",
-						rDate: new Date().toISOString().split("T")[0],
-						requester: formData.requester,
-						stage: "orders"
-					});
-				}
-			}
-
-			toast.success("Grid entries updated successfully");
-		} else {
-			const baseId = Date.now().toString().slice(-6);
-			for (let index = 0; index < parts.length; index++) {
-				const part = parts[index];
-				await saveOrderMutation.mutateAsync({
-					baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
-					trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
-					...formData,
-					cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
-					partNumber: part.partNumber,
-					description: part.description,
-					parts: [part],
-					status: "Ordered",
-					rDate: new Date().toISOString().split("T")[0],
-					endWarranty: "",
-					remainTime: "",
-					stage: "orders"
-				});
-			}
-			toast.success(`${parts.length} order(s) created`);
-		}
-		setIsFormModalOpen(false);
-	};
-
-	const handleCommit = async () => {
-		if (selectedRows.length === 0) return;
-		// Check for attachment path before moving to main
-		const rowsWithoutPaths = selectedRows.filter(
-			(row) => !row.attachmentPath?.trim(),
-		);
-		if (rowsWithoutPaths.length > 0) {
-			toast.error(
-				`${rowsWithoutPaths.length} order(s) missing attachment paths.`,
-			);
-			return;
-		}
-		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "main" });
-		}
-		setSelectedRows([]);
-		toast.success("Committed to Main Sheet");
-	};
-
-	const handleConfirmBooking = async (
-		date: string,
-		note: string,
-		_status?: string,
-	) => {
-		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "booking" });
-			// Note: booking notes/dates should be saved to the bookings table 
-			// I'll implement that in a separate step or via metadata for now
-			await saveOrderMutation.mutateAsync({
-				id: row.id,
-				bookingDate: date,
-				bookingNote: note,
-				stage: "booking"
-			});
-		}
-		setSelectedRows([]);
-		toast.success(`${selectedRows.length} order(s) sent to Booking`);
-	};
-
-	const handleUpdatePartStatus = (status: string) => {
-		if (selectedRows.length === 0) return;
-		selectedRows.forEach((row) => {
-			updatePartStatus(row.id, status);
-		});
-		toast.success(`Part status updated to "${status}"`);
-	};
-
-	const handleSaveBulkAttachment = (path: string | undefined) => {
-		if (selectedRows.length === 0) return;
-		updateOrders(
-			selectedRows.map((r) => r.id),
-			{
-				attachmentPath: path,
-				hasAttachment: !!path,
-			},
-		);
-		toast.success(path ? "Bulk link updated" : "Bulk link cleared");
-		setIsBulkAttachmentModalOpen(false);
-	};
-
-	const handlePrint = () => {
-		if (selectedRows.length === 0) return;
-		printOrderDocument(selectedRows);
-	};
-
-	const handleReserve = () => {
-		if (selectedRows.length === 0) return;
-		printReservationLabels(selectedRows);
-	};
-
-	const handleShareToLogistics = () => {
-		if (selectedRows.length === 0) return;
-		exportToLogisticsCSV(selectedRows);
-	};
-
-	const handleSendToCallList = async () => {
-		if (selectedRows.length === 0) return;
-		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "call" });
-		}
-		setSelectedRows([]);
-		toast.success(`${selectedRows.length} order(s) sent to Call List`);
 	};
 
 	return (
@@ -281,17 +123,50 @@ export default function OrdersPage() {
 							<DataGrid
 								rowData={ordersRowData}
 								columnDefs={columns}
-								onSelectionChanged={handleSelectionChanged}
-								onCellValueChanged={(params) => {
+								onSelectionChange={setSelectedRows}
+								onCellValueChanged={async (params) => {
 									if (
 										params.colDef.field === "partStatus" &&
 										params.newValue !== params.oldValue
 									) {
-										updatePartStatus(params.data.id, params.newValue);
+										const newStatus = params.newValue;
+										const vin = params.data.vin;
+
+										// 1. Persist the change
+										handleUpdateOrder(params.data.id, {
+											partStatus: newStatus,
+										});
+
+										// 2. Check for auto-move to Call List
+										// [CRITICAL] AUTO-MOVE FEATURE - DO NOT REMOVE
+										if (newStatus === "Arrived" && vin) {
+											const vinParts = ordersRowData.filter(
+												(r) => r.vin === vin,
+											);
+											const allArrived = vinParts.every((r) => {
+												if (r.id === params.data.id) return true;
+												return r.partStatus === "Arrived";
+											});
+
+											if (allArrived && vinParts.length > 0) {
+												for (const part of vinParts) {
+													await updateStageMutation.mutateAsync({
+														id: part.id,
+														stage: "call",
+													});
+												}
+												toast.success(
+													`All parts for VIN ${vin} arrived! Moved to Call List.`,
+													{ duration: 5000 },
+												);
+											}
+										}
 									}
 								}}
 								onGridReady={(api) => setGridApi(api)}
 								showFloatingFilters={showFilters}
+								enablePagination={true}
+								pageSize={20}
 							/>
 						</div>
 					</CardContent>
@@ -333,14 +208,7 @@ export default function OrdersPage() {
 				<ConfirmDialog
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
-					onConfirm={async () => {
-						for (const row of selectedRows) {
-							await deleteOrderMutation.mutateAsync(row.id);
-						}
-						setSelectedRows([]);
-						toast.success("Order(s) deleted");
-						setShowDeleteConfirm(false);
-					}}
+					onConfirm={handleDeleteSelected}
 					title="Delete Orders"
 					description={`Are you sure you want to delete ${selectedRows.length} selected order(s)? This action cannot be undone.`}
 					confirmText="Delete"

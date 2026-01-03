@@ -36,6 +36,17 @@
 				"useExhaustiveDependencies": "off",
 				"noUnusedFunctionParameters": "warn"
 			},
+			"style": {
+				"noRestrictedImports": {
+					"level": "error",
+					"options": {
+						"paths": {
+							"@/components/shared/DataGrid": "Use '@/components/grid' instead.",
+							"@/components/shared/DynamicDataGrid": "Use '@/components/grid' instead."
+						}
+					}
+				}
+			},
 			"a11y": {
 				"useButtonType": "warn",
 				"noLabelWithoutControl": "warn",

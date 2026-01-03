@@ -12,6 +12,7 @@ interface UseGridCallbacksOptions<T> {
 	onSelectionChange?: (selectedRows: T[]) => void;
 	onGridReady?: (api: GridApi) => void;
 	onFirstDataRendered?: () => void;
+	onCellValueChanged?: (event: CellValueChangedEvent<T>) => void;
 }
 
 export function useGridCallbacks<T>({
@@ -19,6 +20,7 @@ export function useGridCallbacks<T>({
 	onSelectionChange,
 	onGridReady,
 	onFirstDataRendered,
+	onCellValueChanged,
 }: UseGridCallbacksOptions<T>) {
 	const gridApiRef = useRef<GridApi | null>(null);
 
@@ -53,8 +55,9 @@ export function useGridCallbacks<T>({
 			if (event.data && onDataChange) {
 				onDataChange(event.data);
 			}
+			onCellValueChanged?.(event);
 		},
-		[onDataChange],
+		[onDataChange, onCellValueChanged],
 	);
 
 	const handleSelectionChanged = useCallback(

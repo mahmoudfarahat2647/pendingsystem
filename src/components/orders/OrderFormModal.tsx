@@ -33,7 +33,13 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn, detectModelFromVin, generateId } from "@/lib/utils";
+import {
+	calculateEndWarranty,
+	calculateRemainingTime,
+	cn,
+	detectModelFromVin,
+	generateId,
+} from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 
@@ -257,7 +263,7 @@ export const OrderFormModal = ({
 			if (
 				existingPart &&
 				existingPart.description.trim().toLowerCase() !==
-				part.description.trim().toLowerCase()
+					part.description.trim().toLowerCase()
 			) {
 				warnings[part.id] = {
 					type: "mismatch",
@@ -653,15 +659,41 @@ export const OrderFormModal = ({
 														</div>
 														<div className="space-y-1">
 															<Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">
-																Warranty Warning
+																Warranty Status
 															</Label>
-															<div className="flex items-center h-9">
-																{isHighMileage && (
-																	<div className="w-full h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center overflow-hidden shadow-inner uppercase tracking-tighter">
+															<div className="flex items-center gap-2 h-9">
+																{isHighMileage ? (
+																	<div
+																		className="flex-1 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center overflow-hidden shadow-inner uppercase tracking-tighter cursor-help"
+																		title="Vehicle exceeds 100,000 KM"
+																	>
 																		<span className="text-[10px] text-red-500 font-mono font-black">
 																			HIGH MILEAGE
 																		</span>
 																	</div>
+																) : (
+																	(() => {
+																		const end = calculateEndWarranty(
+																			formData.startWarranty,
+																		);
+																		const remain = calculateRemainingTime(end);
+																		const isExpired = remain === "Expired";
+
+																		return (
+																			<div
+																				className={cn(
+																					"flex-1 h-9 rounded-lg border flex items-center justify-center overflow-hidden shadow-inner uppercase tracking-tighter px-2",
+																					isExpired
+																						? "bg-red-500/10 border-red-500/20 text-red-500"
+																						: "bg-emerald-500/10 border-emerald-500/20 text-emerald-500",
+																				)}
+																			>
+																				<span className="text-[10px] font-mono font-black truncate">
+																					{remain || "--"}
+																				</span>
+																			</div>
+																		);
+																	})()
 																)}
 															</div>
 														</div>
@@ -846,29 +878,29 @@ export const OrderFormModal = ({
 																		<AlertCircle className="h-3 w-3" />
 																		<span className="text-[9px] font-bold uppercase tracking-tight">
 																			{partValidationWarnings[part.id].type ===
-																				"duplicate"
+																			"duplicate"
 																				? partValidationWarnings[part.id].value
 																				: `Existing Name: "${partValidationWarnings[part.id].value}"`}
 																		</span>
 																	</div>
 																	{partValidationWarnings[part.id].type ===
 																		"mismatch" && (
-																			<Button
-																				variant="ghost"
-																				size="icon"
-																				className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
-																				onClick={() =>
-																					handlePartChange(
-																						part.id,
-																						"description",
-																						partValidationWarnings[part.id].value,
-																					)
-																				}
-																				title="Apply existing name"
-																			>
-																				<CheckCircle2 className="h-3 w-3" />
-																			</Button>
-																		)}
+																		<Button
+																			variant="ghost"
+																			size="icon"
+																			className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
+																			onClick={() =>
+																				handlePartChange(
+																					part.id,
+																					"description",
+																					partValidationWarnings[part.id].value,
+																				)
+																			}
+																			title="Apply existing name"
+																		>
+																			<CheckCircle2 className="h-3 w-3" />
+																		</Button>
+																	)}
 																</div>
 															)}
 														</div>

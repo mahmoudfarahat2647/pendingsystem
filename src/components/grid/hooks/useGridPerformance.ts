@@ -43,13 +43,11 @@ export function useGridPerformance(gridApi: GridApi | null) {
 	const markGridReady = () => {
 		const duration = performance.now() - startTimeRef.current;
 		metricsRef.current.gridReadyTime = duration;
-		// console.log(`[Grid Performance] Ready in ${duration.toFixed(2)}ms`);
 	};
 
 	const markFirstDataRendered = () => {
 		const duration = performance.now() - startTimeRef.current;
 		metricsRef.current.firstDataRenderedTime = duration;
-		// console.log(`[Grid Performance] First data rendered in ${duration.toFixed(2)}ms`);
 	};
 
 	return {

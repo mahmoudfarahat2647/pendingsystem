@@ -10,11 +10,11 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { RowModals } from "@/components/shared/RowModals";
@@ -27,36 +27,57 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+	useDeleteOrderMutation,
+	useOrdersQuery,
+	useSaveOrderMutation,
+	useUpdateOrderStageMutation,
+} from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
-import { useAppStore } from "@/store/useStore";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
-import { useOrdersQuery, useUpdateOrderStageMutation, useDeleteOrderMutation, useSaveOrderMutation } from "@/hooks/queries/useOrdersQuery";
-
 export default function CallListPage() {
-	const { data: callRowData = [], isLoading } = useOrdersQuery("call");
+	const { data: callRowData = [] } = useOrdersQuery("call");
+	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const updateStageMutation = useUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
+	const setCallRowData = useAppStore((state) => state.setCallRowData);
+	const setBookingRowData = useAppStore((state) => state.setBookingRowData);
+	const checkNotifications = useAppStore((state) => state.checkNotifications);
+
+	useEffect(() => {
+		if (callRowData) {
+			setCallRowData(callRowData);
+			checkNotifications();
+		}
+	}, [callRowData, setCallRowData, checkNotifications]);
+
+	useEffect(() => {
+		if (bookingRowData) {
+			setBookingRowData(bookingRowData);
+		}
+	}, [bookingRowData, setBookingRowData]);
+
 	const partStatuses = useAppStore((state) => state.partStatuses);
-	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -66,15 +87,25 @@ export default function CallListPage() {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 
-	const handleUpdateOrder = useCallback((id: string, updates: Partial<PendingRow>) => {
-		saveOrderMutation.mutate({ id, ...updates, stage: "call" });
-	}, [saveOrderMutation]);
+	const handleUpdateOrder = useCallback(
+		(id: string, updates: Partial<PendingRow>) => {
+			saveOrderMutation.mutate({ id, updates, stage: "call" });
+		},
+		[saveOrderMutation],
+	);
 
-	const handleSendToArchive = useCallback((ids: string[], reason: string) => {
-		for (const id of ids) {
-			saveOrderMutation.mutate({ id, archiveReason: reason, stage: "archive" });
-		}
-	}, [saveOrderMutation]);
+	const handleSendToArchive = useCallback(
+		(ids: string[], reason: string) => {
+			for (const id of ids) {
+				saveOrderMutation.mutate({
+					id,
+					updates: { archiveReason: reason },
+					stage: "archive",
+				});
+			}
+		},
+		[saveOrderMutation],
+	);
 
 	const {
 		activeModal,
@@ -104,11 +135,19 @@ export default function CallListPage() {
 
 	const handleConfirmBooking = async (
 		date: string,
-		_note: string,
-		_status?: string,
+		note: string,
+		status?: string,
 	) => {
 		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "booking" });
+			await saveOrderMutation.mutateAsync({
+				id: row.id,
+				updates: {
+					bookingDate: date,
+					bookingNote: note,
+					...(status ? { bookingStatus: status } : {}),
+				},
+				stage: "booking",
+			});
 		}
 		setSelectedRows([]);
 		toast.success(`${selectedRows.length} row(s) sent to Booking`);
@@ -123,21 +162,25 @@ export default function CallListPage() {
 			await updateStageMutation.mutateAsync({ id: row.id, stage: "orders" });
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
-				actionNote: `Reorder Reason: ${reorderReason}`,
-				status: "Reorder",
-				stage: "orders"
+				updates: {
+					actionNote: `Reorder Reason: ${reorderReason}`,
+					status: "Reorder",
+				},
+				stage: "orders",
 			});
 		}
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");
-		toast.success(`${selectedRows.length} row(s) sent back to Orders (Reorder)`);
+		toast.success(
+			`${selectedRows.length} row(s) sent back to Orders (Reorder)`,
+		);
 	};
 
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
 		selectedRows.forEach((row) => {
-			updateOrder(row.id, { partStatus: status });
+			handleUpdateOrder(row.id, { partStatus: status });
 		});
 		toast.success(`Updated ${selectedRows.length} item(s) to ${status}`);
 	};
@@ -152,7 +195,7 @@ export default function CallListPage() {
 
 	return (
 		<TooltipProvider>
-			<div className="space-y-4">
+			<div className="space-y-4 h-full flex flex-col">
 				<InfoLabel data={selectedRows[0] || null} />
 
 				<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
@@ -217,8 +260,12 @@ export default function CallListPage() {
 										className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
 									>
 										{partStatuses?.map((status) => {
-											const isHex = status.color?.startsWith("#") || status.color?.startsWith("rgb");
-											const dotStyle = isHex ? { backgroundColor: status.color } : undefined;
+											const isHex =
+												status.color?.startsWith("#") ||
+												status.color?.startsWith("rgb");
+											const dotStyle = isHex
+												? { backgroundColor: status.color }
+												: undefined;
 											const colorClass = isHex ? "" : status.color;
 
 											return (
@@ -292,17 +339,17 @@ export default function CallListPage() {
 					</div>
 				</div>
 
-				<Card>
-					<CardContent className="p-0">
-						<DataGrid
-							rowData={callRowData}
-							columnDefs={columns}
-							onSelectionChanged={setSelectedRows}
-							onGridReady={(api) => setGridApi(api)}
-							showFloatingFilters={showFilters}
-						/>
-					</CardContent>
-				</Card>
+				<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden mt-4">
+					<DataGrid
+						rowData={callRowData}
+						columnDefs={columns}
+						onSelectionChange={setSelectedRows}
+						onGridReady={(api) => setGridApi(api)}
+						showFloatingFilters={showFilters}
+						enablePagination={true}
+						pageSize={20}
+					/>
+				</div>
 
 				<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
 					<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
@@ -364,8 +411,10 @@ export default function CallListPage() {
 				<ConfirmDialog
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
-					onConfirm={() => {
-						deleteOrders(selectedRows.map((r) => r.id));
+					onConfirm={async () => {
+						for (const row of selectedRows) {
+							await deleteOrderMutation.mutateAsync(row.id);
+						}
 						setSelectedRows([]);
 						toast.success("Row(s) deleted");
 					}}

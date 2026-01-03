@@ -14,6 +14,7 @@ import {
 	Trash2,
 	Unlock,
 } from "lucide-react";
+import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -26,9 +27,8 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { PendingRow } from "@/types";
 import { cn } from "@/lib/utils";
-import { VINLineCounter } from "@/components/shared/VINLineCounter";
+import type { PartStatusDef, PendingRow } from "@/types";
 
 interface MainSheetToolbarProps {
 	isLocked: boolean;
@@ -43,7 +43,7 @@ interface MainSheetToolbarProps {
 	onLockToggle: () => void;
 	onReserve: () => void;
 	onUpdateStatus?: (status: string) => void;
-	partStatuses?: any[];
+	partStatuses?: PartStatusDef[];
 	activeFilter?: string | null;
 	onFilterChange?: (status: string | null) => void;
 	rowData?: PendingRow[];
@@ -78,6 +78,7 @@ export const MainSheetToolbar = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
+							type="button"
 							size="icon"
 							className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-lg h-8 w-8"
 							onClick={onReserve}
@@ -94,6 +95,7 @@ export const MainSheetToolbar = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
+							type="button"
 							variant="ghost"
 							size="icon"
 							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
@@ -107,6 +109,7 @@ export const MainSheetToolbar = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
+							type="button"
 							variant="ghost"
 							size="icon"
 							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
@@ -120,6 +123,7 @@ export const MainSheetToolbar = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
+							type="button"
 							variant="ghost"
 							size="icon"
 							className={cn(
@@ -146,6 +150,7 @@ export const MainSheetToolbar = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
+							type="button"
 							variant="ghost"
 							size="icon"
 							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
@@ -161,6 +166,7 @@ export const MainSheetToolbar = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
+							type="button"
 							variant="ghost"
 							size="icon"
 							onClick={onSendToCallList}
@@ -176,6 +182,7 @@ export const MainSheetToolbar = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
+							type="button"
 							variant="ghost"
 							size="icon"
 							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
@@ -190,6 +197,7 @@ export const MainSheetToolbar = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
+							type="button"
 							variant="ghost"
 							size="icon"
 							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
@@ -206,6 +214,7 @@ export const MainSheetToolbar = ({
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
+									type="button"
 									variant="ghost"
 									size="icon"
 									className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
@@ -218,9 +227,13 @@ export const MainSheetToolbar = ({
 								align="end"
 								className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
 							>
-								{partStatuses?.map((status: any) => {
-									const isHex = status.color?.startsWith("#") || status.color?.startsWith("rgb");
-									const dotStyle = isHex ? { backgroundColor: status.color } : undefined;
+								{partStatuses?.map((status: PartStatusDef) => {
+									const isHex =
+										status.color?.startsWith("#") ||
+										status.color?.startsWith("rgb");
+									const dotStyle = isHex
+										? { backgroundColor: status.color }
+										: undefined;
 									const colorClass = isHex ? "" : status.color;
 
 									return (
@@ -246,20 +259,29 @@ export const MainSheetToolbar = ({
 				<div className="w-px h-6 bg-white/10 mx-1" />
 
 				<div className="flex items-center gap-1.5 px-2">
-					{partStatuses?.map((status: any) => {
-						const isHex = status.color?.startsWith("#") || status.color?.startsWith("rgb");
-						const buttonStyle = isHex ? { backgroundColor: status.color } : undefined;
-						const colorClass = isHex ? "" : status.color?.replace?.("text-", "bg-")?.split?.(" ")?.[0] || "bg-gray-400";
+					{partStatuses?.map((status: PartStatusDef) => {
+						const isHex =
+							status.color?.startsWith("#") || status.color?.startsWith("rgb");
+						const buttonStyle = isHex
+							? { backgroundColor: status.color }
+							: undefined;
+						const colorClass = isHex
+							? ""
+							: status.color?.replace?.("text-", "bg-")?.split?.(" ")?.[0] ||
+								"bg-gray-400";
 
 						return (
 							<Tooltip key={status.id}>
 								<TooltipTrigger asChild>
 									<button
+										type="button"
 										onClick={() => onFilterChange?.(status.label)}
 										className={cn(
 											"w-3 h-3 rounded-full transition-all duration-200 hover:scale-125 hover:shadow-[0_0_8px_rgba(255,255,255,0.2)]",
 											colorClass,
-											activeFilter === status.label ? "ring-2 ring-white ring-offset-2 ring-offset-[#141416] scale-110" : "opacity-40 grayscale-[0.5] hover:opacity-100 hover:grayscale-0"
+											activeFilter === status.label
+												? "ring-2 ring-white ring-offset-2 ring-offset-[#141416] scale-110"
+												: "opacity-40 grayscale-[0.5] hover:opacity-100 hover:grayscale-0",
 										)}
 										style={buttonStyle}
 									/>
@@ -270,6 +292,7 @@ export const MainSheetToolbar = ({
 					})}
 					{activeFilter && (
 						<button
+							type="button"
 							onClick={() => onFilterChange?.(null)}
 							className="text-[10px] text-gray-500 hover:text-gray-300 ml-1 font-bold uppercase tracking-wider"
 						>
@@ -279,14 +302,13 @@ export const MainSheetToolbar = ({
 				</div>
 			</div>
 
-
-
 			<div className="flex items-center gap-2">
 				<VINLineCounter rows={rowData} />
 
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
+							type="button"
 							size="icon"
 							variant="ghost"
 							className={cn(
@@ -312,6 +334,7 @@ export const MainSheetToolbar = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
+							type="button"
 							size="icon"
 							variant="ghost"
 							className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
@@ -324,6 +347,6 @@ export const MainSheetToolbar = ({
 					<TooltipContent>Delete</TooltipContent>
 				</Tooltip>
 			</div>
-		</div >
+		</div>
 	);
 };

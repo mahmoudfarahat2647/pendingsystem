@@ -155,4 +155,8 @@ export const createOrdersSlice: StateCreator<
 		}));
 		get().addCommit("Delete Orders");
 	},
+
+	setOrdersRowData: (orders) => {
+		set({ ordersRowData: orders });
+	},
 });

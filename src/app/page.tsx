@@ -9,7 +9,10 @@ import {
 	Users,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
+import { cn } from "@/lib/utils";
 
 const CapacityChart = dynamic(
 	() => import("@/components/dashboard/CapacityChart"),
@@ -30,15 +33,18 @@ const DistributionChart = dynamic(
 	},
 );
 
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-
-import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
-
 export default function DashboardPage() {
+	const [showCharts, setShowCharts] = useState(false);
+
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
 	const { data: rowData = [] } = useOrdersQuery("main");
 	const { data: callRowData = [] } = useOrdersQuery("call");
+
+	// Load charts after 2 seconds to prioritize stats rendering
+	useEffect(() => {
+		const timer = setTimeout(() => setShowCharts(true), 2000);
+		return () => clearTimeout(timer);
+	}, []);
 
 	// Memoize stats to prevent recalculation
 	const stats = useMemo(
@@ -100,17 +106,9 @@ export default function DashboardPage() {
 	return (
 		<div className="space-y-5 pb-8 max-w-[1400px] mx-auto">
 			{/* Hero Section */}
-			<div className="relative overflow-hidden rounded-3xl bg-[#0a0a0b] border border-white/[0.06] h-[460px] shadow-xl">
+			<div className="relative overflow-hidden rounded-3xl bg-black border border-white/5 h-[460px] shadow-xl">
 				{/* Full Background Image */}
-				<div className="absolute inset-0 bg-[url('/dashboard-car.jpg')] bg-cover bg-center" />
-
-				{/* Subtle Gradient Overlays for Depth */}
-				<div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/20 z-[1]" />
-				<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 z-[2]" />
-				<div className="absolute inset-0 bg-gradient-to-br from-black/40 via-transparent to-transparent z-[3]" />
-
-				{/* Subtle Yellow Glow at Bottom */}
-				<div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-renault-yellow/5 to-transparent z-[4]" />
+				<div className="absolute inset-0 bg-[url('/dashboard-car.webp')] bg-cover bg-center" />
 
 				<div className="relative z-20 h-full flex flex-col justify-between p-10">
 					<div className="mt-6">
@@ -122,8 +120,8 @@ export default function DashboardPage() {
 								<h1 className="text-4xl font-bold text-white tracking-tight">
 									RENAULT
 								</h1>
-								<p className="text-renault-yellow/90 font-medium tracking-[0.3em] text-xs mt-0.5">
-									PENDING SYSTEM
+								<p className="text-renault-yellow/90 font-medium tracking-widest text-xs mt-0.5">
+									<span>PENDING SYSTEM</span>
 								</p>
 							</div>
 						</div>
@@ -136,7 +134,7 @@ export default function DashboardPage() {
 							{stats.map((stat) => (
 								<div
 									key={stat.title}
-									className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-xl p-4 relative group hover:bg-white/[0.06] hover:border-white/10 transition-all duration-200"
+									className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 relative group hover:bg-white/10 hover:border-white/20 transition-all duration-200"
 								>
 									<div className="flex justify-between items-start mb-2">
 										<div className="p-1.5 rounded-lg bg-renault-yellow/10 text-renault-yellow">
@@ -206,42 +204,78 @@ export default function DashboardPage() {
 
 			{/* Bottom Grid */}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-				{/* Capacity Pie Chart */}
-				<Card className="bg-[#0c0c0e] border border-white/[0.08] rounded-xl hover:border-white/12 transition-colors duration-200">
-					<CardContent className="p-6 relative">
-						<div className="flex items-center gap-2 mb-6">
-							<TrendingUp className="w-4 h-4 text-renault-yellow" />
-							<h3 className="text-xs font-bold text-gray-400 tracking-widest uppercase">
-								CAPACITY
-							</h3>
-						</div>
-						<div className="h-[180px] w-full relative flex items-center justify-center">
-							<CapacityChart data={pieData} />
-							<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-								<span className="text-2xl font-bold text-white">25</span>
-								<span className="text-xs text-gray-500">Total</span>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
+				{showCharts ? (
+					<Suspense
+						fallback={
+							<Card className="bg-[#0c0c0e] border border-white/10 rounded-xl">
+								<CardContent className="p-6">
+									<div className="h-[220px] bg-white/5 animate-pulse rounded-lg" />
+								</CardContent>
+							</Card>
+						}
+					>
+						{/* Capacity Pie Chart */}
+						<Card className="bg-[#0c0c0e] border border-white/10 rounded-xl hover:border-white/20 transition-colors duration-200">
+							<CardContent className="p-6 relative">
+								<div className="flex items-center gap-2 mb-6">
+									<TrendingUp className="w-4 h-4 text-renault-yellow" />
+									<h3 className="text-xs font-bold text-gray-400 tracking-widest uppercase">
+										CAPACITY
+									</h3>
+								</div>
+								<div className="h-[180px] w-full relative flex items-center justify-center">
+									<CapacityChart data={pieData} />
+									<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+										<span className="text-2xl font-bold text-white">25</span>
+										<span className="text-xs text-gray-500">Total</span>
+									</div>
+								</div>
+							</CardContent>
+						</Card>
+					</Suspense>
+				) : (
+					<Card className="bg-[#0c0c0e] border border-white/10 rounded-xl">
+						<CardContent className="p-6">
+							<div className="h-[220px] bg-white/5 animate-pulse rounded-lg" />
+						</CardContent>
+					</Card>
+				)}
 
-				{/* Bar Chart Distribution */}
-				<Card className="bg-[#0c0c0e] border border-white/[0.08] rounded-xl hover:border-white/12 transition-colors duration-200">
-					<CardContent className="p-6 relative">
-						<div className="flex items-center justify-between mb-6">
-							<div className="flex items-center gap-2">
-								<Users className="w-4 h-4 text-renault-yellow" />
-								<h3 className="text-xs font-bold text-gray-400 tracking-widest uppercase">
-									TOP PARTS DISTRIBUTION
-								</h3>
-							</div>
-							<span className="text-[10px] text-gray-500">Live Data</span>
-						</div>
-						<div className="h-[180px] w-full">
-							<DistributionChart data={barData} />
-						</div>
-					</CardContent>
-				</Card>
+				{showCharts ? (
+					<Suspense
+						fallback={
+							<Card className="bg-[#0c0c0e] border border-white/10 rounded-xl">
+								<CardContent className="p-6">
+									<div className="h-[220px] bg-white/5 animate-pulse rounded-lg" />
+								</CardContent>
+							</Card>
+						}
+					>
+						{/* Bar Chart Distribution */}
+						<Card className="bg-[#0c0c0e] border border-white/10 rounded-xl hover:border-white/20 transition-colors duration-200">
+							<CardContent className="p-6 relative">
+								<div className="flex items-center justify-between mb-6">
+									<div className="flex items-center gap-2">
+										<Users className="w-4 h-4 text-renault-yellow" />
+										<h3 className="text-xs font-bold text-gray-400 tracking-widest uppercase">
+											TOP PARTS DISTRIBUTION
+										</h3>
+									</div>
+									<span className="text-[10px] text-gray-500">Live Data</span>
+								</div>
+								<div className="h-[180px] w-full">
+									<DistributionChart data={barData} />
+								</div>
+							</CardContent>
+						</Card>
+					</Suspense>
+				) : (
+					<Card className="bg-[#0c0c0e] border border-white/10 rounded-xl">
+						<CardContent className="p-6">
+							<div className="h-[220px] bg-white/5 animate-pulse rounded-lg" />
+						</CardContent>
+					</Card>
+				)}
 			</div>
 		</div>
 	);

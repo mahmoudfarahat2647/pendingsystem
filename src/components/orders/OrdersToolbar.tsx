@@ -16,6 +16,7 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
+import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -30,7 +31,6 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { PartStatus, PendingRow } from "@/types";
-import { VINLineCounter } from "@/components/shared/VINLineCounter";
 
 interface OrdersToolbarProps {
 	selectedCount: number;
@@ -267,8 +267,12 @@ export const OrdersToolbar = ({
 								className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
 							>
 								{partStatuses.map((status) => {
-									const isHex = status.color?.startsWith("#") || status.color?.startsWith("rgb");
-									const dotStyle = isHex ? { backgroundColor: status.color } : undefined;
+									const isHex =
+										status.color?.startsWith("#") ||
+										status.color?.startsWith("rgb");
+									const dotStyle = isHex
+										? { backgroundColor: status.color }
+										: undefined;
 									const colorClass = isHex ? "" : status.color;
 
 									return (
@@ -304,8 +308,6 @@ export const OrdersToolbar = ({
 					<TooltipContent>Commit to Main Sheet</TooltipContent>
 				</Tooltip>
 			</div>
-
-
 
 			<div className="flex items-center gap-1.5">
 				<VINLineCounter rows={rowData} />

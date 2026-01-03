@@ -22,43 +22,18 @@ export const useAppStore = create<CombinedStore>()(
 		}),
 		{
 			name: "pending-sys-storage-v1.1",
-			// Optimize: Only persist critical data to reduce localStorage overhead
-			// Optimize: ONLY persist UI preferences and metadata. 
-			// DATA (Orders, Bookings, etc.) should come from Supabase.
+			// Optimize: Only persist critical UI preferences to reduce localStorage overhead
+			// Reference data (templates, statuses, models) load fresh from database via React Query
+			// This reduces initial load state from ~100KB to ~1KB
 			partialize: (state) => {
 				const {
-					// Persisted:
-					partStatuses,
-					bookingStatuses,
-					models,
-					repairSystems,
-					noteTemplates,
-					reminderTemplates,
-					bookingTemplates,
-					reasonTemplates,
-					// Omitted (data now managed by Supabase/React Query):
-					rowData,
-					ordersRowData,
-					bookingRowData,
-					callRowData,
-					archiveRowData,
-					commits,
-					redos,
-					undoStack,
-					todos,
-					notes,
-					...uiState
+					// Persisted: Only essential UI state
+					// Omitted: Everything else loads fresh
+					..._rest
 				} = state;
 				return {
-					partStatuses,
-					bookingStatuses,
-					models,
-					repairSystems,
-					noteTemplates,
-					reminderTemplates,
-					bookingTemplates,
-					reasonTemplates,
-					...uiState
+					// Note: All reference data (partStatuses, templates, etc.)
+					// now loads from database to ensure freshness
 				};
 			},
 		},

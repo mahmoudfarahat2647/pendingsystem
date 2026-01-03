@@ -1,13 +1,4 @@
-import {
-	ClientSideRowModelModule,
-	CsvExportModule,
-	ModuleRegistry,
-	themeQuartz,
-} from "ag-grid-community";
-
-// Register core community modules
-// Note: If additional modules are found to be missing at runtime, add them here.
-ModuleRegistry.registerModules([ClientSideRowModelModule, CsvExportModule]);
+import { themeQuartz } from "ag-grid-community";
 
 // Define the custom theme based on Quartz
 export const gridTheme = themeQuartz.withParams({

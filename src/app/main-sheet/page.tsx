@@ -2,43 +2,74 @@
 
 import type { GridApi } from "ag-grid-community";
 import { Unlock } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { MainSheetToolbar } from "@/components/main-sheet/MainSheetToolbar";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid";
 import { getMainSheetColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { RowModals } from "@/components/shared/RowModals";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+	useDeleteOrderMutation,
+	useOrdersQuery,
+	useSaveOrderMutation,
+	useUpdateOrderStageMutation,
+} from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
-import { useOrdersQuery, useUpdateOrderStageMutation, useDeleteOrderMutation, useSaveOrderMutation } from "@/hooks/queries/useOrdersQuery";
-import { useCallback } from "react";
-
 export default function MainSheetPage() {
-	const { data: rowData = [], isLoading } = useOrdersQuery("main");
+	const { data: rowData = [] } = useOrdersQuery("main");
+	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const updateStageMutation = useUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
+	const setRowData = useAppStore((state) => state.setRowData);
+	const setBookingRowData = useAppStore((state) => state.setBookingRowData);
+	const checkNotifications = useAppStore((state) => state.checkNotifications);
+
+	useEffect(() => {
+		if (rowData) {
+			setRowData(rowData);
+			checkNotifications();
+		}
+	}, [rowData, setRowData, checkNotifications]);
+
+	useEffect(() => {
+		if (bookingRowData) {
+			setBookingRowData(bookingRowData);
+		}
+	}, [bookingRowData, setBookingRowData]);
+
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
-	const handleUpdateOrder = useCallback((id: string, updates: Partial<PendingRow>) => {
-		saveOrderMutation.mutate({ id, ...updates, stage: "main" });
-	}, [saveOrderMutation]);
+	const handleUpdateOrder = useCallback(
+		(id: string, updates: Partial<PendingRow>) => {
+			saveOrderMutation.mutate({ id, updates, stage: "main" });
+		},
+		[saveOrderMutation],
+	);
 
-	const handleSendToArchive = useCallback((ids: string[], reason: string) => {
-		for (const id of ids) {
-			saveOrderMutation.mutate({ id, archiveReason: reason, stage: "archive" });
-		}
-	}, [saveOrderMutation]);
+	const handleSendToArchive = useCallback(
+		(ids: string[], reason: string) => {
+			for (const id of ids) {
+				saveOrderMutation.mutate({
+					id,
+					updates: { archiveReason: reason },
+					stage: "archive",
+				});
+			}
+		},
+		[saveOrderMutation],
+	);
 
 	const [isSheetLocked, setIsSheetLocked] = useState(true);
 	const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
@@ -129,11 +160,20 @@ export default function MainSheetPage() {
 
 	const handleConfirmBooking = async (
 		date: string,
-		_note: string,
-		_status?: string,
+		note: string,
+		status?: string,
 	) => {
 		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "booking" });
+			// Update stage and save booking details
+			await saveOrderMutation.mutateAsync({
+				id: row.id,
+				updates: {
+					bookingDate: date,
+					bookingNote: note,
+					...(status ? { bookingStatus: status } : {}),
+				},
+				stage: "booking",
+			});
 		}
 		setSelectedRows([]);
 		toast.success(`${selectedRows.length} row(s) sent to Booking`);
@@ -141,11 +181,11 @@ export default function MainSheetPage() {
 
 	return (
 		<TooltipProvider>
-			<div className="space-y-4">
+			<div className="space-y-4 h-full flex flex-col">
 				<InfoLabel data={selectedRows[0] || null} />
 
-				<Card className="border-none bg-transparent shadow-none">
-					<CardContent className="p-0">
+				<Card className="flex-1 flex flex-col border-none bg-transparent shadow-none">
+					<CardContent className="p-0 flex-1 flex flex-col space-y-4">
 						{!isSheetLocked && (
 							<div className="flex items-center justify-between px-4 py-2 bg-green-900/30 border border-green-500/30 rounded-t-lg text-green-400 text-sm">
 								<div className="flex items-center gap-2">
@@ -185,7 +225,10 @@ export default function MainSheetPage() {
 							}}
 							onSendToCallList={async () => {
 								for (const row of selectedRows) {
-									await updateStageMutation.mutateAsync({ id: row.id, stage: "call" });
+									await updateStageMutation.mutateAsync({
+										id: row.id,
+										stage: "call",
+									});
 								}
 								setSelectedRows([]);
 								toast.success("Sent to Call List");
@@ -195,27 +238,64 @@ export default function MainSheetPage() {
 							onFilterToggle={() => setShowFilters(!showFilters)}
 							onReserve={() => printReservationLabels(selectedRows)}
 						/>
-					</CardContent>
-				</Card>
 
-				<Card>
-					<CardContent className="p-0">
-						<DataGrid
-							rowData={filteredRowData}
-							columnDefs={columns}
-							onSelectionChanged={setSelectedRows}
-							onCellValueChanged={(params) => {
-								if (
-									params.colDef.field === "partStatus" &&
-									params.newValue !== params.oldValue
-								) {
-									updatePartStatus(params.data.id, params.newValue);
-								}
-							}}
-							readOnly={isSheetLocked}
-							onGridReady={(api) => setGridApi(api)}
-							showFloatingFilters={showFilters}
-						/>
+						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">
+							<DataGrid
+								rowData={filteredRowData}
+								columnDefs={columns}
+								onSelectionChange={setSelectedRows}
+								onCellValueChanged={async (params) => {
+									if (
+										params.colDef.field === "partStatus" &&
+										params.newValue !== params.oldValue
+									) {
+										const newStatus = params.newValue;
+										const vin = params.data.vin;
+
+										// 1. Persist the change to Supabase
+										await handleUpdateOrder(params.data.id, {
+											partStatus: newStatus,
+										});
+
+										// 2. Check for auto-move to Call List
+										// [CRITICAL] AUTO-MOVE FEATURE - DO NOT REMOVE
+										// Implementation: If "Arrived", check all parts for VIN. If all Arrived, move to Call List.
+										if (newStatus === "Arrived" && vin) {
+											// Find all parts for this same VIN in the current dataset
+											const vinParts = rowData.filter((r) => r.vin === vin);
+
+											// Check if every part for this VIN is now "Arrived"
+											// (the current row just became "Arrived", so we check the persistent state for others)
+											const allArrived = vinParts.every((r) => {
+												if (r.id === params.data.id) return true; // Just updated this one
+												return r.partStatus === "Arrived";
+											});
+
+											if (allArrived && vinParts.length > 0) {
+												// Move all parts for this VIN to the "call" stage
+												for (const part of vinParts) {
+													await updateStageMutation.mutateAsync({
+														id: part.id,
+														stage: "call",
+													});
+												}
+												toast.success(
+													`All parts for VIN ${vin} arrived! Moved to Call List.`,
+													{
+														duration: 5000,
+													},
+												);
+											}
+										}
+									}
+								}}
+								readOnly={isSheetLocked}
+								onGridReady={(api) => setGridApi(api)}
+								showFloatingFilters={showFilters}
+								enablePagination={true}
+								pageSize={20}
+							/>
+						</div>
 					</CardContent>
 				</Card>
 			</div>

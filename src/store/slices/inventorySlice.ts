@@ -179,4 +179,16 @@ export const createInventorySlice: StateCreator<
 		}));
 		get().debouncedCommit("Update Part Status");
 	},
+
+	setRowData: (data) => {
+		set({ rowData: data });
+	},
+
+	setCallRowData: (data) => {
+		set({ callRowData: data });
+	},
+
+	setArchiveRowData: (data) => {
+		set({ archiveRowData: data });
+	},
 });

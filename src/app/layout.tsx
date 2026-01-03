@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import QueryProvider from "@/components/providers/QueryProvider";
+import { ClientErrorBoundary } from "@/components/shared/ClientErrorBoundary";
 import { Header } from "@/components/shared/Header";
 import { MainContentWrapper } from "@/components/shared/MainContentWrapper";
 import { Sidebar } from "@/components/shared/Sidebar";
-import QueryProvider from "@/components/providers/QueryProvider";
 
 const inter = Inter({
 	subsets: ["latin"],
@@ -33,7 +34,11 @@ export default function RootLayout({
 						<div className="flex flex-1 flex-col overflow-hidden">
 							<Header />
 							<main className="flex-1 overflow-y-auto p-6">
-								<MainContentWrapper>{children}</MainContentWrapper>
+								<MainContentWrapper>
+									<ClientErrorBoundary fallbackTitle="Page Error">
+										{children}
+									</ClientErrorBoundary>
+								</MainContentWrapper>
 							</main>
 						</div>
 					</div>

@@ -140,10 +140,16 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 							</span>
 							{data?.partStatus ? (
 								<div className="flex items-center gap-1.5 group/state">
-									<div className={cn(
-										"w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.3)]",
-										useAppStore.getState().partStatuses.find(s => s.label === data.partStatus)?.color.replace("text-", "bg-").split(" ")[0] || "bg-cyan-500"
-									)} />
+									<div
+										className={cn(
+											"w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.3)]",
+											useAppStore
+												.getState()
+												.partStatuses.find((s) => s.label === data.partStatus)
+												?.color.replace("text-", "bg-")
+												.split(" ")[0] || "bg-cyan-500",
+										)}
+									/>
 									<span className="text-[11px] font-bold text-gray-100 tracking-wider uppercase group-hover/state:text-cyan-400 transition-colors">
 										{data.partStatus}
 									</span>

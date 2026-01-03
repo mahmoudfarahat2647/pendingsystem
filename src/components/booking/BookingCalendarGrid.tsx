@@ -25,6 +25,8 @@ interface BookingCalendarGridProps {
 	activeCustomerDateSet: Set<string>;
 	bookingStatuses: BookingStatus[];
 	activeBookingRep?: PendingRow;
+	previewBookings?: PendingRow[];
+	previewStatus?: string;
 }
 
 export const BookingCalendarGrid = ({
@@ -38,6 +40,8 @@ export const BookingCalendarGrid = ({
 	activeCustomerDateSet,
 	bookingStatuses,
 	activeBookingRep,
+	previewBookings,
+	previewStatus,
 }: BookingCalendarGridProps) => {
 	const monthStart = startOfMonth(currentMonth);
 	const monthEnd = endOfMonth(monthStart);
@@ -97,7 +101,22 @@ export const BookingCalendarGrid = ({
 					const isFaded = searchQuery && !isSearchMatch;
 					const isActiveCustomerDate = activeCustomerDateSet.has(dateKey);
 
-					const dayBookings = bookingsByDateMap[dateKey] || [];
+					const dayBookings = [...(bookingsByDateMap[dateKey] || [])];
+					const isGhostDay =
+						isSelected && !searchQuery && (previewBookings?.length ?? 0) > 0;
+
+					if (isGhostDay && previewBookings) {
+						previewBookings.forEach((pb) => {
+							if (!dayBookings.find((b) => b.id === pb.id)) {
+								dayBookings.push({
+									...pb,
+									bookingStatus: previewStatus || "Pending",
+									isGhost: true,
+								} as any);
+							}
+						});
+					}
+
 					const customerGroups = Array.from(
 						new Set(dayBookings.map((b) => b.vin)),
 					).slice(0, 3);
@@ -120,9 +139,9 @@ export const BookingCalendarGrid = ({
 								isSearchMatch && !isSelected && "text-emerald-500 font-bold",
 								isFaded && !isSelected && "opacity-20 pointer-events-none",
 								isActiveCustomerDate &&
-								!isSelected &&
-								!isFaded &&
-								"ring-1 ring-emerald-500/40 text-emerald-500",
+									!isSelected &&
+									!isFaded &&
+									"ring-1 ring-emerald-500/40 text-emerald-500",
 							)}
 						>
 							{format(day, "d")}
@@ -132,14 +151,16 @@ export const BookingCalendarGrid = ({
 										const customerBooking = dayBookings.find(
 											(b) => b.vin === vin,
 										);
+										const isGhost = (customerBooking as any)?.isGhost;
 										const statusColor = customerBooking
 											? bookingStatuses.find(
-												(s) => s.label === customerBooking.bookingStatus,
-											)?.color || "bg-emerald-500/80"
+													(s) => s.label === customerBooking.bookingStatus,
+												)?.color || "bg-emerald-500/80"
 											: "bg-emerald-500/80";
 
 										const isHex =
-											statusColor.startsWith("#") || statusColor.startsWith("rgb");
+											statusColor.startsWith("#") ||
+											statusColor.startsWith("rgb");
 
 										return (
 											<div
@@ -152,6 +173,8 @@ export const BookingCalendarGrid = ({
 												className={cn(
 													"absolute w-3 h-3 rounded-full shadow-lg transition-all duration-300 border border-black/20",
 													!isHex && statusColor,
+													isGhost &&
+														"opacity-40 animate-pulse ring-1 ring-white/20",
 													isActiveCustomerDate && vin === activeBookingRep?.vin
 														? "ring-1 ring-white/60 scale-110"
 														: "",

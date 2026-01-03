@@ -1,18 +1,22 @@
 "use client";
 
-import { AgGridReact } from "ag-grid-react";
-import { useMemo } from "react";
-import { useAppStore } from "@/store/useStore";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import { AgGridReact } from "ag-grid-react";
 import { Search as SearchIcon, X } from "lucide-react";
-import {
-	getBaseColumns,
-	PartStatusRenderer,
-} from "@/components/shared/GridConfig";
+import { useMemo } from "react";
+import { toast } from "sonner";
+import { PartStatusRenderer } from "@/components/grid/renderers";
+import { getBaseColumns } from "@/components/shared/GridConfig";
 import { Button } from "@/components/ui/button";
+import {
+	useSaveOrderMutation,
+	useUpdateOrderStageMutation,
+} from "@/hooks/queries/useOrdersQuery";
+// import "ag-grid-community/styles/ag-grid.css"; // Removed to fix Theming API conflict
+// import "ag-grid-community/styles/ag-theme-alpine.css"; // Removed to fix Theming API conflict
+import { gridTheme } from "@/lib/ag-grid-setup";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 // Custom renderer for Source Tag
@@ -54,7 +58,22 @@ export const SearchResultsView = () => {
 	const callRowData = useAppStore((state) => state.callRowData); // Call List
 	const archiveRowData = useAppStore((state) => state.archiveRowData); // Archive
 	const partStatuses = useAppStore((state) => state.partStatuses); // Part Status Definitions
-	const updatePartStatus = useAppStore((state) => state.updatePartStatus); // Action to persist status changes
+
+	// Mutations
+	const saveOrderMutation = useSaveOrderMutation();
+	const updateStageMutation = useUpdateOrderStageMutation();
+
+	// Helper for persistent updates
+	const handleUpdateOrder = (
+		id: string,
+		updates: Partial<PendingRow>,
+		stage?: string,
+	) => {
+		// We pass the stage from the row's source to ensure optimistic updates work correctly
+		const mappedStage = (stage?.toLowerCase().replace(" ", "-") ||
+			"main") as any;
+		saveOrderMutation.mutate({ id, updates, stage: mappedStage });
+	};
 
 	// Aggregate Data
 	const searchResults = useMemo(() => {
@@ -228,8 +247,9 @@ export const SearchResultsView = () => {
 			<div className="flex-1 p-6 overflow-hidden">
 				{searchResults.length > 0 ? (
 					<div className="h-full w-full rounded-xl border border-white/10 overflow-hidden bg-[#141416]/50 shadow-2xl ring-1 ring-white/5">
-						<div className="ag-theme-alpine-dark h-full w-full">
+						<div className="h-full w-full">
 							<AgGridReact
+								theme={gridTheme}
 								rowData={searchResults}
 								columnDefs={columns}
 								defaultColDef={{
@@ -243,9 +263,62 @@ export const SearchResultsView = () => {
 								animateRows={true}
 								rowSelection="multiple"
 								suppressCellFocus={true}
-								onCellValueChanged={(event) => {
-									if (event.colDef.field === "partStatus" && event.data?.id) {
-										updatePartStatus(event.data.id, event.newValue);
+								onCellValueChanged={async (event) => {
+									if (
+										event.colDef.field === "partStatus" &&
+										event.data?.id &&
+										event.newValue !== event.oldValue
+									) {
+										const newStatus = event.newValue;
+										const vin = event.data.vin;
+										const sourceType = event.data.sourceType;
+
+										// 1. Persist the change
+										handleUpdateOrder(
+											event.data.id,
+											{
+												partStatus: newStatus,
+											},
+											event.data.sourceType,
+										);
+
+										// 2. Check for auto-move to Call List (Only for Main Sheet and Orders sources)
+										// [CRITICAL] AUTO-MOVE FEATURE - DO NOT REMOVE OR MODIFY WITHOUT APPROVAL
+										// User Requirement: When a part status is set to "Arrived", check if ALL parts for that VIN are "Arrived".
+										// If so, move the ENTIRE VIN group to the "Call List" tab. This is a core workflow feature.
+										if (newStatus === "Arrived" && vin) {
+											let relevantParts: PendingRow[] = [];
+
+											if (sourceType === "Main Sheet") {
+												relevantParts = rowData.filter((r) => r.vin === vin);
+											} else if (sourceType === "Orders") {
+												relevantParts = ordersRowData.filter(
+													(r) => r.vin === vin,
+												);
+											}
+
+											if (relevantParts.length > 0) {
+												const allArrived = relevantParts.every((r) => {
+													if (r.id === event.data.id) return true; // checking the one currently being updated
+													return r.partStatus === "Arrived";
+												});
+
+												if (allArrived) {
+													for (const part of relevantParts) {
+														await updateStageMutation.mutateAsync({
+															id: part.id,
+															stage: "call",
+														});
+													}
+													toast.success(
+														`All parts for VIN ${vin} arrived! Moved to Call List.`,
+														{ duration: 5000 },
+													);
+												}
+											}
+										} else {
+											toast.success("Part status updated");
+										}
 									}
 								}}
 							/>

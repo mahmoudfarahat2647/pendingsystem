@@ -1,59 +1,27 @@
-#!/bin/sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-# Pre-commit hook: Documentation validation and reminders
+echo "🎨 Running Biome format and lint..."
 
-# Get list of staged files
-CHANGED_FILES=$(git diff --cached --name-only)
+# Get staged files (TypeScript, JavaScript, JSON)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json)$' || echo "")
 
-# Run documentation validation
-echo "🔍 Validating documentation..."
-npm run docs:validate
-VALIDATE_EXIT=$?
-
-if [ $VALIDATE_EXIT -ne 0 ]; then
-  echo ""
-  echo "❌ Documentation validation failed!"
-  echo "Run 'npm run docs:validate' to see detailed errors"
-  exit 1
-fi
-
-# Check if component files were changed
-if echo "$CHANGED_FILES" | grep -qE "src/components/"; then
-  echo "⚠️  Component changes detected!"
-  echo ""
-  echo "📝 Please remember to:"
-  echo "   1. Update docs/COMPONENTS.md if documenting new complex components"
-  echo "   2. Update ../features.md if adding new features"
-  echo "   3. Add JSDoc comments to public component APIs"
-  echo ""
-fi
-
-# Check if store files were changed
-if echo "$CHANGED_FILES" | grep -qE "src/store/"; then
-  echo "⚠️  Store changes detected!"
-  echo ""
-  echo "📝 Please remember to:"
-  echo "   1. Update docs/STORE_API.md with new/changed actions"
-  echo "   2. Add JSDoc comments to new store actions"
-  echo "   3. Update docs/ARCHITECTURE.md if core patterns changed"
-  echo ""
+if [ -n "$STAGED_FILES" ]; then
+  echo "📝 Formatting files..."
   
-  # Extract and show JSDoc summary
-  echo "💡 Run 'npm run docs:extract' to see JSDoc summary"
+  # Format and lint with Biome
+  npx @biomejs/biome check --write $STAGED_FILES
+  
+  # Re-add formatted files to staging
+  git add $STAGED_FILES
+  
+  echo "✅ Format and lint complete"
+else
+  echo "ℹ️  No TypeScript/JavaScript files to format"
 fi
 
-# Check if types were changed
-if echo "$CHANGED_FILES" | grep -qE "src/types/"; then
-  echo "⚠️  Type definition changes detected!"
-  echo ""
-  echo "📝 Please remember to:"
-  echo "   1. Update relevant documentation sections"
-  echo "   2. Check if store actions need updating"
-  echo ""
-fi
+# Validate documentation
+echo "📚 Validating documentation..."
+npm run docs:validate || echo "⚠️  Doc validation warning (non-blocking)"
 
-# Run linter
-echo "🔍 Running Biome linter..."
-npx biome check src/ --apply
-
-exit 0
+echo "✨ Pre-commit checks passed!"

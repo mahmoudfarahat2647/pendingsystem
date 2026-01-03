@@ -3,6 +3,7 @@
 import type { ColDef, GridApi } from "ag-grid-community";
 import dynamic from "next/dynamic";
 import { memo } from "react";
+import { ClientErrorBoundary } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DataGridProps } from "./DataGrid";
 
@@ -71,8 +72,16 @@ if (typeof window !== "undefined") {
 }
 
 // Correctly type the memoized dynamic component to preserve generics
-export const DynamicDataGrid = memo(DataGridComponent) as <
+const MemoizedDataGrid = memo(DataGridComponent) as <
 	T extends { id?: string; vin?: string },
 >(
 	props: DataGridProps<T>,
 ) => React.ReactNode;
+
+export const DynamicDataGrid = <T extends { id?: string; vin?: string }>(
+	props: DataGridProps<T>,
+) => (
+	<ClientErrorBoundary fallbackTitle="Grid Loading Error">
+		<MemoizedDataGrid {...props} />
+	</ClientErrorBoundary>
+);

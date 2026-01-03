@@ -132,4 +132,8 @@ export const createBookingSlice: StateCreator<
 		}));
 		get().addCommit("Remove Booking Status Definition");
 	},
+
+	setBookingRowData: (data) => {
+		set({ bookingRowData: data });
+	},
 });

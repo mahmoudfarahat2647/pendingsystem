@@ -1,23 +1,6 @@
 "use client";
 
-/**
- * @module BookingCalendarModal
- * @description Premium dark-themed booking calendar with multi-customer support
- *
- * Advanced booking interface for scheduling customer appointments with:
- * - VIN-based customer grouping
- * - Visual booking status indicators (color-coded dots)
- * - Historical booking tracking (2-year retention)
- * - Pre-booking note and status configuration
- * - Real-time customer search within calendar
- *
- * @see docs/COMPONENTS.md#bookinicalendarmodal
- * @see docs/STORE_API.md#sentoboking - sendToBooking action
- */
-
-import { format, isAfter, subYears } from "date-fns";
 import { Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -26,10 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import { BookingCalendarGrid } from "../booking/BookingCalendarGrid";
 import { BookingSidebar } from "../booking/BookingSidebar";
+import { useBookingCalendar } from "../booking/hooks/useBookingCalendar";
 
 interface BookingCalendarModalProps {
 	open: boolean;
@@ -40,36 +23,6 @@ interface BookingCalendarModalProps {
 	bookingOnly?: boolean;
 }
 
-/**
- * BookingCalendarModal component
- *
- * @param {boolean} open - Modal visibility state
- * @param {function} onOpenChange - Callback to update modal visibility
- * @param {function} onConfirm - Callback when booking is confirmed
- *   - date: ISO date string (YYYY-MM-DD)
- *   - note: Booking notes/instructions
- *   - status: Optional booking status (e.g., "Scheduled", "Confirmed")
- * @param {PendingRow[]} selectedRows - Orders to book (from grid selection)
- * @param {string} [initialSearchTerm] - Pre-populate customer search field
- * @param {boolean} [bookingOnly=false] - Filter to existing bookings only
- *
- * @returns {JSX.Element} Modal dialog with calendar interface
- *
- * @example
- * ```tsx
- * const [open, setOpen] = useState(false);
- * const selectedOrders = useAppStore(s => s.selectedRows);
- *
- * <BookingCalendarModal
- *   open={open}
- *   onOpenChange={setOpen}
- *   onConfirm={(date, note, status) => {
- *     sendToBooking(selectedIds, date, note, status);
- *   }}
- *   selectedRows={selectedOrders}
- * />
- * ```
- */
 export const BookingCalendarModal = ({
 	open,
 	onOpenChange,
@@ -78,138 +31,29 @@ export const BookingCalendarModal = ({
 	initialSearchTerm = "",
 	bookingOnly = false,
 }: BookingCalendarModalProps) => {
-	const bookingRowData = useAppStore((state) => state.bookingRowData);
-	const archiveRowData = useAppStore((state) => state.archiveRowData);
-	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
-	const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
-
-	const [currentMonth, setCurrentMonth] = useState(new Date());
-	const [selectedDate, setSelectedDate] = useState(new Date());
-	const [bookingNote, setBookingNote] = useState("");
-	const [preBookingStatus, setPreBookingStatus] = useState("");
-	const [searchQuery, setSearchQuery] = useState(initialSearchTerm);
-	const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
-		null,
-	);
-
-	const twoYearsAgo = useMemo(() => subYears(new Date(), 2), []);
-
-	useEffect(() => {
-		if (open) {
-			setSearchQuery(initialSearchTerm);
-			setBookingNote("");
-			setPreBookingStatus("");
-			setSelectedBookingId(null);
-		}
-	}, [open, initialSearchTerm]);
-
-	const allBookings = useMemo(
-		() => [...bookingRowData, ...archiveRowData],
-		[bookingRowData, archiveRowData],
-	);
-
-	const filteredBookings = useMemo(() => {
-		return allBookings.filter((b) => {
-			if (!isAfter(new Date(b.bookingDate || ""), twoYearsAgo)) return false;
-			if (!searchQuery) return true;
-			const query = searchQuery.toLowerCase();
-			return (
-				b.customerName?.toLowerCase().includes(query) ||
-				b.vin?.toLowerCase().includes(query) ||
-				b.partNumber?.toLowerCase().includes(query) ||
-				b.bookingDate?.includes(query)
-			);
-		});
-	}, [allBookings, twoYearsAgo, searchQuery]);
-
-	const searchMatchDates = useMemo(
-		() =>
-			new Set(
-				filteredBookings.map((b) => b.bookingDate).filter(Boolean) as string[],
-			),
-		[filteredBookings],
-	);
-
-	const bookingsByDateMap = useMemo(() => {
-		const map: Record<string, PendingRow[]> = {};
-		allBookings.forEach((b) => {
-			if (b.bookingDate && isAfter(new Date(b.bookingDate), twoYearsAgo)) {
-				if (!map[b.bookingDate]) map[b.bookingDate] = [];
-				map[b.bookingDate].push(b);
-			}
-		});
-		return map;
-	}, [allBookings, twoYearsAgo]);
-
-	const selectedDateKey = format(selectedDate, "yyyy-MM-dd");
-
-	const sidebarGroupedBookings = useMemo(() => {
-		const list = searchQuery
-			? filteredBookings
-			: bookingsByDateMap[selectedDateKey] || [];
-		const groups: Record<string, PendingRow[]> = {};
-		list.forEach((b) => {
-			const key = b.vin || "unknown";
-			if (!groups[key]) groups[key] = [];
-			groups[key].push(b);
-		});
-		return Object.values(groups).map((g) => g[0]);
-	}, [filteredBookings, searchQuery, selectedDateKey, bookingsByDateMap]);
-
-	useEffect(() => {
-		if (
-			sidebarGroupedBookings.length > 0 &&
-			(!selectedBookingId ||
-				!sidebarGroupedBookings.find((b) => b.id === selectedBookingId))
-		) {
-			setSelectedBookingId(sidebarGroupedBookings[0].id);
-		} else if (sidebarGroupedBookings.length === 0) setSelectedBookingId(null);
-	}, [sidebarGroupedBookings, selectedBookingId]);
-
-	const activeCustomerBookings = useMemo(() => {
-		const selectedRep = allBookings.find((b) => b.id === selectedBookingId);
-		if (!selectedRep || !selectedRep.vin) return [];
-		return allBookings.filter(
-			(b) =>
-				b.vin === selectedRep.vin && b.bookingDate === selectedRep.bookingDate,
-		);
-	}, [allBookings, selectedBookingId]);
-
-	const activeBookingRep = activeCustomerBookings[0];
-	const consolidatedNotes = useMemo(
-		() =>
-			Array.from(
-				new Set(
-					activeCustomerBookings
-						.map((b) => b.bookingNote?.trim())
-						.filter(Boolean) as string[],
-				),
-			),
-		[activeCustomerBookings],
-	);
-
-	const activeCustomerHistoryDates = useMemo(() => {
-		if (!activeBookingRep?.vin) return [];
-		return Array.from(
-			new Set(
-				allBookings
-					.filter((b) => b.vin === activeBookingRep.vin && b.bookingDate)
-					.map((b) => b.bookingDate as string),
-			),
-		).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-	}, [allBookings, activeBookingRep]);
-
-	useEffect(() => {
-		if (activeCustomerHistoryDates.length > 0) {
-			const firstDate = new Date(activeCustomerHistoryDates[0]);
-			setCurrentMonth(firstDate);
-			setSelectedDate(firstDate);
-		}
-	}, [activeCustomerHistoryDates]);
-
-	const handleDateSelect = (day: Date) => {
-		setSelectedDate(day);
-	};
+	const {
+		currentMonth,
+		setCurrentMonth,
+		selectedDate,
+		bookingNote,
+		setBookingNote,
+		preBookingStatus,
+		setPreBookingStatus,
+		searchQuery,
+		setSearchQuery,
+		selectedBookingId,
+		setSelectedBookingId,
+		searchMatchDates,
+		bookingsByDateMap,
+		sidebarGroupedBookings,
+		activeBookingRep,
+		activeCustomerBookings,
+		consolidatedNotes,
+		activeCustomerHistoryDates,
+		handleDateSelect,
+		bookingStatuses,
+		updateBookingStatus,
+	} = useBookingCalendar({ open, initialSearchTerm });
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -250,6 +94,8 @@ export const BookingCalendarModal = ({
 						searchMatchDates={searchMatchDates}
 						activeCustomerDateSet={new Set(activeCustomerHistoryDates)}
 						bookingStatuses={bookingStatuses}
+						previewBookings={selectedRows}
+						previewStatus={preBookingStatus}
 					/>
 				</div>
 
@@ -275,7 +121,7 @@ export const BookingCalendarModal = ({
 						onConfirm={onConfirm}
 						onHistoryDateClick={(date) => {
 							setCurrentMonth(date);
-							setSelectedDate(date);
+							handleDateSelect(date);
 						}}
 					/>
 				)}

@@ -17,6 +17,7 @@ export interface OrdersActions {
 	updateOrder: (id: string, updates: Partial<PendingRow>) => void;
 	updateOrders: (ids: string[], updates: Partial<PendingRow>) => void;
 	deleteOrders: (ids: string[]) => void;
+	setOrdersRowData: (orders: PendingRow[]) => void;
 }
 
 export interface InventoryState {
@@ -31,6 +32,9 @@ export interface InventoryActions {
 	sendToArchive: (ids: string[], actionNote?: string) => void;
 	sendToReorder: (ids: string[], actionNote: string) => void;
 	updatePartStatus: (id: string, partStatus: string) => void;
+	setRowData: (data: PendingRow[]) => void;
+	setCallRowData: (data: PendingRow[]) => void;
+	setArchiveRowData: (data: PendingRow[]) => void;
 }
 
 export interface BookingState {
@@ -49,6 +53,7 @@ export interface BookingActions {
 	addBookingStatusDef: (status: PartStatusDef) => void;
 	updateBookingStatusDef: (id: string, updates: Partial<PartStatusDef>) => void;
 	removeBookingStatusDef: (id: string) => void;
+	setBookingRowData: (data: PendingRow[]) => void;
 }
 
 export interface NotificationState {

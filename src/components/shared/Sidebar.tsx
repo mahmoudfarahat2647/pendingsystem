@@ -75,11 +75,56 @@ export const Sidebar = React.memo(function Sidebar() {
 					<div className="flex flex-col">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 bg-renault-yellow rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(255,204,0,0.3)]">
-								<span className="text-black font-extrabold text-xl">R</span>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 32 32"
+									className="w-6 h-6"
+									role="img"
+									aria-label="Renault Logo"
+								>
+									<g transform="translate(16, 16)">
+										<rect
+											x="-8"
+											y="-13"
+											width="4.5"
+											height="26"
+											rx="2.25"
+											fill="#000000"
+											transform="rotate(-8)"
+										/>
+										<rect
+											x="3.5"
+											y="-13"
+											width="4.5"
+											height="26"
+											rx="2.25"
+											fill="#000000"
+											transform="rotate(-8)"
+										/>
+										<rect
+											x="-13"
+											y="-6.25"
+											width="26"
+											height="4.5"
+											rx="2.25"
+											fill="#000000"
+											transform="rotate(-8)"
+										/>
+										<rect
+											x="-13"
+											y="1.75"
+											width="26"
+											height="4.5"
+											rx="2.25"
+											fill="#000000"
+											transform="rotate(-8)"
+										/>
+									</g>
+								</svg>
 							</div>
 							<div className="flex flex-col">
 								<span className="font-bold text-white tracking-wide text-lg leading-none">
-									RENAULT
+									BODY&PAINT
 								</span>
 								<span className="text-renault-yellow font-medium text-xs tracking-[0.2em] leading-none mt-1">
 									pending system
@@ -90,7 +135,52 @@ export const Sidebar = React.memo(function Sidebar() {
 				) : (
 					<div className="w-full flex justify-center">
 						<div className="w-10 h-10 bg-renault-yellow rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(255,204,0,0.3)]">
-							<span className="text-black font-extrabold text-xl">R</span>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 32 32"
+								className="w-6 h-6"
+								role="img"
+								aria-label="Renault Logo"
+							>
+								<g transform="translate(16, 16)">
+									<rect
+										x="-8"
+										y="-13"
+										width="4.5"
+										height="26"
+										rx="2.25"
+										fill="#000000"
+										transform="rotate(-8)"
+									/>
+									<rect
+										x="3.5"
+										y="-13"
+										width="4.5"
+										height="26"
+										rx="2.25"
+										fill="#000000"
+										transform="rotate(-8)"
+									/>
+									<rect
+										x="-13"
+										y="-6.25"
+										width="26"
+										height="4.5"
+										rx="2.25"
+										fill="#000000"
+										transform="rotate(-8)"
+									/>
+									<rect
+										x="-13"
+										y="1.75"
+										width="26"
+										height="4.5"
+										rx="2.25"
+										fill="#000000"
+										transform="rotate(-8)"
+									/>
+								</g>
+							</svg>
 						</div>
 					</div>
 				)}

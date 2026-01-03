@@ -42,7 +42,7 @@ Welcome to the Renault System project! This guide provides information for devel
 - PRs should pass the CI pipeline (lint, test, build) before being merged.
 
 ## 📁 Feature Registry
-Always update [features.md](file:///d:/renault-system/features.md) when adding new system capabilities.
+Always update [FEATURES.md](FEATURES.md) when adding new system capabilities.
 
 ## 📜 Documentation
 - Use **JSDoc** for public APIs, custom hooks, and complex utility functions.

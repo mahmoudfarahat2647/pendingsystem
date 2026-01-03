@@ -12,16 +12,15 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid";
 import { getBookingColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
-import { cn } from "@/lib/utils";
-import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { RowModals } from "@/components/shared/RowModals";
+import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -31,6 +30,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -40,37 +45,54 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+	useDeleteOrderMutation,
+	useOrdersQuery,
+	useSaveOrderMutation,
+	useUpdateOrderStageMutation,
+} from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
+import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
-import { useOrdersQuery, useUpdateOrderStageMutation, useDeleteOrderMutation, useSaveOrderMutation } from "@/hooks/queries/useOrdersQuery";
-import { useCallback } from "react";
-
 export default function BookingPage() {
-	const { data: bookingRowData = [], isLoading } = useOrdersQuery("booking");
+	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const updateStageMutation = useUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
-	const partStatuses = useAppStore((state) => state.partStatuses);
-	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
+	const setBookingRowData = useAppStore((state) => state.setBookingRowData);
+	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
-	const handleUpdateOrder = useCallback((id: string, updates: Partial<PendingRow>) => {
-		saveOrderMutation.mutate({ id, ...updates, stage: "booking" });
-	}, [saveOrderMutation]);
-
-	const handleSendToArchive = useCallback((ids: string[], reason: string) => {
-		for (const id of ids) {
-			saveOrderMutation.mutate({ id, archiveReason: reason, stage: "archive" });
+	useEffect(() => {
+		if (bookingRowData) {
+			setBookingRowData(bookingRowData);
+			checkNotifications();
 		}
-	}, [saveOrderMutation]);
+	}, [bookingRowData, setBookingRowData, checkNotifications]);
+
+	const partStatuses = useAppStore((state) => state.partStatuses);
+
+	const handleUpdateOrder = useCallback(
+		(id: string, updates: Partial<PendingRow>) => {
+			saveOrderMutation.mutate({ id, updates, stage: "booking" });
+		},
+		[saveOrderMutation],
+	);
+
+	const handleSendToArchive = useCallback(
+		(ids: string[], reason: string) => {
+			for (const id of ids) {
+				saveOrderMutation.mutate({
+					id,
+					updates: { archiveReason: reason },
+					stage: "archive",
+				});
+			}
+		},
+		[saveOrderMutation],
+	);
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -121,18 +143,26 @@ export default function BookingPage() {
 			await updateStageMutation.mutateAsync({ id: row.id, stage: "orders" });
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
-				actionNote: `Reorder Reason: ${reorderReason}`,
-				status: "Reorder",
-				stage: "orders"
+				updates: {
+					actionNote: `Reorder Reason: ${reorderReason}`,
+					status: "Reorder",
+				},
+				stage: "orders",
 			});
 		}
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");
-		toast.success(`${selectedRows.length} row(s) sent back to Orders (Reorder)`);
+		toast.success(
+			`${selectedRows.length} row(s) sent back to Orders (Reorder)`,
+		);
 	};
 
-	const handleConfirmRebooking = async (newDate: string, newNote: string) => {
+	const handleConfirmRebooking = async (
+		newDate: string,
+		newNote: string,
+		status?: string,
+	) => {
 		if (selectedRows.length === 0) return;
 		for (const row of selectedRows) {
 			const oldDate = row.bookingDate || "Unknown Date";
@@ -143,9 +173,12 @@ export default function BookingPage() {
 
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
-				bookingDate: newDate,
-				bookingNote: updatedNote.trim(),
-				stage: "booking"
+				updates: {
+					bookingDate: newDate,
+					bookingNote: updatedNote.trim(),
+					...(status ? { bookingStatus: status } : {}),
+				},
+				stage: "booking",
 			});
 		}
 		setIsRebookingModalOpen(false);
@@ -156,14 +189,14 @@ export default function BookingPage() {
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
 		selectedRows.forEach((row) => {
-			updateOrder(row.id, { partStatus: status });
+			handleUpdateOrder(row.id, { partStatus: status });
 		});
 		toast.success(`Updated ${selectedRows.length} item(s) to ${status}`);
 	};
 
 	return (
 		<TooltipProvider>
-			<div className="space-y-4">
+			<div className="space-y-4 h-full flex flex-col">
 				<InfoLabel data={selectedRows[0] || null} />
 
 				<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
@@ -228,8 +261,12 @@ export default function BookingPage() {
 										className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
 									>
 										{partStatuses?.map((status) => {
-											const isHex = status.color?.startsWith("#") || status.color?.startsWith("rgb");
-											const dotStyle = isHex ? { backgroundColor: status.color } : undefined;
+											const isHex =
+												status.color?.startsWith("#") ||
+												status.color?.startsWith("rgb");
+											const dotStyle = isHex
+												? { backgroundColor: status.color }
+												: undefined;
 											const colorClass = isHex ? "" : status.color;
 
 											return (
@@ -305,8 +342,8 @@ export default function BookingPage() {
 									onClick={() => {
 										setRebookingSearchTerm(
 											selectedRows[0]?.vin ||
-											selectedRows[0]?.customerName ||
-											"",
+												selectedRows[0]?.customerName ||
+												"",
 										);
 										setIsRebookingModalOpen(true);
 									}}
@@ -347,19 +384,17 @@ export default function BookingPage() {
 					</div>
 				</div>
 
-
-
-				<Card>
-					<CardContent className="p-0">
-						<DataGrid
-							rowData={bookingRowData}
-							columnDefs={columns}
-							onSelectionChanged={setSelectedRows}
-							onGridReady={(api) => setGridApi(api)}
-							showFloatingFilters={showFilters}
-						/>
-					</CardContent>
-				</Card>
+				<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden mt-4">
+					<DataGrid
+						rowData={bookingRowData}
+						columnDefs={columns}
+						onSelectionChange={setSelectedRows}
+						onGridReady={(api) => setGridApi(api)}
+						showFloatingFilters={showFilters}
+						enablePagination={true}
+						pageSize={20}
+					/>
+				</div>
 
 				<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
 					<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">

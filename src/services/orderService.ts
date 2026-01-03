@@ -4,82 +4,212 @@ import type { PendingRow } from "@/types";
 export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
 
 export const orderService = {
-    async getOrders(stage?: OrderStage) {
-        let query = supabase.from("orders").select("*");
-        if (stage) {
-            query = query.eq("stage", stage);
-        }
-        const { data, error } = await query;
-        if (error) throw error;
-        return data;
-    },
+	async getOrders(stage?: OrderStage) {
+		// Use explicit selection to avoid potential schema cache issues with '*'
+		// and use a clear alias for the related reminders table
+		let query = supabase
+			.from("orders")
+			.select(`
+				id,
+				stage,
+				order_number,
+				customer_name,
+				customer_email,
+				customer_phone,
+				vin,
+				company,
+				status,
+				metadata,
+				created_at,
+				updated_at,
+				order_reminders (*)
+			`)
+			.order("created_at", { ascending: false });
 
-    async updateOrderStage(id: string, stage: OrderStage) {
-        const { data, error } = await supabase
-            .from("orders")
-            .update({ stage })
-            .eq("id", id)
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
-    },
+		if (stage) {
+			query = query.eq("stage", stage);
+		}
+		const { data, error } = await query;
+		if (error) throw error;
+		return data;
+	},
 
-    async saveOrder(order: Partial<PendingRow> & { stage: OrderStage }) {
-        const { id, stage, ...rest } = order;
+	async updateOrderStage(id: string, stage: OrderStage) {
+		const { data, error } = await supabase
+			.from("orders")
+			.update({ stage })
+			.eq("id", id)
+			.select()
+			.single();
+		if (error) throw error;
+		return data;
+	},
 
-        // Map PendingRow fields to Supabase schema
-        const supabaseOrder = {
-            order_number: rest.trackingId || null,
-            customer_name: rest.customerName,
-            customer_phone: rest.mobile,
-            vin: rest.vin,
-            company: rest.company,
-            stage: stage,
-            metadata: rest // Store everything else in metadata for now
-        };
+	async saveOrder(order: Partial<PendingRow> & { stage: OrderStage }) {
+		const { id, stage, reminder, ...rest } = order;
 
-        if (id && id.length === 36) { // Check if it's a UUID
-            const { data, error } = await supabase
-                .from("orders")
-                .update(supabaseOrder)
-                .eq("id", id)
-                .select()
-                .single();
-            if (error) throw error;
-            return data;
-        } else {
-            const { data, error } = await supabase
-                .from("orders")
-                .insert([supabaseOrder])
-                .select()
-                .single();
-            if (error) throw error;
-            return data;
-        }
-    },
+		// 1. Prepare Metadata Merge
+		let currentMetadata: Record<string, unknown> = {};
+		if (id && id.length === 36) {
+			const { data: existing } = await supabase
+				.from("orders")
+				.select("metadata")
+				.eq("id", id)
+				.maybeSingle();
+			if (existing) {
+				currentMetadata = (existing.metadata as Record<string, unknown>) || {};
+			}
+		}
 
-    async deleteOrder(id: string) {
-        const { error } = await supabase.from("orders").delete().eq("id", id);
-        if (error) throw error;
-    },
+		// Ensure we don't store id, stage, or reminder in the metadata JSON itself
+		// to avoid confusion, though it wouldn't cause a schema error.
+		const metadataToStore = { ...currentMetadata, ...rest };
+		delete (metadataToStore as Record<string, unknown>).id;
+		delete (metadataToStore as Record<string, unknown>).stage;
+		delete (metadataToStore as Record<string, unknown>).reminder;
 
-    async getActivityLog() {
-        const { data, error } = await supabase.from("recent_activity").select("*");
-        if (error) throw error;
-        return data;
-    },
+		// 2. Map strictly to table columns to avoid "column not found" errors
+		const supabaseOrder = {
+			order_number:
+				rest.trackingId ||
+				(rest as Record<string, unknown>).order_number ||
+				null,
+			customer_name:
+				rest.customerName || (rest as Record<string, unknown>).customer_name,
+			customer_phone:
+				rest.mobile || (rest as Record<string, unknown>).customer_phone,
+			vin: rest.vin,
+			company: rest.company,
+			stage: stage,
+			metadata: metadataToStore,
+		};
 
-    mapSupabaseOrder(row: any): PendingRow {
-        return {
-            ...(row.metadata || {}),
-            id: row.id,
-            trackingId: row.order_number,
-            customerName: row.customer_name,
-            mobile: row.customer_phone,
-            vin: row.vin,
-            company: row.company,
-            // stage logic is handled by the tab we are in
-        } as PendingRow;
-    }
+		let orderId = id;
+		// biome-ignore lint/suspicious/noExplicitAny: Supabase return type
+		let resultData: any;
+
+		if (id && id.length === 36) {
+			const { data, error } = await supabase
+				.from("orders")
+				.update(supabaseOrder)
+				.eq("id", id)
+				.select()
+				.single();
+			if (error) throw error;
+			resultData = data;
+		} else {
+			const { data, error } = await supabase
+				.from("orders")
+				.insert([supabaseOrder])
+				.select()
+				.single();
+			if (error) throw error;
+			orderId = data.id;
+			resultData = data;
+		}
+
+		// 3. Handle Reminder in separate table
+		if (reminder !== undefined && orderId) {
+			// Clear existing pending reminders
+			await supabase
+				.from("order_reminders")
+				.delete()
+				.eq("order_id", orderId)
+				.eq("is_completed", false);
+
+			if (reminder) {
+				// Combine date and time into a single timestamp for remind_at
+				// Combine date and time into a single timestamp for remind_at
+				let remindAt: string | null = null;
+				if (reminder.date && reminder.time) {
+					// CRITICAL: Timezone Handling
+					// We must construct the Date object using local time components (year, month, day, hours, minutes)
+					// and then convert to UTC via toISOString().
+					// DO NOT simply concatenate strings or use new Date() on a string without timezone,
+					// as that will be interpreted as UTC and shift the time by the timezone offset (e.g. +2h for Egypt).
+					const [year, month, day] = reminder.date.split("-").map(Number);
+					const [hours, minutes] = reminder.time.split(":").map(Number);
+					const localDate = new Date(year, month - 1, day, hours, minutes);
+					remindAt = localDate.toISOString();
+				} else {
+					remindAt = new Date().toISOString();
+				}
+
+				const { error: reminderError } = await supabase
+					.from("order_reminders")
+					.insert({
+						order_id: orderId,
+						title: reminder.subject,
+						remind_at: remindAt,
+						is_completed: false,
+					});
+				if (reminderError) throw reminderError;
+			}
+		}
+
+		return resultData;
+	},
+
+	async deleteOrder(id: string) {
+		if (!id || id.length !== 36) {
+			console.warn(`Skipping delete for non-UUID id: ${id}`);
+			return;
+		}
+		const { error } = await supabase.from("orders").delete().eq("id", id);
+		if (error) throw error;
+	},
+
+	async getActivityLog() {
+		const { data, error } = await supabase.from("recent_activity").select("*");
+		if (error) throw error;
+		return data;
+	},
+
+	// biome-ignore lint/suspicious/noExplicitAny: Supabase row type is loosely defined
+	mapSupabaseOrder(row: any): PendingRow {
+		// Map back the first active reminder if exists via the join
+		let reminder: { date: string; time: string; subject: string } | null = null;
+		if (
+			row.order_reminders &&
+			Array.isArray(row.order_reminders) &&
+			row.order_reminders.length > 0
+		) {
+			// Find the first uncompleted one
+			const active = row.order_reminders.find(
+				(r: { is_completed: boolean; remind_at: string; title: string }) =>
+					!r.is_completed,
+			);
+			if (active?.remind_at) {
+				// Parse the remind_at timestamp back into date and time
+				const remindAt = new Date(active.remind_at);
+				// CRITICAL: Timezone Handling
+				// Parse the UTC remind_at timestamp back into local time components.
+				// We construct the "YYYY-MM-DD" string using local getFullYear/getMonth/getDate
+				// to match the user's local day, reversing the logic used in saveOrder.
+				const resultDate = [
+					remindAt.getFullYear(),
+					String(remindAt.getMonth() + 1).padStart(2, "0"),
+					String(remindAt.getDate()).padStart(2, "0"),
+				].join("-");
+
+				reminder = {
+					date: resultDate,
+					time: remindAt.toTimeString().slice(0, 5), // .toTimeString() returns local time string
+					subject: active.title || "",
+				};
+			}
+		}
+
+		return {
+			...(row.metadata || {}),
+			id: row.id,
+			trackingId: row.order_number,
+			customerName: row.customer_name,
+			mobile: row.customer_phone,
+			vin: row.vin,
+			company: row.company,
+			reminder: reminder,
+			// stage logic is handled by the tab we are in
+		} as PendingRow;
+	},
 };
