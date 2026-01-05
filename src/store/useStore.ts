@@ -8,6 +8,7 @@ import { createInventorySlice } from "./slices/inventorySlice";
 import { createNotificationSlice } from "./slices/notificationSlice";
 import { createOrdersSlice } from "./slices/ordersSlice";
 import { createUISlice } from "./slices/uiSlice";
+import { createReportSettingsSlice } from "./slices/reportSettingsSlice";
 import type { CombinedStore } from "./types";
 
 export const useAppStore = create<CombinedStore>()(
@@ -18,7 +19,9 @@ export const useAppStore = create<CombinedStore>()(
 			...createBookingSlice(...a),
 			...createNotificationSlice(...a),
 			...createUISlice(...a),
+			...createUISlice(...a),
 			...createHistorySlice(...a),
+			...createReportSettingsSlice(...a),
 		}),
 		{
 			name: "pending-sys-storage-v1.1",

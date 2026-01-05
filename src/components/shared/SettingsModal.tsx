@@ -6,6 +6,7 @@ import {
 	Lock,
 	Palette,
 	Settings as SettingsIcon,
+	Shield,
 	Tag,
 	Unlock,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import { BookingStatusTab } from "./settings/BookingStatusTab";
 import { HistoryTab } from "./settings/HistoryTab";
 import { PartStatusTab } from "./settings/PartStatusTab";
 import { ThemeTab } from "./settings/ThemeTab";
+import BackupReportsTab from "../reports/BackupReportsTab";
 
 interface SettingsModalProps {
 	open: boolean;
@@ -29,7 +31,8 @@ type TabType =
 	| "part-statuses"
 	| "booking-statuses"
 	| "theme-color"
-	| "last-changes";
+	| "last-changes"
+	| "backup-reports";
 
 export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 	const [activeTab, setActiveTab] = useState<TabType>("part-statuses");
@@ -45,6 +48,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 		{ id: "booking-statuses", label: "Booking Statuses", icon: CalendarCheck },
 		{ id: "theme-color", label: "Theme Color", icon: Palette },
 		{ id: "last-changes", label: "Last Changes", icon: History },
+		{ id: "backup-reports", label: "Backup & Reports", icon: Shield },
 	];
 
 	return (
@@ -156,7 +160,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 										size="sm"
 										className="flex-1 h-7 text-[10px] uppercase font-bold bg-emerald-500 hover:bg-emerald-400 text-black"
 										onClick={() => {
-											if (passwordAttempt === "Tot2647tot") {
+											if (passwordAttempt === "1234") {
 												setIsLocked(false);
 												setShowPasswordPrompt(false);
 												setPasswordAttempt("");
@@ -189,6 +193,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									"Booking Status Management"}
 								{activeTab === "theme-color" && "System Appearance"}
 								{activeTab === "last-changes" && "System History (Last 48h)"}
+								{activeTab === "backup-reports" && "Backup & Reports Settings"}
 							</h3>
 							<p className="text-xs text-gray-400">
 								{activeTab === "part-statuses" &&
@@ -199,6 +204,8 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									"Manage theme colors and UI preferences."}
 								{activeTab === "last-changes" &&
 									"Review and restore recent changes."}
+								{activeTab === "backup-reports" &&
+									"Configure automated reports and manage data backups."}
 							</p>
 						</div>
 					</header>
@@ -215,6 +222,10 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 						{activeTab === "theme-color" && <ThemeTab />}
 
 						{activeTab === "last-changes" && <HistoryTab />}
+
+						{activeTab === "backup-reports" && (
+							<BackupReportsTab isLocked={isLocked} />
+						)}
 					</div>
 				</div>
 			</DialogContent>

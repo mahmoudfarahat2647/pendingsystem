@@ -132,11 +132,35 @@ export type StoreState = OrdersState &
 	BookingState &
 	NotificationState &
 	UIState &
-	HistoryState;
+	HistoryState &
+	ReportSettingsState;
 export type StoreActions = OrdersActions &
 	InventoryActions &
 	BookingActions &
 	NotificationActions &
 	UIActions &
-	HistoryActions;
+	HistoryActions &
+	ReportSettingsActions;
 export type CombinedStore = StoreState & StoreActions;
+
+export interface ReportSettings {
+	id: string;
+	emails: string[];
+	frequency: "Weekly" | "Monthly" | "Yearly";
+	is_enabled: boolean;
+	last_sent_at: string | null;
+}
+
+export interface ReportSettingsState {
+	reportSettings: ReportSettings | null;
+	isReportSettingsLoading: boolean;
+	reportSettingsError: string | null;
+}
+
+export interface ReportSettingsActions {
+	fetchReportSettings: () => Promise<void>;
+	updateReportSettings: (settings: Partial<ReportSettings>) => Promise<void>;
+	addEmailRecipient: (email: string) => Promise<void>;
+	removeEmailRecipient: (email: string) => Promise<void>;
+	triggerManualBackup: () => Promise<void>;
+}
