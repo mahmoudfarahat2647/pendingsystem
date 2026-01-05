@@ -40,15 +40,20 @@
   - **Send to Call List**: Moves selected ready items to the Call List.
   - **Archive**: Moves completed items to Archive.
   - **Auto-Move Automation**: 
-    - When a part status is updated to "Arrived" (in Main Sheet, Orders, or Global Search):
-    - System automatically checks all other parts for the same VIN.
-    - If **ALL** parts for that VIN are "Arrived", the entire group is automatically moved to the Call List.
-    - Protected feature: Critical to workflow efficiency.
+  - When a part status is updated to "Arrived" (in Main Sheet, Orders, or Global Search):
+  - System automatically checks all other parts for the same VIN across all active sheets.
+  - If **ALL** parts for that VIN are "Arrived" (or have an equivalent 'available' status), the entire group is automatically moved to the Call List.
+  - Protected feature: Critical to workflow efficiency.
+- **Enhanced Global Search**:
+  - Search across all data tabs simultaneously.
+  - **Searchable Fields**: VIN, Customer Name, Part Number, and **Company**.
+  - Direct navigation to source row upon selection.
 
 ## Customer Communication (Call List)
 - **Booking Calendar**:
   - **Premium Dark-Themed Interface**: Modern calendar with glassmorphic design and smooth animations.
   - **Universal Booking**: Works from Orders, Main Sheet, and Call List tabs - rows automatically move to Booking tab.
+  - **Single VIN Restriction**: [CRITICAL] Booking actions are restricted to a single VIN at a time. The Booking button is disabled if multiple VINs are selected simultaneously to prevent scheduling conflicts.
   - **Multi-Customer Visual Indicators**: Stacked, color-coded dots (max 3) for days with multiple customers, grouped by VIN.
   - **Booking Status System**: Customizable status definitions (Add, Cancel, Done, Reschedule, etc.) with color coding.
   - **Pre-Booking Edits**: Set initial note and status in sidebar *before* confirming booking.

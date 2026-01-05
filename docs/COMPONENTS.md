@@ -68,6 +68,10 @@ const [open, setOpen] = useState(false);
 - Status updates: Debounced 300ms
 - Search: Real-time filtering with memoization
 
+**Constraints**:
+- **Single VIN Enforcement**: UI prevents booking multiple different VINs in a single session.
+- **Decomposed Architecture**: Logic is split across `src/components/booking/` (Grid, Sidebar, Header, Details) and `useBookingCalendar` hook.
+
 ---
 
 ### OrderFormModal
@@ -130,14 +134,21 @@ interface OrderFormModalProps {
 **Search Criteria**:
 ```typescript
 interface SearchCriteria {
-  query: string;           // Full-text search
+  query: string;           // Full-text search (scans VIN, Name, Part#, Company)
   vin?: string;           // Exact VIN match
+  company?: string;       // Company filter
   partNumber?: string;    // Partial part match
   status?: string[];      // Multiple statuses
   dateFrom?: string;      // ISO date
   dateTo?: string;        // ISO date
 }
 ```
+
+**Decomposed Architecture**:
+- `SearchResultsHeader`: Toolbar and search input.
+- `SearchResultsGrid`: Data display with tab identification.
+- `SearchEmptyState`: Visual feedback for zero results.
+- `useSearchResults`: Logic for multi-tab searching and filtering.
 
 **Performance**:
 - Indexed search: O(log n)

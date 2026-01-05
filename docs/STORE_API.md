@@ -39,6 +39,8 @@ addOrder({
   id: "order-1",
   baseId: "B001",
   vin: "VF1AB000123456789",
+  customerName: "John Doe",
+  company: "Renault Retail",
   partNumber: "8200123456",
   partDescription: "Front Door Assembly",
   quantity: 1,
