@@ -23,24 +23,49 @@ async function runBackup() {
             .limit(1)
             .maybeSingle();
 
-        if (settingsError) throw settingsError;
+        if (settingsError) {
+            console.error('Error fetching report settings:', settingsError);
+            throw settingsError;
+        }
 
-        const recipients = settings?.emails || [];
-        if (recipients.length === 0) {
-            console.log('No recipients configured. Exiting.');
+        if (!settings) {
+            console.log('No report settings found in database. Exiting.');
             return;
         }
 
+        console.log('Report settings found:', {
+            id: settings.id,
+            is_enabled: settings.is_enabled,
+            frequency: settings.frequency,
+            last_sent_at: settings.last_sent_at,
+            recipient_count: settings.emails?.length || 0
+        });
+
+        const recipients = settings?.emails || [];
+        if (recipients.length === 0) {
+            console.log('Recipients list is empty in settings. Exiting.');
+            return;
+        }
+
+        if (!settings.is_enabled) {
+            console.log('Backup is currently disabled in settings. skipping.');
+            // We proceed if triggered manually, but good to log
+        }
+
         // 2. Fetch All Orders
-        console.log('Fetching orders...');
+        console.log('Fetching orders from database...');
         const { data: orders, error: ordersError } = await supabase
             .from('orders')
             .select('*')
             .order('created_at', { ascending: false });
 
-        if (ordersError) throw ordersError;
+        if (ordersError) {
+            console.error('Error fetching orders:', ordersError);
+            throw ordersError;
+        }
+
         if (!orders || orders.length === 0) {
-            console.log('No orders to backup.');
+            console.log('No orders found in database to backup.');
             return;
         }
 
@@ -51,7 +76,7 @@ async function runBackup() {
 
         // 4. Send Email via Resend
         const date = new Date().toISOString().split('T')[0];
-        console.log(`Sending email to: ${recipients.join(', ')}`);
+        console.log(`Attempting to send email via Resend to: ${recipients.join(', ')}`);
 
         const resendRes = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -80,22 +105,33 @@ async function runBackup() {
         });
 
         if (!resendRes.ok) {
-            const error = await resendRes.text();
-            throw new Error(`Resend API error: ${error}`);
+            const errorText = await resendRes.text();
+            console.error('Resend API call failed:');
+            console.error('Status:', resendRes.status);
+            console.error('Response:', errorText);
+            throw new Error(`Resend API error (${resendRes.status}): ${errorText}`);
         }
 
+        const resendData = await resendRes.json();
+        console.log('Resend API response:', resendData);
         console.log('Backup email sent successfully!');
 
         // 5. Update last_sent_at
-        await supabase
+        console.log('Updating last_sent_at in database...');
+        const { error: updateError } = await supabase
             .from('report_settings')
             .update({ last_sent_at: new Date().toISOString() })
             .eq('id', settings.id);
 
-        console.log('Database updated with last_sent_at.');
+        if (updateError) {
+            console.error('Error updating last_sent_at:', updateError);
+        } else {
+            console.log('Database updated with last_sent_at.');
+        }
 
     } catch (error) {
-        console.error('Backup failed:', error);
+        console.error('CRITICAL: Backup process failed:');
+        console.error(error);
         process.exit(1);
     }
 }
