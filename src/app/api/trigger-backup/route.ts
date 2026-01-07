@@ -2,43 +2,57 @@ import { NextResponse } from "next/server";
 
 export async function POST() {
     try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const githubToken = process.env.GITHUB_PAT;
+        const owner = process.env.GITHUB_OWNER || "mahmoudfarahat2647";
+        const repo = process.env.GITHUB_REPO || "renault-system";
+        const workflowId = "backup-reports.yml";
 
-        if (!supabaseUrl || !serviceRoleKey) {
+        if (!githubToken) {
+            console.error("Missing GITHUB_PAT environment variable");
             return NextResponse.json(
-                { error: "Server configuration error" },
+                { error: "Server configuration error: GitHub Token missing" },
                 { status: 500 }
             );
         }
 
-        const functionUrl = `${supabaseUrl}/functions/v1/backup-reports`;
-
-        if (serviceRoleKey) {
-            console.log("Service Key loaded (prefix):", serviceRoleKey.substring(0, 5) + "...");
-        }
-
-        const response = await fetch(functionUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "apikey": serviceRoleKey,
-                "Authorization": `Bearer ${serviceRoleKey}`,
-            },
-            body: JSON.stringify({ action: "manual_backup" }),
-        });
+        // Trigger the GitHub Actions workflow via dispatch
+        const response = await fetch(
+            `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflowId}/dispatches`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${githubToken}`,
+                    "Accept": "application/vnd.github.v3+json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    ref: "main", // or the default branch
+                }),
+            }
+        );
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Edge function error:", response.status, errorText);
+            console.error("GitHub API error:", response.status, errorText);
+
+            // Helpful error for common issues
+            if (response.status === 404) {
+                return NextResponse.json(
+                    { error: "Workflow not found. Ensure backup-reports.yml is committed to the main branch." },
+                    { status: 404 }
+                );
+            }
+
             return NextResponse.json(
-                { error: `Function failed: ${response.statusText}` },
+                { error: `GitHub trigger failed: ${response.statusText}` },
                 { status: response.status }
             );
         }
 
-        const data = await response.json();
-        return NextResponse.json(data);
+        return NextResponse.json({
+            success: true,
+            message: "Backup workflow triggered successfully on GitHub Actions"
+        });
     } catch (error: any) {
         console.error("Backup trigger error:", error);
         return NextResponse.json(
