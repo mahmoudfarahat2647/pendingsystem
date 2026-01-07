@@ -16,10 +16,11 @@ async function runBackup() {
     console.log('Starting backup process...');
 
     try {
-        // 1. Fetch Report Settings
         const { data: settings, error: settingsError } = await supabase
             .from('report_settings')
             .select('*')
+            .order('updated_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
         if (settingsError) throw settingsError;
