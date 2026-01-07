@@ -42,7 +42,9 @@ export const createReportSettingsSlice: StateCreator<
             const { data, error } = await supabase
                 .from("report_settings")
                 .select("*")
-                .single();
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
             if (error && error.code !== "PGRST116") {
                 throw error;
