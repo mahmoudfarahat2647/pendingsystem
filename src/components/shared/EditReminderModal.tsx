@@ -2,12 +2,11 @@
 
 import {
 	Bell,
-	Calendar as CalendarIcon,
-	Clock,
 	Plus,
 	Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import DateTimePicker from "@/components/ui/date-time-picker";
 import { useAppStore } from "@/store/useStore";
 
 interface EditReminderModalProps {
@@ -44,8 +44,8 @@ export const EditReminderModal = ({
 	const removeReminderTemplate = useAppStore(
 		(state) => state.removeReminderTemplate,
 	);
-	const [date, setDate] = useState("");
-	const [time, setTime] = useState("");
+
+	const [dateTime, setDateTime] = useState<Date | undefined>();
 	const [subject, setSubject] = useState("");
 	const [isAddingTemplate, setIsAddingTemplate] = useState(false);
 	const [newTemplate, setNewTemplate] = useState("");
@@ -53,15 +53,39 @@ export const EditReminderModal = ({
 
 	useEffect(() => {
 		if (open) {
-			setDate(initialData?.date || new Date().toISOString().split("T")[0]);
-			setTime(initialData?.time || "");
+			if (initialData?.date) {
+				const dateStr = initialData.date;
+				const timeStr = initialData.time || "12:00";
+				// Construct date safely
+				const d = new Date(`${dateStr}T${timeStr}`);
+				if (!isNaN(d.getTime())) {
+					setDateTime(d);
+				} else {
+					setDateTime(undefined);
+				}
+			} else {
+				// Default to Today if no data
+				setDateTime(new Date());
+			}
+
 			setSubject(initialData?.subject || "");
 			setShowDeleteConfirm(false);
 		}
 	}, [open, initialData]);
 
 	const handleSave = () => {
-		onSave({ date, time, subject });
+		if (dateTime) {
+			const date = format(dateTime, "yyyy-MM-dd");
+			const time = format(dateTime, "HH:mm");
+			onSave({ date, time, subject });
+		} else {
+			// If cleared or invalid, defaulting to today
+			onSave({
+				date: format(new Date(), "yyyy-MM-dd"),
+				time: "12:00",
+				subject
+			});
+		}
 		onOpenChange(false);
 	};
 
@@ -145,35 +169,11 @@ export const EditReminderModal = ({
 					<div className="p-6 space-y-6">
 						{/* Inputs Section */}
 						<div className="space-y-4">
-							<div className="grid grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label className="text-xs text-gray-400 uppercase tracking-wider">
-										Date
-									</Label>
-									<div className="relative">
-										<Input
-											type="date"
-											value={date}
-											onChange={(e) => setDate(e.target.value)}
-											className="bg-[#2c2c2e] border-white/10 text-gray-200 pl-9 focus-visible:ring-1 focus-visible:ring-renault-yellow focus-visible:ring-offset-0"
-										/>
-										<CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-									</div>
-								</div>
-								<div className="space-y-2">
-									<Label className="text-xs text-gray-400 uppercase tracking-wider">
-										Time
-									</Label>
-									<div className="relative">
-										<Input
-											type="time"
-											value={time}
-											onChange={(e) => setTime(e.target.value)}
-											className="bg-[#2c2c2e] border-white/10 text-gray-200 pl-9 focus-visible:ring-1 focus-visible:ring-renault-yellow focus-visible:ring-offset-0"
-										/>
-										<Clock className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-									</div>
-								</div>
+							<div className="space-y-2">
+								<Label className="text-xs text-gray-400 uppercase tracking-wider">
+									Date & Time
+								</Label>
+								<DateTimePicker date={dateTime} setDate={setDateTime} />
 							</div>
 
 							<div className="space-y-2">
