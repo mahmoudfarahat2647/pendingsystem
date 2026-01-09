@@ -28,17 +28,22 @@ export const useAppStore = create<CombinedStore>()(
 			// Optimize: Only persist critical UI preferences to reduce localStorage overhead
 			// Reference data (templates, statuses, models) load fresh from database via React Query
 			// This reduces initial load state from ~100KB to ~1KB
-			partialize: (state) => {
-				const {
-					// Persisted: Only essential UI state
-					// Omitted: Everything else loads fresh
-					..._rest
-				} = state;
-				return {
-					// Note: All reference data (partStatuses, templates, etc.)
-					// now loads from database to ensure freshness
-				};
-			},
+			partialize: (state) => ({
+				// Persist UI preferences and reference data
+				partStatuses: state.partStatuses,
+				bookingStatuses: state.bookingStatuses,
+				noteTemplates: state.noteTemplates,
+				reminderTemplates: state.reminderTemplates,
+				bookingTemplates: state.bookingTemplates,
+				reasonTemplates: state.reasonTemplates,
+				models: state.models,
+				repairSystems: state.repairSystems,
+				isLocked: state.isLocked,
+				notes: state.notes,
+				todos: state.todos,
+				commits: state.commits,
+				redos: state.redos,
+			}),
 		},
 	),
 );

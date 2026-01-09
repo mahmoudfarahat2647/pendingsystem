@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "loginUser": "test",
+  "loginPassword": "1234",
+  "executionArgs": {
+    "projectName": "renault-system",
+    "projectPath": "d:\\renault-system",
+    "testIds": [],
+    "additionalInstruction": "Execute all frontend tests in the generated plan.",
+    "envs": {
+      "API_KEY": "sk-user-nxrV83PUCpTOQhpfDUEIWD8tKrhAuZnNpzRi0qsSJy4NNTX7Ab_BkV09SMQVvajdWTJz6YPDsoT9yfmKA3kjGvu2fuOi42_7dKX51yfEc6OFDSMP2D-_k9UZUvK4qcDqGxw"
+    }
+  },
+  "proxy": "http://26b383ab-cd63-4777-a153-cf2eae57add3:elG4FpKSAncOlT1Sck0eCrZj8VnIGWSf@tun.testsprite.com:8080"
+}

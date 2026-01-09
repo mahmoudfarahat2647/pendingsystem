@@ -1,9 +1,8 @@
 "use client";
 
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
-import { AgGridReact } from "ag-grid-react";
-import { Search as SearchIcon, X } from "lucide-react";
-import { useMemo } from "react";
+import { Search as SearchIcon } from "lucide-react";
+import { useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { PartStatusRenderer } from "@/components/grid/renderers";
 import { getBaseColumns } from "@/components/shared/GridConfig";
@@ -12,12 +11,11 @@ import {
 	useSaveOrderMutation,
 	useUpdateOrderStageMutation,
 } from "@/hooks/queries/useOrdersQuery";
-// import "ag-grid-community/styles/ag-grid.css"; // Removed to fix Theming API conflict
-// import "ag-grid-community/styles/ag-theme-alpine.css"; // Removed to fix Theming API conflict
-import { gridTheme } from "@/lib/ag-grid-setup";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import { SearchResultsHeader } from "./search/SearchResultsHeader";
+import { SearchResultsGrid } from "./search/SearchResultsGrid";
 
 // Custom renderer for Source Tag
 const SourceRenderer = (params: ICellRendererParams) => {
@@ -50,32 +48,29 @@ const SourceRenderer = (params: ICellRendererParams) => {
 };
 
 export const SearchResultsView = () => {
+	// Specific selectors to avoid broad re-renders
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
-	const rowData = useAppStore((state) => state.rowData); // Main Sheet
-	const ordersRowData = useAppStore((state) => state.ordersRowData); // Orders
-	const bookingRowData = useAppStore((state) => state.bookingRowData); // Booking
-	const callRowData = useAppStore((state) => state.callRowData); // Call List
-	const archiveRowData = useAppStore((state) => state.archiveRowData); // Archive
-	const partStatuses = useAppStore((state) => state.partStatuses); // Part Status Definitions
+	const rowData = useAppStore((state) => state.rowData);
+	const ordersRowData = useAppStore((state) => state.ordersRowData);
+	const bookingRowData = useAppStore((state) => state.bookingRowData);
+	const callRowData = useAppStore((state) => state.callRowData);
+	const archiveRowData = useAppStore((state) => state.archiveRowData);
+	const partStatuses = useAppStore((state) => state.partStatuses);
 
-	// Mutations
 	const saveOrderMutation = useSaveOrderMutation();
 	const updateStageMutation = useUpdateOrderStageMutation();
 
-	// Helper for persistent updates
-	const handleUpdateOrder = (
+	const handleUpdateOrder = useCallback((
 		id: string,
 		updates: Partial<PendingRow>,
 		stage?: string,
 	) => {
-		// We pass the stage from the row's source to ensure optimistic updates work correctly
-		const mappedStage = (stage?.toLowerCase().replace(" ", "-") ||
-			"main") as any;
+		const mappedStage = (stage?.toLowerCase().replace(" ", "-") || "main") as any;
 		saveOrderMutation.mutate({ id, updates, stage: mappedStage });
-	};
+	}, [saveOrderMutation]);
 
-	// Aggregate Data
+	// Aggregate Data - Memoized for performance
 	const searchResults = useMemo(() => {
 		if (!searchTerm || searchTerm.trim().length === 0) return [];
 
@@ -94,7 +89,6 @@ export const SearchResultsView = () => {
 		];
 
 		return allRows.filter((row) => {
-			// Create a giant searchable string
 			const searchString = [
 				row.sourceType,
 				row.vin,
@@ -120,26 +114,12 @@ export const SearchResultsView = () => {
 				.map((field) => (field ? String(field).toLowerCase() : ""))
 				.join(" ");
 
-			// Check if ALL terms match (AND logic)
 			return terms.every((term) => searchString.includes(term));
 		});
-	}, [
-		searchTerm,
-		rowData,
-		ordersRowData,
-		bookingRowData,
-		callRowData,
-		archiveRowData,
-	]);
+	}, [searchTerm, rowData, ordersRowData, bookingRowData, callRowData, archiveRowData]);
 
-	const handleClearSearch = () => {
-		setSearchTerm("");
-	};
-
-	// Columns Configuration
 	const columns = useMemo((): ColDef<PendingRow>[] => {
 		const baseCols = getBaseColumns();
-
 		return [
 			{
 				headerName: "SOURCE",
@@ -161,169 +141,79 @@ export const SearchResultsView = () => {
 				},
 				cellEditor: "agSelectCellEditor",
 				cellEditorParams: {
-					values:
-						Array.isArray(partStatuses) && partStatuses.length > 0
-							? partStatuses
-									.filter((s) => s && typeof s.label === "string")
-									.map((s) => s.label)
-							: [],
+					values: Array.isArray(partStatuses) && partStatuses.length > 0
+						? partStatuses.filter((s) => s && typeof s.label === "string").map((s) => s.label)
+						: [],
 				},
 				cellClass: "flex items-center justify-center",
 			},
 		];
 	}, [partStatuses]);
 
-	// Summary Counts
 	const counts = useMemo(() => {
-		return searchResults.reduce(
-			(acc, curr) => {
-				const source = curr.sourceType || "Unknown";
-				acc[source] = (acc[source] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
+		return searchResults.reduce((acc, curr) => {
+			const source = curr.sourceType || "Unknown";
+			acc[source] = (acc[source] || 0) + 1;
+			return acc;
+		}, {} as Record<string, number>);
 	}, [searchResults]);
+
+	const onCellValueChanged = useCallback(async (event: any) => {
+		if (
+			event.colDef.field === "partStatus" &&
+			event.data?.id &&
+			event.newValue !== event.oldValue
+		) {
+			const newStatus = event.newValue;
+			const vin = event.data.vin;
+			const sourceType = event.data.sourceType;
+
+			handleUpdateOrder(event.data.id, { partStatus: newStatus }, sourceType);
+
+			if (newStatus === "Arrived" && vin) {
+				let relevantParts: PendingRow[] = [];
+				if (sourceType === "Main Sheet") {
+					relevantParts = rowData.filter((r) => r.vin === vin);
+				} else if (sourceType === "Orders") {
+					relevantParts = ordersRowData.filter((r) => r.vin === vin);
+				}
+
+				if (relevantParts.length > 0) {
+					const allArrived = relevantParts.every((r) => {
+						if (r.id === event.data.id) return true;
+						return r.partStatus === "Arrived";
+					});
+
+					if (allArrived) {
+						for (const part of relevantParts) {
+							await updateStageMutation.mutateAsync({ id: part.id, stage: "call" });
+						}
+						toast.success(`All parts for VIN ${vin} arrived! Moved to Call List.`, { duration: 5000 });
+					}
+				}
+			} else {
+				toast.success("Part status updated");
+			}
+		}
+	}, [handleUpdateOrder, rowData, ordersRowData, updateStageMutation]);
 
 	if (!searchTerm) return null;
 
 	return (
 		<div className="flex flex-col h-full bg-[#0a0a0b] text-white">
-			{/* Header / Summary Bar */}
-			<div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0a0a0b]/50 backdrop-blur-xl">
-				<div className="flex items-center gap-4">
-					<div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/20">
-						<SearchIcon className="w-5 h-5" />
-					</div>
-					<div>
-						<h2 className="text-lg font-semibold text-white/90">
-							Global Search Results
-						</h2>
-						<div className="flex items-center gap-3 mt-1 text-sm text-gray-400">
-							<span className="text-white font-medium">
-								{searchResults.length}
-							</span>{" "}
-							matches for
-							<span className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-xs">
-								"{searchTerm}"
-							</span>
-						</div>
-					</div>
-				</div>
-
-				<div className="flex items-center gap-2">
-					{Object.entries(counts).map(([source, count]) => (
-						<div
-							key={source}
-							className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-300"
-						>
-							<span
-								className={cn("w-1.5 h-1.5 rounded-full", {
-									"bg-indigo-500": source === "Main Sheet",
-									"bg-orange-500": source === "Orders",
-									"bg-purple-500": source === "Booking",
-									"bg-blue-500": source === "Call",
-									"bg-slate-500": source === "Archive",
-								})}
-							/>
-							<span>{source}</span>
-							<span className="text-gray-500 ml-1 font-mono">{count}</span>
-						</div>
-					))}
-					<div className="w-px h-6 bg-white/10 mx-2" />
-					<Button
-						onClick={handleClearSearch}
-						variant="ghost"
-						size="sm"
-						className="text-gray-400 hover:text-white hover:bg-white/5"
-					>
-						<X className="w-4 h-4 mr-2" />
-						Clear Search
-					</Button>
-				</div>
-			</div>
-
-			{/* Grid Content */}
+			<SearchResultsHeader
+				searchTerm={searchTerm}
+				resultsCount={searchResults.length}
+				counts={counts}
+				onClearSearch={() => setSearchTerm("")}
+			/>
 			<div className="flex-1 p-6 overflow-hidden">
 				{searchResults.length > 0 ? (
-					<div className="h-full w-full rounded-xl border border-white/10 overflow-hidden bg-[#141416]/50 shadow-2xl ring-1 ring-white/5">
-						<div className="h-full w-full">
-							<AgGridReact
-								theme={gridTheme}
-								rowData={searchResults}
-								columnDefs={columns}
-								defaultColDef={{
-									sortable: true,
-									filter: true,
-									resizable: true,
-									suppressMenu: true,
-								}}
-								rowHeight={32}
-								headerHeight={36}
-								animateRows={true}
-								rowSelection="multiple"
-								suppressCellFocus={true}
-								onCellValueChanged={async (event) => {
-									if (
-										event.colDef.field === "partStatus" &&
-										event.data?.id &&
-										event.newValue !== event.oldValue
-									) {
-										const newStatus = event.newValue;
-										const vin = event.data.vin;
-										const sourceType = event.data.sourceType;
-
-										// 1. Persist the change
-										handleUpdateOrder(
-											event.data.id,
-											{
-												partStatus: newStatus,
-											},
-											event.data.sourceType,
-										);
-
-										// 2. Check for auto-move to Call List (Only for Main Sheet and Orders sources)
-										// [CRITICAL] AUTO-MOVE FEATURE - DO NOT REMOVE OR MODIFY WITHOUT APPROVAL
-										// User Requirement: When a part status is set to "Arrived", check if ALL parts for that VIN are "Arrived".
-										// If so, move the ENTIRE VIN group to the "Call List" tab. This is a core workflow feature.
-										if (newStatus === "Arrived" && vin) {
-											let relevantParts: PendingRow[] = [];
-
-											if (sourceType === "Main Sheet") {
-												relevantParts = rowData.filter((r) => r.vin === vin);
-											} else if (sourceType === "Orders") {
-												relevantParts = ordersRowData.filter(
-													(r) => r.vin === vin,
-												);
-											}
-
-											if (relevantParts.length > 0) {
-												const allArrived = relevantParts.every((r) => {
-													if (r.id === event.data.id) return true; // checking the one currently being updated
-													return r.partStatus === "Arrived";
-												});
-
-												if (allArrived) {
-													for (const part of relevantParts) {
-														await updateStageMutation.mutateAsync({
-															id: part.id,
-															stage: "call",
-														});
-													}
-													toast.success(
-														`All parts for VIN ${vin} arrived! Moved to Call List.`,
-														{ duration: 5000 },
-													);
-												}
-											}
-										} else {
-											toast.success("Part status updated");
-										}
-									}
-								}}
-							/>
-						</div>
-					</div>
+					<SearchResultsGrid
+						rowData={searchResults}
+						columnDefs={columns}
+						onCellValueChanged={onCellValueChanged}
+					/>
 				) : (
 					<div className="flex flex-col items-center justify-center h-full text-center space-y-4">
 						<div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
@@ -339,7 +229,7 @@ export const SearchResultsView = () => {
 							</p>
 						</div>
 						<Button
-							onClick={handleClearSearch}
+							onClick={() => setSearchTerm("")}
 							variant="outline"
 							className="mt-4 border-white/10 hover:bg-white/5"
 						>

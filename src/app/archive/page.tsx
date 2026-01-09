@@ -64,7 +64,7 @@ export default function ArchivePage() {
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			saveOrderMutation.mutate({ id, updates, stage: "archive" });
+			return saveOrderMutation.mutateAsync({ id, updates, stage: "archive" });
 		},
 		[saveOrderMutation],
 	);
@@ -281,7 +281,7 @@ export default function ArchivePage() {
 					onSaveNote={saveNote}
 					onSaveReminder={saveReminder}
 					onSaveAttachment={saveAttachment}
-					onSaveArchive={() => {}}
+					onSaveArchive={() => { }}
 					sourceTag="archive"
 				/>
 

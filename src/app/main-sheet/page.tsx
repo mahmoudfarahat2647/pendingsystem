@@ -5,12 +5,23 @@ import { Unlock } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
+import dynamic from "next/dynamic";
 import { MainSheetToolbar } from "@/components/main-sheet/MainSheetToolbar";
-import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
+
+const BookingCalendarModal = dynamic(
+	() =>
+		import("@/components/shared/BookingCalendarModal").then(
+			(mod) => mod.BookingCalendarModal,
+		),
+	{ ssr: false },
+);
+const RowModals = dynamic(
+	() => import("@/components/shared/RowModals").then((mod) => mod.RowModals),
+	{ ssr: false },
+);
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getMainSheetColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
-import { RowModals } from "@/components/shared/RowModals";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
@@ -53,7 +64,7 @@ export default function MainSheetPage() {
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			saveOrderMutation.mutate({ id, updates, stage: "main" });
+			return saveOrderMutation.mutateAsync({ id, updates, stage: "main" });
 		},
 		[saveOrderMutation],
 	);
@@ -300,23 +311,27 @@ export default function MainSheetPage() {
 				</Card>
 			</div>
 
-			<RowModals
-				activeModal={activeModal}
-				currentRow={currentRow}
-				onClose={closeModal}
-				onSaveNote={saveNote}
-				onSaveReminder={saveReminder}
-				onSaveAttachment={saveAttachment}
-				onSaveArchive={saveArchive}
-				sourceTag="main sheet"
-			/>
+			{currentRow && (
+				<RowModals
+					activeModal={activeModal}
+					currentRow={currentRow}
+					onClose={closeModal}
+					onSaveNote={saveNote}
+					onSaveReminder={saveReminder}
+					onSaveAttachment={saveAttachment}
+					onSaveArchive={saveArchive}
+					sourceTag="main sheet"
+				/>
+			)}
 
-			<BookingCalendarModal
-				open={isBookingModalOpen}
-				onOpenChange={setIsBookingModalOpen}
-				onConfirm={handleConfirmBooking}
-				selectedRows={selectedRows}
-			/>
+			{isBookingModalOpen && (
+				<BookingCalendarModal
+					open={isBookingModalOpen}
+					onOpenChange={setIsBookingModalOpen}
+					onConfirm={handleConfirmBooking}
+					selectedRows={selectedRows}
+				/>
+			)}
 
 			<ConfirmDialog
 				open={showDeleteConfirm}

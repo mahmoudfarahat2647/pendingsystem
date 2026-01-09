@@ -11,7 +11,7 @@ export type RowModalType =
 	| null;
 
 export const useRowModals = (
-	onUpdate: (id: string, updates: Partial<PendingRow>) => void,
+	onUpdate: (id: string, updates: Partial<PendingRow>) => Promise<unknown> | void,
 	onArchive?: (ids: string[], reason: string) => void,
 ) => {
 	const [activeModal, setActiveModal] = useState<RowModalType>(null);
@@ -48,10 +48,20 @@ export const useRowModals = (
 	}, []);
 
 	const saveNote = useCallback(
-		(content: string) => {
+		async (content: string) => {
 			if (currentRow) {
-				onUpdate(currentRow.id, { actionNote: content });
-				closeModal();
+				try {
+					await onUpdate(currentRow.id, { actionNote: content });
+					// @ts-ignore - Dynamic import might not have toast yet, but it's available in the project
+					const { toast } = await import("sonner");
+					toast.success("Note saved successfully");
+					closeModal();
+				} catch (error) {
+					console.error("Failed to save note:", error);
+					// @ts-ignore
+					const { toast } = await import("sonner");
+					toast.error("Failed to save note");
+				}
 			}
 		},
 		[currentRow, onUpdate, closeModal],

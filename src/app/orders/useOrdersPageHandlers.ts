@@ -53,7 +53,7 @@ export const useOrdersPageHandlers = () => {
 	// 4. Core Handlers
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			saveOrderMutation.mutate({ id, updates, stage: "orders" });
+			return saveOrderMutation.mutateAsync({ id, updates, stage: "orders" });
 		},
 		[saveOrderMutation],
 	);

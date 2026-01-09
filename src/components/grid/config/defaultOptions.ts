@@ -31,10 +31,6 @@ export const defaultGridOptions: GridOptions = {
 	suppressDragLeaveHidesColumns: true,
 	suppressMakeColumnVisibleAfterUnGroup: true,
 	suppressRowClickSelection: false,
-
-	// Loading state
-	suppressLoadingOverlay: false,
-	suppressNoRowsOverlay: false,
 };
 
 export const defaultColDef = {

@@ -1,0 +1,74 @@
+{
+  "tech_stack": [
+    "TypeScript",
+    "Next.js",
+    "Tailwind CSS",
+    "Supabase",
+    "TanStack Query",
+    "Zustand",
+    "AG Grid",
+    "Vitest",
+    "Playwright"
+  ],
+  "features": [
+    {
+      "name": "Booking Calendar",
+      "description": "Calendar view for managing bookings and schedules.",
+      "files": [
+        "src/app/booking/page.tsx",
+        "src/store/slices/bookingSlice.ts"
+      ]
+    },
+    {
+      "name": "Orders Management",
+      "description": "Manage customer orders, including creation and tracking.",
+      "files": [
+        "src/app/orders/page.tsx",
+        "src/store/slices/ordersSlice.ts",
+        "src/services/orderService.ts"
+      ]
+    },
+    {
+      "name": "Inventory Management",
+      "description": "Track and manage vehicle inventory.",
+      "files": [
+        "src/store/slices/inventorySlice.ts"
+      ]
+    },
+    {
+      "name": "Main Sheet",
+      "description": "Core interface for daily operations and overviews.",
+      "files": [
+        "src/app/main-sheet/page.tsx"
+      ]
+    },
+    {
+      "name": "Call List",
+      "description": "Manage calls and reminders for customer follow-ups.",
+      "files": [
+        "src/app/call-list/page.tsx"
+      ]
+    },
+    {
+      "name": "Backup & Reports",
+      "description": "Configure and trigger system backups and reports.",
+      "files": [
+        "src/store/slices/reportSettingsSlice.ts"
+      ]
+    },
+    {
+      "name": "Archive",
+      "description": "Historical data storage and retrieval.",
+      "files": [
+        "src/app/archive/page.tsx"
+      ]
+    },
+    {
+      "name": "UI Theme & State",
+      "description": "Global UI preferences and layout state.",
+      "files": [
+        "src/store/slices/uiSlice.ts"
+      ]
+    }
+  ]
+}

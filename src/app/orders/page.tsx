@@ -1,19 +1,40 @@
 "use client";
 
 import { useMemo } from "react";
+import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
-import { OrderFormModal } from "@/components/orders/OrderFormModal";
 import { OrdersToolbar } from "@/components/orders/OrdersToolbar";
-import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { EditAttachmentModal } from "@/components/shared/EditAttachmentModal";
 import { getOrdersColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
-import { RowModals } from "@/components/shared/RowModals";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
+
+const OrderFormModal = dynamic(
+	() =>
+		import("@/components/orders/OrderFormModal").then((mod) => mod.OrderFormModal),
+	{ ssr: false },
+);
+const BookingCalendarModal = dynamic(
+	() =>
+		import("@/components/shared/BookingCalendarModal").then(
+			(mod) => mod.BookingCalendarModal,
+		),
+	{ ssr: false },
+);
+const EditAttachmentModal = dynamic(
+	() =>
+		import("@/components/shared/EditAttachmentModal").then(
+			(mod) => mod.EditAttachmentModal,
+		),
+	{ ssr: false },
+);
+const RowModals = dynamic(
+	() => import("@/components/shared/RowModals").then((mod) => mod.RowModals),
+	{ ssr: false },
+);
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import { useOrdersPageHandlers } from "./useOrdersPageHandlers";
@@ -133,7 +154,7 @@ export default function OrdersPage() {
 										const vin = params.data.vin;
 
 										// 1. Persist the change
-										handleUpdateOrder(params.data.id, {
+										await handleUpdateOrder(params.data.id, {
 											partStatus: newStatus,
 										});
 
@@ -172,38 +193,46 @@ export default function OrdersPage() {
 					</CardContent>
 				</Card>
 
-				<OrderFormModal
-					open={isFormModalOpen}
-					onOpenChange={setIsFormModalOpen}
-					isEditMode={isEditMode}
-					selectedRows={selectedRows}
-					onSubmit={handleSaveOrder}
-				/>
+				{isFormModalOpen && (
+					<OrderFormModal
+						open={isFormModalOpen}
+						onOpenChange={setIsFormModalOpen}
+						isEditMode={isEditMode}
+						selectedRows={selectedRows}
+						onSubmit={handleSaveOrder}
+					/>
+				)}
 
-				<RowModals
-					activeModal={activeModal}
-					currentRow={currentRow}
-					onClose={closeModal}
-					onSaveNote={saveNote}
-					onSaveReminder={saveReminder}
-					onSaveAttachment={saveAttachment}
-					onSaveArchive={saveArchive}
-					sourceTag="orders"
-				/>
+				{currentRow && (
+					<RowModals
+						activeModal={activeModal}
+						currentRow={currentRow}
+						onClose={closeModal}
+						onSaveNote={saveNote}
+						onSaveReminder={saveReminder}
+						onSaveAttachment={saveAttachment}
+						onSaveArchive={saveArchive}
+						sourceTag="orders"
+					/>
+				)}
 
-				<EditAttachmentModal
-					open={isBulkAttachmentModalOpen}
-					onOpenChange={setIsBulkAttachmentModalOpen}
-					initialPath=""
-					onSave={handleSaveBulkAttachment}
-				/>
+				{isBulkAttachmentModalOpen && (
+					<EditAttachmentModal
+						open={isBulkAttachmentModalOpen}
+						onOpenChange={setIsBulkAttachmentModalOpen}
+						initialPath=""
+						onSave={handleSaveBulkAttachment}
+					/>
+				)}
 
-				<BookingCalendarModal
-					open={isBookingModalOpen}
-					onOpenChange={setIsBookingModalOpen}
-					onConfirm={handleConfirmBooking}
-					selectedRows={selectedRows}
-				/>
+				{isBookingModalOpen && (
+					<BookingCalendarModal
+						open={isBookingModalOpen}
+						onOpenChange={setIsBookingModalOpen}
+						onConfirm={handleConfirmBooking}
+						selectedRows={selectedRows}
+					/>
+				)}
 
 				<ConfirmDialog
 					open={showDeleteConfirm}

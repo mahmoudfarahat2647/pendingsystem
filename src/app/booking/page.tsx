@@ -76,7 +76,7 @@ export default function BookingPage() {
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			saveOrderMutation.mutate({ id, updates, stage: "booking" });
+			return saveOrderMutation.mutateAsync({ id, updates, stage: "booking" });
 		},
 		[saveOrderMutation],
 	);
@@ -342,8 +342,8 @@ export default function BookingPage() {
 									onClick={() => {
 										setRebookingSearchTerm(
 											selectedRows[0]?.vin ||
-												selectedRows[0]?.customerName ||
-												"",
+											selectedRows[0]?.customerName ||
+											"",
 										);
 										setIsRebookingModalOpen(true);
 									}}

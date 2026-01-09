@@ -1,0 +1,139 @@
+{
+  "meta": {
+    "project": "Automotive Service Management System",
+    "date": "2025-12-30",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "An integrated web-based platform designed to manage automotive service operations including bookings, orders, inventory, customer communication, and reporting with a modern UI and efficient workflow.",
+  "core_goals": [
+    "Provide a centralized dashboard for system overview and quick insights.",
+    "Enable efficient management of customer bookings and appointments with multi-vehicle support.",
+    "Streamline order management with bulk operations, notes, reminders, and attachments.",
+    "Offer real-time inventory tracking and status management for vehicles and parts.",
+    "Facilitate customer communication through a call list and outreach tracking.",
+    "Support historical data archiving with the ability to restore items.",
+    "Implement a customizable and dynamic data grid for detailed data interaction.",
+    "Deliver a global search across all data modules for quick access.",
+    "Allow user-customizable settings including appearance, status management, and history.",
+    "Incorporate an alert and notification system for important updates and actions.",
+    "Ensure seamless data integrity and syncing via Supabase with query management.",
+    "Automate workflow transitions such as moving vehicles to call list when conditions are met."
+  ],
+  "key_features": [
+    "Dashboard page displaying statistics, charts, and calendar widgets for overview.",
+    "Booking Calendar with dark theme, detailed customer and vehicle scheduling, multi-VIN support.",
+    "Order Management system with interactive data grid, modal dialogs for editing notes, reminders, and attachments.",
+    "Active Inventory tracking with status updates, sheet locking, and workflow management.",
+    "Call List functionality for managing customer call queues and statuses.",
+    "Archive system with reorder capability to move items back to active orders.",
+    "Advanced AG-Grid implementation for dynamic editing, filtering, and custom renderers.",
+    "Global Search feature spanning VINs, customer names, parts, and companies.",
+    "Tabbed Settings Modal including Part Status, Booking Status, Theme, and History management.",
+    "Robust Notifications System with alert badges and contextual navigation.",
+    "Row Modals to edit grid row data efficiently.",
+    "State management via Zustand with segmented slices for individual data domains.",
+    "Supabase backed service layer integrated with React Query for optimized data fetching and caching.",
+    "Automatic Workflow for moving VINs to Call List upon fulfillment of parts arrival.",
+    "Reusable UI components based on Radix UI primitives and Tailwind CSS styling."
+  ],
+  "user_flow_summary": [
+    "User logs in and lands on the Dashboard showing system overview with charts and calendar.",
+    "User navigates to Booking Calendar to schedule, view, or manage customer appointments and vehicles.",
+    "From Orders Management, user creates or updates orders, adding notes, reminders, and attachments as needed.",
+    "User tracks vehicle inventory status and updates progress within the Main Sheet interface.",
+    "Call List page is used to manage outbound calls and customer follow-up communication.",
+    "Users search across all data tabs using Global Search for quick data retrieval.",
+    "Settings Modal allows user to customize statuses, UI themes, and manage history.",
+    "Notifications alert user to updates which can be clicked to navigate and auto-scroll to relevant entries.",
+    "Archive page used to review historical orders and restore them back into active workflow if necessary.",
+    "Automated system workflows move VINs between states based on business rules like parts arrival completion."
+  ],
+  "validation_criteria": [
+    "All key features are implemented as per requirements and accessible through the UI.",
+    "Booking Calendar supports multi-vehicle scheduling and persists customer appointments correctly.",
+    "Order management supports bulk operations and individual note/reminder/attachment editing.",
+    "Inventory updates reflect accurately and support sheet locking functionality.",
+    "Call List accurately tracks call statuses and allows queue management.",
+    "Archive system correctly archives and restores items without data loss.",
+    "Global search returns relevant results across all data domains with acceptable performance.",
+    "Settings Modal saves and applies user preferences successfully including theme changes.",
+    "Notifications display real-time alerts with functional navigation and auto-scroll.",
+    "Automated workflow moves VINs as specified after parts arrival conditions are fulfilled.",
+    "System passes all unit and integration tests including Vitest and Playwright E2E tests.",
+    "UI components adhere to design standards with responsive layouts and accessibility compliance."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "TypeScript",
+      "Next.js",
+      "Tailwind CSS",
+      "Supabase",
+      "TanStack Query",
+      "Zustand",
+      "AG Grid",
+      "Vitest",
+      "Playwright"
+    ],
+    "features": [
+      {
+        "name": "Booking Calendar",
+        "description": "Calendar view for managing bookings and schedules.",
+        "files": [
+          "src/app/booking/page.tsx",
+          "src/store/slices/bookingSlice.ts"
+        ]
+      },
+      {
+        "name": "Orders Management",
+        "description": "Manage customer orders, including creation and tracking.",
+        "files": [
+          "src/app/orders/page.tsx",
+          "src/store/slices/ordersSlice.ts",
+          "src/services/orderService.ts"
+        ]
+      },
+      {
+        "name": "Inventory Management",
+        "description": "Track and manage vehicle inventory.",
+        "files": [
+          "src/store/slices/inventorySlice.ts"
+        ]
+      },
+      {
+        "name": "Main Sheet",
+        "description": "Core interface for daily operations and overviews.",
+        "files": [
+          "src/app/main-sheet/page.tsx"
+        ]
+      },
+      {
+        "name": "Call List",
+        "description": "Manage calls and reminders for customer follow-ups.",
+        "files": [
+          "src/app/call-list/page.tsx"
+        ]
+      },
+      {
+        "name": "Backup & Reports",
+        "description": "Configure and trigger system backups and reports.",
+        "files": [
+          "src/store/slices/reportSettingsSlice.ts"
+        ]
+      },
+      {
+        "name": "Archive",
+        "description": "Historical data storage and retrieval.",
+        "files": [
+          "src/app/archive/page.tsx"
+        ]
+      },
+      {
+        "name": "UI Theme & State",
+        "description": "Global UI preferences and layout state.",
+        "files": [
+          "src/store/slices/uiSlice.ts"
+        ]
+      }
+    ]
+  }
+}

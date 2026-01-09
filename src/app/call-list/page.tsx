@@ -89,7 +89,7 @@ export default function CallListPage() {
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			saveOrderMutation.mutate({ id, updates, stage: "call" });
+			return saveOrderMutation.mutateAsync({ id, updates, stage: "call" });
 		},
 		[saveOrderMutation],
 	);
