@@ -26,6 +26,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { SimpleDatePicker } from "@/components/ui/simple-date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -692,23 +693,21 @@ export const OrderFormModal = ({
 														initial={{ opacity: 0, x: 10 }}
 														animate={{ opacity: 1, x: 0 }}
 														exit={{ opacity: 0, x: 10 }}
-														className="col-span-8 grid grid-cols-2 gap-3"
+														className="col-span-8 flex flex-col gap-3"
 													>
 														<div className="space-y-1 group">
 															<Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">
 																ICM Date
 															</Label>
-															<Input
-																type="date"
+															<SimpleDatePicker
 																value={formData.startWarranty}
-																onChange={(e) =>
+																onChange={(val) =>
 																	setFormData({
 																		...formData,
-																		startWarranty: e.target.value,
+																		startWarranty: val,
 																	})
 																}
 																className={cn(
-																	"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-2 transition-all",
 																	isEditMode
 																		? "premium-glow-amber"
 																		: "premium-glow-indigo",
