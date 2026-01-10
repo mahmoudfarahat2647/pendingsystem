@@ -4,7 +4,7 @@ export async function POST() {
     try {
         const githubToken = process.env.GITHUB_PAT;
         const owner = process.env.GITHUB_OWNER || "mahmoudfarahat2647";
-        const repo = process.env.GITHUB_REPO || "renault-system";
+        const repo = process.env.GITHUB_REPO || "pendingsystem";
         const workflowId = "backup-reports.yml";
 
         if (!githubToken) {

@@ -8,7 +8,7 @@ Welcome to the Renault System project! This guide provides information for devel
 2.  **Clone & Install**:
     ```bash
     git clone <repository-url>
-    cd renault-system
+    cd pendingsystem
     npm install
     ```
 3.  **Environment Variables**:

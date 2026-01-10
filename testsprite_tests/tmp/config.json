@@ -6,8 +6,8 @@
   "loginUser": "test",
   "loginPassword": "1234",
   "executionArgs": {
-    "projectName": "renault-system",
-    "projectPath": "d:\\renault-system",
+    "projectName": "pendingsystem",
+    "projectPath": "d:\\pendingsystem",
     "testIds": [],
     "additionalInstruction": "Execute all frontend tests in the generated plan.",
     "envs": {
