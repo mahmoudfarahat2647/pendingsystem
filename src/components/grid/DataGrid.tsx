@@ -98,12 +98,29 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 		if (!enablePagination && rowData.length <= 100) {
 			return { pagination: false };
 		}
+		// Ensure pageSize is included in selector to avoid AG Grid warning
+		const selectorSizes = [25, 50, 100, 200];
+		if (!selectorSizes.includes(pageSize)) {
+			selectorSizes.unshift(pageSize);
+			selectorSizes.sort((a, b) => a - b);
+		}
 		return {
 			pagination: true,
 			paginationPageSize: pageSize,
-			paginationPageSizeSelector: [25, 50, 100, 200],
+			paginationPageSizeSelector: selectorSizes,
 		};
 	}, [enablePagination, rowData.length, pageSize]);
+
+	// Row selection configuration for v32.2+
+	const rowSelectionConfig = useMemo(
+		() => ({
+			mode: "multiRow" as const,
+			checkboxes: false,
+			headerCheckbox: false,
+			enableClickSelection: true,
+		}),
+		[],
+	);
 
 	const style = useMemo(() => ({ height, width: "100%" }), [height]);
 
@@ -157,6 +174,8 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				onSelectionChanged={handleSelectionChanged}
 				// Default options spread
 				{...defaultGridOptions}
+				// Row Selection
+				rowSelection={rowSelectionConfig}
 				// Pagination
 				{...paginationSettings}
 				// Custom components

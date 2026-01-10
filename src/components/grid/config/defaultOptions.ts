@@ -30,7 +30,6 @@ export const defaultGridOptions: GridOptions = {
 	// Suppress unnecessary features
 	suppressDragLeaveHidesColumns: true,
 	suppressMakeColumnVisibleAfterUnGroup: true,
-	suppressRowClickSelection: false,
 };
 
 export const defaultColDef = {

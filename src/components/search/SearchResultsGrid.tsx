@@ -89,8 +89,8 @@ export const SearchResultsGrid = ({
 					values:
 						Array.isArray(partStatuses) && partStatuses.length > 0
 							? partStatuses
-									.filter((s) => s && typeof s.label === "string")
-									.map((s) => s.label)
+								.filter((s) => s && typeof s.label === "string")
+								.map((s) => s.label)
 							: [],
 				},
 				cellClass: "flex items-center justify-center",
@@ -109,12 +109,15 @@ export const SearchResultsGrid = ({
 						sortable: true,
 						filter: true,
 						resizable: true,
-						suppressMenu: true,
+						suppressHeaderMenuButton: true,
 					}}
 					rowHeight={32}
 					headerHeight={36}
 					animateRows={true}
-					rowSelection="multiple"
+					rowSelection={{
+						mode: "multiRow",
+						enableClickSelection: true,
+					}}
 					suppressCellFocus={true}
 					onCellValueChanged={async (event) => {
 						if (

@@ -1,73 +1,135 @@
 {
   "tech_stack": [
     "TypeScript",
-    "Next.js",
-    "Tailwind CSS",
+    "Next.js 15",
+    "React 19",
     "Supabase",
-    "TanStack Query",
     "Zustand",
+    "TanStack Query",
+    "Tailwind CSS",
     "AG Grid",
-    "Vitest",
-    "Playwright"
+    "Radix UI",
+    "Lucide React"
   ],
   "features": [
     {
-      "name": "Booking Calendar",
-      "description": "Calendar view for managing bookings and schedules.",
+      "name": "Dashboard",
+      "description": "Main entry point showing system statistics, charts and calendar overview",
       "files": [
-        "src/app/booking/page.tsx",
-        "src/store/slices/bookingSlice.ts"
+        "src/app/page.tsx",
+        "src/components/dashboard/CapacityChart.tsx",
+        "src/components/dashboard/DistributionChart.tsx",
+        "src/hooks/queries/useOrdersQuery.ts"
       ]
     },
     {
-      "name": "Orders Management",
-      "description": "Manage customer orders, including creation and tracking.",
+      "name": "Order Management",
+      "description": "System for creating, editing and managing orders with bulk operations",
       "files": [
         "src/app/orders/page.tsx",
+        "src/components/orders/OrderFormModal.tsx",
+        "src/components/orders/OrdersToolbar.tsx",
+        "src/services/orderService.ts",
         "src/store/slices/ordersSlice.ts",
-        "src/services/orderService.ts"
+        "src/app/orders/useOrdersPageHandlers.ts"
       ]
     },
     {
-      "name": "Inventory Management",
-      "description": "Track and manage vehicle inventory.",
+      "name": "Booking System",
+      "description": "Calendar and sidebar for managing multi-VIN appointments",
       "files": [
-        "src/store/slices/inventorySlice.ts"
+        "src/app/booking/page.tsx",
+        "src/components/booking/BookingCalendarGrid.tsx",
+        "src/components/booking/BookingSidebar.tsx",
+        "src/components/booking/BookingSidebarCustomerList.tsx",
+        "src/components/booking/BookingSidebarDetails.tsx",
+        "src/components/booking/BookingSidebarFooter.tsx",
+        "src/components/booking/BookingSidebarHeader.tsx",
+        "src/components/booking/BookingSidebarHistory.tsx",
+        "src/components/booking/hooks/useBookingCalendar.ts"
       ]
     },
     {
       "name": "Main Sheet",
-      "description": "Core interface for daily operations and overviews.",
+      "description": "Inventory management with status tracking and sheet locking",
       "files": [
-        "src/app/main-sheet/page.tsx"
+        "src/app/main-sheet/page.tsx",
+        "src/components/main-sheet/MainSheetToolbar.tsx"
       ]
     },
     {
       "name": "Call List",
-      "description": "Manage calls and reminders for customer follow-ups.",
+      "description": "Tracking system for customer communications and call status",
       "files": [
         "src/app/call-list/page.tsx"
       ]
     },
     {
-      "name": "Backup & Reports",
-      "description": "Configure and trigger system backups and reports.",
-      "files": [
-        "src/store/slices/reportSettingsSlice.ts"
-      ]
-    },
-    {
-      "name": "Archive",
-      "description": "Historical data storage and retrieval.",
+      "name": "Archive Module",
+      "description": "Historical records management with reorder functionality",
       "files": [
         "src/app/archive/page.tsx"
       ]
     },
     {
-      "name": "UI Theme & State",
-      "description": "Global UI preferences and layout state.",
+      "name": "Data Grid",
+      "description": "Reusable AG Grid component with sorting, filtering and editing",
       "files": [
-        "src/store/slices/uiSlice.ts"
+        "src/components/grid/DataGrid.tsx",
+        "src/components/grid/DynamicDataGrid.tsx",
+        "src/components/grid/renderers/*",
+        "src/components/grid/hooks/*",
+        "src/components/grid/config/*"
+      ]
+    },
+    {
+      "name": "Global Search",
+      "description": "Cross-domain search across VINs, customers, part numbers and companies",
+      "files": [
+        "src/components/search/SearchResultsGrid.tsx",
+        "src/components/search/SearchResultsHeader.tsx",
+        "src/components/search/SearchEmptyState.tsx",
+        "src/components/search/hooks/useGlobalSearch.ts"
+      ]
+    },
+    {
+      "name": "State Management",
+      "description": "Zustand stores for managing application state across domains",
+      "files": [
+        "src/store/useStore.ts",
+        "src/store/types.ts",
+        "src/store/slices/*"
+      ]
+    },
+    {
+      "name": "Notification System",
+      "description": "Badge system with direct navigation and auto-scroll functionality",
+      "files": [
+        "src/components/shared/Header.tsx",
+        "src/components/shared/Sidebar.tsx"
+      ]
+    },
+    {
+      "name": "Settings Modal",
+      "description": "Configuration panel for part statuses, appearance, booking status and history",
+      "files": [
+        "src/components/shared/SettingsModal.tsx"
+      ]
+    },
+    {
+      "name": "Row Modals",
+      "description": "Inline editing for notes, reminders and attachments at row level",
+      "files": [
+        "src/hooks/useRowModals.ts",
+        "src/components/shared/RowModal.tsx"
+      ]
+    },
+    {
+      "name": "Auto Move Workflow",
+      "description": "Automatic workflow to move VINs to Call List when all parts arrive",
+      "files": [
+        "src/hooks/useAutoMoveVins.ts",
+        "src/services/orderService.ts"
       ]
     }
   ]

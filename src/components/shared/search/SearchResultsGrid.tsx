@@ -27,12 +27,15 @@ export const SearchResultsGrid = ({
                         sortable: true,
                         filter: true,
                         resizable: true,
-                        suppressMenu: true,
+                        suppressHeaderMenuButton: true,
                     }}
                     rowHeight={32}
                     headerHeight={36}
                     animateRows={true}
-                    rowSelection="multiple"
+                    rowSelection={{
+                        mode: "multiRow",
+                        enableClickSelection: true,
+                    }}
                     suppressCellFocus={true}
                     onCellValueChanged={onCellValueChanged}
                 />

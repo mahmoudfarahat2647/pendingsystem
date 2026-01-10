@@ -35,6 +35,7 @@ export function useColumnDefs(
 	const baseColumns: ColDef[] = [
 		{
 			headerName: "",
+			colId: "selection",
 			field: "id",
 			checkboxSelection: true,
 			headerCheckboxSelection: true,
@@ -44,13 +45,16 @@ export function useColumnDefs(
 			filter: false,
 			resizable: false,
 			pinned: "left",
-			suppressMenu: true,
+			suppressHeaderMenuButton: true,
 			valueFormatter: () => "",
 			cellClass: "flex items-center justify-center",
 		},
 		{
 			headerName: "ACTIONS",
+			colId: "actions",
 			field: "id",
+			checkboxSelection: false,
+			headerCheckboxSelection: false,
 			cellRenderer: ActionCellRenderer,
 			cellRendererParams: {
 				onNoteClick,
@@ -61,7 +65,7 @@ export function useColumnDefs(
 			maxWidth: 100,
 			sortable: false,
 			filter: false,
-			suppressMenu: true,
+			suppressHeaderMenuButton: true,
 		},
 		{
 			headerName: "STATS",
@@ -133,12 +137,12 @@ export function useColumnDefs(
 			minWidth: 180,
 		},
 		{
-			headerName: "نظام اصلاح",
+			headerName: "REPAIR SYSTEM",
 			field: "repairSystem",
 			width: 100,
 		},
 		{
-			headerName: "مدة ضمان",
+			headerName: "WARRANTY",
 			field: "remainTime",
 			cellRenderer: WarrantyRenderer,
 			width: 100,
@@ -164,8 +168,8 @@ export function useColumnDefs(
 							values:
 								Array.isArray(partStatuses) && partStatuses.length > 0
 									? partStatuses
-											.filter((s) => s && typeof s.label === "string")
-											.map((s) => s.label)
+										.filter((s) => s && typeof s.label === "string")
+										.map((s) => s.label)
 									: [],
 						},
 						cellClass: "flex items-center justify-center",

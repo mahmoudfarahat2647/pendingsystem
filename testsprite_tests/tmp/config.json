@@ -3,16 +3,16 @@
   "type": "frontend",
   "scope": "codebase",
   "localEndpoint": "http://localhost:3000",
-  "loginUser": "test",
+  "loginUser": "test1",
   "loginPassword": "1234",
   "executionArgs": {
     "projectName": "pendingsystem",
     "projectPath": "d:\\pendingsystem",
     "testIds": [],
-    "additionalInstruction": "Execute all frontend tests in the generated plan.",
+    "additionalInstruction": "Test the main dashboard, navigation to different tabs (orders, booking, call-list), and verify that the data grid renders correctly.",
     "envs": {
-      "API_KEY": "sk-user-nxrV83PUCpTOQhpfDUEIWD8tKrhAuZnNpzRi0qsSJy4NNTX7Ab_BkV09SMQVvajdWTJz6YPDsoT9yfmKA3kjGvu2fuOi42_7dKX51yfEc6OFDSMP2D-_k9UZUvK4qcDqGxw"
+      "API_KEY": "sk-user-R7vAlskxMk964DliBYYTjSG0nXOnvX9NskPmdXAwiaRAshOANbFWMJXTXq_48mPRjgaxIZcGOA1etghipa4a6kNAsP1IQZB0aU76fezGQ8wbT_Xde3OVSTKnLRdyu86A4t0"
     }
   },
-  "proxy": "http://26b383ab-cd63-4777-a153-cf2eae57add3:elG4FpKSAncOlT1Sck0eCrZj8VnIGWSf@tun.testsprite.com:8080"
+  "proxy": "http://81876925-db46-41fe-b3ff-c647c49d0f38:KDTn5N6GHF0OJZ6vkhskMyzONf6n6x5o@tun.testsprite.com:8080"
 }

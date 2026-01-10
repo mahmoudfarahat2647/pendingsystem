@@ -30,6 +30,7 @@ export function useGridCallbacks<T>({
 
 			// Defer column sizing to next frame
 			requestAnimationFrame(() => {
+				if (event.api.isDestroyed?.()) return;
 				event.api.sizeColumnsToFit();
 			});
 
@@ -42,6 +43,7 @@ export function useGridCallbacks<T>({
 		(event: FirstDataRenderedEvent) => {
 			// Auto-size columns based on content
 			requestAnimationFrame(() => {
+				if (event.api.isDestroyed?.()) return;
 				event.api.autoSizeAllColumns();
 			});
 

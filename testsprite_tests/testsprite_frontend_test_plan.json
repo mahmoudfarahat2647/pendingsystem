@@ -1,381 +1,482 @@
 [
   {
     "id": "TC001",
-    "title": "Dashboard Overview Load",
-    "description": "Verify the dashboard loads correctly displaying statistics, charts, and calendar widgets with accurate data.",
+    "title": "Dashboard loads correctly with key statistics and charts",
+    "description": "Verify that the Dashboard page loads without errors and displays all key statistics, capacity and distribution charts, and calendar overview correctly with dynamic data.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the Dashboard page after successful login."
+        "description": "Navigate to the Dashboard page after login"
       },
       {
         "type": "assertion",
-        "description": "Check statistics section is populated with current system data."
+        "description": "Check the Dashboard displays system metrics such as total orders, inventory counts, bookings summary"
       },
       {
         "type": "assertion",
-        "description": "Verify charts render correctly with valid and updated data points."
+        "description": "Verify the Capacity Chart is rendered and populated with correct data"
       },
       {
         "type": "assertion",
-        "description": "Ensure calendar widgets display correct dates and highlight relevant events."
+        "description": "Verify the Distribution Chart is rendered and populated correctly"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm Calendar overview is displayed with current and upcoming events"
       }
     ]
   },
   {
     "id": "TC002",
-    "title": "Booking Calendar Multi-Vehicle Scheduling",
-    "description": "Verify users can schedule and view bookings for multiple vehicles per customer in the Booking Calendar with dark theme enabled.",
+    "title": "Order Management bulk update and modal interactions",
+    "description": "Test creating, editing, and performing bulk operations in Order Management including opening modals for notes, reminders and attachments.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to Booking Calendar page."
+        "description": "Navigate to the Order Management page"
       },
       {
         "type": "action",
-        "description": "Create a new booking linked to a customer with multiple VINs."
+        "description": "Create a new order using the OrderFormModal and save"
       },
       {
         "type": "assertion",
-        "description": "Verify all vehicles are displayed properly and selectable in the booking entry."
+        "description": "Verify the new order appears in the orders data grid"
       },
       {
         "type": "action",
-        "description": "Switch UI to dark theme in settings."
+        "description": "Select multiple orders and perform a bulk update operation"
       },
       {
         "type": "assertion",
-        "description": "Confirm Booking Calendar displays correctly in dark mode."
+        "description": "Verify the selected orders are updated accordingly"
+      },
+      {
+        "type": "action",
+        "description": "Open a row modal to add a note to an existing order"
+      },
+      {
+        "type": "action",
+        "description": "Save the note and close the modal"
       },
       {
         "type": "assertion",
-        "description": "Check that the booking persists and shows accurate scheduling details on reload."
+        "description": "Confirm the note is visible in the corresponding order's details"
       }
     ]
   },
   {
     "id": "TC003",
-    "title": "Order Management Bulk Operations and Note Editing",
-    "description": "Validate that order management supports bulk edits, adding/editing notes, reminders, and attachments with modal dialogs.",
+    "title": "Booking system multi-VIN appointment scheduling and calendar accuracy",
+    "description": "Verify booking of appointments involving multiple VINs, and the calendar updates in real time to reflect bookings and booking history in the sidebar.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Go to Orders Management page."
+        "description": "Navigate to the Booking page"
       },
       {
         "type": "action",
-        "description": "Select multiple orders in the data grid."
-      },
-      {
-        "type": "action",
-        "description": "Perform bulk status update and confirm changes reflect properly."
-      },
-      {
-        "type": "action",
-        "description": "Open the modal dialog for one order to add and edit notes."
+        "description": "Schedule a new appointment involving multiple VINs using the BookingCalendarGrid"
       },
       {
         "type": "assertion",
-        "description": "Verify notes save successfully and appear in the order details."
+        "description": "Ensure the appointment is shown correctly on the calendar with all associated VINs"
       },
       {
         "type": "action",
-        "description": "Add reminders and attachments through modal dialogs."
+        "description": "View booking history in the BookingSidebar"
       },
       {
         "type": "assertion",
-        "description": "Check reminders and attachments are linked correctly and displayed."
+        "description": "Confirm booking history shows recent appointments accurately"
+      },
+      {
+        "type": "action",
+        "description": "Modify the appointment and verify calendar updates immediately"
+      },
+      {
+        "type": "assertion",
+        "description": "Check the updated appointment details reflect correctly on the calendar and sidebar"
       }
     ]
   },
   {
     "id": "TC004",
-    "title": "Inventory Tracking and Sheet Locking",
-    "description": "Verify real-time inventory updates with status changes and sheet locking feature in the Main Sheet interface.",
+    "title": "Main Sheet inventory status handling and sheet locking workflow",
+    "description": "Test inventory entries status updates and workflow controls including locking and unlocking the main sheet.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to Main Sheet page."
+        "description": "Navigate to the Main Sheet Inventory page"
       },
       {
         "type": "action",
-        "description": "Update inventory status for a vehicle or part."
+        "description": "Change the status of multiple inventory items"
       },
       {
         "type": "assertion",
-        "description": "Confirm status changes reflect instantly and persist after page reload."
+        "description": "Verify inventory items' statuses update correctly"
       },
       {
         "type": "action",
-        "description": "Enable sheet locking."
-      },
-      {
-        "type": "action",
-        "description": "Attempt to modify locked inventory items."
+        "description": "Lock the Main Sheet to prevent changes"
       },
       {
         "type": "assertion",
-        "description": "Verify modifications are prevented while sheet is locked."
+        "description": "Confirm the sheet is locked and no edits are possible"
       },
       {
         "type": "action",
-        "description": "Disable sheet locking."
+        "description": "Unlock the Main Sheet"
       },
       {
         "type": "assertion",
-        "description": "Confirm modifications are now allowed."
+        "description": "Verify edits are possible again after unlocking"
       }
     ]
   },
   {
     "id": "TC005",
-    "title": "Call List Customer Communication Flow",
-    "description": "Check call list management including adding customers, updating call statuses, and managing call queues.",
+    "title": "Call List tracking and call status updating",
+    "description": "Ensure the Call List correctly displays ongoing calls related to orders and allows updating call statuses from the UI.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Open Call List page."
-      },
-      {
-        "type": "action",
-        "description": "Add a customer entry to the call list."
+        "description": "Navigate to the Call List page"
       },
       {
         "type": "assertion",
-        "description": "Verify customer appears in the queue with correct details."
+        "description": "Verify the ongoing calls are listed with correct details"
       },
       {
         "type": "action",
-        "description": "Update the call status of the customer (e.g., called, no answer)."
+        "description": "Update the status of a call record"
       },
       {
         "type": "assertion",
-        "description": "Confirm that status update is saved and visible."
-      },
-      {
-        "type": "action",
-        "description": "Remove customer from the call list."
-      },
-      {
-        "type": "assertion",
-        "description": "Ensure customer is no longer listed."
+        "description": "Verify the call status updates properly and reflects immediately"
       }
     ]
   },
   {
     "id": "TC006",
-    "title": "Archive and Item Restoration",
-    "description": "Confirm archive system archives completed items and allows orderly restoration to active workflow without data loss.",
+    "title": "Archive module viewing and reorder functionality",
+    "description": "Test the ability to view archived records and reorder them back into active Orders without data loss.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to Archive page."
-      },
-      {
-        "type": "action",
-        "description": "Archive a completed order or vehicle."
+        "description": "Navigate to the Archive module"
       },
       {
         "type": "assertion",
-        "description": "Verify the item is removed from active lists and appears in Archive."
+        "description": "Verify historical records are displayed correctly"
       },
       {
         "type": "action",
-        "description": "Use reorder functionality to restore archived item back to active orders."
+        "description": "Select a record and initiate reorder back to Orders"
       },
       {
         "type": "assertion",
-        "description": "Confirm restored item reappears in active workflow with intact data."
+        "description": "Confirm the record moves back to active Orders with data intact"
       }
     ]
   },
   {
     "id": "TC007",
-    "title": "Global Search Functional Accuracy and Performance",
-    "description": "Test the global search features spanning VINs, customers, parts, and companies returning accurate and timely results.",
+    "title": "Data Grid sorting, filtering, dynamic editing and custom rendering",
+    "description": "Validate that the reusable data grid supports sorting, filtering, dynamic inline editing and displays custom cell renderers as expected.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Use the global search to query by customer name."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify relevant customer records are returned."
+        "description": "Open any page with AG Grid based data grid"
       },
       {
         "type": "action",
-        "description": "Search by VIN and check matching vehicle records."
+        "description": "Apply sorting on multiple columns"
       },
       {
         "type": "assertion",
-        "description": "Ensure VIN related data appears accurately."
+        "description": "Verify rows reorder according to sorting"
       },
       {
         "type": "action",
-        "description": "Perform searches using part names and company names."
+        "description": "Apply filters to narrow down displayed rows"
       },
       {
         "type": "assertion",
-        "description": "Confirm returned results include relevant entries for parts and companies."
+        "description": "Verify filtered rows display correctly"
+      },
+      {
+        "type": "action",
+        "description": "Edit a cell inline and submit changes"
       },
       {
         "type": "assertion",
-        "description": "Measure response time and ensure results are delivered within acceptable limits."
+        "description": "Confirm that changes persist and reflect correctly"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify custom renderers display specialized content (e.g. badges, icons) appropriately"
       }
     ]
   },
   {
     "id": "TC008",
-    "title": "Settings Modal Customization and Persistence",
-    "description": "Verify the settings modal allows UI theme changes, status management, and history tracking updates with persistence across sessions.",
+    "title": "Global Search returns cross-domain accurate results",
+    "description": "Test Global Search functionality by querying VINs, customers, parts, and companies and verify results reflect across respective UI components.",
     "category": "functional",
-    "priority": "Medium",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Open the Settings Modal via the UI."
-      },
-      {
-        "type": "action",
-        "description": "Change booking status values."
+        "description": "Input search query into the Global Search input"
       },
       {
         "type": "assertion",
-        "description": "Validate the new booking statuses are saved and applied."
-      },
-      {
-        "type": "action",
-        "description": "Switch UI theme between light and dark."
+        "description": "Verify search results include relevant VINs, customers, part numbers and companies"
       },
       {
         "type": "assertion",
-        "description": "Confirm theme changes reflect immediately across the app."
+        "description": "Confirm results appear categorized correctly in the Search Results Grid"
       },
       {
         "type": "action",
-        "description": "Modify history settings within the modal."
-      },
-      {
-        "type": "assertion",
-        "description": "Ensure history changes are stored and can be retrieved in future sessions."
+        "description": "Select a search result and verify the correct detailed data view loads"
       }
     ]
   },
   {
     "id": "TC009",
-    "title": "Notification System Alert and Navigation",
-    "description": "Check robust notifications display with alert badges and clicking notification navigates and auto-scrolls to related data entries.",
+    "title": "Settings Modal persistence and effect on system behavior",
+    "description": "Verify that changes made in the Settings Modal for part statuses, appearance, booking status, and history persist after closing and affect behavior across the app.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Trigger a system event that generates a notification (e.g. parts arrival)."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the notification appears with correct alert badge count."
+        "description": "Open the Settings Modal"
       },
       {
         "type": "action",
-        "description": "Click the notification."
+        "description": "Modify part statuses, appearance theme, booking statuses, and history options"
+      },
+      {
+        "type": "action",
+        "description": "Save settings and close the modal"
       },
       {
         "type": "assertion",
-        "description": "Confirm navigation to the relevant page and auto-scroll to the associated record or alert."
+        "description": "Verify settings changes persist after reopening the modal"
+      },
+      {
+        "type": "assertion",
+        "description": "Check system behavior reflects changes, e.g., new part statuses available, theme updates, booking status modifications"
       }
     ]
   },
   {
     "id": "TC010",
-    "title": "Automatic Workflow Transition on Parts Arrival",
-    "description": "Validate the automated workflow triggers moving VINs to Call List once parts arrival conditions are met.",
+    "title": "Notification system badges and direct navigation",
+    "description": "Test that the notification system displays correct badges for alerts, enables direct navigation to affected items, and auto-scrolls to the alert source in the UI.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Update parts inventory status to 'Arrival Complete' for an order with a VIN."
+        "description": "Generate or receive notifications in the system"
       },
       {
         "type": "assertion",
-        "description": "Check that the associated VIN is automatically moved from inventory/main sheet to the Call List."
+        "description": "Verify badges show correct notification counts on Header and Sidebar"
+      },
+      {
+        "type": "action",
+        "description": "Click on a notification badge or alert"
       },
       {
         "type": "assertion",
-        "description": "Ensure no manual intervention is required for this transition."
+        "description": "Confirm navigation jumps directly to the related data entry and auto-scrolls into view"
       }
     ]
   },
   {
     "id": "TC011",
-    "title": "Data Integrity and Syncing with Supabase and Query Management",
-    "description": "Verify data consistency and synchronization across all modules using Supabase backend integrated with React Query cache management.",
-    "category": "error handling",
+    "title": "Row Modals for inline editing of notes, reminders, attachments",
+    "description": "Validate that users can open row-level modals to edit notes, reminders, and attachments within data grids and that changes save correctly.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Perform concurrent updates on orders and inventory in different browser sessions."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify data syncs correctly with no stale or conflicting data shown."
+        "description": "Open a data grid and select a row to open its Row Modal"
       },
       {
         "type": "action",
-        "description": "Simulate network interruption during data save."
+        "description": "Edit the note, add a reminder, and upload an attachment within the modal"
+      },
+      {
+        "type": "action",
+        "description": "Save changes and close the modal"
       },
       {
         "type": "assertion",
-        "description": "Check that error is handled gracefully and data retries or restores as expected."
+        "description": "Verify that changes appear immediately in the grid row and persist after reload"
       }
     ]
   },
   {
     "id": "TC012",
-    "title": "UI Component Responsiveness and Accessibility",
-    "description": "Ensure all reusable UI components comply with responsive layouts and accessibility standards across supported devices and screen sizes.",
+    "title": "Automatic workflow moves VINs to Call List when parts arrive",
+    "description": "Test the auto-move workflow that triggers moving VINs to the Call List when all parts have arrived and parts status updates accordingly.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Update parts status to 'arrived' for a VIN in the inventory"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the VIN is automatically moved to the Call List"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm call status monitoring reflects the new VIN in the Call List"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Application state consistency with Zustand slices",
+    "description": "Ensure state management using Zustand slices maintains consistent application state across sessions, components, and tabs when actions are performed.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Perform actions that modify state such as updating orders, changing bookings, or modifying settings in one tab"
+      },
+      {
+        "type": "action",
+        "description": "Open the application in a second tab or reload the first tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the state updates are consistent and reflected across tabs and components"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm no state corruption or loss occurs during normal use"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Error handling for invalid data input in Order Management",
+    "description": "Test the system's handling of invalid inputs in order forms and bulk updates to ensure appropriate validation messages appear and errors are gracefully handled.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Order Management and attempt to create an order with invalid or missing mandatory fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation error messages appear and form submission is blocked"
+      },
+      {
+        "type": "action",
+        "description": "Try bulk updating orders with invalid data sets"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm errors are caught and the operation is either blocked or partially applied with warnings"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "UI responsiveness across devices and screen sizes",
+    "description": "Verify that major UI pages including Dashboard, Order Management, and Booking system maintain usability and layout integrity on different screen resolutions and devices.",
     "category": "ui",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Load main UI pages on various devices (desktop, tablet, mobile)."
+        "description": "Access the system on desktop, tablet, and mobile viewport sizes"
       },
       {
         "type": "assertion",
-        "description": "Verify UI components resize and rearrange properly without content overflow or truncation."
+        "description": "Check that all UI components are visible, functional, and properly aligned in each viewport"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm no horizontal scrolling or layout breakages occur"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Security: Verify access control for critical modules",
+    "description": "Ensure only authenticated users can access sensitive features like Order Management, Archive module, and Settings Modal, and unauthorized access is blocked.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Try to access protected routes/pages without logging in"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify redirection to login page or access denied message"
       },
       {
         "type": "action",
-        "description": "Navigate the UI using keyboard only."
+        "description": "Login with a user without admin or privileged rights and try to access Settings Modal or Archive reorder"
       },
       {
         "type": "assertion",
-        "description": "Confirm all interactive elements are reachable and operable via keyboard."
+        "description": "Confirm access restrictions apply according to user role"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Reporting feature: Backup report scheduling and recipient management",
+    "description": "Test the creation, scheduling, and recipient configuration of backup reports, and verify reports generate and send correctly.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the Reporting section"
       },
       {
         "type": "action",
-        "description": "Use screen reader to interact with UI."
+        "description": "Create a new backup report and schedule it for automatic generation"
+      },
+      {
+        "type": "action",
+        "description": "Add and remove recipients for report delivery"
       },
       {
         "type": "assertion",
-        "description": "Check proper labeling and announcements for UI components."
+        "description": "Verify the report generates on schedule and recipients receive the report"
       }
     ]
   }
