@@ -95,7 +95,10 @@ export function useSaveOrderMutation() {
 			stage: OrderStage;
 		}) => orderService.saveOrder({ id, ...updates, stage }),
 		onMutate: async ({ id, updates, stage }) => {
-			// Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+			// [CRITICAL] OPTIMISTIC UPDATE PATTERN
+			// 1. Cancel outgoing refetches to prevent overwrite
+			// 2. Snapshot current state for rollback
+			// 3. Update cache instantly (creates new object reference for immutability)
 			await queryClient.cancelQueries({ queryKey: ["orders", stage] });
 
 			// Snapshot the previous value
@@ -144,8 +147,9 @@ export function useSaveOrderMutation() {
 			toast.error(`Error saving order: ${errorMessage}`);
 		},
 		onSettled: (_data, _error, { stage }) => {
-			// Invalidate immediately to ensure eventual consistency
-			// No delay needed because we manually updated the cache in onSuccess
+			// [CRITICAL] CONSISTENCY INVALIDATION
+			// Refetch only AFTER the UI has been updated via onMutate/onSuccess. 
+			// Do NOT add delays here; the reactivity is handled by manual cache updates.
 			queryClient.invalidateQueries({ queryKey: ["orders", stage] });
 		},
 	});

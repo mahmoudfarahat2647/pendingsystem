@@ -182,6 +182,10 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				components={cellRenderers}
 				// Loading state
 				loading={loading}
+				// [CRITICAL] REACTIVE CUSTOM COMPONENTS
+				// This MUST be true to allow React Cell Renderers (Action icons, etc.) to respond 
+				// immediately to React Query cache updates.
+				reactiveCustomComponents={true}
 			/>
 		</div>
 	);

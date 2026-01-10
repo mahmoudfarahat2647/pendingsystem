@@ -36,7 +36,17 @@ export const getBaseColumns = (
 		{
 			headerName: "ACTIONS",
 			colId: "actions",
-			field: "id",
+			// field: "id", // REMOVED: Using ID suppresses updates if ID doesn't change
+			// Use valueGetter to force re-render when relevant data changes
+			valueGetter: (params) => {
+				const data = params.data;
+				if (!data) return "";
+				// [CRITICAL] COMPOSITE KEY FOR REACTIVITY
+				// This getter returns a string that explicitly changes when metadata (note/reminder) updates.
+				// This is REQUIRED because the 'id' field stays static, which would otherwise cause AG Grid 
+				// to optimize away the re-render. DO NOT revert to field: "id".
+				return `${data.id}_${data.actionNote ? "note" : ""}_${data.reminder ? "rem" : ""}_${data.hasAttachment ? "att" : ""}`;
+			},
 			checkboxSelection: false,
 			headerCheckboxSelection: false,
 			cellRenderer: ActionCellRenderer,

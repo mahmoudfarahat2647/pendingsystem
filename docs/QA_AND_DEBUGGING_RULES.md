@@ -4,6 +4,17 @@
 
 ---
 
+## Reactivity & Performance [CRITICAL]
+
+If UI elements (specifically AG Grid cells) are not reacting to data changes:
+
+1.  **Check Reference Identity**: Ensure mutations return a *new* object reference (`{...row, ...updates}`).
+2.  **Check `reactiveCustomComponents`**: Ensure `reactiveCustomComponents: true` is set in the `AgGridReact` instance.
+3.  **Check Value Changes**: If the column is bound to a static field (like `id`), AG Grid will not re-render even if other properties change. You MUST use a `valueGetter` that returns a composite key containing all sensitive properties (e.g., `${id}_${note}_${reminder}`).
+4.  **No Delays**: Never use `setTimeout` to wait for the database. Use manual cache updates (`setQueryData`) in `onMutate` and `onSuccess`.
+
+---
+
 ## 1. Code Standards & Quality Gates
 
 ### 1.1 Pre-Commit Code Quality

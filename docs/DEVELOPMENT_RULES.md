@@ -34,6 +34,12 @@ State Management (Zustand):
 - Use the internal `debouncedCommit` for frequent data updates to group history snapshots.
 - Avoid storing derived state in the store; use `useMemo` in components or selectors.
 
+Feature Protection & Performance:
+- **[CRITICAL] Reactivity Hardening**: Never revert the `valueGetter` in `GridConfig.tsx` to a simple `field: "id"`. The composite key is essential for triggering AG Grid cell refreshes on metadata updates.
+- **[CRITICAL] Optimistic UI**: Always use `onMutate` for immediate feedback and `onSuccess` for authoritative cache injection. 
+- **[CRITICAL] No Delays**: Do NOT add `setTimeout` or artificial delays to `onSettled` or `invalidateQueries`. Reactivity must be handled via manual cache management.
+- **Data Binding**: Components must consume data directly from React Query. Avoid redundant syncing to Zustand unless the data is purely UI-local (selection, focus, etc.).
+
 Workflow (always follow):
 1. Analyze request and code carefully.
 2. Identify exact changes needed and why.

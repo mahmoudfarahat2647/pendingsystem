@@ -254,6 +254,25 @@ const newArr = arr.map(item =>
 
 ---
 
+## UI Reactivity & Data Flow [PROTECTED]
+
+The system implements a high-performance reactivity chain to ensure 0ms perceived latency for data updates.
+
+### 1. Optimistic UI Pattern
+All mutations (Notes, Reminders, Status updates) follow the [CRITICAL] optimistic pattern in `useOrdersQuery.ts`:
+1.  **Cancel**: In-flight refetches are cancelled to prevent race conditions.
+2.  **Snapshot**: Current cache state is saved for instant rollback on error.
+3.  **Update**: `queryClient.setQueryData` is called immediately, creating a **new object reference** (`{...row, ...updates}`).
+4.  **Inject**: `onSuccess` injects the server's authoritative response directly into the cache.
+5.  **Invalidate**: `onSettled` invalidates the query for eventual consistency, but **without artificial delays**.
+
+### 2. Grid Reactivity Hardening
+To prevent AG Grid from optimizing away React component updates, two settings are required:
+- **`reactiveCustomComponents: true`**: Forces AG Grid to respect the React lifecycle for cell renderers.
+- **`valueGetter` (Action Column)**: Instead of `field: 'id'`, the column uses a composite key `${id}_${metadata}`. This ensures that even if the ID is static, a change in metadata (like a new Note) is detected as a *value change*, forcing a cell refresh.
+
+---
+
 ## Component Architecture
 
 ### Folder Structure

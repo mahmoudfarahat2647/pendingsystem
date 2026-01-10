@@ -16,6 +16,7 @@
 ## Order Management (Orders Page)
 - **Data Grid**:
   - Dynamic editing of all order fields.
+  - **[PROTECTED] Instant Reactivity**: Action icons (Notes, Reminders) and Statuses update with 0ms perceived latency using optimized cache injection and composite valueGetters.
   - Validation checks for duplicates and name mismatches.
 - **Bulk Operations**:
   - **Bulk Link / Set Path**: Select multiple rows -> Toolbar Link Icon -> Apply path/URL to all.
