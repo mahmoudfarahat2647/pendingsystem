@@ -1,0 +1,16 @@
+{
+  "status": "commited",
+  "type": "backend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "pendingsystem",
+    "projectPath": "d:\\pendingsystem",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-R7vAlskxMk964DliBYYTjSG0nXOnvX9NskPmdXAwiaRAshOANbFWMJXTXq_48mPRjgaxIZcGOA1etghipa4a6kNAsP1IQZB0aU76fezGQ8wbT_Xde3OVSTKnLRdyu86A4t0"
+    }
+  }
+}

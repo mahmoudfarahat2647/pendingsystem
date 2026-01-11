@@ -1,5 +1,6 @@
 import type { StateCreator } from "zustand";
 import { supabase } from "@/lib/supabase";
+import type { ApiResponse } from "@/lib/apiResponse";
 import type { CombinedStore } from "../types";
 
 export interface ReportSettings {
@@ -135,11 +136,14 @@ export const createReportSettingsSlice: StateCreator<
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || "Backup failed");
+                const errorData = (await response.json()) as ApiResponse;
+                const errorMessage = !errorData.success
+                    ? errorData.error.message
+                    : "Backup failed";
+                throw new Error(errorMessage);
             }
 
-            const data = await response.json();
+            const data = (await response.json()) as ApiResponse;
             console.log("Backup triggered successfully:", data);
 
             // Refresh settings to update last_sent_at

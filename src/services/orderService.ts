@@ -1,7 +1,27 @@
+import { processBatch } from "@/lib/batchUtils";
+import type { PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { PendingRow } from "@/types";
 
 export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
+
+export class ServiceError extends Error {
+	code: string;
+	details?: unknown;
+
+	constructor(code: string, message: string, details?: unknown) {
+		super(message);
+		this.code = code;
+		this.details = details;
+	}
+}
+
+function handleSupabaseError(error: PostgrestError): never {
+	throw new ServiceError(error.code || "DATABASE_ERROR", error.message, {
+		hint: error.hint,
+		details: error.details,
+	});
+}
 
 export const orderService = {
 	async getOrders(stage?: OrderStage) {
@@ -30,7 +50,7 @@ export const orderService = {
 			query = query.eq("stage", stage);
 		}
 		const { data, error } = await query;
-		if (error) throw error;
+		if (error) handleSupabaseError(error);
 		return data;
 	},
 
@@ -41,18 +61,34 @@ export const orderService = {
 			.eq("id", id)
 			.select()
 			.single();
-		if (error) throw error;
+		if (error) handleSupabaseError(error);
 		return data;
 	},
 
 	async updateOrdersStage(ids: string[], stage: OrderStage) {
 		if (ids.length === 0) return [];
+
+		// For large batches, process in chunks to avoid connection pool exhaustion
+		const BATCH_SIZE = 50;
+
+		if (ids.length > BATCH_SIZE) {
+			return processBatch(ids, BATCH_SIZE, async (batch) => {
+				const { data, error } = await supabase
+					.from("orders")
+					.update({ stage })
+					.in("id", batch)
+					.select();
+				if (error) handleSupabaseError(error);
+				return data || [];
+			});
+		}
+
 		const { data, error } = await supabase
 			.from("orders")
 			.update({ stage })
 			.in("id", ids)
 			.select();
-		if (error) throw error;
+		if (error) handleSupabaseError(error);
 		return data;
 	},
 
@@ -106,7 +142,7 @@ export const orderService = {
 				.eq("id", id)
 				.select()
 				.single();
-			if (error) throw error;
+			if (error) handleSupabaseError(error);
 			resultData = data;
 		} else {
 			const { data, error } = await supabase
@@ -114,7 +150,7 @@ export const orderService = {
 				.insert([supabaseOrder])
 				.select()
 				.single();
-			if (error) throw error;
+			if (error) handleSupabaseError(error);
 			orderId = data.id;
 			resultData = data;
 		}
@@ -154,7 +190,7 @@ export const orderService = {
 						remind_at: remindAt,
 						is_completed: false,
 					});
-				if (reminderError) throw reminderError;
+				if (reminderError) handleSupabaseError(reminderError);
 			}
 		}
 
@@ -167,12 +203,12 @@ export const orderService = {
 			return;
 		}
 		const { error } = await supabase.from("orders").delete().eq("id", id);
-		if (error) throw error;
+		if (error) handleSupabaseError(error);
 	},
 
 	async getActivityLog() {
 		const { data, error } = await supabase.from("recent_activity").select("*");
-		if (error) throw error;
+		if (error) handleSupabaseError(error);
 		return data;
 	},
 

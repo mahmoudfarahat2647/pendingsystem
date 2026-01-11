@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { successResponse, errorResponse } from "@/lib/apiResponse";
 
 export async function POST() {
     try {
@@ -9,9 +9,10 @@ export async function POST() {
 
         if (!githubToken) {
             console.error("Missing GITHUB_PAT environment variable");
-            return NextResponse.json(
-                { error: "Server configuration error: GitHub Token missing" },
-                { status: 500 }
+            return errorResponse(
+                "SERVER_ERROR",
+                "Server configuration error: GitHub Token missing",
+                500,
             );
         }
 
@@ -21,14 +22,14 @@ export async function POST() {
             {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${githubToken}`,
-                    "Accept": "application/vnd.github.v3+json",
+                    Authorization: `Bearer ${githubToken}`,
+                    Accept: "application/vnd.github.v3+json",
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     ref: "main", // or the default branch
                 }),
-            }
+            },
         );
 
         if (!response.ok) {
@@ -37,27 +38,26 @@ export async function POST() {
 
             // Helpful error for common issues
             if (response.status === 404) {
-                return NextResponse.json(
-                    { error: "Workflow not found. Ensure backup-reports.yml is committed to the main branch." },
-                    { status: 404 }
+                return errorResponse(
+                    "NOT_FOUND",
+                    "Workflow not found. Ensure backup-reports.yml is committed to the main branch.",
+                    404,
                 );
             }
 
-            return NextResponse.json(
-                { error: `GitHub trigger failed: ${response.statusText}` },
-                { status: response.status }
+            return errorResponse(
+                "EXTERNAL_SERVICE_ERROR",
+                `GitHub trigger failed: ${response.statusText}`,
+                response.status,
             );
         }
 
-        return NextResponse.json({
-            success: true,
-            message: "Backup workflow triggered successfully on GitHub Actions"
-        });
+        return successResponse(
+            undefined,
+            "Backup workflow triggered successfully on GitHub Actions",
+        );
     } catch (error: any) {
         console.error("Backup trigger error:", error);
-        return NextResponse.json(
-            { error: error.message },
-            { status: 500 }
-        );
+        return errorResponse("SERVER_ERROR", error.message || "An internal error occurred", 500);
     }
 }

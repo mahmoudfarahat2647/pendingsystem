@@ -34,7 +34,7 @@ describe("reportSettingsSlice", () => {
             // biome-ignore lint/suspicious/noExplicitAny: Global fetch mock
             (global.fetch as any).mockResolvedValueOnce({
                 ok: true,
-                json: () => Promise.resolve({ message: "Success" }),
+                json: () => Promise.resolve({ success: true, message: "Success" }),
             });
 
             const fetchSpy = vi.spyOn(store.getState(), "fetchReportSettings").mockResolvedValue(undefined);
@@ -55,7 +55,7 @@ describe("reportSettingsSlice", () => {
             // biome-ignore lint/suspicious/noExplicitAny: Global fetch mock
             (global.fetch as any).mockResolvedValueOnce({
                 ok: false,
-                json: () => Promise.resolve({ error: "Backup failed" }),
+                json: () => Promise.resolve({ success: false, error: { message: "Backup failed", code: "SERVER_ERROR" } }),
             });
 
             await store.getState().triggerManualBackup();

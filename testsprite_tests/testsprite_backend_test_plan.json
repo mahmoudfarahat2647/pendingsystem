@@ -1,0 +1,22 @@
+[
+  {
+    "id": "TC001",
+    "title": "get orders by stage",
+    "description": "Verify that the GET /api/orders endpoint correctly returns a list of orders filtered by the specified stage parameter, including stages orders, main, call, booking, and archive."
+  },
+  {
+    "id": "TC002",
+    "title": "trigger backup workflow",
+    "description": "Verify that the POST /api/trigger-backup endpoint successfully triggers the GitHub Actions backup workflow and returns a 200 status code on success and a 500 status code on server error."
+  },
+  {
+    "id": "TC003",
+    "title": "get report settings",
+    "description": "Verify that the GET /api/report-settings endpoint returns the current report settings including email recipients and backup scheduling information."
+  },
+  {
+    "id": "TC004",
+    "title": "update report settings",
+    "description": "Verify that the POST /api/report-settings endpoint updates the report settings correctly with valid input and returns a 200 status code confirming the update."
+  }
+]

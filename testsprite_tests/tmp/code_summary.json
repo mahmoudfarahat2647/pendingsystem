@@ -1,0 +1,101 @@
+{
+  "tech_stack": [
+    "TypeScript",
+    "Next.js",
+    "React",
+    "Supabase",
+    "PostgreSQL",
+    "Zustand",
+    "AG-Grid"
+  ],
+  "features": [
+    {
+      "name": "Order Management API",
+      "description": "Handles creation, retrieval, update, and deletion of orders with Supabase backend",
+      "files": [
+        "src/services/orderService.ts",
+        "src/store/slices/ordersSlice.ts",
+        "src/app/orders/page.tsx"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/orders": {
+            "get": {
+              "summary": "Get orders by stage",
+              "parameters": [
+                {
+                  "name": "stage",
+                  "in": "query",
+                  "type": "string",
+                  "enum": ["orders", "main", "call", "booking", "archive"]
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "List of orders"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Backup Trigger API",
+      "description": "Triggers GitHub Actions workflow to backup reports",
+      "files": [
+        "src/app/api/trigger-backup/route.ts"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/trigger-backup": {
+            "post": {
+              "summary": "Trigger backup workflow",
+              "responses": {
+                "200": {
+                  "description": "Backup triggered successfully"
+                },
+                "500": {
+                  "description": "Server error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Report Settings API",
+      "description": "Manages email recipients and backup scheduling via Supabase",
+      "files": [
+        "src/store/slices/reportSettingsSlice.ts",
+        "src/lib/supabase.ts"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/report-settings": {
+            "get": {
+              "summary": "Get report settings",
+              "responses": {
+                "200": {
+                  "description": "Report settings"
+                }
+              }
+            },
+            "post": {
+              "summary": "Update report settings",
+              "responses": {
+                "200": {
+                  "description": "Settings updated"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
