@@ -1,22 +1,42 @@
 [
   {
     "id": "TC001",
-    "title": "get orders by stage",
-    "description": "Verify that the GET /api/orders endpoint correctly returns a list of orders filtered by the specified stage parameter, including stages orders, main, call, booking, and archive."
+    "title": "orders management bulk import validation",
+    "description": "Verify that the Orders Management API correctly handles bulk import of new part requests, including validation for duplicates and attachment support."
   },
   {
     "id": "TC002",
-    "title": "trigger backup workflow",
-    "description": "Verify that the POST /api/trigger-backup endpoint successfully triggers the GitHub Actions backup workflow and returns a 200 status code on success and a 500 status code on server error."
+    "title": "main sheet part lifecycle auto move",
+    "description": "Test the Main Sheet API to ensure parts automatically move through lifecycle statuses (Pending → Arrived → Available → Call List) with correct visual indicators."
   },
   {
     "id": "TC003",
-    "title": "get report settings",
-    "description": "Verify that the GET /api/report-settings endpoint returns the current report settings including email recipients and backup scheduling information."
+    "title": "booking system multi customer vin grouping",
+    "description": "Validate the Booking System API supports scheduling appointments with multi-customer VIN grouping and maintains booking history accurately."
   },
   {
     "id": "TC004",
-    "title": "update report settings",
-    "description": "Verify that the POST /api/report-settings endpoint updates the report settings correctly with valid input and returns a 200 status code confirming the update."
+    "title": "call list customer communication logging",
+    "description": "Check the Call List API for proper tracking of call statuses and logging of customer communications."
+  },
+  {
+    "id": "TC005",
+    "title": "archive history retention and compliance",
+    "description": "Ensure the Archive API retains historical data for 48 hours with documented archived reasons for compliance and immutable records."
+  },
+  {
+    "id": "TC006",
+    "title": "api endpoint trigger backup workflow",
+    "description": "Test the API endpoint that triggers the GitHub Actions workflow to backup reports, verifying successful initiation and response handling."
+  },
+  {
+    "id": "TC007",
+    "title": "data grid sorting filtering virtualization",
+    "description": "Validate the Data Grid API supports advanced sorting, filtering, and virtualization features for efficient data handling."
+  },
+  {
+    "id": "TC008",
+    "title": "search functionality cross tab accuracy",
+    "description": "Test the Search API to ensure accurate cross-tab search results across VIN, Customer Name, Part Number, and Company fields."
   }
 ]

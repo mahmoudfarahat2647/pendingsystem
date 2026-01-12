@@ -1,101 +1,91 @@
 {
   "tech_stack": [
     "TypeScript",
-    "Next.js",
-    "React",
+    "Next.js 15",
+    "React 19",
     "Supabase",
-    "PostgreSQL",
+    "ag-Grid Community",
+    "Tailwind CSS",
     "Zustand",
-    "AG-Grid"
+    "Recharts"
   ],
   "features": [
     {
-      "name": "Order Management API",
-      "description": "Handles creation, retrieval, update, and deletion of orders with Supabase backend",
+      "name": "Orders Management",
+      "description": "Manage new part requests and initial order staging with bulk import, editing, and attachment support.",
       "files": [
+        "src/app/orders/page.tsx",
         "src/services/orderService.ts",
         "src/store/slices/ordersSlice.ts",
-        "src/app/orders/page.tsx"
-      ],
-      "api_doc": {
-        "openapi": "3.0.0",
-        "paths": {
-          "/api/orders": {
-            "get": {
-              "summary": "Get orders by stage",
-              "parameters": [
-                {
-                  "name": "stage",
-                  "in": "query",
-                  "type": "string",
-                  "enum": ["orders", "main", "call", "booking", "archive"]
-                }
-              ],
-              "responses": {
-                "200": {
-                  "description": "List of orders"
-                }
-              }
-            }
-          }
-        }
-      }
+        "src/types/index.ts"
+      ]
     },
     {
-      "name": "Backup Trigger API",
-      "description": "Triggers GitHub Actions workflow to backup reports",
+      "name": "Main Sheet",
+      "description": "Track part status through lifecycle (Pending → Arrived → Available → Call List) with auto-move workflow.",
       "files": [
-        "src/app/api/trigger-backup/route.ts"
-      ],
-      "api_doc": {
-        "openapi": "3.0.0",
-        "paths": {
-          "/api/trigger-backup": {
-            "post": {
-              "summary": "Trigger backup workflow",
-              "responses": {
-                "200": {
-                  "description": "Backup triggered successfully"
-                },
-                "500": {
-                  "description": "Server error"
-                }
-              }
-            }
-          }
-        }
-      }
+        "src/app/main-sheet/page.tsx",
+        "src/components/main-sheet/MainSheetToolbar.tsx",
+        "src/store/slices/inventorySlice.ts",
+        "src/types/index.ts"
+      ]
     },
     {
-      "name": "Report Settings API",
-      "description": "Manages email recipients and backup scheduling via Supabase",
+      "name": "Booking System",
+      "description": "Premium calendar interface for scheduling customer appointments with multi-customer VIN grouping.",
       "files": [
-        "src/store/slices/reportSettingsSlice.ts",
-        "src/lib/supabase.ts"
-      ],
-      "api_doc": {
-        "openapi": "3.0.0",
-        "paths": {
-          "/api/report-settings": {
-            "get": {
-              "summary": "Get report settings",
-              "responses": {
-                "200": {
-                  "description": "Report settings"
-                }
-              }
-            },
-            "post": {
-              "summary": "Update report settings",
-              "responses": {
-                "200": {
-                  "description": "Settings updated"
-                }
-              }
-            }
-          }
-        }
-      }
+        "src/app/booking/page.tsx",
+        "src/components/booking/BookingCalendarGrid.tsx",
+        "src/components/booking/BookingSidebar.tsx",
+        "src/components/booking/hooks/useBookingCalendar.ts",
+        "src/types/index.ts"
+      ]
+    },
+    {
+      "name": "Call List",
+      "description": "Manage customer contact queue with call status tracking and communication logging.",
+      "files": [
+        "src/app/call-list/page.tsx",
+        "src/store/slices/callListSlice.ts",
+        "src/types/index.ts"
+      ]
+    },
+    {
+      "name": "Archive & History",
+      "description": "Maintain 48-hour historical retention with archived reasons for compliance.",
+      "files": [
+        "src/app/archive/page.tsx",
+        "src/components/shared/ArchiveReasonModal.tsx",
+        "src/store/slices/archiveSlice.ts",
+        "src/types/index.ts"
+      ]
+    },
+    {
+      "name": "API Endpoint - Trigger Backup",
+      "description": "Triggers GitHub Actions workflow to backup reports.",
+      "files": [
+        "src/app/api/trigger-backup/route.ts",
+        "src/lib/apiResponse.ts"
+      ]
+    },
+    {
+      "name": "Data Grid",
+      "description": "Advanced data grid functionality with sorting, filtering, and virtualization.",
+      "files": [
+        "src/components/grid/DataGrid.tsx",
+        "src/components/grid/DynamicDataGrid.tsx",
+        "src/components/grid/renderers/*",
+        "src/lib/ag-grid-setup.ts"
+      ]
+    },
+    {
+      "name": "Search Functionality",
+      "description": "Cross-tab search across VIN, Customer Name, Part Number, and Company.",
+      "files": [
+        "src/components/search/SearchResultsGrid.tsx",
+        "src/components/search/hooks/useSearchResults.ts",
+        "src/types/index.ts"
+      ]
     }
   ]
 }

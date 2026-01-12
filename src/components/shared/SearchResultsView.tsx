@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import {
 	useSaveOrderMutation,
 	useBulkUpdateOrderStageMutation,
+	useOrdersQuery,
 } from "@/hooks/queries/useOrdersQuery";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -51,12 +52,14 @@ export const SearchResultsView = () => {
 	// Specific selectors to avoid broad re-renders
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
-	const rowData = useAppStore((state) => state.rowData);
-	const ordersRowData = useAppStore((state) => state.ordersRowData);
-	const bookingRowData = useAppStore((state) => state.bookingRowData);
-	const callRowData = useAppStore((state) => state.callRowData);
-	const archiveRowData = useAppStore((state) => state.archiveRowData);
 	const partStatuses = useAppStore((state) => state.partStatuses);
+
+	// Fetch data from React Query (replacing old Zustand data)
+	const { data: rowData = [] } = useOrdersQuery("main");
+	const { data: ordersRowData = [] } = useOrdersQuery("orders");
+	const { data: bookingRowData = [] } = useOrdersQuery("booking");
+	const { data: callRowData = [] } = useOrdersQuery("call");
+	const { data: archiveRowData = [] } = useOrdersQuery("archive");
 
 	const saveOrderMutation = useSaveOrderMutation();
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
@@ -90,7 +93,7 @@ export const SearchResultsView = () => {
 
 		return allRows.filter((row) => {
 			const searchString = [
-				row.sourceType,
+				(row as any).sourceType,
 				row.vin,
 				row.customerName,
 				row.partNumber,

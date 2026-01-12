@@ -1,15 +1,17 @@
 import { useMemo } from "react";
 import { useAppStore } from "@/store/useStore";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import type { PendingRow } from "@/types";
 
 export function useSearchResults() {
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
-	const rowData = useAppStore((state) => state.rowData); // Main Sheet
-	const ordersRowData = useAppStore((state) => state.ordersRowData); // Orders
-	const bookingRowData = useAppStore((state) => state.bookingRowData); // Booking
-	const callRowData = useAppStore((state) => state.callRowData); // Call List
-	const archiveRowData = useAppStore((state) => state.archiveRowData); // Archive
+
+	const { data: rowData = [] } = useOrdersQuery("main");
+	const { data: ordersRowData = [] } = useOrdersQuery("orders");
+	const { data: bookingRowData = [] } = useOrdersQuery("booking");
+	const { data: callRowData = [] } = useOrdersQuery("call");
+	const { data: archiveRowData = [] } = useOrdersQuery("archive");
 
 	// Aggregate Data
 	const searchResults = useMemo(() => {

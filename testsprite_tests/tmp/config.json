@@ -10,7 +10,8 @@
     "testIds": [],
     "additionalInstruction": "",
     "envs": {
-      "API_KEY": "sk-user-R7vAlskxMk964DliBYYTjSG0nXOnvX9NskPmdXAwiaRAshOANbFWMJXTXq_48mPRjgaxIZcGOA1etghipa4a6kNAsP1IQZB0aU76fezGQ8wbT_Xde3OVSTKnLRdyu86A4t0"
+      "API_KEY": "sk-user-DaO33VsPhOBLH1viXzO-h2R0oJqT52R59bwFwXk5L--GgWFGTFbBdkFI1b6I8A0Fy3G6ZpxC61wLM7SVll_eQjIwf9W-BSEtuNtnlhX1DJ6bbyjn4Qi94SqWa8jFxrNCv1c"
     }
-  }
+  },
+  "proxy": "http://5e8c5b39-eebb-4411-96fe-4055bad2bf53:35wUy7wt91sYqMNeJLuskrc669bzyFSZ@tun.testsprite.com:8080"
 }

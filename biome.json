@@ -12,7 +12,7 @@
 		"enabled": true,
 		"indentStyle": "tab",
 		"formatWithErrors": true
-	},
+	}, 
 	"css": {
 		"parser": {
 			"allowWrongLineComments": true,
