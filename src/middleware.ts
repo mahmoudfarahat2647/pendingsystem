@@ -53,7 +53,7 @@ export function middleware(request: NextRequest) {
     }
 
     // Identify the client (IP address)
-    const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown";
+    const ip = (request as any).ip || request.headers.get("x-forwarded-for") || "unknown";
     const path = request.nextUrl.pathname;
 
     // Determine which config to use
