@@ -116,16 +116,18 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 
 					{/* Column 3: Warranty & Part State */}
 					<div className="space-y-1">
-						<div className="flex items-baseline gap-2">
-							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
-								warranty :
-							</span>
-							<span
-								className={`text-sm font-bold tracking-wide truncate ${remainTime === "Expired" ? "text-red-500 drop-shadow-sm" : "text-green-400 drop-shadow-sm"}`}
-							>
-								{remainTime}
-							</span>
-						</div>
+						{repairSystem !== "ضمان" && (
+							<div className="flex items-baseline gap-2">
+								<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
+									warranty :
+								</span>
+								<span
+									className={`text-sm font-bold tracking-wide truncate ${remainTime === "Expired" ? "text-red-500 drop-shadow-sm" : "text-green-400 drop-shadow-sm"}`}
+								>
+									{remainTime}
+								</span>
+							</div>
+						)}
 						<div className="flex items-baseline gap-2">
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
 								system :
@@ -160,6 +162,30 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 						</div>
 					</div>
 				</div>
+
+				{/* Footer: Warranty Status (when Repair System is "ضمان") */}
+				{repairSystem === "ضمان" && (
+					<div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between">
+						<div className="flex items-center gap-2">
+							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-black">
+								Warranty Status :
+							</span>
+							<span
+								className={cn(
+									"px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-inner",
+									remainTime === "Expired"
+										? "bg-red-500/10 border-red-500/20 text-red-500"
+										: "bg-green-500/10 border-green-500/20 text-green-400",
+								)}
+							>
+								{remainTime}
+							</span>
+						</div>
+						<div className="text-[8px] text-gray-600 font-bold uppercase tracking-widest animate-pulse">
+							[ Warranty Secured ]
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);

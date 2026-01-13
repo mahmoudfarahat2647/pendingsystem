@@ -115,14 +115,14 @@ export const OrderFormModal = ({
 			if (isEditMode && selectedRows.length > 0) {
 				const first = selectedRows[0];
 				setFormData({
-					customerName: first.customerName,
-					vin: first.vin,
-					mobile: first.mobile,
-					cntrRdg: first.cntrRdg.toString(),
-					model: first.model,
-					repairSystem: first.repairSystem,
-					startWarranty: first.startWarranty,
-					requester: first.requester,
+					customerName: first.customerName || "",
+					vin: first.vin || "",
+					mobile: first.mobile || "",
+					cntrRdg: first.cntrRdg !== null && first.cntrRdg !== undefined ? String(first.cntrRdg) : "",
+					model: first.model || "",
+					repairSystem: first.repairSystem || "Mechanical",
+					startWarranty: first.startWarranty || new Date().toISOString().split("T")[0],
+					requester: first.requester || "",
 					sabNumber: first.sabNumber || "",
 					acceptedBy: first.acceptedBy || "",
 					company: first.company || "Renault",
@@ -130,8 +130,8 @@ export const OrderFormModal = ({
 
 				const initialParts = selectedRows.map((row) => ({
 					id: generateId(),
-					partNumber: row.partNumber,
-					description: row.description,
+					partNumber: row.partNumber || "",
+					description: row.description || "",
 					rowId: row.id,
 				}));
 				setParts(initialParts);
@@ -444,57 +444,59 @@ export const OrderFormModal = ({
 										exit={{ opacity: 0 }}
 										className="space-y-3"
 									>
-										<div className="space-y-1 group">
-											<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
-												Customer
-											</Label>
-											<Input
-												placeholder="Full Name"
-												value={formData.customerName}
-												onChange={(e) =>
-													setFormData({
-														...formData,
-														customerName: e.target.value,
-													})
-												}
-												className={cn(
-													"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
-													errors.customerName && "border-red-500/50 focus:ring-red-500/20",
-													isEditMode
-														? "premium-glow-amber"
-														: "premium-glow-indigo",
-												)}
-											/>
-											{errors.customerName && (
-												<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
-													{errors.customerName}
-												</p>
-											)}
-										</div>
-										<div className="space-y-1 group">
-											<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
-												Company
-											</Label>
-											<div className="relative">
-												<select
-													value={formData.company}
+										<div className="grid grid-cols-10 gap-3">
+											<div className="col-span-7 space-y-1 group">
+												<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
+													Customer
+												</Label>
+												<Input
+													placeholder="Full Name"
+													value={formData.customerName}
 													onChange={(e) =>
 														setFormData({
 															...formData,
-															company: e.target.value,
+															customerName: e.target.value,
 														})
 													}
 													className={cn(
-														"w-full bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all appearance-none outline-none focus:ring-0",
+														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+														errors.customerName && "border-red-500/50 focus:ring-red-500/20",
 														isEditMode
-															? "premium-glow-amber text-amber-500"
-															: "premium-glow-indigo text-indigo-400 font-bold",
+															? "premium-glow-amber"
+															: "premium-glow-indigo",
 													)}
-												>
-													<option value="Renault">Renault</option>
-													<option value="Zeekr">Zeekr</option>
-												</select>
-												<ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500 pointer-events-none" />
+												/>
+												{errors.customerName && (
+													<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
+														{errors.customerName}
+													</p>
+												)}
+											</div>
+											<div className="col-span-3 space-y-1 group">
+												<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
+													Company
+												</Label>
+												<div className="relative">
+													<select
+														value={formData.company}
+														onChange={(e) =>
+															setFormData({
+																...formData,
+																company: e.target.value,
+															})
+														}
+														className={cn(
+															"w-full bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all appearance-none outline-none focus:ring-0",
+															isEditMode
+																? "premium-glow-amber text-amber-500"
+																: "premium-glow-indigo text-indigo-400 font-bold",
+														)}
+													>
+														<option value="Renault">Renault</option>
+														<option value="Zeekr">Zeekr</option>
+													</select>
+													<ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500 pointer-events-none" />
+												</div>
 											</div>
 										</div>
 										<div className="grid grid-cols-10 gap-3">
@@ -714,46 +716,7 @@ export const OrderFormModal = ({
 																)}
 															/>
 														</div>
-														<div className="space-y-1">
-															<Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">
-																Warranty Status
-															</Label>
-															<div className="flex items-center gap-2 h-9">
-																{isHighMileage ? (
-																	<div
-																		className="flex-1 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center overflow-hidden shadow-inner uppercase tracking-tighter cursor-help"
-																		title="Vehicle exceeds 100,000 KM"
-																	>
-																		<span className="text-[10px] text-red-500 font-mono font-black">
-																			HIGH MILEAGE
-																		</span>
-																	</div>
-																) : (
-																	(() => {
-																		const end = calculateEndWarranty(
-																			formData.startWarranty,
-																		);
-																		const remain = calculateRemainingTime(end);
-																		const isExpired = remain === "Expired";
 
-																		return (
-																			<div
-																				className={cn(
-																					"flex-1 h-9 rounded-lg border flex items-center justify-center overflow-hidden shadow-inner uppercase tracking-tighter px-2",
-																					isExpired
-																						? "bg-red-500/10 border-red-500/20 text-red-500"
-																						: "bg-emerald-500/10 border-emerald-500/20 text-emerald-500",
-																				)}
-																			>
-																				<span className="text-[10px] font-mono font-black truncate">
-																					{remain || "--"}
-																				</span>
-																			</div>
-																		);
-																	})()
-																)}
-															</div>
-														</div>
 													</motion.div>
 												)}
 											</AnimatePresence>
@@ -1001,13 +964,57 @@ export const OrderFormModal = ({
 
 				<DialogFooter className="px-6 py-4 bg-white/[0.01] border-t border-white/5">
 					<div className="flex items-center justify-between w-full">
-						<Button
-							variant="ghost"
-							className="h-9 px-4 rounded-lg text-[10px] font-bold text-slate-500 hover:text-white transition-all uppercase tracking-widest"
-							onClick={() => onOpenChange(false)}
-						>
-							Cancel
-						</Button>
+						<div className="flex items-center gap-3">
+							<Button
+								variant="ghost"
+								className="h-9 px-4 rounded-lg text-[10px] font-bold text-slate-500 hover:text-white transition-all uppercase tracking-widest"
+								onClick={() => onOpenChange(false)}
+							>
+								Cancel
+							</Button>
+							<AnimatePresence>
+								{formData.repairSystem === "ضمان" && (
+									<motion.div
+										initial={{ opacity: 0, scale: 0.95 }}
+										animate={{ opacity: 1, scale: 1 }}
+										exit={{ opacity: 0, scale: 0.95 }}
+										className="flex items-center gap-2"
+									>
+										<span className="text-[9px] font-bold text-slate-500 uppercase">Warranty:</span>
+										{isHighMileage ? (
+											<div
+												className="h-8 px-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center overflow-hidden shadow-inner uppercase tracking-tighter cursor-help"
+												title="Vehicle exceeds 100,000 KM"
+											>
+												<span className="text-[10px] text-red-500 font-mono font-black">
+													HIGH MILEAGE
+												</span>
+											</div>
+										) : (
+											(() => {
+												const end = calculateEndWarranty(formData.startWarranty);
+												const remain = calculateRemainingTime(end);
+												const isExpired = remain === "Expired";
+												return (
+													<div
+														className={cn(
+															"h-8 px-3 rounded-lg border flex items-center justify-center overflow-hidden shadow-inner uppercase tracking-tighter",
+															isExpired
+																? "bg-red-500/10 border-red-500/20 text-red-500"
+																: "bg-emerald-500/10 border-emerald-500/20 text-emerald-500",
+														)}
+													>
+														<span className="text-[10px] font-mono font-black truncate">
+															{remain || "--"}
+														</span>
+													</div>
+												);
+											})()
+										)}
+									</motion.div>
+								)}
+							</AnimatePresence>
+						</div>
 						<div className="flex items-center gap-3">
 							<AnimatePresence>
 								{formData.repairSystem === "ضمان" && isHighMileage && (
