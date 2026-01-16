@@ -9,6 +9,7 @@ interface InfoLabelProps {
 
 export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
+	const partStatuses = useAppStore((state) => state.partStatuses);
 	const {
 		customerName = "-",
 		vin = "-",
@@ -27,6 +28,16 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 		? bookingStatuses.find((s) => s.label === bookingStatus)
 		: null;
 	const statsColor = statusDef?.color || "bg-renault-yellow";
+
+	const partStatusDef = data?.partStatus
+		? partStatuses.find((s) => s.label === data.partStatus)
+		: null;
+	// Default to cyan hex if not found, to ensure colorful fallback
+	let partStatsColor = partStatusDef?.color || "#06b6d4";
+	// If it's a tailwind class starting with text-, normalize it for class logic
+	if (!partStatsColor.startsWith("#") && partStatsColor.startsWith("text-")) {
+		partStatsColor = partStatsColor.replace("text-", "bg-");
+	}
 
 	const _bgOpacity = statsColor.includes("/") ? "" : "/10";
 	const _borderOpacity = statsColor.includes("/") ? "" : "/20";
@@ -141,21 +152,28 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								part state :
 							</span>
 							{data?.partStatus ? (
-								<div className="flex items-center gap-1.5 group/state">
-									<div
-										className={cn(
-											"w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.3)]",
-											useAppStore
-												.getState()
-												.partStatuses.find((s) => s.label === data.partStatus)
-												?.color.replace("text-", "bg-")
-												.split(" ")[0] || "bg-cyan-500",
-										)}
-									/>
-									<span className="text-[11px] font-bold text-gray-100 tracking-wider uppercase group-hover/state:text-cyan-400 transition-colors">
-										{data.partStatus}
-									</span>
-								</div>
+								<span
+									className={cn(
+										"px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+										!partStatsColor.startsWith("#") && !partStatsColor.includes(" ") && [
+											`${partStatsColor.replace("bg-", "border-").split(" ")[0]}/20`,
+											partStatsColor.replace("bg-", "text-").split(" ")[0],
+											partStatsColor.includes("/") ? partStatsColor : `${partStatsColor}/10`,
+										],
+										partStatsColor.includes(" ") && partStatsColor
+									)}
+									style={
+										partStatsColor.startsWith("#")
+											? {
+												backgroundColor: `${partStatsColor}1A`, // 10% opacity
+												borderColor: `${partStatsColor}33`,     // 20% opacity
+												color: partStatsColor,
+											}
+											: undefined
+									}
+								>
+									{data.partStatus}
+								</span>
 							) : (
 								<span className="text-xs text-gray-600 italic">No Status</span>
 							)}
