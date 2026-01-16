@@ -69,8 +69,17 @@ export const SearchResultsView = () => {
 		updates: Partial<PendingRow>,
 		stage?: string,
 	) => {
-		const mappedStage = (stage?.toLowerCase().replace(" ", "-") || "main") as any;
-		saveOrderMutation.mutate({ id, updates, stage: mappedStage });
+		let mappedStage = (stage?.toLowerCase() || "main");
+		if (mappedStage === "main sheet") mappedStage = "main";
+
+		// Ensure strictly valid stage
+		const validStages = ["orders", "main", "call", "booking", "archive"];
+		if (!validStages.includes(mappedStage)) {
+			console.error(`Invalid stage detected: ${mappedStage}, defaulting to 'main'`);
+			mappedStage = "main";
+		}
+
+		return saveOrderMutation.mutateAsync({ id, updates, stage: mappedStage as any });
 	}, [saveOrderMutation]);
 
 	// Aggregate Data - Memoized for performance
@@ -171,9 +180,13 @@ export const SearchResultsView = () => {
 			const vin = event.data.vin;
 			const sourceType = event.data.sourceType;
 
-			handleUpdateOrder(event.data.id, { partStatus: newStatus }, sourceType);
+			// Await the update to avoid race conditions with bulk move
+			await handleUpdateOrder(event.data.id, { partStatus: newStatus }, sourceType);
 
-			if (newStatus === "Arrived" && vin) {
+			// check status case-insensitively or as provided in labels
+			const isArrived = newStatus?.toLowerCase() === "arrived";
+
+			if (isArrived && vin) {
 				let relevantParts: PendingRow[] = [];
 				if (sourceType === "Main Sheet") {
 					relevantParts = rowData.filter((r) => r.vin === vin);
@@ -184,7 +197,7 @@ export const SearchResultsView = () => {
 				if (relevantParts.length > 0) {
 					const allArrived = relevantParts.every((r) => {
 						if (r.id === event.data.id) return true;
-						return r.partStatus === "Arrived";
+						return r.partStatus?.toLowerCase() === "arrived";
 					});
 
 					if (allArrived) {

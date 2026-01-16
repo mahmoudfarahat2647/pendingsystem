@@ -83,10 +83,15 @@ const [open, setOpen] = useState(false);
 **Features**:
 - Single or batch order entry
 - Part number autocomplete with database-wide description matching
-- VIN validation (17 chars) and auto-model detection
-- **Optimized Layout**: Side-by-side fields for (Customer/Company) and (VIN/Odo KM) to minimize scrolling
-- **Warranty Status Footer**: Real-time warranty calculations (Remaining Time/High Mileage) displayed in modal footer when Repair System is "ضمان"
-- Attachment upload and link support
+- VIN validation (17 chars)
+- **Order Form ([PROTECTED])**:
+  - **Premium Layout**: Side-by-side field grouping for (Customer/Company) and (VIN/Mileage) to eliminate scrolling on standard displays. [CRITICAL UX]
+  - **Dynamic Warranty Display**: Real-time calculation of remaining warranty time or "High Mileage" warning displayed in the modal footer when Repair System is "ضمان". [CRITICAL UX]
+- **Zod Data Validation ([PROTECTED])**:
+  - Centralized schema enforcement for all Supabase data.
+  - Runtime validation in service layer to prevent "water leak" regressions.
+  - Auto-sync for legacy fields via schema transformations.
+- **Bulk Operations**: Attachment upload and link support
 - Real-time form validation with visual mismatch warnings
 
 **Props**:
@@ -115,6 +120,9 @@ interface OrderFormModalProps {
 - Part number: Non-empty, max 20 chars
 - Quantity: Positive integer
 - Notes: Max 500 characters
+
+> [!IMPORTANT]
+> **Maintenance Note**: This component's layout is optimized for high-density usage. Side-by-side field groupings and the warranty footer logic are considered **protected** features.
 
 ---
 

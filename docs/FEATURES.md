@@ -18,9 +18,13 @@
   - Dynamic editing of all order fields.
   - **[PROTECTED] Instant Reactivity**: Action icons (Notes, Reminders) and Statuses update with 0ms perceived latency using optimized cache injection and composite valueGetters.
   - Validation checks for duplicates and name mismatches.
-- **Order Form (UI Optimization)**:
-  - **Premium Layout**: Side-by-side field grouping for (Customer/Company) and (VIN/Mileage) to eliminate scrolling on standard displays.
-  - **Dynamic Warranty Display**: Real-time calculation of remaining warranty time or "High Mileage" warning displayed in the modal footer when Repair System is "ضمان".
+- **Order Form ([PROTECTED])**:
+  - **Premium Layout**: Side-by-side field grouping for (Customer/Company) and (VIN/Mileage) to eliminate scrolling on standard displays. [CRITICAL UX]
+  - **Dynamic Warranty Display**: Real-time calculation of remaining warranty time or "High Mileage" warning displayed in the modal footer when Repair System is "ضمان". [CRITICAL UX]
+- **Zod Data Validation ([PROTECTED])**:
+  - Centralized schema enforcement for all Supabase data.
+  - Runtime validation in service layer to prevent "water leak" regressions.
+  - Auto-sync for legacy fields via schema transformations.
 - **Bulk Operations**:
   - **Bulk Link / Set Path**: Select multiple rows -> Toolbar Link Icon -> Apply path/URL to all.
   - **Commit to Main Sheet**: Validates entries and moves them to the Main Sheet.

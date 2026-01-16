@@ -203,7 +203,8 @@ export const useOrdersPageHandlers = () => {
 					id: row.trackingId || "Unknown",
 					errors: [errorMessages],
 				});
-				// Activate Shared Beast Mode Timer
+				// CRITICAL: BEAST MODE TRIGGER - SYNC WITH MODAL TIMER
+				// Records timestamp to enforce 30s deadline even if modal is closed.
 				triggerBeastMode(row.id, Date.now());
 			}
 		}

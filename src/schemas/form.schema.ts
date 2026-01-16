@@ -15,6 +15,7 @@ export const OrderFormSchema = z.object({
 });
 
 // Beast Mode: All fields mandatory
+// CRITICAL: DO NOT RELAX VALIDATION - Enforces data integrity on Commit
 export const BeastModeSchema = z.object({
     customerName: z.string().min(1, "Customer name is required"),
     vin: z.string().min(1, "VIN is required"),

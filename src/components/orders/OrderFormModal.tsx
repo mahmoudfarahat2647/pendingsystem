@@ -153,6 +153,7 @@ export const OrderFormModal = ({
 				setParts(initialParts);
 				setFormData(initialFormData);
 
+				// CRITICAL: BEAST MODE SYNC - TIMER PERSISTENCE
 				// 1. Check for Active Global Timer (from Commit failure)
 				const triggerTime = beastModeTriggers[first.id];
 				const now = Date.now();
@@ -592,6 +593,8 @@ export const OrderFormModal = ({
 										exit={{ opacity: 0 }}
 										className="space-y-3"
 									>
+										{/* [CRITICAL] Core Identity Layout - Side-by-side (Customer/Company) and (VIN/Odo) 
+										    MUST be preserved to eliminate scrolling on standard displays. */}
 										<div className="grid grid-cols-10 gap-3">
 											<div className="col-span-7 space-y-1 group">
 												<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
@@ -1131,6 +1134,8 @@ export const OrderFormModal = ({
 								Cancel
 							</Button>
 							<AnimatePresence>
+								{/* [CRITICAL] Warranty Status Footer - Real-time calculations for Repair System "ضمان"
+								    This section provides essential visibility for warranty/mileage status. */}
 								{formData.repairSystem === "ضمان" && (
 									<motion.div
 										initial={{ opacity: 0, scale: 0.95 }}

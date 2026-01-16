@@ -260,6 +260,9 @@ export const orderService = {
 			// stage logic is handled by the tab we are in
 		};
 
+		// [CRITICAL] Strict Data Validation Mapping
+		// This ensures all records entering the application state conform to the project's Zod schemas.
+		// Bypassing or loosening these checks risks widespread data corruption and UI crashes.
 		// Safe parse with Zod to validate and normalize data structure
 		// This handles legacy field synchronization via the schema transform
 		const parseResult = PendingRowSchema.safeParse(resultObj);

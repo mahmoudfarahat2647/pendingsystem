@@ -247,6 +247,9 @@ export const createUISlice: StateCreator<
 
 	setIsLocked: (isLocked) => set({ isLocked }),
 
+	// CRITICAL: BEAST MODE SYNC - DO NOT MODIFY WITHOUT REVIEW
+	// This tracks when an order failed validation during commit,
+	// enabling the global 30s timer to persist across modal re-opens.
 	triggerBeastMode: (id, timestamp) => {
 		set((state) => ({
 			beastModeTriggers: {

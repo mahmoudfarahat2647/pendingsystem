@@ -22,6 +22,10 @@ export const ReminderSchema = z.object({
     subject: z.string(),
 }).nullable();
 
+// [CRITICAL] Order Schema - Single Source of Truth
+// These schemas govern data integrity across the entire application.
+// Structural changes require careful impact analysis of Supabase services and UI components.
+
 // Schema for PendingRow based on src/types/index.ts
 // We enforce critical constraints for validation while transforming existing data.
 export const PendingRowSchema = z.object({

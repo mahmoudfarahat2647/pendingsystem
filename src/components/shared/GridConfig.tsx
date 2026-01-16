@@ -68,6 +68,7 @@ export const getBaseColumns = (
 			field: "status",
 			cellRenderer: StatusRenderer,
 			width: 80,
+			editable: false,
 		},
 		{
 			headerName: "R/DATE",
