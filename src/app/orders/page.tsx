@@ -144,6 +144,7 @@ export default function OrdersPage() {
 							<DataGrid
 								rowData={ordersRowData}
 								columnDefs={columns}
+								gridStateKey="orders"
 								onSelectionChange={setSelectedRows}
 								onCellValueChanged={async (params) => {
 									if (

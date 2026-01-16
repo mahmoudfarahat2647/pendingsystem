@@ -270,6 +270,7 @@ export default function ArchivePage() {
 					<DataGrid
 						rowData={archiveRowData}
 						columnDefs={columns}
+						gridStateKey="archive"
 						onSelectionChange={setSelectedRows}
 						onGridReady={(api) => setGridApi(api)}
 						showFloatingFilters={showFilters}

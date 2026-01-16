@@ -6,6 +6,7 @@ import type {
 	StickyNote,
 	TodoItem,
 } from "@/types";
+import type { GridState } from "ag-grid-community";
 
 export interface OrdersState {
 	ordersRowData: PendingRow[];
@@ -130,12 +131,23 @@ export interface HistoryActions {
 	debouncedCommit: (actionName: string) => void;
 }
 
+export interface GridSliceState {
+	gridStates: Record<string, GridState>;
+}
+
+export interface GridSliceActions {
+	saveGridState: (gridKey: string, state: GridState) => void;
+	getGridState: (gridKey: string) => GridState | null;
+	clearGridState: (gridKey: string) => void;
+}
+
 export type StoreState = OrdersState &
 	InventoryState &
 	BookingState &
 	NotificationState &
 	UIState &
 	HistoryState &
+	GridSliceState &
 	ReportSettingsState;
 export type StoreActions = OrdersActions &
 	InventoryActions &
@@ -143,6 +155,7 @@ export type StoreActions = OrdersActions &
 	NotificationActions &
 	UIActions &
 	HistoryActions &
+	GridSliceActions &
 	ReportSettingsActions;
 export type CombinedStore = StoreState & StoreActions;
 

@@ -1,6 +1,7 @@
 import { Status, PartEntry, PendingRow } from "@/schemas/order.schema";
+import type { GridState } from "ag-grid-community";
 
-export type { Status, PartEntry, PendingRow };
+export type { Status, PartEntry, PendingRow, GridState };
 
 export interface AppNotification {
 	id: string;

@@ -338,6 +338,7 @@ export default function CallListPage() {
 					<DataGrid
 						rowData={callRowData}
 						columnDefs={columns}
+						gridStateKey="call-list"
 						onSelectionChange={setSelectedRows}
 						onGridReady={(api) => setGridApi(api)}
 						showFloatingFilters={showFilters}

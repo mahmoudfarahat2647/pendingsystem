@@ -1,11 +1,12 @@
 "use client";
 
-import type { CellValueChangedEvent, ColDef, GridApi } from "ag-grid-community";
+import type { CellValueChangedEvent, ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-import { memo, useEffect, useId, useMemo } from "react";
+import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
 
 import { gridTheme } from "@/lib/ag-grid-setup";
 import { useAppStore } from "@/store/useStore";
+import type { GridState } from "@/types";
 import { defaultColDef, defaultGridOptions } from "./config/defaultOptions";
 import { useGridCallbacks } from "./hooks/useGridCallbacks";
 import { useGridPerformance } from "./hooks/useGridPerformance";
@@ -24,6 +25,7 @@ export interface DataGridProps<T extends { id?: string; vin?: string }> {
 	loading?: boolean;
 	height?: string | number;
 	showFloatingFilters?: boolean;
+	gridStateKey?: string;
 }
 
 function DataGridInner<T extends { id?: string; vin?: string }>({
@@ -39,6 +41,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	loading = false,
 	height = "100%",
 	showFloatingFilters = false,
+	gridStateKey,
 }: DataGridProps<T>) {
 	const gridId = useId();
 
@@ -58,6 +61,52 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 
 	// Performance monitoring
 	useGridPerformance(gridApiRef.current);
+
+	// Grid State Persistence logic
+	const saveGridState = useAppStore((state) => state.saveGridState);
+	const getGridState = useAppStore((state) => state.getGridState);
+	const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+	// Restoration: Get initial state once on mount
+	const initialState = useMemo(() => {
+		if (!gridStateKey) return undefined;
+		const state = getGridState(gridStateKey);
+		return state || undefined;
+	}, [gridStateKey, getGridState]);
+
+	const handleSaveState = useCallback(() => {
+		if (gridStateKey && gridApiRef.current) {
+			const api = gridApiRef.current;
+			if (api.isDestroyed()) return;
+
+			// Clear previous timer
+			if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+
+			// Debounce save to avoid excessive localStorage writes
+			saveTimerRef.current = setTimeout(() => {
+				const state = api.getState();
+				saveGridState(gridStateKey, state);
+				saveTimerRef.current = null;
+			}, 500);
+		}
+	}, [gridStateKey, saveGridState, gridApiRef]);
+
+	// [CRITICAL] PERSISTENCE RESTORATION
+	// Restore saved state when grid is ready
+	const onGridReadyInternal = useCallback(
+		(params: GridReadyEvent) => {
+			// Call external onGridReady if provided
+			handleGridReady(params);
+		},
+		[handleGridReady],
+	);
+
+	// Cleanup timer on unmount
+	useEffect(() => {
+		return () => {
+			if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+		};
+	}, []);
 
 	// Memoized column definitions with readOnly override
 	const memoizedColDefs = useMemo(() => {
@@ -166,12 +215,21 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				rowData={rowData}
 				columnDefs={memoizedColDefs}
 				defaultColDef={memoizedDefaultColDef}
+				initialState={initialState}
 				getRowId={getRowId}
 				// Event handlers
-				onGridReady={handleGridReady}
+				onGridReady={onGridReadyInternal}
 				onFirstDataRendered={handleFirstDataRendered}
 				onCellValueChanged={handleCellValueChanged}
 				onSelectionChanged={handleSelectionChanged}
+				// State Change tracking for persistence
+				onColumnMoved={handleSaveState}
+				onColumnResized={handleSaveState}
+				onColumnVisible={handleSaveState}
+				onColumnPinned={handleSaveState}
+				onSortChanged={handleSaveState}
+				onFilterChanged={handleSaveState}
+				onColumnGroupOpened={handleSaveState}
 				// Default options spread
 				{...defaultGridOptions}
 				// Row Selection

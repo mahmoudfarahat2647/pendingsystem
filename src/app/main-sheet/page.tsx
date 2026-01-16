@@ -245,6 +245,7 @@ export default function MainSheetPage() {
 							<DataGrid
 								rowData={filteredRowData}
 								columnDefs={columns}
+								gridStateKey="main-sheet"
 								onSelectionChange={setSelectedRows}
 								onCellValueChanged={async (params) => {
 									if (

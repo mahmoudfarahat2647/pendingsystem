@@ -389,6 +389,7 @@ export default function BookingPage() {
 					<DataGrid
 						rowData={bookingRowData}
 						columnDefs={columns}
+						gridStateKey="booking"
 						onSelectionChange={setSelectedRows}
 						onGridReady={(api) => setGridApi(api)}
 						showFloatingFilters={showFilters}
