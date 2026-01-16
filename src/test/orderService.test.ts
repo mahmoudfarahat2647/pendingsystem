@@ -72,9 +72,13 @@ describe("orderService", () => {
 			order_number: "T1",
 			customer_name: "John",
 			customer_phone: "123",
-			vin: "V1",
+			vin: "VF1AB000123456789", // 17 characters
 			company: "R",
-			metadata: { partNumber: "P1", description: "D1" },
+			metadata: {
+				partNumber: "P1",
+				description: "D1",
+				model: "Clio", // Required field
+			},
 			order_reminders: [
 				{
 					title: "Call",

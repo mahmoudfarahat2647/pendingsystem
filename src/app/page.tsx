@@ -63,12 +63,14 @@ export default function DashboardPage() {
 			},
 			{
 				title: "CALL QUEUE",
-				value: callRowData.length,
-				subtext: "Waiting List",
+				// اللعب كله هنا: بنجيب الـ vin من كل سطر، والـ Set بتطير المتكرر، والـ size بيدينا العدد النهائي
+				value: new Set(callRowData.map(item => item.vin)).size,
+				subtext: "Unique Vehicles",
 				icon: Phone,
 			},
 		],
-		[rowData.length, ordersRowData.length, callRowData.length],
+		// خد بالك غيرنا الـ dependency array عشان يحس بأي تغيير في البيانات نفسها
+		[rowData, ordersRowData, callRowData]
 	);
 
 	// Memoize calendar data

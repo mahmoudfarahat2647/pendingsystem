@@ -82,11 +82,12 @@ const [open, setOpen] = useState(false);
 
 **Features**:
 - Single or batch order entry
-- Part number autocomplete
-- VIN validation and formatting
-- Quantity and notes input
-- Attachment upload support
-- Real-time form validation
+- Part number autocomplete with database-wide description matching
+- VIN validation (17 chars) and auto-model detection
+- **Optimized Layout**: Side-by-side fields for (Customer/Company) and (VIN/Odo KM) to minimize scrolling
+- **Warranty Status Footer**: Real-time warranty calculations (Remaining Time/High Mileage) displayed in modal footer when Repair System is "ضمان"
+- Attachment upload and link support
+- Real-time form validation with visual mismatch warnings
 
 **Props**:
 ```typescript
@@ -279,11 +280,12 @@ import { DynamicDataGrid } from "@/components/grid";
 ```
 
 **Features**:
-- Multi-select with checkboxes
+- Multi-select with checkboxes (v32.2+ `rowSelection` standard)
 - Column sorting and filtering
 - Inline cell editing
 - Custom cell renderers
 - Status-based row styling
+- **Reactivity Chain**: Protected composite key `valueGetter` for instant icon updates
 - Keyboard shortcuts (Ctrl+A, Delete, etc.)
 
 **Custom Renderers**:

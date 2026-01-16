@@ -34,9 +34,9 @@ describe("inventorySlice", () => {
 			(...a) =>
 				({
 					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
-					...createOrdersSlice(...(a as unknown as any[])),
+					...createOrdersSlice(a[0], a[1], a[2] as any),
 					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
-					...createInventorySlice(...(a as unknown as any[])),
+					...createInventorySlice(a[0], a[1], a[2] as any),
 					addCommit: vi.fn(),
 					debouncedCommit: vi.fn(),
 					bookingRowData: [],

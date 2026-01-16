@@ -34,7 +34,7 @@ describe("ordersSlice", () => {
 			(...a) =>
 				({
 					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
-					...createOrdersSlice(...(a as unknown as any[])),
+					...createOrdersSlice(a[0], a[1], a[2] as any),
 					// Mock other slices that ordersSlice depends on
 					addCommit: vi.fn(),
 					debouncedCommit: vi.fn(),

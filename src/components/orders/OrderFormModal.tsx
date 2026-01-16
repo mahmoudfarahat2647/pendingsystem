@@ -34,6 +34,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { OrderFormSchema } from "@/schemas/form.schema";
 import {
 	calculateEndWarranty,
 	calculateRemainingTime,
@@ -280,32 +281,19 @@ export const OrderFormModal = ({
 	const hasValidationErrors = Object.keys(partValidationWarnings).length > 0;
 
 	const validateForm = () => {
-		const newErrors: Partial<Record<keyof FormData, string>> = {};
-
-		if (!formData.customerName.trim()) {
-			newErrors.customerName = "Customer name is required";
+		const result = OrderFormSchema.safeParse(formData);
+		if (!result.success) {
+			const fieldErrors = result.error.flatten().fieldErrors;
+			const newErrors: Partial<Record<keyof FormData, string>> = {};
+			for (const [key, messages] of Object.entries(fieldErrors)) {
+				// Type assertion needed because Object.entries returns string keys
+				newErrors[key as keyof FormData] = messages?.[0] || "";
+			}
+			setErrors(newErrors);
+			return false;
 		}
-
-		if (!formData.vin.trim()) {
-			newErrors.vin = "VIN is required";
-		} else if (formData.vin.length !== 17) {
-			newErrors.vin = "VIN must be exactly 17 characters";
-		}
-
-		if (!formData.mobile.trim()) {
-			newErrors.mobile = "Mobile number is required";
-		}
-
-		if (!formData.model) {
-			newErrors.model = "Vehicle model is required";
-		}
-
-		if (formData.repairSystem === "ضمان" && isHighMileage) {
-			newErrors.cntrRdg = "Ineligible for Warranty: Vehicle exceeds 100,000 KM";
-		}
-
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
+		setErrors({});
+		return true;
 	};
 
 	const handleLocalSubmit = () => {

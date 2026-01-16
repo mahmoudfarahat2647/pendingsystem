@@ -192,6 +192,16 @@ All modals must use Shadcn `Dialog` (auto focus-trapping)
 
 ---
 
+## 14. TypeScript & Data Integrity Standards
+
+- **No `any` Policy**: The use of `any` is strictly forbidden. Always use precise types or `unknown` if the data shape is uncertain.
+- **Zod Validation**: All data fetched from Supabase or external APIs **MUST** be validated using a Zod schema before reaching the UI or Store.
+- **Type Centralization**: All Zod schemas and their inferred types must be defined in `src/types/index.ts` to serve as the single source of truth.
+- **Legacy Field Sync**: Use Zod's `.transform()` method to ensure legacy fields (like `partNumber` and `description`) are automatically derived and synced from modern structures (like the `parts` array).
+- **Strict Component Props**: Every React component must have an interface or type defined for its props; no implicit `any` is allowed.
+
+---
+
 ## Success Metrics (Monthly)
 
 - ✅ Test coverage: 70%+
@@ -200,4 +210,4 @@ All modals must use Shadcn `Dialog` (auto focus-trapping)
 - ✅ All components < 250 lines
 - ✅ First Load JS: < 200 KB
 
-**Last Updated**: January 3, 2026
+**Last Updated**: January 16, 2026

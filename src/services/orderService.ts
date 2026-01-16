@@ -1,6 +1,7 @@
 import { processBatch } from "@/lib/batchUtils";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { PendingRowSchema } from "@/schemas/order.schema";
 import type { PendingRow } from "@/types";
 
 export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
@@ -247,7 +248,7 @@ export const orderService = {
 			}
 		}
 
-		return {
+		const resultObj = {
 			...(row.metadata || {}),
 			id: row.id,
 			trackingId: row.order_number,
@@ -257,6 +258,39 @@ export const orderService = {
 			company: row.company,
 			reminder: reminder,
 			// stage logic is handled by the tab we are in
-		} as PendingRow;
+		};
+
+		// Safe parse with Zod to validate and normalize data structure
+		// This handles legacy field synchronization via the schema transform
+		const parseResult = PendingRowSchema.safeParse(resultObj);
+
+		if (process.env.NODE_ENV === "development") {
+			if (!parseResult.success) {
+				console.error(
+					`[Strict Validation Failed] Order ID ${row.id}:`,
+					parseResult.error.flatten().fieldErrors,
+				);
+				// In development, catch these early to prevent "water leak" regressions
+				throw new Error(
+					`Data Constraint Violation: ${JSON.stringify(parseResult.error.flatten().fieldErrors)}`,
+				);
+			}
+			return parseResult.data;
+		}
+
+		// Production: Log but fallback to best-effort data to prevent crash
+		if (!parseResult.success) {
+			console.warn(
+				`[Zod Validation Warning] Invalid order data for ID ${row.id}:`,
+				parseResult.error.flatten().fieldErrors,
+			);
+			// Even if validation fails, return raw object cast to PendingRow.
+			// Note: Transforms did NOT run, so legacy fields might be out of sync if validation failed.
+			return resultObj as PendingRow;
+		}
+
+		return parseResult.data;
+
+
 	},
 };
