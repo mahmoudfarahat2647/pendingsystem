@@ -1,6 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 
+// [CRITICAL] PROTECTED FILE - DO NOT MODIFY WITHOUT REVIEW
+// This script handles data backup and email reporting.
+// Logic: Fetch orders -> Generate CSV -> SMTP Email -> Update Settings
+// Maintainer: System Admin
+
 // Configuration from environment variables
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;

@@ -97,6 +97,16 @@
 - **Archive Page**: Read-only view of completed historical data.
 - **Reorder**: Ability to move archived items back to Orders for re-processing.
 
+## System Reports & Backup ([PROTECTED])
+- **Automated Email Reports**:
+  - Scheduled CSV backups sent via SMTP (Weekly/Monthly).
+  - "Send Backup Now" manual trigger.
+- **Security & Integrity**:
+  - Run via GitHub Actions to ensure isolated environment.
+  - Requires Service Role Key for complete data access.
+  - **[CRITICAL]** Logic protected from alteration to ensure data safety.
+
+
 ## UI/UX Standards
 - **Design System**:
   - Dark mode default (`bg-[#0a0a0b]`).

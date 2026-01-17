@@ -1,3 +1,6 @@
+# [CRITICAL] PROTECTED WORKFLOW - BACKUP & REPORTS
+# This workflow runs the `scripts/generate-backup.mjs` in a clean environment.
+# Ensure all secrets (SUPABASE_URL, SMTP_PASS, etc.) are configured in Repo Settings.
 name: Backup & Reports
 
 on:

@@ -195,6 +195,7 @@ export const Sidebar = React.memo(function Sidebar() {
 							<li key={item.href}>
 								<Link
 									href={item.href}
+									suppressHydrationWarning
 									className={cn(
 										"flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
 										isActive

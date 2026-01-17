@@ -1,5 +1,7 @@
 import { successResponse, errorResponse } from "@/lib/apiResponse";
 
+// [CRITICAL] PROTECTED ROUTE - MANUAL BACKUP TRIGGER
+// Coordinates with GitHub Actions to run the protected backup script.
 export async function POST() {
     try {
         const githubToken = process.env.GITHUB_PAT;

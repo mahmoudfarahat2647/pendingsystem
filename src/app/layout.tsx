@@ -29,7 +29,7 @@ export default function RootLayout({
 		<html lang="en" className="dark" suppressHydrationWarning>
 			<body className={inter.className} suppressHydrationWarning>
 				<QueryProvider>
-					<div className="flex h-screen overflow-hidden bg-background">
+					<div className="flex h-screen overflow-hidden bg-background" suppressHydrationWarning>
 						<Sidebar />
 						<div className="flex flex-1 flex-col overflow-hidden">
 							<Header />
