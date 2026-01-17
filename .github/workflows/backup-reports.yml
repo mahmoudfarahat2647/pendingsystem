@@ -2,8 +2,8 @@ name: Backup & Reports
 
 on:
   schedule:
-    # Runs every Monday at 00:00 UTC
-    - cron: '0 0 * * 1'
+    # Runs daily at 00:00 Cairo Time (22:00 UTC)
+    - cron: '0 22 * * *'
   workflow_dispatch:
     # Allows manual triggering from the UI or GitHub Actions tab
 
@@ -27,5 +27,9 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          IS_SCHEDULE_RUN: ${{ github.event_name == 'schedule' }}
         run: node scripts/generate-backup.mjs

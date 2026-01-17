@@ -1,19 +1,54 @@
 import { createClient } from '@supabase/supabase-js';
+import nodemailer from 'nodemailer';
 
 // Configuration from environment variables
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY) {
+// SMTP Configuration
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
     console.error('Missing required environment variables');
     process.exit(1);
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+/**
+ * Helper to get current time in Cairo (UTC+2)
+ */
+function getCairoDate() {
+    const now = new Date();
+    // Use Intl to format the date in Cairo timezone
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Africa/Cairo',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        weekday: 'long',
+    });
+
+    const parts = formatter.formatToParts(now);
+    const dateMap = {};
+    for (const part of parts) {
+        dateMap[part.type] = part.value;
+    }
+
+    return {
+        day: parseInt(dateMap.day),
+        month: parseInt(dateMap.month),
+        year: parseInt(dateMap.year),
+        weekday: dateMap.weekday, // e.g., "Monday"
+    };
+}
+
 async function runBackup() {
-    console.log('Starting backup process...');
+    const isScheduleRun = process.env.IS_SCHEDULE_RUN === 'true';
+    console.log(`Starting backup process (Scheduled: ${isScheduleRun})...`);
 
     try {
         const { data: settings, error: settingsError } = await supabase
@@ -41,15 +76,38 @@ async function runBackup() {
             recipient_count: settings.emails?.length || 0
         });
 
+        // 1. Check if we should proceed
+        if (isScheduleRun) {
+            if (!settings.is_enabled) {
+                console.log('Backup is disabled. Skipping scheduled run.');
+                return;
+            }
+
+            const cairo = getCairoDate();
+            console.log('Current Cairo Time:', cairo);
+
+            let shouldRun = false;
+            if (settings.frequency === 'Weekly') {
+                // Run only on Mondays
+                shouldRun = cairo.weekday === 'Monday';
+            } else if (settings.frequency === 'Monthly') {
+                // Run only on the 1st of the month
+                shouldRun = cairo.day === 1;
+            } else if (settings.frequency === 'Yearly') {
+                // Run only on January 1st
+                shouldRun = cairo.day === 1 && cairo.month === 1;
+            }
+
+            if (!shouldRun) {
+                console.log(`Frequency is ${settings.frequency}, but today is ${cairo.weekday}, ${cairo.month}/${cairo.day}. Skipping.`);
+                return;
+            }
+        }
+
         const recipients = settings?.emails || [];
         if (recipients.length === 0) {
             console.log('Recipients list is empty in settings. Exiting.');
             return;
-        }
-
-        if (!settings.is_enabled) {
-            console.log('Backup is currently disabled in settings. skipping.');
-            // We proceed if triggered manually, but good to log
         }
 
         // 2. Fetch All Orders
@@ -72,49 +130,43 @@ async function runBackup() {
         // 3. Generate CSV
         console.log(`Generating CSV for ${orders.length} orders...`);
         const csvContent = generateCSV(orders);
-        const base64Csv = Buffer.from(csvContent).toString('base64');
 
-        // 4. Send Email via Resend
-        const date = new Date().toISOString().split('T')[0];
-        console.log(`Attempting to send email via Resend to: ${recipients.join(', ')}`);
+        // 4. Send Email via SMTP
+        const dateStr = new Date().toISOString().split('T')[0];
+        console.log(`Attempting to send email via SMTP to: ${recipients.join(', ')}`);
 
-        const resendRes = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${RESEND_API_KEY}`,
+        const transporter = nodemailer.createTransport({
+            host: SMTP_HOST,
+            port: SMTP_PORT,
+            secure: SMTP_PORT === 465, // true for 465, false for other ports
+            auth: {
+                user: SMTP_USER,
+                pass: SMTP_PASS,
             },
-            body: JSON.stringify({
-                from: 'onboarding@resend.dev',
-                to: recipients,
-                subject: `[Backup] Renault System - ${date}`,
-                html: `
-          <h1>Automatic Backup Report</h1>
-          <p>This is an automated backup of your Renault System data.</p>
-          <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-          <p><strong>Total Orders:</strong> ${orders.length}</p>
-          <p>Please find the attached CSV file.</p>
-        `,
-                attachments: [
-                    {
-                        filename: `backup_${date}.csv`,
-                        content: base64Csv,
-                    },
-                ],
-            }),
         });
 
-        if (!resendRes.ok) {
-            const errorText = await resendRes.text();
-            console.error('Resend API call failed:');
-            console.error('Status:', resendRes.status);
-            console.error('Response:', errorText);
-            throw new Error(`Resend API error (${resendRes.status}): ${errorText}`);
-        }
+        const mailOptions = {
+            from: `"Renault System" <${SMTP_USER}>`,
+            to: recipients.join(', '),
+            subject: `[Backup] Renault System - ${dateStr}`,
+            html: `
+          <h1>Automatic Backup Report</h1>
+          <p>This is an automated backup of your Renault System data.</p>
+          <p><strong>Date (Cairo):</strong> ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Cairo' })}</p>
+          <p><strong>Total Orders:</strong> ${orders.length}</p>
+          <p><strong>Frequency:</strong> ${isScheduleRun ? settings.frequency : 'Manual Trigger'}</p>
+          <p>Please find the attached CSV file.</p>
+        `,
+            attachments: [
+                {
+                    filename: `backup_${dateStr}.csv`,
+                    content: csvContent, // nodemailer handles string content directly
+                },
+            ],
+        };
 
-        const resendData = await resendRes.json();
-        console.log('Resend API response:', resendData);
-        console.log('Backup email sent successfully!');
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully:', info.messageId);
 
         // 5. Update last_sent_at
         console.log('Updating last_sent_at in database...');
