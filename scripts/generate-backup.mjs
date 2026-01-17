@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 
 // Configuration from environment variables
-const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // SMTP Configuration
@@ -11,8 +11,15 @@ const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    console.error('Missing required environment variables');
+const missingVars = [];
+if (!SUPABASE_URL) missingVars.push('SUPABASE_URL');
+if (!SUPABASE_SERVICE_ROLE_KEY) missingVars.push('SUPABASE_SERVICE_ROLE_KEY');
+if (!SMTP_HOST) missingVars.push('SMTP_HOST');
+if (!SMTP_USER) missingVars.push('SMTP_USER');
+if (!SMTP_PASS) missingVars.push('SMTP_PASS');
+
+if (missingVars.length > 0) {
+    console.error(`Missing required environment variables: ${missingVars.join(', ')}`);
     process.exit(1);
 }
 
