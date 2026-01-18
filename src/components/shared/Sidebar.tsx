@@ -63,6 +63,7 @@ export const Sidebar = React.memo(function Sidebar() {
 
 	return (
 		<aside
+			suppressHydrationWarning
 			className={cn(
 				"flex flex-col border-r transition-all duration-300 z-50",
 				"bg-black/80 backdrop-blur-md border-white/10",
@@ -187,12 +188,12 @@ export const Sidebar = React.memo(function Sidebar() {
 			</div>
 
 			{/* Navigation */}
-			<nav className="flex-1 py-8 overflow-y-auto">
-				<ul className="space-y-2 px-4">
+			<nav className="flex-1 py-8 overflow-y-auto" suppressHydrationWarning>
+				<ul className="space-y-2 px-4" suppressHydrationWarning>
 					{navItems.map((item) => {
 						const isActive = pathname === item.href;
 						return (
-							<li key={item.href}>
+							<li key={item.href} suppressHydrationWarning>
 								<Link
 									href={item.href}
 									suppressHydrationWarning
@@ -217,7 +218,7 @@ export const Sidebar = React.memo(function Sidebar() {
 
 									{/* Label */}
 									{!isCollapsed && (
-										<span className="relative z-10 text-sm tracking-wide">
+										<span className="relative z-10 text-sm tracking-wide" suppressHydrationWarning>
 											{item.label}
 										</span>
 									)}
@@ -257,7 +258,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			</button>
 
 			{/* User Profile */}
-			<div className="border-t border-white/10 p-4 bg-black/20">
+			<div className="border-t border-white/10 p-4 bg-black/20" suppressHydrationWarning>
 				<button
 					type="button"
 					suppressHydrationWarning
@@ -267,8 +268,14 @@ export const Sidebar = React.memo(function Sidebar() {
 						isCollapsed && "justify-center",
 					)}
 				>
-					<div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center relative flex-shrink-0">
-						<div className="absolute inset-0 rounded-full bg-renault-yellow/10 animate-pulse"></div>
+					<div
+						suppressHydrationWarning
+						className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center relative flex-shrink-0"
+					>
+						<div
+							suppressHydrationWarning
+							className="absolute inset-0 rounded-full bg-renault-yellow/10 animate-pulse"
+						></div>
 						<span className="text-xs font-bold text-renault-yellow">MF</span>
 						<div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full"></div>
 					</div>

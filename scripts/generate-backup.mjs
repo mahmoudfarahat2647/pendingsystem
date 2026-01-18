@@ -124,9 +124,23 @@ async function runBackup() {
 
         // 2. Fetch All Orders
         console.log('Fetching orders from database...');
-        const { data: orders, error: ordersError } = await supabase
+        const { data: rawOrders, error: ordersError } = await supabase
             .from('orders')
-            .select('*')
+            .select(`
+                id,
+                stage,
+                order_number,
+                customer_name,
+                customer_email,
+                customer_phone,
+                vin,
+                company,
+                status,
+                metadata,
+                created_at,
+                updated_at,
+                order_reminders (*)
+            `)
             .order('created_at', { ascending: false });
 
         if (ordersError) {
@@ -134,14 +148,152 @@ async function runBackup() {
             throw ordersError;
         }
 
-        if (!orders || orders.length === 0) {
+        if (!rawOrders || rawOrders.length === 0) {
             console.log('No orders found in database to backup.');
             return;
         }
 
-        // 3. Generate CSV
-        console.log(`Generating CSV for ${orders.length} orders...`);
-        const csvContent = generateCSV(orders);
+        // 3. Map and Generate CSV
+        console.log(`Processing ${rawOrders.length} orders...`);
+
+        const stageMap = {
+            orders: "Orders",
+            main: "Main Sheet",
+            booking: "Booking",
+            call: "Call List",
+            archive: "Archive",
+        };
+
+        const mappedData = [];
+
+        for (const row of rawOrders) {
+            // 1. Find the primary reminder (latest uncompleted or just latest)
+            let reminderDate = "";
+            let reminderTime = "";
+            let reminderSubject = "";
+            let reminderStatus = "None";
+
+            if (row.order_reminders && Array.isArray(row.order_reminders) && row.order_reminders.length > 0) {
+                // Prioritize uncompleted reminders
+                const active = row.order_reminders.find(r => !r.is_completed);
+                const primary = active || row.order_reminders[0]; // Fallback to first if all completed
+
+                if (primary && primary.remind_at) {
+                    const d = new Date(primary.remind_at);
+                    reminderDate = d.toISOString().split('T')[0];
+                    reminderTime = d.toTimeString().slice(0, 5);
+                    reminderSubject = primary.title || "";
+                    reminderStatus = primary.is_completed ? "Completed" : "Pending";
+                }
+            }
+
+            // 2. Extract metadata and parts
+            const meta = row.metadata || {};
+            const parts = (meta.parts && Array.isArray(meta.parts) && meta.parts.length > 0)
+                ? meta.parts
+                : [{ partNumber: meta.partNumber || "", description: meta.description || "" }];
+
+            // 3. Generate One Row Per Part
+            for (const part of parts) {
+                mappedData.push({
+                    // Order Identity
+                    id: row.id || "",
+                    source: stageMap[row.stage] || row.stage || "Unknown",
+                    trackingId: row.order_number || "",
+                    vin: row.vin || "",
+                    status: row.status || "",
+
+                    // Customer Info
+                    customerName: row.customer_name || "",
+                    customerEmail: row.customer_email || "",
+                    customerPhone: row.customer_phone || "",
+                    company: row.company || "",
+
+                    // Part Specific (The core focus of this report)
+                    partNumber: part.partNumber || "",
+                    partDescription: part.description || "",
+                    partStatus: meta.partStatus || "", // Part status usually applies to the whole order in this schema
+
+                    // Vehicle & Logistics
+                    model: meta.model || "",
+                    cntrRdg: meta.cntrRdg || 0,
+                    rDate: meta.rDate || "",
+                    requester: meta.requester || "",
+                    acceptedBy: meta.acceptedBy || "",
+                    sabNumber: meta.sabNumber || "",
+                    repairSystem: meta.repairSystem || "",
+
+                    // Warranty
+                    startWarranty: meta.startWarranty || "",
+                    endWarranty: meta.endWarranty || "",
+                    remainTime: meta.remainTime || "",
+
+                    // Workflow / Booking
+                    bookingDate: meta.bookingDate || "",
+                    bookingStatus: meta.bookingStatus || "",
+
+                    // Notes (Separate Columns)
+                    noteContent: meta.noteContent || "",
+                    actionNote: meta.actionNote || "",
+                    bookingNote: meta.bookingNote || "",
+
+                    // Reminders (Dedicated Columns)
+                    reminderDate,
+                    reminderTime,
+                    reminderSubject,
+                    reminderStatus,
+
+                    // Archive info
+                    archiveReason: meta.archiveReason || "",
+                    archivedAt: meta.archivedAt || "",
+
+                    // System Timestamps
+                    createdAt: row.created_at || "",
+                    updatedAt: row.updated_at || "",
+                });
+            }
+        }
+
+        const headers = [
+            "id",
+            "source",
+            "trackingId",
+            "vin",
+            "status",
+            "customerName",
+            "customerEmail",
+            "customerPhone",
+            "company",
+            "partNumber",
+            "partDescription",
+            "partStatus",
+            "model",
+            "cntrRdg",
+            "rDate",
+            "requester",
+            "acceptedBy",
+            "sabNumber",
+            "repairSystem",
+            "startWarranty",
+            "endWarranty",
+            "remainTime",
+            "bookingDate",
+            "bookingStatus",
+            "noteContent",
+            "actionNote",
+            "bookingNote",
+            "reminderDate",
+            "reminderTime",
+            "reminderSubject",
+            "reminderStatus",
+            "archiveReason",
+            "archivedAt",
+            "createdAt",
+            "updatedAt",
+        ];
+
+        console.log(`Generating CSV for ${mappedData.length} records...`);
+        const csvContent = generateCSV(mappedData, headers);
 
         // 4. Send Email via SMTP
         const dateStr = new Date().toISOString().split('T')[0];
@@ -165,9 +317,9 @@ async function runBackup() {
           <h1>Automatic Backup Report</h1>
           <p>This is an automated backup of your Renault System data.</p>
           <p><strong>Date (Cairo):</strong> ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Cairo' })}</p>
-          <p><strong>Total Orders:</strong> ${orders.length}</p>
+          <p><strong>Total Orders:</strong> ${mappedData.length}</p>
           <p><strong>Frequency:</strong> ${isScheduleRun ? settings.frequency : 'Manual Trigger'}</p>
-          <p>Please find the attached CSV file.</p>
+          <p>Please find the attached CSV file with all system information including notes and reminders.</p>
         `,
             attachments: [
                 {
@@ -200,13 +352,13 @@ async function runBackup() {
     }
 }
 
-function generateCSV(data) {
+function generateCSV(data, headers) {
     if (data.length === 0) return '';
-    const headers = Object.keys(data[0]);
-    const rows = [headers.join(',')];
+    const columnHeaders = headers || Object.keys(data[0]);
+    const rows = [columnHeaders.join(',')];
 
     for (const item of data) {
-        const values = headers.map(header => {
+        const values = columnHeaders.map(header => {
             const val = item[header];
             if (val === null || val === undefined) return '';
             const stringVal = typeof val === 'object' ? JSON.stringify(val) : String(val);
