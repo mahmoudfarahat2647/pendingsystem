@@ -4,7 +4,7 @@ import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { Search as SearchIcon } from "lucide-react";
 import { useMemo, useCallback } from "react";
 import { toast } from "sonner";
-import { PartStatusRenderer } from "@/components/grid/renderers";
+import { PartStatusRenderer, ActionCellRenderer } from "@/components/grid/renderers";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,8 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import { SearchResultsHeader } from "./search/SearchResultsHeader";
 import { SearchResultsGrid } from "./search/SearchResultsGrid";
+import { useRowModals } from "@/hooks/useRowModals";
+import { RowModals } from "./RowModals";
 
 // Custom renderer for Source Tag
 const SourceRenderer = (params: ICellRendererParams) => {
@@ -82,6 +84,19 @@ export const SearchResultsView = () => {
 		return saveOrderMutation.mutateAsync({ id, updates, stage: mappedStage as any });
 	}, [saveOrderMutation]);
 
+	const {
+		activeModal,
+		currentRow,
+		handleNoteClick,
+		handleReminderClick,
+		handleAttachClick,
+		closeModal,
+		saveNote,
+		saveReminder,
+		saveAttachment,
+		saveArchive,
+	} = useRowModals(handleUpdateOrder);
+
 	// Aggregate Data - Memoized for performance
 	const searchResults = useMemo(() => {
 		if (!searchTerm || searchTerm.trim().length === 0) return [];
@@ -131,7 +146,37 @@ export const SearchResultsView = () => {
 	}, [searchTerm, rowData, ordersRowData, bookingRowData, callRowData, archiveRowData]);
 
 	const columns = useMemo((): ColDef<PendingRow>[] => {
-		const baseCols = getBaseColumns();
+		const baseCols = getBaseColumns(
+			handleNoteClick,
+			handleReminderClick,
+			handleAttachClick,
+		);
+
+		// Find and configure the actions column
+		const actionsCol = baseCols.find((col) => col.colId === "actions");
+		const configuredActionsCol: ColDef<PendingRow> = actionsCol
+			? {
+				...actionsCol,
+				checkboxSelection: true,
+				headerCheckboxSelection: false, // User requested removal of header checkbox
+				pinned: "left", // User requested first position
+			}
+			: {
+				// Fallback if not found (should typically be found)
+				headerName: "ACTIONS",
+				field: "id", // Fallback field
+				colId: "actions",
+				pinned: "left",
+				checkboxSelection: true,
+				headerCheckboxSelection: false,
+				width: 100
+			};
+
+		// Filter out 'selection' and 'actions' from baseCols as we handle them differently
+		const remainingBaseCols = baseCols.filter(
+			(col) => col.colId !== "selection" && col.colId !== "actions",
+		);
+
 		return [
 			{
 				headerName: "SOURCE",
@@ -141,7 +186,8 @@ export const SearchResultsView = () => {
 				pinned: "left",
 				filter: true,
 			},
-			...baseCols,
+			configuredActionsCol,
+			...remainingBaseCols,
 			{
 				headerName: "PART STATUS",
 				field: "partStatus",
@@ -160,7 +206,7 @@ export const SearchResultsView = () => {
 				cellClass: "flex items-center justify-center",
 			},
 		];
-	}, [partStatuses]);
+	}, [partStatuses, handleNoteClick, handleReminderClick, handleAttachClick]);
 
 	const counts = useMemo(() => {
 		return searchResults.reduce((acc, curr) => {
@@ -253,6 +299,15 @@ export const SearchResultsView = () => {
 					</div>
 				)}
 			</div>
+			<RowModals
+				activeModal={activeModal}
+				currentRow={currentRow}
+				onClose={closeModal}
+				onSaveNote={saveNote}
+				onSaveReminder={saveReminder}
+				onSaveAttachment={saveAttachment}
+				onSaveArchive={saveArchive}
+			/>
 		</div>
 	);
 };

@@ -56,16 +56,13 @@ export function SchedulingCard({ isLocked }: SchedulingCardProps) {
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="frequency">Frequency</Label>
-                    <FrequencyPicker
-                        value={reportSettings?.frequency || "Weekly"}
-                        onChange={(value) =>
-                            updateReportSettings({ frequency: value })
-                        }
-                        disabled={isLoading || !reportSettings?.is_enabled || isLocked}
-                    />
-                </div>
+                <FrequencyPicker
+                    value={reportSettings?.frequency || "Weekly"}
+                    onChange={(value) =>
+                        updateReportSettings({ frequency: value })
+                    }
+                    disabled={isLoading || !reportSettings?.is_enabled || isLocked}
+                />
             </CardContent>
         </Card>
     );

@@ -35,6 +35,8 @@ export const SearchResultsGrid = ({
                     rowSelection={{
                         mode: "multiRow",
                         enableClickSelection: true,
+                        checkboxes: false,
+                        headerCheckbox: false,
                     }}
                     suppressCellFocus={true}
                     onCellValueChanged={onCellValueChanged}
