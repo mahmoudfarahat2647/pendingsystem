@@ -13,6 +13,7 @@ Common issues and solutions for the Renault Pending System.
 5. [Data Import Issues](#data-import-issues)
 6. [Browser & Environment Issues](#browser--environment-issues)
 7. [Build & Deployment Issues](#build--deployment-issues)
+8. [Backup & Reporting Issues](#backup--reporting-issues)
 
 ---
 
@@ -651,5 +652,36 @@ copy(JSON.stringify(useAppStore.getState()))
 
 ---
 
-**Last Updated**: December 30, 2025
+## Backup & Reporting Issues
+
+### Scheduled Backup Not Received
+
+**Symptoms**: Automatic backup email didn't arrive at the expected time.
+
+**Solutions**:
+
+1. **Verify "Automatic Backups" is enabled**
+   - Check toggle in Settings → Backup & Reports.
+
+2. **Check Frequency Selection**
+   - **Weekly**: Ensure your selected day (e.g., "Wed") matches the current day.
+   - **Daily**: Runs every day.
+   - **Monthly**: Runs on the 1st of the month.
+   - **Yearly**: Runs on January 1st.
+
+3. **Verify Time Schedule**
+   - The system is configured to send backups at **10:00 AM Cairo Time (08:00 UTC)**. 
+   - Check if the GitHub Action run was triggered at this time.
+
+4. **Review GitHub Actions Logs**
+   - Go to the repository's "Actions" tab.
+   - Look for the "Backup & Reports" workflow run.
+   - If it shows "Skipping", check the logs to see if the frequency didn't match the current day.
+
+5. **Check Recipients List**
+   - Ensure your email is correctly listed in the "Recipients" card in Settings.
+
+---
+
+**Last Updated**: January 19, 2026
 **Still have issues?** Check [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines

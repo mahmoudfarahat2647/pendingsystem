@@ -99,7 +99,9 @@
 
 ## System Reports & Backup ([PROTECTED])
 - **Automated Email Reports**:
-  - Scheduled CSV backups sent via SMTP (Weekly/Monthly).
+  - Scheduled CSV backups sent via SMTP (Daily/Weekly/Monthly/Yearly).
+  - Supports user-defined day selection for Weekly reports.
+  - Emails sent at 10:00 AM Cairo Time (08:00 UTC).
   - "Send Backup Now" manual trigger.
 - **Security & Integrity**:
   - Run via GitHub Actions to ensure isolated environment.

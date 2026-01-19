@@ -98,20 +98,52 @@ async function runBackup() {
             const cairo = getCairoDate();
             console.log('Current Cairo Time:', cairo);
 
+            // [CRITICAL] Frequency Parsing Logic
+            // Format: "Daily", "Weekly-DayIndex" (e.g., "Weekly-3" for Wednesday),
+            // "Weekly" (legacy, defaults to Monday), "Monthly", "Yearly"
             let shouldRun = false;
-            if (settings.frequency === 'Weekly') {
-                // Run only on Mondays
+            const frequency = settings.frequency || 'Weekly';
+
+            // Day name mapping for validation
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+            if (frequency === 'Daily') {
+                // Run every day
+                shouldRun = true;
+                console.log('Daily schedule: Running backup.');
+            } else if (frequency.startsWith('Weekly-')) {
+                // Extract day index: "Weekly-3" => 3 (Wednesday)
+                const parts = frequency.split('-');
+                const selectedDayIndex = parseInt(parts[1]);
+
+                // Validation: Check if day index is valid (0-6)
+                if (isNaN(selectedDayIndex) || selectedDayIndex < 0 || selectedDayIndex > 6) {
+                    console.error(`Invalid Weekly format: ${frequency}. Expected "Weekly-0" to "Weekly-6". Skipping.`);
+                    return;
+                }
+
+                const selectedDayName = dayNames[selectedDayIndex];
+                shouldRun = cairo.weekday === selectedDayName;
+                console.log(`Weekly schedule: Selected ${selectedDayName} (index ${selectedDayIndex}), Today is ${cairo.weekday}. Run: ${shouldRun}`);
+            } else if (frequency === 'Weekly') {
+                // Legacy format: Default to Monday for backward compatibility
                 shouldRun = cairo.weekday === 'Monday';
-            } else if (settings.frequency === 'Monthly') {
+                console.log(`Weekly schedule (legacy): Defaulting to Monday. Today is ${cairo.weekday}. Run: ${shouldRun}`);
+            } else if (frequency === 'Monthly') {
                 // Run only on the 1st of the month
                 shouldRun = cairo.day === 1;
-            } else if (settings.frequency === 'Yearly') {
+                console.log(`Monthly schedule: Run on 1st. Today is ${cairo.day}. Run: ${shouldRun}`);
+            } else if (frequency === 'Yearly') {
                 // Run only on January 1st
                 shouldRun = cairo.day === 1 && cairo.month === 1;
+                console.log(`Yearly schedule: Run on Jan 1st. Today is ${cairo.month}/${cairo.day}. Run: ${shouldRun}`);
+            } else {
+                console.error(`Unknown frequency format: ${frequency}. Skipping.`);
+                return;
             }
 
             if (!shouldRun) {
-                console.log(`Frequency is ${settings.frequency}, but today is ${cairo.weekday}, ${cairo.month}/${cairo.day}. Skipping.`);
+                console.log(`Frequency is ${frequency}, but conditions not met. Skipping.`);
                 return;
             }
         }

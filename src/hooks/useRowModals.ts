@@ -11,7 +11,11 @@ export type RowModalType =
 	| null;
 
 export const useRowModals = (
-	onUpdate: (id: string, updates: Partial<PendingRow>) => Promise<unknown> | void,
+	onUpdate: (
+		id: string,
+		updates: Partial<PendingRow>,
+		stage?: string,
+	) => Promise<unknown> | void,
 	onArchive?: (ids: string[], reason: string) => void,
 ) => {
 	const [activeModal, setActiveModal] = useState<RowModalType>(null);
@@ -51,7 +55,7 @@ export const useRowModals = (
 		async (content: string) => {
 			if (currentRow) {
 				try {
-					await onUpdate(currentRow.id, { actionNote: content });
+					await onUpdate(currentRow.id, { actionNote: content }, sourceTag || undefined);
 					// @ts-ignore - Dynamic import might not have toast yet, but it's available in the project
 					const { toast } = await import("sonner");
 					toast.success("Note saved successfully");
@@ -64,7 +68,7 @@ export const useRowModals = (
 				}
 			}
 		},
-		[currentRow, onUpdate, closeModal],
+		[currentRow, onUpdate, closeModal, sourceTag],
 	);
 
 	const saveReminder = useCallback(
@@ -75,7 +79,7 @@ export const useRowModals = (
 				| undefined,
 		) => {
 			if (currentRow) {
-				onUpdate(currentRow.id, { reminder });
+				onUpdate(currentRow.id, { reminder }, sourceTag || undefined);
 				closeModal();
 				// Check for notifications immediately after setting a reminder
 				// This ensures the notification appears if the reminder is already due
@@ -87,7 +91,7 @@ export const useRowModals = (
 				}, 100);
 			}
 		},
-		[currentRow, onUpdate, closeModal],
+		[currentRow, onUpdate, closeModal, sourceTag],
 	);
 
 	const saveAttachment = useCallback(
@@ -96,11 +100,11 @@ export const useRowModals = (
 				onUpdate(currentRow.id, {
 					attachmentPath: path,
 					hasAttachment: !!path,
-				});
+				}, sourceTag || undefined);
 				closeModal();
 			}
 		},
-		[currentRow, onUpdate, closeModal],
+		[currentRow, onUpdate, closeModal, sourceTag],
 	);
 
 	const saveArchive = useCallback(
@@ -123,11 +127,11 @@ export const useRowModals = (
 					archiveReason: archiveReason,
 					archivedAt: new Date().toISOString(),
 					actionNote: combinedNote,
-				});
+				}, sourceTag || undefined);
 				closeModal();
 			}
 		},
-		[currentRow, targetIds, onArchive, onUpdate, closeModal],
+		[currentRow, targetIds, onArchive, onUpdate, closeModal, sourceTag],
 	);
 
 	return {

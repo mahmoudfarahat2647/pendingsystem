@@ -95,6 +95,7 @@ export const SearchResultsView = () => {
 		saveReminder,
 		saveAttachment,
 		saveArchive,
+		sourceTag,
 	} = useRowModals(handleUpdateOrder);
 
 	// Aggregate Data - Memoized for performance
@@ -147,9 +148,9 @@ export const SearchResultsView = () => {
 
 	const columns = useMemo((): ColDef<PendingRow>[] => {
 		const baseCols = getBaseColumns(
-			handleNoteClick,
-			handleReminderClick,
-			handleAttachClick,
+			(row) => handleNoteClick(row, (row as any).sourceType),
+			(row) => handleReminderClick(row),
+			(row) => handleAttachClick(row),
 		);
 
 		// Find and configure the actions column
@@ -307,6 +308,7 @@ export const SearchResultsView = () => {
 				onSaveReminder={saveReminder}
 				onSaveAttachment={saveAttachment}
 				onSaveArchive={saveArchive}
+				sourceTag={sourceTag}
 			/>
 		</div>
 	);
