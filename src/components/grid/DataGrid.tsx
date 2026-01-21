@@ -167,6 +167,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 			checkboxes: false,
 			headerCheckbox: false,
 			enableClickSelection: true,
+			selectAll: "filtered" as const,
 		}),
 		[],
 	);

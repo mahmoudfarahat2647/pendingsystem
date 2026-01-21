@@ -25,6 +25,7 @@ export const defaultGridOptions: GridOptions = {
 		checkboxes: false,
 		headerCheckbox: false,
 		enableClickSelection: true,
+		selectAll: "filtered",
 	},
 
 	// Suppress unnecessary features

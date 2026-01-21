@@ -1,37 +1,90 @@
 ---
 name: vitest-feature-protector
-description: Automatically generates a Vitest unit test template for any new feature or component to protect existing code from being broken.
+description: Generate Vitest unit tests for new features/components to prevent regressions
 ---
 
 # Vitest Feature Protector
 
-This skill helps the agent generate ready-to-use Vitest tests for any new feature or component in your project. It ensures that any new code is properly tested and prevents regressions in existing code.
+Automatically creates Vitest test templates when new features or components are added.
 
 ## When to use this skill
 
-- Use this when a **new feature** is added to the project.
-- Use this when a **component** is created or modified.
-- Use this to **protect existing code** from being accidentally broken.
-- This is helpful when generating tests via AI automatically to keep standards consistent.
+- A new React/Vue component is created
+- A new feature module is added
+- Existing code needs test coverage
+- User explicitly asks to "generate tests" or "create unit tests"
 
 ## How to use it
 
-1. Identify the **new feature or component**.
-2. Call this skill with the **feature name** and **type** (component / logic / function).
-3. The agent will:
-   - Generate a **Vitest template test** based on the feature type.
-   - Include placeholders for rendering, props, state, and edge cases.
-   - Suggest basic unit test scenarios automatically.
-4. Copy the generated test into the appropriate `/tests/` folder:
-   - Components → `/tests/components/`
-   - Features → `/tests/features/`
-5. Run **Vitest** to ensure all tests pass before merging or deploying.
-6. Optionally, if TestSpirit is enabled, the agent can generate additional edge case tests automatically.
+1. **Identify the target**
+   - Get the feature/component name and file path
+   - Determine type: component, utility function, or feature logic
 
-## Conventions
+2. **Generate test template**
+```typescript
+   // For React components
+   import { describe, it, expect } from 'vitest'
+   import { render, screen } from '@testing-library/react'
+   import { ComponentName } from './ComponentName'
 
-- Always start test files with `describe("FeatureName or ComponentName", () => { ... })`.
-- Each test should use `it("should ...", () => { ... })`.
-- Keep templates consistent with existing Vitest + Testing Library style.
-- Place template files under `/tests/templates/` for reuse.
-- Use meaningful test names for clarity.
+   describe('ComponentName', () => {
+     it('should render without errors', () => {
+       render(<ComponentName />)
+       expect(screen.getByRole('...').toBeInTheDocument()
+     })
+     
+     it('should handle props correctly', () => {
+       // TODO: Test props
+     })
+   })
+```
+
+3. **File placement**
+   - Components → `tests/components/ComponentName.test.tsx`
+   - Features → `tests/features/FeatureName.test.ts`
+   - Utils → `tests/utils/UtilName.test.ts`
+
+4. **Follow conventions**
+   - Use `describe()` for grouping
+   - Use `it('should...')` for test cases
+   - Include at least: render test, props test, interaction test
+   - Add TODO comments for edge cases
+
+5. **Remind user to**
+   - Run `npm test` before committing
+   - Check test coverage with `npm run test:coverage`
+
+## Examples
+
+**User request:** "Create a Button component"
+
+**Agent response:**
+```typescript
+// src/components/Button.tsx
+export function Button({ label, onClick }) { ... }
+
+// tests/components/Button.test.tsx
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { Button } from '@/components/Button'
+
+describe('Button', () => {
+  it('should render with label', () => {
+    render(<Button label="Click me" onClick={() => {}} />)
+    expect(screen.getByText('Click me')).toBeInTheDocument()
+  })
+
+  it('should call onClick when clicked', () => {
+    const handleClick = vi.fn()
+    render(<Button label="Click" onClick={handleClick} />)
+    fireEvent.click(screen.getByText('Click'))
+    expect(handleClick).toHaveBeenCalledOnce()
+  })
+})
+```
+
+## Notes
+
+- Don't generate tests for third-party libraries
+- Skip tests if user explicitly says "no tests needed"
+- Prefer Testing Library queries in this order: `getByRole` > `getByLabelText` > `getByText`

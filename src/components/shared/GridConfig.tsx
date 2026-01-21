@@ -23,6 +23,7 @@ export const getBaseColumns = (
 			field: "id",
 			checkboxSelection: true,
 			headerCheckboxSelection: true,
+			headerCheckboxSelectionFilteredOnly: true,
 			width: 50,
 			maxWidth: 50,
 			sortable: false,
