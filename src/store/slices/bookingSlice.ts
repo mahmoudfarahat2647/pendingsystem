@@ -23,6 +23,7 @@ export const createBookingSlice: StateCreator<
 	 * @param bookingStatus - Optional initial booking status.
 	 */
 	sendToBooking: (ids, bookingDate, bookingNote, bookingStatus) => {
+		get().pushUndo();
 		set((state) => {
 			const rowsFromMainSheet = state.rowData.filter((r) => ids.includes(r.id));
 			const rowsFromOrders = state.ordersRowData.filter((r) =>
@@ -63,6 +64,7 @@ export const createBookingSlice: StateCreator<
 	 * @param bookingStatus - The new booking status value.
 	 */
 	updateBookingStatus: (id, bookingStatus) => {
+		get().pushUndo();
 		const updateInArray = (arr: PendingRow[]) =>
 			arr.map((row) => (row.id === id ? { ...row, bookingStatus } : row));
 
@@ -81,6 +83,7 @@ export const createBookingSlice: StateCreator<
 	 * @param status - The status definition object (id, label, color).
 	 */
 	addBookingStatusDef: (status) => {
+		get().pushUndo();
 		set((state) => ({
 			bookingStatuses: [...state.bookingStatuses, status],
 		}));
@@ -92,6 +95,7 @@ export const createBookingSlice: StateCreator<
 	 * @param id - The ID of the status definition to remove.
 	 */
 	updateBookingStatusDef: (id, updates) => {
+		get().pushUndo();
 		const state = get();
 		const statusToUpdate = state.bookingStatuses.find((s) => s.id === id);
 		if (!statusToUpdate) return;
@@ -127,6 +131,7 @@ export const createBookingSlice: StateCreator<
 	},
 
 	removeBookingStatusDef: (id) => {
+		get().pushUndo();
 		set((state) => ({
 			bookingStatuses: state.bookingStatuses.filter((s) => s.id !== id),
 		}));

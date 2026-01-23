@@ -94,6 +94,7 @@ export const createUISlice: StateCreator<
 	},
 
 	addTodo: (text) => {
+		get().pushUndo();
 		set((state) => ({
 			todos: [
 				...state.todos,
@@ -109,6 +110,7 @@ export const createUISlice: StateCreator<
 	},
 
 	toggleTodo: (id) => {
+		get().pushUndo();
 		set((state) => ({
 			todos: state.todos.map((todo) =>
 				todo.id === id ? { ...todo, completed: !todo.completed } : todo,
@@ -118,6 +120,7 @@ export const createUISlice: StateCreator<
 	},
 
 	deleteTodo: (id) => {
+		get().pushUndo();
 		set((state) => ({
 			todos: state.todos.filter((todo) => todo.id !== id),
 		}));
@@ -125,6 +128,7 @@ export const createUISlice: StateCreator<
 	},
 
 	addNote: (content, color) => {
+		get().pushUndo();
 		set((state) => ({
 			notes: [
 				...state.notes,
@@ -140,6 +144,7 @@ export const createUISlice: StateCreator<
 	},
 
 	updateNote: (id, content) => {
+		get().pushUndo();
 		set((state) => ({
 			notes: state.notes.map((note) =>
 				note.id === id ? { ...note, content } : note,
@@ -149,6 +154,7 @@ export const createUISlice: StateCreator<
 	},
 
 	deleteNote: (id) => {
+		get().pushUndo();
 		set((state) => ({
 			notes: state.notes.filter((note) => note.id !== id),
 		}));

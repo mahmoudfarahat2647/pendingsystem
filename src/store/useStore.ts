@@ -10,6 +10,7 @@ import { createOrdersSlice } from "./slices/ordersSlice";
 import { createUISlice } from "./slices/uiSlice";
 import { createGridSlice } from "./slices/gridSlice";
 import { createReportSettingsSlice } from "./slices/reportSettingsSlice";
+import { createUndoRedoSlice } from "./slices/undoRedoSlice";
 import type { CombinedStore } from "./types";
 
 export const useAppStore = create<CombinedStore>()(
@@ -21,6 +22,7 @@ export const useAppStore = create<CombinedStore>()(
 			...createNotificationSlice(...a),
 			...createUISlice(...a),
 			...createHistorySlice(...a),
+			...createUndoRedoSlice(...a),
 			...createGridSlice(...a),
 			...createReportSettingsSlice(...a),
 		}),
@@ -42,9 +44,7 @@ export const useAppStore = create<CombinedStore>()(
 				isLocked: state.isLocked,
 				notes: state.notes,
 				todos: state.todos,
-				undoStack: state.undoStack,
 				commits: state.commits,
-				redos: state.redos,
 				gridStates: state.gridStates,
 			}),
 		},

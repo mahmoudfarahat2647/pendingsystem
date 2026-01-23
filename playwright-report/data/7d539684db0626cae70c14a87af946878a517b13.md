@@ -1,0 +1,411 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - img
+            - generic:
+              - generic: BODY&PAINT
+              - generic: pending system
+      - navigation:
+        - list:
+          - listitem:
+            - link:
+              - /url: /
+              - generic:
+                - img
+              - generic: Dashboard
+          - listitem:
+            - link:
+              - /url: /orders
+              - generic:
+                - img
+              - generic: Orders
+          - listitem:
+            - link:
+              - /url: /main-sheet
+              - generic:
+                - img
+              - generic: Main Sheet
+          - listitem:
+            - link:
+              - /url: /call-list
+              - generic:
+                - img
+              - generic: Call
+          - listitem:
+            - link:
+              - /url: /booking
+              - generic:
+                - img
+              - generic: Booking
+          - listitem:
+            - link:
+              - /url: /archive
+              - generic:
+                - img
+              - generic: Archive
+      - button:
+        - img
+      - generic:
+        - button:
+          - generic:
+            - generic: MF
+          - generic:
+            - paragraph: Mahmoud Farahat
+            - paragraph: System Creator
+    - generic:
+      - banner:
+        - generic:
+          - generic:
+            - img
+            - textbox:
+              - /placeholder: Search system (Cmd+K)...
+            - generic:
+              - generic:
+                - generic: ⌘
+                - text: K
+        - generic:
+          - generic:
+            - button [disabled]:
+              - img
+            - button [disabled]:
+              - img
+            - button:
+              - img
+          - generic:
+            - button:
+              - img
+            - button:
+              - img
+              - text: Sync Local Data to Cloud
+            - button:
+              - img
+            - generic:
+              - generic:
+                - button:
+                  - generic:
+                    - img
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: "name :"
+                    - generic: هشام احمد محمد
+                  - generic:
+                    - generic: "vin :"
+                    - generic: VF1RFB004PR042094
+                  - generic:
+                    - generic: "model :"
+                    - generic: Megane IV
+                  - generic:
+                    - generic: "mobile :"
+                    - generic: "1114444341"
+                - generic:
+                  - generic:
+                    - generic: "part des. :"
+                    - generic: قاعدة علبوة فيوزات خلفية
+                  - generic:
+                    - generic: "part no. :"
+                    - generic: 243824BA1B
+                  - generic:
+                    - generic: "order stats :"
+                    - generic: Add
+                - generic:
+                  - generic:
+                    - generic: "warranty :"
+                  - generic:
+                    - generic: "system :"
+                    - generic: Mechanical
+                  - generic:
+                    - generic: "part state :"
+                    - generic: No Status
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - button:
+                    - img
+                  - button:
+                    - img
+                  - button:
+                    - img
+                  - button:
+                    - img
+                  - button:
+                    - img
+                  - button:
+                    - img
+                  - button:
+                    - img
+                  - button:
+                    - img
+                  - button:
+                    - img
+                  - button:
+                    - img
+                  - generic:
+                    - button:
+                      - img
+                  - button:
+                    - img
+                  - button:
+                    - img
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: "1"
+                        - generic: VIN
+                      - generic:
+                        - generic: "8"
+                        - generic: Lines
+                  - button:
+                    - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: Press SPACE to deselect this row.
+                    - generic:
+                      - treegrid:
+                        - rowgroup:
+                          - row:
+                            - columnheader:
+                              - checkbox [checked=mixed]
+                        - rowgroup:
+                          - row:
+                            - columnheader:
+                              - generic: ACTIONS
+                            - columnheader:
+                              - generic: STATS
+                            - columnheader:
+                              - generic: R/DATE
+                            - columnheader:
+                              - generic: COMPANY
+                            - columnheader:
+                              - generic: CUSTOMER NAME
+                            - columnheader:
+                              - generic: VIN NO/
+                            - columnheader:
+                              - generic: MOBILE
+                            - columnheader:
+                              - generic: CNTR RDG
+                        - rowgroup:
+                          - row [selected]:
+                            - gridcell:
+                              - checkbox [checked]
+                          - row:
+                            - gridcell:
+                              - checkbox
+                          - row:
+                            - gridcell:
+                              - checkbox
+                          - row:
+                            - gridcell:
+                              - checkbox
+                          - row:
+                            - gridcell:
+                              - checkbox
+                          - row:
+                            - gridcell:
+                              - checkbox
+                          - row:
+                            - gridcell:
+                              - checkbox
+                          - row:
+                            - gridcell:
+                              - checkbox
+                        - rowgroup:
+                          - row [selected]:
+                            - gridcell:
+                              - generic:
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                            - gridcell: Reorder
+                            - gridcell: 2026-01-14
+                            - gridcell: Renault
+                            - gridcell: هشام احمد محمد
+                            - gridcell:
+                              - generic:
+                                - generic: VF1RFB004PR042094
+                            - gridcell: "1114444341"
+                            - gridcell: "914"
+                          - row:
+                            - gridcell:
+                              - generic:
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                            - gridcell: Reorder
+                            - gridcell: 2026-01-14
+                            - gridcell: Renault
+                            - gridcell: هشام احمد محمد
+                            - gridcell:
+                              - generic:
+                                - generic: VF1RFB004PR042094
+                            - gridcell: "1114444341"
+                            - gridcell: "914"
+                          - row:
+                            - gridcell:
+                              - generic:
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                            - gridcell: Reorder
+                            - gridcell: 2026-01-14
+                            - gridcell: Renault
+                            - gridcell: هشام احمد محمد
+                            - gridcell:
+                              - generic:
+                                - generic: VF1RFB004PR042094
+                            - gridcell: "1114444341"
+                            - gridcell: "914"
+                          - row:
+                            - gridcell:
+                              - generic:
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                            - gridcell: Reorder
+                            - gridcell: 2026-01-14
+                            - gridcell: Renault
+                            - gridcell: هشام احمد محمد
+                            - gridcell:
+                              - generic:
+                                - generic: VF1RFB004PR042094
+                            - gridcell: "1114444341"
+                            - gridcell: "914"
+                          - row:
+                            - gridcell:
+                              - generic:
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                            - gridcell: Reorder
+                            - gridcell: 2026-01-14
+                            - gridcell: Renault
+                            - gridcell: هشام احمد محمد
+                            - gridcell:
+                              - generic:
+                                - generic: VF1RFB004PR042094
+                            - gridcell: "1114444341"
+                            - gridcell: "914"
+                          - row:
+                            - gridcell:
+                              - generic:
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                            - gridcell: Reorder
+                            - gridcell: 2026-01-14
+                            - gridcell: Renault
+                            - gridcell: هشام احمد محمد
+                            - gridcell:
+                              - generic:
+                                - generic: VF1RFB004PR042094
+                            - gridcell: "1114444341"
+                            - gridcell: "914"
+                          - row:
+                            - gridcell:
+                              - generic:
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                            - gridcell: Reorder
+                            - gridcell: 2026-01-08
+                            - gridcell: Renault
+                            - gridcell: هشام احمد محمد
+                            - gridcell:
+                              - generic:
+                                - generic: VF1RFB004PR042094
+                            - gridcell: "1114444341"
+                            - gridcell: "914"
+                          - row:
+                            - gridcell:
+                              - generic:
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                            - gridcell: Reorder
+                            - gridcell: 2026-01-08
+                            - gridcell: Renault
+                            - gridcell: هشام احمد محمد
+                            - gridcell:
+                              - generic:
+                                - generic: VF1RFB004PR042094
+                            - gridcell: "1114444341"
+                            - gridcell: "914"
+                        - rowgroup
+                        - rowgroup
+                      - generic:
+                        - generic:
+                          - generic: "Page Size:"
+                          - combobox:
+                            - generic: "20"
+                        - generic: 1 to 8 of 8
+                        - button [disabled]
+                        - button [disabled]
+                        - generic: Page 1 of 1
+                        - button [disabled]
+                        - button [disabled]
+  - region "Notifications alt+T"
+  - generic:
+    - generic:
+      - img
+    - button:
+      - img
+  - button "Open Next.js Dev Tools" [ref=e6] [cursor=pointer]:
+    - img [ref=e7]
+  - alert
+  - dialog "Attachments" [ref=e11]:
+    - heading "Attachments" [level=2] [ref=e13]:
+      - img [ref=e14]
+      - text: Attachments
+    - generic [ref=e18]:
+      - button "Link files or folders (Paste file path or URL below)" [active] [ref=e19] [cursor=pointer]:
+        - generic [ref=e20]:
+          - img [ref=e22]
+          - img [ref=e26]
+          - img [ref=e29]
+        - generic [ref=e32]:
+          - heading "Link files or folders" [level=3] [ref=e33]
+          - paragraph [ref=e34]: (Paste file path or URL below)
+      - textbox "C:\\Users\\Documents\\Order_123" [ref=e37]
+    - button "Save & Close" [ref=e39] [cursor=pointer]
+    - button "Close" [ref=e40] [cursor=pointer]:
+      - img [ref=e41]
+      - generic [ref=e44]: Close
+```

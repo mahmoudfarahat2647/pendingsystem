@@ -53,9 +53,7 @@ export const createHistorySlice: StateCreator<
 			);
 
 			return {
-				commits: [...filteredCommits.slice(-49), commit], // Audit Log (Persistent-ish)
-				undoStack: [...state.undoStack, commit], // Session Undo History
-				redos: [],
+				commits: [...filteredCommits.slice(-49), commit], // Audit Log (Persistent)
 			};
 		});
 	},
@@ -82,8 +80,6 @@ export const createHistorySlice: StateCreator<
 				// 2. Update Local State
 				set({
 					...targetCommit.snapshot,
-					redos: [],
-					undoStack: [...state.undoStack, targetCommit],
 					isRestoring: false,
 				});
 
@@ -99,78 +95,13 @@ export const createHistorySlice: StateCreator<
 		}
 	},
 
-	undo: () => {
-		const state = get();
-		if (state.undoStack.length === 0) return;
-
-		// Current state to be pushed to redo stack
-		const currentSnapshot = {
-			rowData: structuredClone(state.rowData),
-			ordersRowData: structuredClone(state.ordersRowData),
-			bookingRowData: structuredClone(state.bookingRowData),
-			callRowData: structuredClone(state.callRowData),
-			archiveRowData: structuredClone(state.archiveRowData),
-			bookingStatuses: structuredClone(state.bookingStatuses),
-		};
-
-		const lastCommit = state.undoStack[state.undoStack.length - 1];
-
-		set({
-			...lastCommit.snapshot,
-			undoStack: state.undoStack.slice(0, -1), // Remove from Session Stack
-			redos: [
-				...state.redos,
-				{
-					id: generateId(),
-					actionName: "Redo",
-					timestamp: new Date().toISOString(),
-					snapshot: currentSnapshot,
-				},
-			],
-			// NOTE: We do NOT touch state.commits (Audit Log)
-		});
-	},
-
-	redo: () => {
-		const state = get();
-		if (state.redos.length === 0) return;
-
-		const currentSnapshot = {
-			rowData: structuredClone(state.rowData),
-			ordersRowData: structuredClone(state.ordersRowData),
-			bookingRowData: structuredClone(state.bookingRowData),
-			callRowData: structuredClone(state.callRowData),
-			archiveRowData: structuredClone(state.archiveRowData),
-			bookingStatuses: structuredClone(state.bookingStatuses),
-		};
-
-		const lastRedo = state.redos[state.redos.length - 1];
-
-		set({
-			...lastRedo.snapshot,
-			redos: state.redos.slice(0, -1),
-			undoStack: [
-				...state.undoStack,
-				{
-					id: generateId(),
-					actionName: "Undo",
-					timestamp: new Date().toISOString(),
-					snapshot: currentSnapshot,
-				},
-			],
-		});
-	},
-
 	clearHistory: () => {
-		set({ commits: [], undoStack: [], redos: [] });
+		set({ commits: [] });
 	},
 
 	commitSave: () => {
 		// Ctrl+S functionality: Checkpoint/Save
 		get().addCommit("Manual Checkpoint (Saved)");
-		set({
-			undoStack: [], // Clear session undo history
-			redos: [], // Clear redo history
-		});
+		get().clearUndoRedo(); // Clear session undo/redo history (intentional)
 	},
 });

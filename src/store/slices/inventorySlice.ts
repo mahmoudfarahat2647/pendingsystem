@@ -17,6 +17,7 @@ export const createInventorySlice: StateCreator<
 	 * @param ids - Array of row IDs to commit.
 	 */
 	commitToMainSheet: (ids) => {
+		get().pushUndo();
 		set((state) => {
 			const ordersToMove = state.ordersRowData.filter((r) =>
 				ids.includes(r.id),
@@ -40,6 +41,7 @@ export const createInventorySlice: StateCreator<
 	 * @param ids - Array of row IDs to send.
 	 */
 	sendToCallList: (ids) => {
+		get().pushUndo();
 		set((state) => {
 			const rowsFromMain = state.rowData.filter((r) => ids.includes(r.id));
 			const rowsFromOrders = state.ordersRowData.filter((r) =>
@@ -68,6 +70,7 @@ export const createInventorySlice: StateCreator<
 	 * @param actionNote - Optional note explaining the archive action.
 	 */
 	sendToArchive: (ids, actionNote) => {
+		get().pushUndo();
 		set((state) => {
 			// Check all possible source lists
 			const bookingRows = state.bookingRowData.filter((r) =>
@@ -119,6 +122,7 @@ export const createInventorySlice: StateCreator<
 	 * @param actionNote - Required note explaining the reorder reason.
 	 */
 	sendToReorder: (ids, actionNote) => {
+		get().pushUndo();
 		set((state) => {
 			// Check all possible source lists
 			const bookingRows = state.bookingRowData.filter((r) =>
@@ -167,6 +171,7 @@ export const createInventorySlice: StateCreator<
 	 * @param partStatus - The new part status value.
 	 */
 	updatePartStatus: (id, partStatus) => {
+		get().pushUndo();
 		const updateInArray = (arr: PendingRow[]) =>
 			arr.map((row) => (row.id === id ? { ...row, partStatus } : row));
 

@@ -28,7 +28,7 @@ export const Header = React.memo(function Header() {
 
 	const _commits = useAppStore((state) => state.commits);
 	const undoStack = useAppStore((state) => state.undoStack);
-	const redos = useAppStore((state) => state.redos);
+	const redoStack = useAppStore((state) => state.redoStack);
 	const undo = useAppStore((state) => state.undo);
 	const redo = useAppStore((state) => state.redo);
 	const commitSave = useAppStore((state) => state.commitSave);
@@ -37,6 +37,16 @@ export const Header = React.memo(function Header() {
 	// Handle keyboard shortcuts
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
+			// Safety guard: don't fire when user is editing
+			const target = e.target as HTMLElement;
+			const isEditing =
+				target.tagName === "INPUT" ||
+				target.tagName === "TEXTAREA" ||
+				target.isContentEditable ||
+				target.closest(".ag-cell-edit-wrapper"); // AG-Grid edit mode
+
+			if (isEditing) return;
+
 			// Cmd/Ctrl + K for search
 			if ((e.metaKey || e.ctrlKey) && e.key === "k") {
 				e.preventDefault();
@@ -47,8 +57,11 @@ export const Header = React.memo(function Header() {
 				e.preventDefault();
 				undo();
 			}
-			// Cmd/Ctrl + Shift + Z for redo
-			if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "z") {
+			// Cmd/Ctrl + Y OR Cmd/Ctrl + Shift + Z for redo
+			if (
+				(e.metaKey || e.ctrlKey) &&
+				(e.key === "y" || (e.shiftKey && e.key === "z"))
+			) {
 				e.preventDefault();
 				redo();
 			}
@@ -161,10 +174,10 @@ export const Header = React.memo(function Header() {
 						type="button"
 						suppressHydrationWarning
 						onClick={redo}
-						disabled={redos.length === 0}
+						disabled={redoStack.length === 0}
 						className={cn(
 							"p-2 rounded-lg transition-all",
-							redos.length > 0
+							redoStack.length > 0
 								? "text-gray-400 hover:text-white hover:bg-white/10"
 								: "text-gray-700 cursor-not-allowed",
 						)}

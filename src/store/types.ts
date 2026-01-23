@@ -117,8 +117,6 @@ export interface UIActions {
 
 export interface HistoryState {
 	commits: CommitLog[];
-	undoStack: CommitLog[];
-	redos: CommitLog[];
 	isRestoring: boolean;
 }
 
@@ -126,11 +124,29 @@ export interface HistoryActions {
 	addCommit: (actionName: string) => void;
 	restoreToCommit: (commitId: string) => Promise<void>;
 	setIsRestoring: (val: boolean) => void;
-	undo: () => void;
-	redo: () => void;
 	clearHistory: () => void;
 	commitSave: () => void;
 	debouncedCommit: (actionName: string) => void;
+}
+
+export interface UndoRedoSnapshot {
+	rowData: PendingRow[];
+	ordersRowData: PendingRow[];
+	bookingRowData: PendingRow[];
+	callRowData: PendingRow[];
+	archiveRowData: PendingRow[];
+}
+
+export interface UndoRedoState {
+	undoStack: UndoRedoSnapshot[];
+	redoStack: UndoRedoSnapshot[];
+}
+
+export interface UndoRedoActions {
+	pushUndo: () => void;
+	undo: () => void;
+	redo: () => void;
+	clearUndoRedo: () => void;
 }
 
 export interface GridSliceState {
@@ -154,6 +170,7 @@ export type StoreState = OrdersState &
 	NotificationState &
 	UIState &
 	HistoryState &
+	UndoRedoState &
 	GridSliceState &
 	ReportSettingsState;
 export type StoreActions = OrdersActions &
@@ -162,6 +179,7 @@ export type StoreActions = OrdersActions &
 	NotificationActions &
 	UIActions &
 	HistoryActions &
+	UndoRedoActions &
 	GridSliceActions &
 	ReportSettingsActions;
 export type CombinedStore = StoreState & StoreActions;
