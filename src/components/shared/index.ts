@@ -1,5 +1,5 @@
 export { ArchiveReasonModal } from "./ArchiveReasonModal";
-export { BookingCalendarModal } from "./BookingCalendarModal";
+
 export { ClientErrorBoundary } from "./ClientErrorBoundary";
 export { CloudSync } from "./CloudSync";
 export { ColorPicker } from "./ColorPicker";

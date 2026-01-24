@@ -79,12 +79,18 @@ export function useBookingCalendar({
 		[filteredBookings],
 	);
 
+	// Group bookings by date, but only keep one representative row per unique VIN (customer)
+	// This ensures the calendar shows customer count, not parts count
 	const bookingsByDateMap = useMemo(() => {
 		const map: Record<string, PendingRow[]> = {};
 		allBookings.forEach((b) => {
 			if (b.bookingDate && isAfter(new Date(b.bookingDate), twoYearsAgo)) {
 				if (!map[b.bookingDate]) map[b.bookingDate] = [];
-				map[b.bookingDate].push(b);
+				// Only add if this VIN is not already in the list for this date
+				const vinExists = map[b.bookingDate].some((existing) => existing.vin === b.vin);
+				if (!vinExists) {
+					map[b.bookingDate].push(b);
+				}
 			}
 		});
 		return map;
