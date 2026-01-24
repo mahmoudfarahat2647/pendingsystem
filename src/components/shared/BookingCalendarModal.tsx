@@ -16,7 +16,6 @@ import { BookingSidebarCustomerList } from "../booking/BookingSidebarCustomerLis
 import { BookingSidebarDetails } from "../booking/BookingSidebarDetails";
 import { BookingSidebarFooter } from "../booking/BookingSidebarFooter";
 import { BookingSidebarHeader } from "../booking/BookingSidebarHeader";
-import { BookingSidebarHistory } from "../booking/BookingSidebarHistory";
 import { useBookingCalendar } from "../booking/hooks/useBookingCalendar";
 
 interface BookingCalendarModalProps {
@@ -103,13 +102,6 @@ export const BookingCalendarModal = ({
 									selectedBookingId={selectedBookingId}
 									setSelectedBookingId={setSelectedBookingId}
 								/>
-								<BookingSidebarHistory
-									activeCustomerHistoryDates={activeCustomerHistoryDates}
-									onHistoryDateClick={(date) => {
-										setCurrentMonth(date);
-										handleDateSelect(date);
-									}}
-								/>
 							</div>
 
 							{/* Column 3: Customer Details & Actions (Right - Wider) */}
@@ -128,6 +120,11 @@ export const BookingCalendarModal = ({
 										activeCustomerBookings={activeCustomerBookings}
 										consolidatedNotes={consolidatedNotes}
 										updateBookingStatus={() => { }}
+										activeCustomerHistoryDates={activeCustomerHistoryDates}
+										onHistoryDateClick={(date) => {
+											setCurrentMonth(date);
+											handleDateSelect(date);
+										}}
 									/>
 
 

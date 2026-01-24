@@ -1,4 +1,5 @@
-import { Car, ChevronRight, MessageSquare, Package } from "lucide-react";
+import { Car, ChevronRight, MessageSquare, Package, History as HistoryIcon } from "lucide-react";
+import { format } from "date-fns";
 import {
 	Popover,
 	PopoverContent,
@@ -13,6 +14,8 @@ interface BookingSidebarDetailsProps {
 	activeCustomerBookings: PendingRow[];
 	consolidatedNotes: string[];
 	updateBookingStatus: (id: string, status: string) => void;
+	activeCustomerHistoryDates: string[];
+	onHistoryDateClick: (date: Date) => void;
 }
 
 export const BookingSidebarDetails = ({
@@ -21,6 +24,8 @@ export const BookingSidebarDetails = ({
 	activeCustomerBookings,
 	consolidatedNotes,
 	updateBookingStatus,
+	activeCustomerHistoryDates,
+	onHistoryDateClick,
 }: BookingSidebarDetailsProps) => {
 	if (!activeBookingRep && selectedRows.length === 0) {
 		return (
@@ -128,6 +133,29 @@ export const BookingSidebarDetails = ({
 							))}
 						</div>
 					</div>
+
+					{activeCustomerHistoryDates.length > 0 && (
+						<div className="flex items-start gap-3 pt-4 border-t border-white/5">
+							<HistoryIcon className="h-4 w-4 mt-0.5 text-gray-600" />
+							<div className="space-y-3 flex-1">
+								<span className="block text-xs font-medium text-gray-500 uppercase">
+									Booking History ({activeCustomerHistoryDates.length})
+								</span>
+								<div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar content-start">
+									{activeCustomerHistoryDates.map((date) => (
+										<button
+											type="button"
+											key={date}
+											onClick={() => onHistoryDateClick(new Date(date))}
+											className="inline-flex items-center px-2 py-1 rounded-md bg-white/5 border border-white/5 text-[10px] font-mono text-gray-400 hover:text-white hover:border-white/20 hover:bg-white/10 transition-colors cursor-pointer"
+										>
+											{format(new Date(date), "MMM d, yyyy")}
+										</button>
+									))}
+								</div>
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

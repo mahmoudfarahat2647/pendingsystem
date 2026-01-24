@@ -5,7 +5,6 @@ import { BookingSidebarCustomerList } from "./BookingSidebarCustomerList";
 import { BookingSidebarDetails } from "./BookingSidebarDetails";
 import { BookingSidebarFooter } from "./BookingSidebarFooter";
 import { BookingSidebarHeader } from "./BookingSidebarHeader";
-import { BookingSidebarHistory } from "./BookingSidebarHistory";
 
 interface BookingSidebarProps {
 	selectedRows: PendingRow[];
@@ -78,12 +77,10 @@ export const BookingSidebar = ({
 				consolidatedNotes={consolidatedNotes}
 				bookingStatuses={bookingStatuses}
 				updateBookingStatus={updateBookingStatus}
-			/>
-
-			<BookingSidebarHistory
 				activeCustomerHistoryDates={activeCustomerHistoryDates}
 				onHistoryDateClick={onHistoryDateClick}
 			/>
+
 
 			<BookingSidebarFooter
 				selectedRowsLength={selectedRows.length}

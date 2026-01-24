@@ -24,8 +24,6 @@ interface BookingCalendarGridProps {
 	searchMatchDates: Set<string>;
 	activeCustomerDateSet: Set<string>;
 	activeBookingRep?: PendingRow;
-	previewBookings?: PendingRow[];
-	previewStatus?: string;
 }
 
 export const BookingCalendarGrid = ({
@@ -38,8 +36,6 @@ export const BookingCalendarGrid = ({
 	searchMatchDates,
 	activeCustomerDateSet,
 	activeBookingRep,
-	previewBookings,
-	previewStatus,
 }: BookingCalendarGridProps) => {
 	const monthStart = startOfMonth(currentMonth);
 	const monthEnd = endOfMonth(monthStart);
@@ -100,24 +96,8 @@ export const BookingCalendarGrid = ({
 					const isActiveCustomerDate = activeCustomerDateSet.has(dateKey);
 
 					const dayBookings = [...(bookingsByDateMap[dateKey] || [])];
-					const isGhostDay =
-						isSelected && !searchQuery && (previewBookings?.length ?? 0) > 0;
 
-					if (isGhostDay && previewBookings) {
-						previewBookings.forEach((pb) => {
-							if (!dayBookings.find((b) => b.id === pb.id)) {
-								dayBookings.push({
-									...pb,
-									bookingStatus: previewStatus || "Pending",
-									isGhost: true,
-								} as any);
-							}
-						});
-					}
 
-					const customerGroups = Array.from(
-						new Set(dayBookings.map((b) => b.vin)),
-					).slice(0, 3);
 
 					return (
 						<button
@@ -143,21 +123,12 @@ export const BookingCalendarGrid = ({
 							)}
 						>
 							{format(day, "d")}
-							{dayBookings.length >= 2 && !isFaded && (
+							{dayBookings.length >= 1 && !isFaded && (
 								<div className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-renault-yellow text-black text-[10px] font-bold rounded-full shadow-lg border border-[#050505] z-20">
 									{dayBookings.length}
 								</div>
 							)}
-							{dayBookings.length === 1 && !isFaded && (
-								<div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center">
-									<div
-										className={cn(
-											"w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-lg",
-											isActiveCustomerDate && "ring-2 ring-white/60 scale-125",
-										)}
-									/>
-								</div>
-							)}
+
 						</button>
 					);
 				})}
