@@ -116,15 +116,15 @@ export interface UIActions {
 }
 
 export interface HistoryState {
-	commits: CommitLog[];
-	isRestoring: boolean;
+	// commits: CommitLog[]; // Removed
+	// isRestoring: boolean; // Removed
 }
 
 export interface HistoryActions {
 	addCommit: (actionName: string) => void;
-	restoreToCommit: (commitId: string) => Promise<void>;
-	setIsRestoring: (val: boolean) => void;
-	clearHistory: () => void;
+	// restoreToCommit: (commitId: string) => Promise<void>;
+	// setIsRestoring: (val: boolean) => void;
+	// clearHistory: () => void;
 	commitSave: () => void;
 	debouncedCommit: (actionName: string) => void;
 }

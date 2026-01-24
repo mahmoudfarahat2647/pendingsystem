@@ -28,7 +28,11 @@ vi.mock("sonner", () => ({
 // Mock window.location.reload
 const originalLocation = window.location;
 delete (window as any).location;
-window.location = { ...originalLocation, reload: vi.fn() };
+Object.defineProperty(window, "location", {
+    value: { ...originalLocation, reload: vi.fn() },
+    configurable: true,
+    writable: true,
+});
 
 describe("useColumnLayoutTracker", () => {
     beforeEach(() => {

@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import { BookingStatusTab } from "./settings/BookingStatusTab";
-import { HistoryTab } from "./settings/HistoryTab";
+
 import { PartStatusTab } from "./settings/PartStatusTab";
 import { ThemeTab } from "./settings/ThemeTab";
 import BackupReportsTab from "../reports/BackupReportsTab";
@@ -31,7 +31,6 @@ type TabType =
 	| "part-statuses"
 	| "booking-statuses"
 	| "theme-color"
-	| "last-changes"
 	| "backup-reports";
 
 export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
@@ -47,7 +46,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 		{ id: "part-statuses", label: "Part Statuses", icon: Tag },
 		{ id: "booking-statuses", label: "Booking Statuses", icon: CalendarCheck },
 		{ id: "theme-color", label: "Theme Color", icon: Palette },
-		{ id: "last-changes", label: "Last Changes", icon: History },
+
 		{ id: "backup-reports", label: "Backup & Reports", icon: Shield },
 	];
 
@@ -192,7 +191,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 								{activeTab === "booking-statuses" &&
 									"Booking Status Management"}
 								{activeTab === "theme-color" && "System Appearance"}
-								{activeTab === "last-changes" && "System History (Last 48h)"}
+
 								{activeTab === "backup-reports" && "Backup & Reports Settings"}
 							</h3>
 							<p className="text-xs text-gray-400">
@@ -202,8 +201,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									"Customize labels and colors for booking statuses."}
 								{activeTab === "theme-color" &&
 									"Manage theme colors and UI preferences."}
-								{activeTab === "last-changes" &&
-									"Review and restore recent changes."}
+
 								{activeTab === "backup-reports" &&
 									"Configure automated reports and manage data backups."}
 							</p>
@@ -221,7 +219,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 						{activeTab === "theme-color" && <ThemeTab />}
 
-						{activeTab === "last-changes" && <HistoryTab />}
+
 
 						{activeTab === "backup-reports" && (
 							<BackupReportsTab isLocked={isLocked} />

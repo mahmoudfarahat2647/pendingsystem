@@ -281,8 +281,9 @@ export const createUISlice: StateCreator<
 			archiveRowData: [],
 			bookingRowData: [],
 			notifications: [],
-			commits: [],
-			redos: [],
+
+			undoStack: [],
+			redoStack: [],
 			...initialState,
 		});
 		get().addCommit("Reset Store");
