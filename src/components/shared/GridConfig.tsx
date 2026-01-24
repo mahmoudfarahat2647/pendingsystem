@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import type { ColDef, ValueFormatterParams } from "ag-grid-community";
+import { format } from "date-fns";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
 
@@ -213,6 +214,7 @@ export const getMainSheetColumns = (
 		},
 	];
 
+
 export const getBookingColumns = (
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
@@ -224,6 +226,14 @@ export const getBookingColumns = (
 			field: "bookingDate",
 			width: 130,
 			cellStyle: { color: "#22c55e", fontWeight: 500 },
+			valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
+				if (!params.value) return "";
+				try {
+					return format(new Date(params.value), "EEE, MMM d, yyyy");
+				} catch {
+					return params.value;
+				}
+			},
 		},
 		{
 			headerName: "STATUS",

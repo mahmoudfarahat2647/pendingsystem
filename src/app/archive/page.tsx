@@ -1,7 +1,8 @@
 "use client";
 
-import type { GridApi } from "ag-grid-community";
+import type { GridApi, ValueFormatterParams } from "ag-grid-community";
 import { CheckCircle, Download, Filter, RotateCcw, Trash2 } from "lucide-react";
+import { format } from "date-fns";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
@@ -147,7 +148,19 @@ export default function ArchivePage() {
 		);
 		return [
 			...baseColumns.slice(0, 3),
-			{ headerName: "BOOKING", field: "bookingDate", width: 120 },
+			{
+				headerName: "BOOKING",
+				field: "bookingDate",
+				width: 120,
+				valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
+					if (!params.value) return "";
+					try {
+						return format(new Date(params.value), "EEE, MMM d, yyyy");
+					} catch {
+						return params.value;
+					}
+				},
+			},
 			...baseColumns.slice(3),
 		];
 	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
@@ -189,8 +202,8 @@ export default function ArchivePage() {
 						<LayoutSaveButton
 							isDirty={isDirty}
 							onSave={saveLayout}
-					onSaveAsDefault={saveAsDefault}
-	onReset={resetLayout}
+							onSaveAsDefault={saveAsDefault}
+							onReset={resetLayout}
 						/>
 
 						<Tooltip>

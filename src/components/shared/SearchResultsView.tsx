@@ -4,6 +4,7 @@ import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { Search as SearchIcon } from "lucide-react";
 import { useMemo, useCallback } from "react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import { PartStatusRenderer, ActionCellRenderer } from "@/components/grid/renderers";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { Button } from "@/components/ui/button";
@@ -186,6 +187,19 @@ export const SearchResultsView = () => {
 				cellRenderer: SourceRenderer,
 				pinned: "left",
 				filter: true,
+			},
+			{
+				headerName: "BOOKING",
+				field: "bookingDate",
+				width: 120,
+				valueFormatter: (params) => {
+					if (!params.value) return "";
+					try {
+						return format(new Date(params.value), "EEE, MMM d, yyyy");
+					} catch {
+						return params.value;
+					}
+				},
 			},
 			configuredActionsCol,
 			...remainingBaseCols,
