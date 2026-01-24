@@ -16,9 +16,9 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
-import { BookingStatusTab } from "./settings/BookingStatusTab";
-
 import { PartStatusTab } from "./settings/PartStatusTab";
+
+
 import { ThemeTab } from "./settings/ThemeTab";
 import BackupReportsTab from "../reports/BackupReportsTab";
 
@@ -29,7 +29,6 @@ interface SettingsModalProps {
 
 type TabType =
 	| "part-statuses"
-	| "booking-statuses"
 	| "theme-color"
 	| "backup-reports";
 
@@ -44,7 +43,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 	const navItems = [
 		{ id: "part-statuses", label: "Part Statuses", icon: Tag },
-		{ id: "booking-statuses", label: "Booking Statuses", icon: CalendarCheck },
 		{ id: "theme-color", label: "Theme Color", icon: Palette },
 
 		{ id: "backup-reports", label: "Backup & Reports", icon: Shield },
@@ -188,8 +186,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 						<div>
 							<h3 className="font-bold text-lg">
 								{activeTab === "part-statuses" && "Part Status Management"}
-								{activeTab === "booking-statuses" &&
-									"Booking Status Management"}
 								{activeTab === "theme-color" && "System Appearance"}
 
 								{activeTab === "backup-reports" && "Backup & Reports Settings"}
@@ -197,8 +193,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 							<p className="text-xs text-gray-400">
 								{activeTab === "part-statuses" &&
 									"Customize status labels and colors used in the grid."}
-								{activeTab === "booking-statuses" &&
-									"Customize labels and colors for booking statuses."}
 								{activeTab === "theme-color" &&
 									"Manage theme colors and UI preferences."}
 
@@ -211,10 +205,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 					<div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
 						{activeTab === "part-statuses" && (
 							<PartStatusTab isLocked={isLocked} />
-						)}
-
-						{activeTab === "booking-statuses" && (
-							<BookingStatusTab isLocked={isLocked} />
 						)}
 
 						{activeTab === "theme-color" && <ThemeTab />}

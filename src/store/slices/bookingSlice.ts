@@ -9,11 +9,7 @@ export const createBookingSlice: StateCreator<
 	BookingState & BookingActions
 > = (set, get) => ({
 	bookingRowData: [],
-	bookingStatuses: [
-		{ id: "add", label: "Add", color: "#10b981" },
-		{ id: "cancel", label: "Cancel", color: "#ef4444" },
-		{ id: "reschedule", label: "Reschedule", color: "#3b82f6" },
-	],
+	bookingRowData: [],
 
 	/**
 	 * Moves rows from various source lists (Main, Orders, Call) to the Booking list.
@@ -76,66 +72,6 @@ export const createBookingSlice: StateCreator<
 			archiveRowData: updateInArray(state.archiveRowData),
 		}));
 		get().debouncedCommit("Update Booking Status");
-	},
-
-	/**
-	 * Adds a new booking status definition to the system.
-	 * @param status - The status definition object (id, label, color).
-	 */
-	addBookingStatusDef: (status) => {
-		get().pushUndo();
-		set((state) => ({
-			bookingStatuses: [...state.bookingStatuses, status],
-		}));
-		get().addCommit("Add Booking Status Definition");
-	},
-
-	/**
-	 * Removes a booking status definition from the system by ID.
-	 * @param id - The ID of the status definition to remove.
-	 */
-	updateBookingStatusDef: (id, updates) => {
-		get().pushUndo();
-		const state = get();
-		const statusToUpdate = state.bookingStatuses.find((s) => s.id === id);
-		if (!statusToUpdate) return;
-
-		const oldLabel = statusToUpdate.label;
-		const newLabel = updates.label;
-
-		set((state) => ({
-			bookingStatuses: state.bookingStatuses.map((s) =>
-				s.id === id ? { ...s, ...updates } : s,
-			),
-		}));
-
-		// If label changed, bulk update all rows
-		if (newLabel && newLabel !== oldLabel) {
-			const updateRows = (rows: PendingRow[]) =>
-				rows.map((row) =>
-					row.bookingStatus === oldLabel
-						? { ...row, bookingStatus: newLabel }
-						: row,
-				);
-
-			set((state) => ({
-				ordersRowData: updateRows(state.ordersRowData),
-				rowData: updateRows(state.rowData),
-				callRowData: updateRows(state.callRowData),
-				archiveRowData: updateRows(state.archiveRowData),
-				bookingRowData: updateRows(state.bookingRowData),
-			}));
-		}
-
-		get().addCommit("Update Booking Status Definition");
-	},
-
-	removeBookingStatusDef: (id) => {
-		get().pushUndo();
-		set((state) => ({
-			bookingStatuses: state.bookingStatuses.filter((s) => s.id !== id),
-		}));
-		get().addCommit("Remove Booking Status Definition");
 	},
 
 	setBookingRowData: (data) => {

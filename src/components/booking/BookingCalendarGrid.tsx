@@ -23,7 +23,6 @@ interface BookingCalendarGridProps {
 	searchQuery: string;
 	searchMatchDates: Set<string>;
 	activeCustomerDateSet: Set<string>;
-	bookingStatuses: BookingStatus[];
 	activeBookingRep?: PendingRow;
 	previewBookings?: PendingRow[];
 	previewStatus?: string;
@@ -38,7 +37,6 @@ export const BookingCalendarGrid = ({
 	searchQuery,
 	searchMatchDates,
 	activeCustomerDateSet,
-	bookingStatuses,
 	activeBookingRep,
 	previewBookings,
 	previewStatus,
@@ -139,50 +137,25 @@ export const BookingCalendarGrid = ({
 								isSearchMatch && !isSelected && "text-emerald-500 font-bold",
 								isFaded && !isSelected && "opacity-20 pointer-events-none",
 								isActiveCustomerDate &&
-									!isSelected &&
-									!isFaded &&
-									"ring-1 ring-emerald-500/40 text-emerald-500",
+								!isSelected &&
+								!isFaded &&
+								"ring-1 ring-emerald-500/40 text-emerald-500",
 							)}
 						>
 							{format(day, "d")}
-							{hasBookings && !isFaded && (
-								<div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center h-3 w-8">
-									{customerGroups.map((vin, idx) => {
-										const customerBooking = dayBookings.find(
-											(b) => b.vin === vin,
-										);
-										const isGhost = (customerBooking as any)?.isGhost;
-										const statusColor = customerBooking
-											? bookingStatuses.find(
-													(s) => s.label === customerBooking.bookingStatus,
-												)?.color || "bg-emerald-500/80"
-											: "bg-emerald-500/80";
-
-										const isHex =
-											statusColor.startsWith("#") ||
-											statusColor.startsWith("rgb");
-
-										return (
-											<div
-												key={vin}
-												style={{
-													zIndex: 10 - idx,
-													transform: `translateX(${(idx - (customerGroups.length - 1) / 2) * 6}px)`,
-													backgroundColor: isHex ? statusColor : undefined,
-												}}
-												className={cn(
-													"absolute w-3 h-3 rounded-full shadow-lg transition-all duration-300 border border-black/20",
-													!isHex && statusColor,
-													isGhost &&
-														"opacity-40 animate-pulse ring-1 ring-white/20",
-													isActiveCustomerDate && vin === activeBookingRep?.vin
-														? "ring-1 ring-white/60 scale-110"
-														: "",
-													isSelected && "ring-1 ring-white/30",
-												)}
-											/>
-										);
-									})}
+							{dayBookings.length >= 2 && !isFaded && (
+								<div className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-renault-yellow text-black text-[10px] font-bold rounded-full shadow-lg border border-[#050505] z-20">
+									{dayBookings.length}
+								</div>
+							)}
+							{dayBookings.length === 1 && !isFaded && (
+								<div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center">
+									<div
+										className={cn(
+											"w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-lg",
+											isActiveCustomerDate && "ring-2 ring-white/60 scale-125",
+										)}
+									/>
 								</div>
 							)}
 						</button>

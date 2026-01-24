@@ -14,7 +14,6 @@ export function useBookingCalendar({
 }: UseBookingCalendarOptions) {
 	const bookingRowData = useAppStore((state) => state.bookingRowData);
 	const archiveRowData = useAppStore((state) => state.archiveRowData);
-	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
 	const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
 
 	const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -172,8 +171,6 @@ export function useBookingCalendar({
 		consolidatedNotes,
 		activeCustomerHistoryDates,
 		handleDateSelect,
-		bookingStatuses,
-		updateBookingStatus,
 		isDateInPast,
 	};
 }

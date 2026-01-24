@@ -10,9 +10,6 @@ import type { BookingStatus, PendingRow } from "@/types";
 
 interface BookingSidebarHeaderProps {
 	selectedRows: PendingRow[];
-	preBookingStatus: string;
-	setPreBookingStatus: (status: string) => void;
-	bookingStatuses: BookingStatus[];
 	bookingNote: string;
 	setBookingNote: (note: string) => void;
 	onClose: () => void;
@@ -20,9 +17,6 @@ interface BookingSidebarHeaderProps {
 
 export const BookingSidebarHeader = ({
 	selectedRows,
-	preBookingStatus,
-	setPreBookingStatus,
-	bookingStatuses,
 	bookingNote,
 	setBookingNote,
 	onClose,
@@ -56,75 +50,6 @@ export const BookingSidebarHeader = ({
 						{selectedRows.length} Items • {selectedRows[0]?.customerName}
 					</h3>
 				</div>
-				<Popover>
-					<PopoverTrigger asChild>
-						<button
-							type="button"
-							className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all group"
-						>
-							{preBookingStatus ? (
-								<>
-									{(() => {
-										const color =
-											bookingStatuses.find((s) => s.label === preBookingStatus)
-												?.color || "bg-gray-500";
-										const isHex =
-											color.startsWith("#") || color.startsWith("rgb");
-										return (
-											<div
-												className={cn("w-2 h-2 rounded-full", !isHex && color)}
-												style={{ backgroundColor: isHex ? color : undefined }}
-											/>
-										);
-									})()}
-									<span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">
-										{preBookingStatus}
-									</span>
-								</>
-							) : (
-								<span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400/70">
-									Set Status
-								</span>
-							)}
-							<ChevronRight className="h-3 w-3 text-indigo-500 group-hover:text-indigo-400 rotate-90" />
-						</button>
-					</PopoverTrigger>
-					<PopoverContent className="w-48 p-2 bg-[#0f0f11] border-white/10 rounded-xl shadow-2xl z-[60]">
-						<div className="space-y-1">
-							{bookingStatuses.map((status) => (
-								<button
-									type="button"
-									key={status.id}
-									onClick={() => setPreBookingStatus(status.label)}
-									className={cn(
-										"w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
-										preBookingStatus === status.label
-											? "bg-white/10 text-white"
-											: "text-gray-400 hover:bg-white/5 hover:text-gray-200",
-									)}
-								>
-									<div
-										className={cn(
-											"w-2 h-2 rounded-full shadow-lg",
-											!(
-												status.color.startsWith("#") ||
-												status.color.startsWith("rgb")
-											) && status.color,
-										)}
-										style={{
-											backgroundColor:
-												status.color.startsWith("#") ||
-												status.color.startsWith("rgb")
-													? status.color
-													: undefined,
-										}}
-									/>
-									<span className="text-xs font-semibold">{status.label}</span>
-								</button>
-							))}
-						</div>
-					</PopoverContent>
-				</Popover>
 			</div>
 			<div className="relative">
 				<MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-500/50 pointer-events-none" />

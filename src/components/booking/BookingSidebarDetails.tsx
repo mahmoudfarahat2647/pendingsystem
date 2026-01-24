@@ -12,7 +12,6 @@ interface BookingSidebarDetailsProps {
 	selectedRows: PendingRow[];
 	activeCustomerBookings: PendingRow[];
 	consolidatedNotes: string[];
-	bookingStatuses: BookingStatus[];
 	updateBookingStatus: (id: string, status: string) => void;
 }
 
@@ -21,7 +20,6 @@ export const BookingSidebarDetails = ({
 	selectedRows,
 	activeCustomerBookings,
 	consolidatedNotes,
-	bookingStatuses,
 	updateBookingStatus,
 }: BookingSidebarDetailsProps) => {
 	if (!activeBookingRep && selectedRows.length === 0) {
@@ -111,91 +109,6 @@ export const BookingSidebarDetails = ({
 								<span className="block text-xs font-medium text-gray-500 uppercase">
 									Parts List
 								</span>
-								{activeBookingRep && (
-									<Popover>
-										<PopoverTrigger asChild>
-											<button
-												type="button"
-												className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
-											>
-												{activeBookingRep.bookingStatus ? (
-													<>
-														{(() => {
-															const color =
-																bookingStatuses.find(
-																	(s) =>
-																		s.label === activeBookingRep.bookingStatus,
-																)?.color || "bg-gray-500";
-															const isHex =
-																color.startsWith("#") ||
-																color.startsWith("rgb");
-															return (
-																<div
-																	className={cn(
-																		"w-2 h-2 rounded-full",
-																		!isHex && color,
-																	)}
-																	style={{
-																		backgroundColor: isHex ? color : undefined,
-																	}}
-																/>
-															);
-														})()}
-														<span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">
-															{activeBookingRep.bookingStatus}
-														</span>
-													</>
-												) : (
-													<span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-														Status
-													</span>
-												)}
-												<ChevronRight className="h-3 w-3 text-gray-600 group-hover:text-gray-400 transition-transform rotate-90" />
-											</button>
-										</PopoverTrigger>
-										<PopoverContent className="w-48 p-2 bg-[#0f0f11] border-white/10 rounded-xl shadow-2xl z-[60]">
-											<div className="space-y-1">
-												{bookingStatuses.map((status) => (
-													<button
-														type="button"
-														key={status.id}
-														onClick={() => {
-															activeCustomerBookings.forEach((b) => {
-																updateBookingStatus(b.id, status.label);
-															});
-														}}
-														className={cn(
-															"w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
-															activeBookingRep.bookingStatus === status.label
-																? "bg-white/10 text-white"
-																: "text-gray-400 hover:bg-white/5 hover:text-gray-200",
-														)}
-													>
-														<div
-															className={cn(
-																"w-2 h-2 rounded-full shadow-lg",
-																!(
-																	status.color.startsWith("#") ||
-																	status.color.startsWith("rgb")
-																) && status.color,
-															)}
-															style={{
-																backgroundColor:
-																	status.color.startsWith("#") ||
-																	status.color.startsWith("rgb")
-																		? status.color
-																		: undefined,
-															}}
-														/>
-														<span className="text-xs font-semibold">
-															{status.label}
-														</span>
-													</button>
-												))}
-											</div>
-										</PopoverContent>
-									</Popover>
-								)}
 							</div>
 							{currentParts.map((booking, idx) => (
 								<div

@@ -40,7 +40,6 @@ export interface InventoryActions {
 
 export interface BookingState {
 	bookingRowData: PendingRow[];
-	bookingStatuses: PartStatusDef[];
 }
 
 export interface BookingActions {
@@ -51,9 +50,6 @@ export interface BookingActions {
 		bookingStatus?: string,
 	) => void;
 	updateBookingStatus: (id: string, bookingStatus: string) => void;
-	addBookingStatusDef: (status: PartStatusDef) => void;
-	updateBookingStatusDef: (id: string, updates: Partial<PartStatusDef>) => void;
-	removeBookingStatusDef: (id: string) => void;
 	setBookingRowData: (data: PendingRow[]) => void;
 }
 

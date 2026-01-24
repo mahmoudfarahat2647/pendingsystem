@@ -17,7 +17,7 @@ export const BookingSidebarCustomerList = ({
 	setSelectedBookingId,
 }: BookingSidebarCustomerListProps) => {
 	return (
-		<div className="h-1/3 border-b border-white/5 p-6 overflow-y-auto custom-scrollbar">
+		<div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
 			<h4 className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-4 sticky top-0 bg-[#0a0a0b] py-2 z-10">
 				{searchQuery ? "Search Results" : "Customers"}
 			</h4>

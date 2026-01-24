@@ -11,7 +11,12 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 import { BookingCalendarGrid } from "../booking/BookingCalendarGrid";
-import { BookingSidebar } from "../booking/BookingSidebar";
+import { BookingTasks } from "../booking/BookingTasks";
+import { BookingSidebarCustomerList } from "../booking/BookingSidebarCustomerList";
+import { BookingSidebarDetails } from "../booking/BookingSidebarDetails";
+import { BookingSidebarFooter } from "../booking/BookingSidebarFooter";
+import { BookingSidebarHeader } from "../booking/BookingSidebarHeader";
+import { BookingSidebarHistory } from "../booking/BookingSidebarHistory";
 import { useBookingCalendar } from "../booking/hooks/useBookingCalendar";
 
 interface BookingCalendarModalProps {
@@ -51,8 +56,6 @@ export const BookingCalendarModal = ({
 		consolidatedNotes,
 		activeCustomerHistoryDates,
 		handleDateSelect,
-		bookingStatuses,
-		updateBookingStatus,
 		isDateInPast,
 	} = useBookingCalendar({ open, initialSearchTerm });
 
@@ -61,72 +64,90 @@ export const BookingCalendarModal = ({
 			<DialogContent
 				hideClose={true}
 				className={cn(
-					"bg-[#0f0f11] text-gray-300 border-white/5 p-0 gap-0 overflow-hidden flex h-[85vh] rounded-[2rem] shadow-2xl font-sans",
-					bookingOnly ? "max-w-3xl" : "max-w-6xl",
+					"bg-[#0f0f11] text-gray-300 border-white/5 p-0 gap-0 overflow-hidden flex h-[90vh] rounded-[2rem] shadow-2xl font-sans w-fit max-w-[95vw]",
+					bookingOnly ? "max-w-3xl" : "",
 				)}
 			>
 				<DialogHeader className="sr-only">
 					<DialogTitle>Booking Schedule</DialogTitle>
 				</DialogHeader>
 
-				<div className="flex-1 p-10 flex flex-col bg-[#050505]">
-					<div className="flex items-center justify-between mb-12">
-						<h3 className="text-sm font-bold text-gray-500 uppercase tracking-[0.2em]">
-							Reservers
-						</h3>
-						<div className="relative w-80">
-							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-							<Input
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-								placeholder="Search..."
-								className="pl-10 h-10 bg-white/[0.03] border-white/10 rounded-full focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder:text-gray-600 text-sm transition-all"
-							/>
-						</div>
+				<div className="flex-1 flex min-w-0">
+					{/* Column 1: Calendar & Tasks */}
+					<div className="w-[450px] p-10 flex flex-col bg-[#050505] border-r border-white/5 overflow-y-auto custom-scrollbar">
+
+
+						<BookingCalendarGrid
+							currentMonth={currentMonth}
+							selectedDate={selectedDate}
+							onMonthChange={setCurrentMonth}
+							onDateSelect={handleDateSelect}
+							bookingsByDateMap={bookingsByDateMap}
+							searchQuery={searchQuery}
+							searchMatchDates={searchMatchDates}
+							activeCustomerDateSet={new Set(activeCustomerHistoryDates)}
+							previewBookings={selectedRows}
+							previewStatus={preBookingStatus}
+						/>
+
+						<BookingTasks />
 					</div>
 
-					<BookingCalendarGrid
-						currentMonth={currentMonth}
-						selectedDate={selectedDate}
-						onMonthChange={setCurrentMonth}
-						onDateSelect={handleDateSelect}
-						bookingsByDateMap={bookingsByDateMap}
-						searchQuery={searchQuery}
-						searchMatchDates={searchMatchDates}
-						activeCustomerDateSet={new Set(activeCustomerHistoryDates)}
-						bookingStatuses={bookingStatuses}
-						previewBookings={selectedRows}
-						previewStatus={preBookingStatus}
-					/>
-				</div>
+					{!bookingOnly && (
+						<>
+							{/* Column 2: Scheduled Customers & History (Middle - Narrower) */}
+							<div className="w-[320px] bg-[#0a0a0b] border-r border-white/5 flex flex-col">
+								<BookingSidebarCustomerList
+									searchQuery={searchQuery}
+									sidebarGroupedBookings={sidebarGroupedBookings}
+									selectedBookingId={selectedBookingId}
+									setSelectedBookingId={setSelectedBookingId}
+								/>
+								<BookingSidebarHistory
+									activeCustomerHistoryDates={activeCustomerHistoryDates}
+									onHistoryDateClick={(date) => {
+										setCurrentMonth(date);
+										handleDateSelect(date);
+									}}
+								/>
+							</div>
 
-				{!bookingOnly && (
-					<BookingSidebar
-						selectedRows={selectedRows}
-						searchQuery={searchQuery}
-						sidebarGroupedBookings={sidebarGroupedBookings}
-						selectedBookingId={selectedBookingId}
-						setSelectedBookingId={setSelectedBookingId}
-						activeBookingRep={activeBookingRep}
-						activeCustomerBookings={activeCustomerBookings}
-						consolidatedNotes={consolidatedNotes}
-						bookingStatuses={bookingStatuses}
-						updateBookingStatus={updateBookingStatus}
-						preBookingStatus={preBookingStatus}
-						setPreBookingStatus={setPreBookingStatus}
-						bookingNote={bookingNote}
-						setBookingNote={setBookingNote}
-						activeCustomerHistoryDates={activeCustomerHistoryDates}
-						selectedDate={selectedDate}
-						isDateInPast={isDateInPast}
-						onOpenChange={onOpenChange}
-						onConfirm={onConfirm}
-						onHistoryDateClick={(date) => {
-							setCurrentMonth(date);
-							handleDateSelect(date);
-						}}
-					/>
-				)}
+							{/* Column 3: Customer Details & Actions (Right - Wider) */}
+							<div className="flex-1 bg-[#0a0a0b] flex flex-col w-[360px] max-w-[360px]">
+								<BookingSidebarHeader
+									selectedRows={selectedRows}
+									bookingNote={bookingNote}
+									setBookingNote={setBookingNote}
+									onClose={() => onOpenChange(false)}
+								/>
+
+								<div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
+									<BookingSidebarDetails
+										activeBookingRep={activeBookingRep}
+										selectedRows={selectedRows}
+										activeCustomerBookings={activeCustomerBookings}
+										consolidatedNotes={consolidatedNotes}
+										updateBookingStatus={() => { }}
+									/>
+
+
+								</div>
+
+								<BookingSidebarFooter
+									selectedRowsLength={selectedRows.length}
+									searchQuery={searchQuery}
+									selectedDate={selectedDate}
+									bookingNote={bookingNote}
+									preBookingStatus={preBookingStatus}
+									onConfirm={onConfirm}
+									onNoteReset={() => setBookingNote("")}
+									onStatusReset={() => setPreBookingStatus("")}
+									isDateInPast={isDateInPast}
+								/>
+							</div>
+						</>
+					)}
+				</div>
 			</DialogContent>
 		</Dialog>
 	);
