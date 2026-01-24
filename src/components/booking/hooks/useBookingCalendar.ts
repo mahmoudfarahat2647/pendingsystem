@@ -6,15 +6,25 @@ import type { PendingRow } from "@/types";
 interface UseBookingCalendarOptions {
 	open: boolean;
 	initialSearchTerm: string;
+	/** Optional booking data from React Query - if not provided, falls back to Zustand store */
+	bookingData?: PendingRow[];
+	/** Optional archive data from React Query - if not provided, falls back to Zustand store */
+	archiveData?: PendingRow[];
 }
 
 export function useBookingCalendar({
 	open,
 	initialSearchTerm,
+	bookingData,
+	archiveData,
 }: UseBookingCalendarOptions) {
-	const bookingRowData = useAppStore((state) => state.bookingRowData);
-	const archiveRowData = useAppStore((state) => state.archiveRowData);
+	const storeBookingRowData = useAppStore((state) => state.bookingRowData);
+	const storeArchiveRowData = useAppStore((state) => state.archiveRowData);
 	const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
+
+	// Use provided data if available, otherwise fall back to store data
+	const bookingRowData = bookingData ?? storeBookingRowData;
+	const archiveRowData = archiveData ?? storeArchiveRowData;
 
 	const [currentMonth, setCurrentMonth] = useState(new Date());
 	const [selectedDate, setSelectedDate] = useState(new Date());

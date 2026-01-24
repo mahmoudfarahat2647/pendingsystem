@@ -59,6 +59,7 @@ export default function CallListPage() {
 	const { isDirty, saveLayout, saveAsDefault, resetLayout } = useColumnLayoutTracker("call-list");
 	const { data: callRowData = [] } = useOrdersQuery("call");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
+	const { data: archiveRowData = [] } = useOrdersQuery("archive");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
@@ -228,8 +229,8 @@ export default function CallListPage() {
 						<LayoutSaveButton
 							isDirty={isDirty}
 							onSave={saveLayout}
-					onSaveAsDefault={saveAsDefault}
-	onReset={resetLayout}
+							onSaveAsDefault={saveAsDefault}
+							onReset={resetLayout}
 						/>
 
 						<Tooltip>
@@ -402,6 +403,8 @@ export default function CallListPage() {
 					onOpenChange={setIsBookingModalOpen}
 					onConfirm={handleConfirmBooking}
 					selectedRows={selectedRows}
+					bookingData={bookingRowData}
+					archiveData={archiveRowData}
 				/>
 
 				<RowModals
