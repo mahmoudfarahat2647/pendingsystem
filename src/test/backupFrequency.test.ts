@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 // The logic from scripts/generate-backup.mjs extracted for testing
-function shouldRunBackup(frequency, cairo) {
+function shouldRunBackup(frequency: string, cairo: { weekday: string; day: number; month: number }) {
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     if (frequency === 'Daily') {
@@ -43,7 +43,7 @@ describe("Backup Frequency Logic", () => {
         expect(shouldRunBackup("Weekly-3", monday)).toBe(false);
 
         // Sunday is index 0
-        expect(shouldRunBackup("Weekly-0", { weekday: "Sunday" })).toBe(true);
+        expect(shouldRunBackup("Weekly-0", { weekday: "Sunday", day: 20, month: 1 })).toBe(true);
         expect(shouldRunBackup("Weekly-0", monday)).toBe(false);
     });
 

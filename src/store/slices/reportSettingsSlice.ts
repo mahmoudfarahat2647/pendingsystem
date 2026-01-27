@@ -131,8 +131,7 @@ export const createReportSettingsSlice: StateCreator<
         set({ isReportSettingsLoading: true, reportSettingsError: null });
         try {
             // Call our Next.js API route using absolute path to prevent resolution issues
-            const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-            const response = await fetch(`${baseUrl}/api/trigger-backup`, {
+            const response = await fetch("/api/trigger-backup", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'

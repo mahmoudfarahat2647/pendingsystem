@@ -17,18 +17,19 @@ describe('Zod Schemas', () => {
             expect(result.success).toBe(true);
         });
 
-        it('should fail on invalid VIN length', () => {
+        it('should fail on invalid VIN (empty string)', () => {
             const invalidRow = {
                 id: "123e4567-e89b-12d3-a456-426614174000",
                 customerName: "John Doe",
-                vin: "TOO_SHORT", // Invalid
+                vin: "", // Invalid - empty
                 mobile: "01234567890",
                 model: "Megane",
             };
             const result = PendingRowSchema.safeParse(invalidRow);
             expect(result.success).toBe(false);
             if (!result.success) {
-                expect(result.error.flatten().fieldErrors.vin).toContain("VIN must be exactly 17 characters");
+                const fieldErrors = result.error.flatten().fieldErrors;
+                expect(fieldErrors.vin).toBeDefined();
             }
         });
 

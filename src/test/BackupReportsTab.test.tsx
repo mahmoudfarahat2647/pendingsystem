@@ -60,7 +60,7 @@ describe("BackupReportsTab", () => {
 
         // Check for the grid container
         const gridContainer = container.querySelector(".grid");
-        expect(gridContainer).toHaveClass("gap-6", "md:grid-cols-2");
+        expect(gridContainer).toHaveClass("grid", "gap-6", "md:grid-cols-[58%_42%]");
     });
 
     it("should render scheduling and recipients cards in the same grid row", () => {

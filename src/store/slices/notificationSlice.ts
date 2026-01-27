@@ -185,5 +185,27 @@ export const createNotificationSlice: StateCreator<
 				),
 			};
 		});
+		// 3. Auto-archive expired warranties
+		const expiredIds = sources.flatMap((source) =>
+			source.data
+				.filter((row) => {
+					if (!row.endWarranty) return false;
+					const endDate = new Date(row.endWarranty);
+					return (
+						!Number.isNaN(endDate.getTime()) && endDate.getTime() < now.getTime()
+					);
+				})
+				.map((row) => row.id),
+		);
+
+		if (expiredIds.length > 0) {
+			state.sendToArchive(expiredIds, "Auto-archived: Warranty expired");
+			// Trigger background update if orderService available
+			import("@/services/orderService")
+				.then(({ orderService }) => {
+					orderService.updateOrdersStage(expiredIds, "archive");
+				})
+				.catch((err) => console.error("Auto-archive background sync failed:", err));
+		}
 	},
 });

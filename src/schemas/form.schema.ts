@@ -12,7 +12,18 @@ export const OrderFormSchema = z.object({
     sabNumber: z.string().optional(),
     acceptedBy: z.string().optional(),
     company: z.string().default("Renault"),
-});
+}).refine(
+    (data) => {
+        if (data.repairSystem === "ضمان" && data.cntrRdg >= 100000) {
+            return false;
+        }
+        return true;
+    },
+    {
+        message: "Ineligible for Warranty: Vehicle exceeds 100,000 KM",
+        path: ["cntrRdg"],
+    },
+);
 
 // Beast Mode: All fields mandatory
 // CRITICAL: DO NOT RELAX VALIDATION - Enforces data integrity on Commit

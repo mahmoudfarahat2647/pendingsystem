@@ -11,6 +11,7 @@ import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
+import { OrderFormErrorBoundary } from "@/components/orders/OrderFormErrorBoundary";
 
 const OrderFormModal = dynamic(
 	() =>
@@ -102,8 +103,19 @@ export default function OrdersPage() {
 	);
 
 	const handleOpenForm = (edit = false) => {
-		setIsEditMode(edit);
-		setIsFormModalOpen(true);
+		try {
+			console.log(`[DEBUG] Opening form with edit mode: ${edit}`);
+			console.log(`[DEBUG] Selected rows count: ${selectedRows.length}`);
+			console.log(`[DEBUG] Selected rows:`, selectedRows);
+			
+			setIsEditMode(edit);
+			setIsFormModalOpen(true);
+			
+			console.log(`[DEBUG] Form modal state set to: ${isFormModalOpen}`);
+		} catch (error) {
+			console.error(`[ERROR] Failed to open form:`, error);
+			toast.error("Failed to open order form. Please try again.");
+		}
 	};
 
 	return (
@@ -194,13 +206,18 @@ export default function OrdersPage() {
 				</Card>
 
 				{isFormModalOpen && (
-					<OrderFormModal
-						open={isFormModalOpen}
-						onOpenChange={setIsFormModalOpen}
-						isEditMode={isEditMode}
-						selectedRows={selectedRows}
-						onSubmit={handleSaveOrder}
-					/>
+					<OrderFormErrorBoundary>
+						<OrderFormModal
+							open={isFormModalOpen}
+							onOpenChange={(open) => {
+								console.log(`[DEBUG] Modal open change: ${open}`);
+								setIsFormModalOpen(open);
+							}}
+							isEditMode={isEditMode}
+							selectedRows={selectedRows}
+							onSubmit={handleSaveOrder}
+						/>
+					</OrderFormErrorBoundary>
 				)}
 
 				{currentRow && (

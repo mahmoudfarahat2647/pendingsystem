@@ -34,12 +34,30 @@ export const PendingRowSchema = z.object({
     trackingId: z.string().nullish().transform(v => v || ""),
 
     // Customer Info
-    customerName: z.string().nullish().transform(v => v || ""),
+    customerName: z.preprocess((val) => {
+        // Handle both string and string[] formats from database
+        if (Array.isArray(val)) {
+            return val.length > 0 ? String(val[0]) : "";
+        }
+        return String(val || "");
+    }, z.string()),
     company: z.string().nullish(), // Allow null
-    vin: z.string().nullish().transform(v => v || ""),
-    mobile: z.string().nullish().transform(v => v || ""),
+    vin: z.string().min(1, "VIN is required"),
+    mobile: z.preprocess((val) => {
+        // Handle both string and string[] formats from database
+        if (Array.isArray(val)) {
+            return val.length > 0 ? String(val[0]) : "";
+        }
+        return String(val || "");
+    }, z.string()),
     cntrRdg: z.preprocess((val) => Number(val) || 0, z.number().nonnegative().default(0)),
-    model: z.string().nullish().transform(v => v || ""),
+    model: z.preprocess((val) => {
+        // Handle both string and string[] formats from database
+        if (Array.isArray(val)) {
+            return val.length > 0 ? String(val[0]) : "";
+        }
+        return String(val || "");
+    }, z.string()),
 
     // Logistics
     parts: z.array(PartEntrySchema).default([]),

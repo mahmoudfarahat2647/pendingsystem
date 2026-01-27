@@ -3,108 +3,169 @@
     "TypeScript",
     "Next.js",
     "React",
-    "Supabase",
-    "PostgreSQL",
+    "Tailwind CSS",
     "Zustand",
-    "Zod",
-    "ag-Grid"
+    "Supabase",
+    "ag-Grid",
+    "Recharts",
+    "TanStack Query",
+    "Framer Motion",
+    "Vitest",
+    "Playwright"
   ],
   "features": [
     {
-      "name": "Order Management API",
-      "description": "Handles CRUD operations for orders, including saving, updating stages, and retrieving orders from Supabase database",
+      "name": "Orders Management",
+      "description": "Import, create, edit, and manage customer orders with attachments, notes, and tracking IDs",
       "files": [
-        "src/services/orderService.ts"
-      ],
-      "api_doc": {
-        "openapi": "3.0.0",
-        "paths": {
-          "/api/orders": {
-            "get": {
-              "summary": "Get all orders",
-              "responses": {
-                "200": {
-                  "description": "List of orders"
-                }
-              }
-            },
-            "post": {
-              "summary": "Create/update order",
-              "responses": {
-                "200": {
-                  "description": "Order created/updated successfully"
-                }
-              }
-            }
-          }
-        }
-      }
+        "src/app/orders/page.tsx",
+        "src/components/orders/OrderFormModal.tsx",
+        "src/components/orders/OrdersToolbar.tsx",
+        "src/services/orderService.ts",
+        "src/schemas/order.schema.ts",
+        "src/types/index.ts"
+      ]
     },
     {
-      "name": "Backup Trigger API",
-      "description": "API endpoint to trigger GitHub Actions backup workflow",
+      "name": "Main Sheet (Inventory Tracking)",
+      "description": "Track part status through lifecycle from Pending to Arrived to Available to Call List with auto-move workflow",
       "files": [
-        "src/app/api/trigger-backup/route.ts"
-      ],
-      "api_doc": {
-        "openapi": "3.0.0",
-        "paths": {
-          "/api/trigger-backup": {
-            "post": {
-              "summary": "Trigger backup workflow",
-              "responses": {
-                "200": {
-                  "description": "Backup triggered successfully"
-                },
-                "500": {
-                  "description": "Server error"
-                }
-              }
-            }
-          }
-        }
-      }
+        "src/app/main-sheet/page.tsx",
+        "src/components/grid/DataGrid.tsx",
+        "src/components/grid/DynamicDataGrid.tsx",
+        "src/components/grid/renderers/*",
+        "src/components/main-sheet/MainSheetToolbar.tsx",
+        "src/store/slices/inventorySlice.ts",
+        "src/hooks/useAutoMoveVins.ts"
+      ]
     },
     {
-      "name": "Database Service",
-      "description": "Supabase client and database operations for orders and reminders",
+      "name": "Booking System",
+      "description": "Premium calendar interface for scheduling appointments with multi-VIN customer grouping",
+      "files": [
+        "src/app/booking/page.tsx",
+        "src/components/booking/BookingCalendarGrid.tsx",
+        "src/components/booking/BookingSidebar.tsx",
+        "src/components/booking/BookingSidebarCustomerList.tsx",
+        "src/components/booking/BookingSidebarDetails.tsx",
+        "src/components/booking/BookingSidebarFooter.tsx",
+        "src/components/booking/BookingSidebarHeader.tsx",
+        "src/components/booking/BookingTasks.tsx",
+        "src/store/slices/bookingSlice.ts"
+      ]
+    },
+    {
+      "name": "Call List Management",
+      "description": "Manage customer contact queue and track call status with communication logging",
+      "files": [
+        "src/app/call-list/page.tsx",
+        "src/store/slices/callListSlice.ts"
+      ]
+    },
+    {
+      "name": "Archive System",
+      "description": "Maintain 48-hour historical retention with immutable records and audit trails",
+      "files": [
+        "src/app/archive/page.tsx",
+        "src/components/shared/ArchiveReasonModal.tsx",
+        "src/store/slices/historySlice.ts"
+      ]
+    },
+    {
+      "name": "Search & Discovery",
+      "description": "Cross-tab search functionality across VIN, Customer Name, Part Number, and Company",
+      "files": [
+        "src/components/search/SearchResultsView.tsx",
+        "src/components/search/SearchResultsGrid.tsx",
+        "src/components/search/SearchResultsHeader.tsx",
+        "src/components/search/hooks/useSearchResults.ts",
+        "src/components/shared/search/useCrossTabSearch.ts",
+        "src/components/shared/search/CrossTabSearchProvider.tsx"
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "description": "Real-time dashboard with stats, charts, and calendar widget",
+      "files": [
+        "src/app/page.tsx",
+        "src/components/dashboard/CapacityChart.tsx",
+        "src/components/dashboard/DistributionChart.tsx"
+      ]
+    },
+    {
+      "name": "Settings & Configuration",
+      "description": "Manage part statuses, appearance, and history settings with Renault branding",
+      "files": [
+        "src/components/shared/SettingsModal.tsx",
+        "src/components/shared/settings/*",
+        "src/store/slices/settingsSlice.ts"
+      ]
+    },
+    {
+      "name": "Notifications System",
+      "description": "Responsive alert system with numbered badges and direct navigation to source items",
+      "files": [
+        "src/components/shared/NotificationsDropdown.tsx",
+        "src/store/slices/notificationSlice.ts",
+        "src/components/shared/InfoLabel.tsx"
+      ]
+    },
+    {
+      "name": "Data Grid Components",
+      "description": "Custom ag-Grid renderers and components for optimized data display",
+      "files": [
+        "src/components/grid/renderers/*",
+        "src/components/grid/config/*",
+        "src/components/grid/hooks/*",
+        "src/lib/ag-grid-setup.ts"
+      ]
+    },
+    {
+      "name": "State Management",
+      "description": "Zustand store with selective persistence and localStorage integration",
+      "files": [
+        "src/store/useStore.ts",
+        "src/store/slices/*",
+        "src/store/types.ts"
+      ]
+    },
+    {
+      "name": "UI Components",
+      "description": "Shared UI components using Radix UI primitives with custom theming",
+      "files": [
+        "src/components/ui/*",
+        "src/components/shared/*",
+        "src/components/providers/*"
+      ]
+    },
+    {
+      "name": "Supabase Integration",
+      "description": "Database integration with Supabase for data persistence and real-time updates",
       "files": [
         "src/lib/supabase.ts",
-        "src/services/orderService.ts"
-      ],
-      "api_doc": {}
-    },
-    {
-      "name": "Restore Service",
-      "description": "Database restoration functionality to restore snapshots",
-      "files": [
+        "src/types/supabase.ts",
         "src/services/restoreService.ts"
-      ],
-      "api_doc": {}
+      ]
     },
     {
-      "name": "API Response Utilities",
-      "description": "Standardized success and error response helpers",
+      "name": "Backup & Restore",
+      "description": "System backup and restore functionality with scheduling capabilities",
       "files": [
-        "src/lib/apiResponse.ts"
-      ],
-      "api_doc": {}
+        "src/app/api/trigger-backup/route.ts",
+        "src/components/reports/BackupReportsTab.tsx",
+        "src/components/reports/SchedulingCard.tsx",
+        "src/components/reports/RecipientsCard.tsx",
+        "src/components/reports/ManualActionCard.tsx",
+        "src/components/reports/FrequencyPicker.tsx"
+      ]
     },
     {
-      "name": "Batch Processing",
-      "description": "Utility for processing items in batches to avoid overwhelming system resources",
+      "name": "Error Handling",
+      "description": "Client-side error boundaries and graceful fallback mechanisms",
       "files": [
-        "src/lib/batchUtils.ts"
-      ],
-      "api_doc": {}
-    },
-    {
-      "name": "Data Validation",
-      "description": "Zod schemas for validating order data structures",
-      "files": [
-        "src/schemas/order.schema.ts"
-      ],
-      "api_doc": {}
+        "src/components/shared/ClientErrorBoundary.tsx",
+        "src/app/global-error.tsx"
+      ]
     }
   ]
 }

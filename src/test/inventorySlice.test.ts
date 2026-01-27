@@ -37,8 +37,6 @@ describe("inventorySlice", () => {
 					...createOrdersSlice(a[0], a[1], a[2] as any),
 					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
 					...createInventorySlice(a[0], a[1], a[2] as any),
-					addCommit: vi.fn(),
-					debouncedCommit: vi.fn(),
 					bookingRowData: [],
 					// biome-ignore lint/suspicious/noExplicitAny: Mock store structure
 				}) as unknown as any,
@@ -56,7 +54,6 @@ describe("inventorySlice", () => {
 		expect(state.rowData).toHaveLength(1);
 		expect(state.rowData[0].status).toBe("Pending");
 		expect(state.rowData[0].trackingId).toBe("MAIN-B1");
-		expect(state.addCommit).toHaveBeenCalledWith("Commit to Main Sheet");
 	});
 
 	it("should send main sheet rows to call list", () => {
@@ -70,7 +67,6 @@ describe("inventorySlice", () => {
 		expect(state.callRowData).toHaveLength(1);
 		expect(state.callRowData[0].status).toBe("Call");
 		expect(state.callRowData[0].trackingId).toBe("CALL-B1");
-		expect(state.addCommit).toHaveBeenCalledWith("Send to Call List");
 	});
 
 	it("should archive rows from any sheet", () => {
@@ -86,7 +82,6 @@ describe("inventorySlice", () => {
 		expect(state.archiveRowData).toHaveLength(2);
 		expect(state.archiveRowData[0].status).toBe("Archived");
 		expect(state.archiveRowData[0].actionNote).toContain("Test Archive");
-		expect(state.addCommit).toHaveBeenCalledWith("Send to Archive");
 	});
 
 	it("should send rows back to reorder", () => {
@@ -101,7 +96,6 @@ describe("inventorySlice", () => {
 		expect(state.ordersRowData[0].status).toBe("Reorder");
 		expect(state.ordersRowData[0].trackingId).toBe("ORD-B1");
 		expect(state.ordersRowData[0].actionNote).toContain("Defective Part");
-		expect(state.addCommit).toHaveBeenCalledWith("Send to Reorder");
 	});
 
 	it("should update part status correctly", () => {
@@ -111,8 +105,5 @@ describe("inventorySlice", () => {
 		store.getState().updatePartStatus("1", "Arrived");
 
 		expect(store.getState().rowData[0].partStatus).toBe("Arrived");
-		expect(store.getState().debouncedCommit).toHaveBeenCalledWith(
-			"Update Part Status",
-		);
 	});
 });

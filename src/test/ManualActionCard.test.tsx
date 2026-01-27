@@ -30,16 +30,17 @@ vi.mock("../components/ui/card", () => ({
     CardContent: ({ children }: { children: React.ReactNode }) => <div data-testid="card-content">{children}</div>,
     CardDescription: ({ children }: { children: React.ReactNode }) => <div data-testid="card-description">{children}</div>,
     CardHeader: ({ children }: { children: React.ReactNode }) => <div data-testid="card-header">{children}</div>,
-    CardTitle: ({ children }: { children: React.ReactNode }) => <div data-testid="card-title">{children}</div>,
+    CardTitle: ({ children, className }: { children: React.ReactNode; className?: string }) => <div data-testid="card-title" className={className}>{children}</div>,
 }));
 
-vi.mock("../components/ui/button", () => ({
-    Button: ({ children, onClick, disabled, variant }: any) => (
+vi.mock("@/components/ui/button", () => ({
+    Button: ({ children, onClick, disabled, variant, type }: any) => (
         <button
             data-testid="send-button"
             onClick={onClick}
             disabled={disabled}
             data-variant={variant}
+            type={type}
         >
             {children}
         </button>
@@ -52,9 +53,10 @@ vi.mock("lucide-react", () => ({
     Send: ({ className }: { className: string }) => <span data-testid="send-icon" className={className} />,
 }));
 
+import { toast } from "sonner";
+
 describe("ManualActionCard", () => {
     const mockTriggerManualBackup = vi.fn();
-    const { toast } = require("sonner");
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -251,13 +253,13 @@ describe("ManualActionCard", () => {
         render(<ManualActionCard isLocked={false} />);
 
         const button = screen.getByTestId("send-button");
-        
+
         // First click
         await userEvent.click(button);
-        
+
         // Second click should be ignored (button should be disabled during loading)
         expect(button).toBeDisabled();
-        
+
         await waitFor(() => {
             expect(mockTriggerManualBackup).toHaveBeenCalledTimes(1);
         });

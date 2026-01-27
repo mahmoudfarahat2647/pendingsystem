@@ -35,9 +35,6 @@ describe("ordersSlice", () => {
 				({
 					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
 					...createOrdersSlice(a[0], a[1], a[2] as any),
-					// Mock other slices that ordersSlice depends on
-					addCommit: vi.fn(),
-					debouncedCommit: vi.fn(),
 					rowData: [],
 					bookingRowData: [],
 					callRowData: [],
@@ -58,7 +55,6 @@ describe("ordersSlice", () => {
 
 		expect(store.getState().ordersRowData).toHaveLength(1);
 		expect(store.getState().ordersRowData[0]).toEqual(mockRow);
-		expect(store.getState().addCommit).toHaveBeenCalledWith("Add Order");
 	});
 
 	it("should add multiple orders", () => {
@@ -67,9 +63,6 @@ describe("ordersSlice", () => {
 		store.getState().addOrders(orders);
 
 		expect(store.getState().ordersRowData).toHaveLength(2);
-		expect(store.getState().addCommit).toHaveBeenCalledWith(
-			"Add Multiple Orders",
-		);
 	});
 
 	it("should update an order using updateOrder", () => {
@@ -79,9 +72,6 @@ describe("ordersSlice", () => {
 		store.getState().updateOrder("1", { customerName: "Jane Doe" });
 
 		expect(store.getState().ordersRowData[0].customerName).toBe("Jane Doe");
-		expect(store.getState().debouncedCommit).toHaveBeenCalledWith(
-			"Update Order: 1",
-		);
 	});
 
 	it("should bulk update orders using updateOrders", () => {
@@ -105,7 +95,6 @@ describe("ordersSlice", () => {
 		expect(state.ordersRowData.find((r) => r.id === "3")?.status).toBe(
 			"Orders",
 		);
-		expect(state.debouncedCommit).toHaveBeenCalledWith("Bulk Update Orders");
 	});
 
 	it("should delete orders using deleteOrders", () => {
@@ -120,6 +109,5 @@ describe("ordersSlice", () => {
 
 		expect(store.getState().ordersRowData).toHaveLength(1);
 		expect(store.getState().ordersRowData[0].id).toBe("2");
-		expect(store.getState().addCommit).toHaveBeenCalledWith("Delete Orders");
 	});
 });

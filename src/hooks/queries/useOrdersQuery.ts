@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { type OrderStage, orderService } from "@/services/orderService";
-import { useAppStore } from "@/store/useStore";
 
 export function useOrdersQuery(stage?: OrderStage) {
 	return useQuery({
@@ -78,9 +77,6 @@ export function useBulkUpdateOrderStageMutation() {
 			// Invalidate everything to be safe
 			queryClient.invalidateQueries({ queryKey: ["orders"] });
 		},
-		onSuccess: (_, variables) => {
-			useAppStore.getState().addCommit(`Bulk update orders to stage: ${variables.stage}`);
-		},
 	});
 }
 
@@ -144,9 +140,7 @@ export function useSaveOrderMutation() {
 			queryClient.invalidateQueries({ queryKey: ["orders", variables.stage] });
 		},
 		onSuccess: (_, variables) => {
-			const action = variables.id ? "Update Order" : "Create Order";
-			const trackingId = variables.updates?.trackingId || variables.id || "New";
-			useAppStore.getState().addCommit(`${action}: ${trackingId}`);
+			void variables;
 		},
 	});
 }
@@ -159,7 +153,7 @@ export function useDeleteOrderMutation() {
 		onSuccess: (_, id) => {
 			queryClient.invalidateQueries({ queryKey: ["orders"] });
 			toast.success("Order deleted");
-			useAppStore.getState().addCommit(`Delete Order: ${id}`);
+			void id;
 		},
 	});
 }

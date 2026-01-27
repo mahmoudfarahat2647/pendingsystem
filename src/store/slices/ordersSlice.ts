@@ -35,11 +35,9 @@ export const createOrdersSlice: StateCreator<
 	 * })
 	 */
 	addOrder: (order) => {
-		get().pushUndo();
 		set((state) => ({
 			ordersRowData: [...state.ordersRowData, order],
 		}));
-		get().addCommit("Add Order");
 	},
 
 	/**
@@ -55,11 +53,9 @@ export const createOrdersSlice: StateCreator<
 	 * ])
 	 */
 	addOrders: (orders) => {
-		get().pushUndo();
 		set((state) => ({
 			ordersRowData: [...state.ordersRowData, ...orders],
 		}));
-		get().addCommit("Add Multiple Orders");
 	},
 
 	/**
@@ -77,7 +73,6 @@ export const createOrdersSlice: StateCreator<
 	 * })
 	 */
 	updateOrder: (id, updates) => {
-		get().pushUndo();
 		// Optimized: Use index-based lookup instead of full array map
 		const updateInArray = (arr: PendingRow[]) => {
 			const idx = arr.findIndex((row) => row.id === id);
@@ -94,7 +89,6 @@ export const createOrdersSlice: StateCreator<
 			callRowData: updateInArray(state.callRowData),
 			archiveRowData: updateInArray(state.archiveRowData),
 		}));
-		get().debouncedCommit(`Update Order: ${id}`);
 	},
 
 	/**
@@ -112,7 +106,6 @@ export const createOrdersSlice: StateCreator<
 	 * })
 	 */
 	updateOrders: (ids, updates) => {
-		get().pushUndo();
 		// Optimized: Create Set for O(1) lookup instead of O(n) includes check
 		const idSet = new Set(ids);
 		const updateInArray = (arr: PendingRow[]) => {
@@ -132,7 +125,6 @@ export const createOrdersSlice: StateCreator<
 			callRowData: updateInArray(state.callRowData),
 			archiveRowData: updateInArray(state.archiveRowData),
 		}));
-		get().debouncedCommit("Bulk Update Orders");
 	},
 
 	/**
@@ -147,7 +139,6 @@ export const createOrdersSlice: StateCreator<
 	 * deleteOrders(["id1", "id2"])
 	 */
 	deleteOrders: (ids) => {
-		get().pushUndo();
 		const filterArray = (arr: PendingRow[]) =>
 			arr.filter((row) => !ids.includes(row.id));
 
@@ -158,7 +149,6 @@ export const createOrdersSlice: StateCreator<
 			callRowData: filterArray(state.callRowData),
 			archiveRowData: filterArray(state.archiveRowData),
 		}));
-		get().addCommit("Delete Orders");
 	},
 
 	setOrdersRowData: (orders) => {

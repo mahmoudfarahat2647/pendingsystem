@@ -75,14 +75,12 @@ export const createUISlice: StateCreator<
 				? state.models
 				: [...state.models, model],
 		}));
-		get().addCommit("Add Model");
 	},
 
 	removeModel: (model) => {
 		set((state) => ({
 			models: state.models.filter((m) => m !== model),
 		}));
-		get().addCommit("Remove Model");
 	},
 
 	addRepairSystem: (system) => {
@@ -91,14 +89,12 @@ export const createUISlice: StateCreator<
 				? state.repairSystems
 				: [...state.repairSystems, system],
 		}));
-		get().addCommit("Add Repair System");
 	},
 
 	removeRepairSystem: (system) => {
 		set((state) => ({
 			repairSystems: state.repairSystems.filter((s) => s !== system),
 		}));
-		get().addCommit("Remove Repair System");
 	},
 
 	addTodo: (text) => {
@@ -114,7 +110,6 @@ export const createUISlice: StateCreator<
 				},
 			],
 		}));
-		get().addCommit("Add Todo");
 	},
 
 	toggleTodo: (id) => {
@@ -124,7 +119,6 @@ export const createUISlice: StateCreator<
 				todo.id === id ? { ...todo, completed: !todo.completed } : todo,
 			),
 		}));
-		get().debouncedCommit("Toggle Todo");
 	},
 
 	deleteTodo: (id) => {
@@ -132,7 +126,6 @@ export const createUISlice: StateCreator<
 		set((state) => ({
 			todos: state.todos.filter((todo) => todo.id !== id),
 		}));
-		get().addCommit("Delete Todo");
 	},
 
 	addNote: (content, color) => {
@@ -148,7 +141,6 @@ export const createUISlice: StateCreator<
 				},
 			],
 		}));
-		get().addCommit("Add Note");
 	},
 
 	updateNote: (id, content) => {
@@ -158,7 +150,6 @@ export const createUISlice: StateCreator<
 				note.id === id ? { ...note, content } : note,
 			),
 		}));
-		get().addCommit("Update Note");
 	},
 
 	deleteNote: (id) => {
@@ -166,56 +157,48 @@ export const createUISlice: StateCreator<
 		set((state) => ({
 			notes: state.notes.filter((note) => note.id !== id),
 		}));
-		get().addCommit("Delete Note");
 	},
 
 	addNoteTemplate: (template) => {
 		set((state) => ({
 			noteTemplates: [...state.noteTemplates, template],
 		}));
-		get().addCommit("Add Note Template");
 	},
 
 	removeNoteTemplate: (template) => {
 		set((state) => ({
 			noteTemplates: state.noteTemplates.filter((t) => t !== template),
 		}));
-		get().addCommit("Remove Note Template");
 	},
 
 	addReminderTemplate: (template) => {
 		set((state) => ({
 			reminderTemplates: [...state.reminderTemplates, template],
 		}));
-		get().addCommit("Add Reminder Template");
 	},
 
 	removeReminderTemplate: (template) => {
 		set((state) => ({
 			reminderTemplates: state.reminderTemplates.filter((t) => t !== template),
 		}));
-		get().addCommit("Remove Reminder Template");
 	},
 
 	addReasonTemplate: (template) => {
 		set((state) => ({
 			reasonTemplates: [...state.reasonTemplates, template],
 		}));
-		get().addCommit("Add Reason Template");
 	},
 
 	removeReasonTemplate: (template) => {
 		set((state) => ({
 			reasonTemplates: state.reasonTemplates.filter((t) => t !== template),
 		}));
-		get().addCommit("Remove Reason Template");
 	},
 
 	addPartStatusDef: (status) => {
 		set((state) => ({
 			partStatuses: [...state.partStatuses, status],
 		}));
-		get().addCommit("Add Part Status Definition");
 	},
 
 	updatePartStatusDef: (id, updates) => {
@@ -247,8 +230,6 @@ export const createUISlice: StateCreator<
 				bookingRowData: updateRows(state.bookingRowData),
 			}));
 		}
-
-		get().addCommit("Update Part Status Definition");
 	},
 
 	removePartStatusDef: (id) => {
@@ -256,7 +237,6 @@ export const createUISlice: StateCreator<
 		set((state) => ({
 			partStatuses: state.partStatuses.filter((s) => s.id !== id),
 		}));
-		get().addCommit("Remove Part Status Definition");
 	},
 
 	setIsLocked: (isLocked) => set({ isLocked }),
@@ -279,21 +259,5 @@ export const createUISlice: StateCreator<
 			delete newTriggers[id];
 			return { beastModeTriggers: newTriggers };
 		});
-	},
-
-	resetStore: () => {
-		set({
-			ordersRowData: [],
-			rowData: [],
-			callRowData: [],
-			archiveRowData: [],
-			bookingRowData: [],
-			notifications: [],
-
-			undoStack: [],
-			redoStack: [],
-			...initialState,
-		});
-		get().addCommit("Reset Store");
 	},
 });

@@ -56,13 +56,18 @@ describe("orderService", () => {
 	it("should delete an order with valid UUID", async () => {
 		const mockId = "00000000-0000-0000-0000-000000000000";
 		// biome-ignore lint/suspicious/noExplicitAny: Mocking Supabase client
+		const mockDelete = vi.fn().mockReturnThis();
+		const mockEq = vi.fn().mockResolvedValue({ error: null });
 		(supabase.from as any).mockReturnValue({
-			delete: vi.fn().mockReturnThis(),
-			eq: vi.fn().mockResolvedValue({ error: null }),
+			delete: mockDelete,
+			eq: mockEq,
 		});
 
 		await orderService.deleteOrder(mockId);
 
+		// Should attempt to clean up activity_log first
+		expect(supabase.from).toHaveBeenCalledWith("activity_log");
+		// Then delete the order
 		expect(supabase.from).toHaveBeenCalledWith("orders");
 	});
 

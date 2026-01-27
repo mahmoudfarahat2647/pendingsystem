@@ -1,9 +1,8 @@
 {
   "status": "commited",
-  "type": "backend",
+  "type": "frontend",
   "scope": "codebase",
   "localEndpoint": "http://localhost:3000",
-  "backendAuthType": "public",
   "executionArgs": {
     "projectName": "pendingsystem",
     "projectPath": "d:\\pendingsystem",
@@ -12,5 +11,6 @@
     "envs": {
       "API_KEY": "sk-user-lbfA6dNLySr3zmbe_c4QM2RMtY0aBGDfHQ0J-HLwza3EFGhWvvU7A3rGyNTrVMnn8AzDDgfxFc3xIEu_-xM3b9J6J6lgw4GxhW_84yXPXwe7GR2o-G78lBXuIp63c9dbsLo"
     }
-  }
+  },
+  "proxy": "http://b875cc36-63d0-49a9-83fa-5cf6633fa0b1:I4GJpuTE7sC6hhNUQ3UJDy1Z8PjfKqDr@tun.testsprite.com:8080"
 }

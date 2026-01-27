@@ -85,7 +85,6 @@ The app uses **Zustand** with six specialized slices:
 | **Booking** | Customer appointments | `sendToBooking`, `updateBookingStatus` |
 | **Call List** | Customer communication | `sendToCallList`, `markCallCompleted` |
 | **Notifications** | System alerts | `addNotification`, `clearNotifications` |
-| **History** | Undo/redo operations | `addCommit`, `undo`, `redo` |
 
 → See [Store API Reference](./STORE_API.md) for detailed action signatures
 

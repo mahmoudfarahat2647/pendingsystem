@@ -203,6 +203,18 @@ export const orderService = {
 			console.warn(`Skipping delete for non-UUID id: ${id}`);
 			return;
 		}
+
+		// First, clean up any activity_log records related to this order
+		// This prevents foreign key constraint violations
+		try {
+			await supabase.from("activity_log").delete().eq("order_id", id);
+		} catch (e) {
+			// activity_log might not exist or might not have order_id column
+			// This is safe to ignore
+			console.debug("Could not clean up activity_log:", e);
+		}
+
+		// Then delete the order
 		const { error } = await supabase.from("orders").delete().eq("id", id);
 		if (error) handleSupabaseError(error);
 	},
@@ -290,12 +302,32 @@ export const orderService = {
 			return parseResult.data;
 		}
 
-		// Production: Log but fallback to best-effort data to prevent crash
+		// Production: Enhanced error logging and graceful fallback
 		if (!parseResult.success) {
+			const errorDetails = parseResult.error.flatten();
 			console.warn(
 				`[Zod Validation Warning] Invalid order data for ID ${row.id}:`,
-				parseResult.error.flatten().fieldErrors,
+				{
+					orderId: row.id,
+					errors: errorDetails.fieldErrors,
+					data: resultObj,
+					timestamp: new Date().toISOString(),
+				}
 			);
+
+			// Log specific array field issues for debugging
+			const arrayFields = ['customerName', 'mobile', 'model'];
+			const arrayFieldIssues = arrayFields.filter(field => 
+				Array.isArray(resultObj[field]) && resultObj[field].length > 0
+			);
+			
+			if (arrayFieldIssues.length > 0) {
+				console.warn(
+					`[Array Field Detected] Order ID ${row.id} has array fields that should be strings:`,
+					arrayFieldIssues
+				);
+			}
+
 			// Even if validation fails, return raw object cast to PendingRow.
 			// Note: Transforms did NOT run, so legacy fields might be out of sync if validation failed.
 			return resultObj as PendingRow;

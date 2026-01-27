@@ -5,7 +5,6 @@ import {
 	Download,
 	Redo2,
 	RefreshCw,
-	Save,
 	Search,
 	Undo2,
 	X,
@@ -30,7 +29,6 @@ export const Header = React.memo(function Header() {
 	const redoStack = useAppStore((state) => state.redoStack);
 	const undo = useAppStore((state) => state.undo);
 	const redo = useAppStore((state) => state.redo);
-	const commitSave = useAppStore((state) => state.commitSave);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
 	// Handle keyboard shortcuts
@@ -64,16 +62,11 @@ export const Header = React.memo(function Header() {
 				e.preventDefault();
 				redo();
 			}
-			// Cmd/Ctrl + S for save
-			if ((e.metaKey || e.ctrlKey) && e.key === "s") {
-				e.preventDefault();
-				commitSave();
-			}
 		};
 
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [undo, redo, commitSave]);
+	}, [undo, redo]);
 
 	// Notification Check Interval (Throttled to reduce lag)
 	useEffect(() => {
@@ -183,16 +176,6 @@ export const Header = React.memo(function Header() {
 						title="Redo (Cmd+Shift+Z)"
 					>
 						<Redo2 className="h-4 w-4" />
-					</button>
-					<div className="w-px h-4 bg-white/10" />
-					<button
-						type="button"
-						suppressHydrationWarning
-						onClick={commitSave}
-						className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
-						title="Save Changes (Cmd+S)"
-					>
-						<Save className="h-4 w-4" />
 					</button>
 				</div>
 

@@ -176,7 +176,6 @@ export const useAppStore = create<CombinedStore>()(
 | **Booking** | `bookingRowData[]`, `bookingStatuses` | `sendToBooking`, `updateBookingStatus`, `updateBookingStatusDef` |
 | **Notifications** | `notifications[]`, `notificationInterval` | `addNotification`, `clearNotifications` |
 | **UI** | `selectedRows[]`, `partStatuses[]` | `setSelectedRows`, `updatePartStatusDef` |
-| **History** | `undoStack[]`, `redos[]` | `addCommit`, `undo`, `redo` |
 
 ---
 
@@ -194,7 +193,6 @@ The system uses a **Definition-driven Status System** instead of static enumerat
 
 - **Method**: localStorage with key `"pending-sys-storage-v1.1"`
 - **Selective**: Heavy arrays (commits, attachments) excluded
-- **Retention**: 48-hour history in memory
 - **Recovery**: Auto-restore on page reload
 
 ---

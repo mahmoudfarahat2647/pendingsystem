@@ -102,7 +102,7 @@ describe("useRowModals Stage Routing", () => {
     });
 
     it("should pass sourceTag as stage when saveArchive is called", async () => {
-        const { result } = renderHook(() => useRowModals(mockOnUpdate, mockOnArchive));
+        const { result } = renderHook(() => useRowModals(mockOnUpdate, undefined));
 
         act(() => {
             result.current.handleNoteClick(mockRow, "Main Sheet");

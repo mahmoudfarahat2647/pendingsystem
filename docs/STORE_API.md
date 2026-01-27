@@ -11,7 +11,6 @@ Complete reference for all Zustand store actions and state management in the Ren
 - [Booking Slice](#booking-slice)
 - [Notifications Slice](#notifications-slice)
 - [UI Slice](#ui-slice)
-- [History Slice](#history-slice)
 
 ---
 
@@ -83,7 +82,6 @@ updateOrder("order-1", {
 **Behavior**:
 - Merges updates with existing data
 - Updates across all sheets (Orders, Main, Booking, Call, Archive)
-- Adds to history with action label
 
 ---
 
@@ -114,7 +112,6 @@ deleteOrders(["id1", "id2"]);
 
 **Behavior**:
 - Removes from Orders, Main Sheet, Booking, Call, Archive
-- Creates history commit
 - No recovery (use Undo for recent deletions)
 
 ---
@@ -171,7 +168,6 @@ updatePartStatus("order-1", "Arrived");
 **Automatic Behaviors**:
 - Status `"Arrived"` + all parts arrived → **Auto-move to Call List**
 - Triggers notifications
-- Updates part tracking history
 
 **Example - Auto-move Workflow**:
 ```typescript
@@ -246,7 +242,7 @@ sendToArchive(
 
 **Triggered from**: Any sheet (Booking, Call List, Main, Orders)
 
-**Retention**: 48-hour history (then eligible for cleanup)
+**Retention**: Archive records are retained
 
 ---
 
@@ -297,7 +293,6 @@ updateBookingStatusDef("pending", {
 **Data Integrity Behavior**:
 - If `label` is changed, ALL rows in `bookingRowData` with the old label are automatically updated to the new label.
 - Color changes reflect immediately in the UI without modifying row data.
-- Adds "Update Booking Status Definition" to history.
 
 ---
 
@@ -463,83 +458,7 @@ updatePartStatusDef("arrived", {
   - `archiveRowData`
   - `bookingRowData` (individual line items)
 - Matches by exact label string and replaces with new label.
-- Adds "Update Part Status Definition" to history.
 
----
-
-## History Slice
-
-Undo/redo and audit trail functionality.
-
-### State
-
-```typescript
-interface HistoryState {
-  undoStack: string[];      // Action descriptions
-  redos: string[];          // Redo stack
-  commits: CommitEntry[];   // Full audit trail (48h)
-}
-```
-
-### Actions
-
-#### `addCommit(action: string): void`
-
-**Record action in history** (used internally by all slices).
-
-```typescript
-const { addCommit } = useAppStore();
-addCommit("Update Order: order-1");
-```
-
-**Called Automatically**: Most state changes auto-log
-
-**Common Actions**:
-- `"Add Order"`
-- `"Commit to Main Sheet"`
-- `"Update Part Status"`
-- `"Send to Booking"`
-- `"Send to Archive"`
-
----
-
-#### `undo(): void`
-
-Revert to previous state.
-
-```typescript
-const { undo } = useAppStore();
-undo();  // Revert last action
-```
-
-**Behavior**:
-- Pops undoStack
-- Pushes to redoStack
-- Restores previous state
-
-**Limit**: 48-hour history
-
----
-
-#### `redo(): void`
-
-Re-apply last undone action.
-
-```typescript
-const { redo } = useAppStore();
-redo();  // Re-apply undone action
-```
-
----
-
-#### `clearHistory(): void`
-
-Purge all history (caution: cannot recover).
-
-```typescript
-const { clearHistory } = useAppStore();
-clearHistory();
-```
 
 ---
 
@@ -622,8 +541,7 @@ undo();  // Orders restored
 1. **Batch Operations**: Use `addOrders()` not repeated `addOrder()`
 2. **Selective Updates**: Only update changed fields with `updateOrders()`
 3. **Set Operations**: Built-in optimization for O(1) lookups
-4. **Debounced History**: Use `debouncedCommit()` for rapid updates
-5. **Memoize Selectors**: Use `useAppStore(state => state.rowData)` pattern
+4. **Memoize Selectors**: Use `useAppStore(state => state.rowData)` pattern
 
 ---
 
@@ -647,12 +565,6 @@ localStorage.clear();  // Clear all state
 location.reload();     // Reload app
 ```
 
-### View History
-
-```typescript
-useAppStore.getState().commits;  // Audit trail
-useAppStore.getState().undoStack;  // Undo history
-```
 
 ---
 

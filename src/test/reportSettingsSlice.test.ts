@@ -43,6 +43,9 @@ describe("reportSettingsSlice", () => {
 
             expect(global.fetch).toHaveBeenCalledWith("/api/trigger-backup", {
                 method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
             expect(fetchSpy).toHaveBeenCalled();
             expect(store.getState().isReportSettingsLoading).toBe(false);

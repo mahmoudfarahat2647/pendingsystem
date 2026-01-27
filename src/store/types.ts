@@ -1,6 +1,5 @@
 import type {
 	AppNotification,
-	CommitLog,
 	PartStatusDef,
 	PendingRow,
 	StickyNote,
@@ -109,21 +108,6 @@ export interface UIActions {
 	setIsLocked: (isLocked: boolean) => void;
 	triggerBeastMode: (id: string, timestamp: number) => void;
 	clearBeastMode: (id: string) => void;
-	resetStore: () => void;
-}
-
-export interface HistoryState {
-	// commits: CommitLog[]; // Removed
-	// isRestoring: boolean; // Removed
-}
-
-export interface HistoryActions {
-	addCommit: (actionName: string) => void;
-	// restoreToCommit: (commitId: string) => Promise<void>;
-	// setIsRestoring: (val: boolean) => void;
-	// clearHistory: () => void;
-	commitSave: () => void;
-	debouncedCommit: (actionName: string) => void;
 }
 
 export interface UndoRedoSnapshot {
@@ -166,7 +150,6 @@ export type StoreState = OrdersState &
 	BookingState &
 	NotificationState &
 	UIState &
-	HistoryState &
 	UndoRedoState &
 	GridSliceState &
 	ReportSettingsState;
@@ -175,7 +158,6 @@ export type StoreActions = OrdersActions &
 	BookingActions &
 	NotificationActions &
 	UIActions &
-	HistoryActions &
 	UndoRedoActions &
 	GridSliceActions &
 	ReportSettingsActions;

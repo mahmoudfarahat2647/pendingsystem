@@ -31,7 +31,6 @@ Project Organization:
 
 State Management (Zustand):
 - Always use selective selectors to prevent unnecessary re-renders (e.g., `useAppStore(state => state.data)` instead of `useAppStore()`).
-- Use the internal `debouncedCommit` for frequent data updates to group history snapshots.
 - Avoid storing derived state in the store; use `useMemo` in components or selectors.
 
 Feature Protection & Performance:

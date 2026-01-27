@@ -49,6 +49,7 @@ export function ManualActionCard({ isLocked }: ManualActionCardProps) {
                         )}
                     </div>
                     <Button
+                        type="button"
                         variant="destructive"
                         onClick={handleTriggerBackup}
                         disabled={isReportSettingsLoading || isTriggering || isLoading || isLocked}

@@ -50,7 +50,6 @@ export const createBookingSlice: StateCreator<
 				bookingRowData: [...state.bookingRowData, ...updatedRows],
 			};
 		});
-		get().addCommit("Send to Booking");
 	},
 
 	/**
@@ -70,7 +69,6 @@ export const createBookingSlice: StateCreator<
 			callRowData: updateInArray(state.callRowData),
 			archiveRowData: updateInArray(state.archiveRowData),
 		}));
-		get().debouncedCommit("Update Booking Status");
 	},
 
 	setBookingRowData: (data) => {
