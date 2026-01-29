@@ -3,13 +3,9 @@
 > [!IMPORTANT]
 > This document serves as the single source of truth for all system features. **Update this file whenever a new feature is added or an existing one is modified.**
 
-## Core Infrastructure
-- **Store History & Restore**: 
-  - Tracks all state changes for 48 hours.
-  - Allows full system restoration to any previous "commit" point via Settings.
-  - Auto-cleans history older than 48h to maintain performance.
+-## Core Infrastructure
 - **Settings Modal**:
-  - Tabbed interface (Part Statuses, Appearance, History).
+  - Tabbed interface (Part Statuses, Appearance).
   - Accessible via Sidebar User Profile.
   - Centralized management for Part Status definitions.
 
@@ -67,17 +63,13 @@
   - **Pre-Booking Edits**: Set initial note and status in sidebar *before* confirming booking.
   - **Large Purple Action Button**: Premium pill-shaped "Book [Date]" button with hover elevations.
   - **Smart Navigation**: Jumping to a customer highlights their booked dates and auto-selects the relevant month.
-  - **History Tracking**: 
-    - Includes archived bookings as historical markers on calendar.
-    - Clickable "pill" badges for past booking dates to quickly review history.
   - **Search**: Filter bookings by customer name/VIN/part with visual fade effects for non-matches.
   - **3-Section Sidebar Layout**: 
     - Pre-booking setup (when creating new booking)
     - Customer list with selection
     - Details card with VIN, parts, and status dropdown
-    - History footer with past booking dates
   - **Workflow Optimization**: Modal stays open after booking for immediate status updates and note additions.
-- **Rebooking**: Dedicated button to reschedule, automatically opening the calendar with pre-filled search and history.
+- **Rebooking**: Dedicated button to reschedule, automatically opening the calendar with pre-filled search context.
   - System logs "Rescheduled from X to Y" notes automatically.
 
 ## Smart Notification System
@@ -93,8 +85,8 @@
   - Individual "X" delete icon per notification for quick cleanup.
   - "Clear All" functionality to wipe all alerts at once.
 
-## Archive & history
-- **Archive Page**: Read-only view of completed historical data.
+## Archive
+- **Archive Page**: Read-only view of completed items.
 - **Reorder**: Ability to move archived items back to Orders for re-processing.
 
 ## System Reports & Backup ([PROTECTED])

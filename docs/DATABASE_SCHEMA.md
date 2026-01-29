@@ -31,12 +31,3 @@ Stores scheduled reminders associated with orders.
 | `remind_at` | `timestamp` | Scheduled UTC time for the reminder |
 | `is_completed` | `boolean` | Completion status |
 
-## Table: `recent_activity`
-
-Aggregated view or table for dashboard activity logs.
-
-| Column | Type | Description |
-| :--- | :--- | :--- |
-| `id` | `uuid` | Primary Key |
-| `action_name` | `text` | Description of the action performed |
-| `timestamp` | `timestamp` | When the action occurred |

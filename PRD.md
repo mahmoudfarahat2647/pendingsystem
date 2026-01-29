@@ -38,7 +38,6 @@ To create an efficient, intuitive logistics platform that reduces operational ov
 - Automate routine operations and status updates
 - Provide real-time visibility across all stages of the workflow
 - Enable efficient customer communication and scheduling
-- Maintain comprehensive audit trails for compliance
 
 ### 3.2 Secondary Goals
 - Minimize training time with intuitive UI
@@ -62,45 +61,40 @@ To create an efficient, intuitive logistics platform that reduces operational ov
 - **FR-009**: Implement auto-move workflow when all parts arrive
 - **FR-010**: Provide locking mechanism to prevent accidental edits
 - **FR-011**: Support bulk operations on selected items
-- **FR-012**: Maintain historical status tracking
 
 ### 4.3 Customer Communication (Call List)
-- **FR-013**: Manage customer contact queue
-- **FR-014**: Track call status and log communications
-- **FR-015**: Facilitate movement to booking appointments
-- **FR-016**: Support note attachments for customer interactions
+- **FR-012**: Manage customer contact queue
+- **FR-013**: Track call status and log communications
+- **FR-014**: Facilitate movement to booking appointments
+- **FR-015**: Support note attachments for customer interactions
 
 ### 4.4 Booking System
-- **FR-017**: Provide premium calendar interface for scheduling
-- **FR-018**: Support multi-customer VIN grouping
-- **FR-019**: Enable pre-booking note configuration
-- **FR-020**: Implement visual booking indicators (color-coded)
-- **FR-021**: Maintain 2-year historical booking retention
-- **FR-022**: Allow rebooking with automatic history logging
+- **FR-016**: Provide premium calendar interface for scheduling
+- **FR-017**: Support multi-customer VIN grouping
+- **FR-018**: Enable pre-booking note configuration
+- **FR-019**: Implement visual booking indicators (color-coded)
+- **FR-020**: Maintain 2-year historical booking retention
+- **FR-021**: Allow rebooking with automatic note logging
 
-### 4.5 Archive & History
-- **FR-023**: Maintain 48-hour historical retention
-- **FR-024**: Document archived reasons for compliance
-- **FR-025**: Provide immutable records for audit trails
-- **FR-026**: Enable reorder capability from archived items
+### 4.5 Archive
+- **FR-022**: Document archived reasons for compliance
+- **FR-023**: Enable reorder capability from archived items
 
 ### 4.6 Notification System
-- **FR-027**: Implement responsive alert system with numbered badges
-- **FR-028**: Provide direct navigation to source items
-- **FR-029**: Display detailed metadata (Due Date, Customer Name, VIN, Tracking ID)
-- **FR-030**: Support individual and bulk notification management
+- **FR-024**: Implement responsive alert system with numbered badges
+- **FR-025**: Provide direct navigation to source items
+- **FR-026**: Display detailed metadata (Due Date, Customer Name, VIN, Tracking ID)
+- **FR-027**: Support individual and bulk notification management
 
 ### 4.7 Search & Discovery
-- **FR-031**: Enable cross-tab search functionality
-- **FR-032**: Search across VIN, Customer Name, Part Number, and Company
-- **FR-033**: Provide direct navigation to source rows
-- **FR-034**: Support advanced filtering capabilities
+- **FR-028**: Enable cross-tab search functionality
+- **FR-029**: Search across VIN, Customer Name, Part Number, and Company
+- **FR-030**: Provide direct navigation to source rows
+- **FR-031**: Support advanced filtering capabilities
 
 ### 4.8 Settings & Configuration
-- **FR-035**: Provide tabbed interface for Part Statuses, Appearance, and History
-- **FR-036**: Enable centralized management of Part Status definitions
-- **FR-037**: Support 48-hour history restoration capability
-- **FR-038**: Implement auto-cleaning of old history to maintain performance
+- **FR-032**: Provide tabbed interface for Part Statuses and Appearance
+- **FR-033**: Enable centralized management of Part Status definitions
 
 ## 5. Technical Requirements
 
@@ -216,7 +210,6 @@ Orders (Staging) → Main Sheet (Pending) → Main Sheet (Arrived) → Call List
 
 ### 9.2 Business Constraints
 - Automotive service center focused (not general-purpose)
-- 48-hour history retention requirement
 - Renault Pending System-specific branding and workflow requirements
 
 ## 10. Risk Assessment
@@ -261,7 +254,7 @@ Orders (Staging) → Main Sheet (Pending) → Main Sheet (Arrived) → Call List
 - Notification system
 
 ### Phase 3: Advanced Features (Months 3-4)
-- Archive and history management
+- Archive management
 - Advanced search capabilities
 - Reporting features
 
@@ -320,8 +313,7 @@ Orders (Staging) → Main Sheet (Pending) → Main Sheet (Arrived) → Call List
 - **Note Attachments**: Customer interaction documentation
 
 #### Archive (`/archive`)
-- **48-hour Retention**: Historical record management
-- **Immutable Records**: Audit trail compliance
+- **Read-only Records**: Completed items stored without edit access
 - **Archive Reasons**: Documentation for compliance
 - **Reorder Capability**: Quick reordering from archived items
 
@@ -333,8 +325,6 @@ Orders (Staging) → Main Sheet (Pending) → Main Sheet (Arrived) → Call List
 #### Settings & Configuration
 - **Part Status Management**: Centralized status definition with color customization
 - **Appearance Settings**: Theme and visual preferences
-- **History Management**: 48-hour restoration capability
-- **Auto-cleaning**: Performance optimization for old history
 
 ### 14.2 Technical Implementation Details
 
@@ -349,7 +339,6 @@ export const useAppStore = create<CombinedStore>()(
       ...createBookingSlice(...a),
       ...createNotificationSlice(...a),
       ...createUISlice(...a),
-      ...createHistorySlice(...a),
     }),
     {
       name: "pending-sys-storage-v1.1",
