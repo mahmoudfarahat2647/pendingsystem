@@ -16,9 +16,8 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
-import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
-import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -31,6 +30,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { cn } from "@/lib/utils";
 import type { PartStatus, PendingRow } from "@/types";
 
@@ -73,7 +73,8 @@ export const OrdersToolbar = ({
 	onCallList,
 	rowData = [],
 }: OrdersToolbarProps) => {
-	const { isDirty, saveLayout, saveAsDefault, resetLayout } = useColumnLayoutTracker("orders");
+	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
+		useColumnLayoutTracker("orders");
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
 
@@ -199,20 +200,22 @@ export const OrdersToolbar = ({
 							variant="ghost"
 							className={cn(
 								"h-8 w-8 transition-colors",
-								isSingleVin
+								selectedCount > 0
 									? "text-green-500 hover:text-green-400 hover:bg-green-500/10"
 									: "text-gray-600 cursor-not-allowed opacity-50",
 							)}
-							disabled={!isSingleVin}
+							disabled={selectedCount === 0}
 							onClick={onBooking}
 						>
 							<Calendar className="h-3.5 w-3.5" />
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>
-						{!isSingleVin && selectedCount > 0
-							? "Select items for a single VIN to book"
-							: "Booking"}
+						{selectedCount === 0
+							? "Select items to book"
+							: uniqueVins.size > 1
+								? `Book items for ${uniqueVins.size} customers`
+								: "Booking"}
 					</TooltipContent>
 				</Tooltip>
 
@@ -263,7 +266,7 @@ export const OrdersToolbar = ({
 					isDirty={isDirty}
 					onSave={saveLayout}
 					onSaveAsDefault={saveAsDefault}
-	onReset={resetLayout}
+					onReset={resetLayout}
 				/>
 
 				<div

@@ -7,6 +7,8 @@ interface SearchResultsHeaderProps {
 	resultCount: number;
 	counts: Record<string, number>;
 	onClear: () => void;
+	activeSources: string[];
+	onToggleSource: (source: string) => void;
 }
 
 export const SearchResultsHeader = ({
@@ -14,7 +16,13 @@ export const SearchResultsHeader = ({
 	resultCount,
 	counts,
 	onClear,
+	activeSources,
+	onToggleSource,
 }: SearchResultsHeaderProps) => {
+	const allSources = Object.keys(counts);
+	const hasActiveFilters =
+		activeSources.length > 0 && activeSources.length < allSources.length;
+
 	return (
 		<div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0a0a0b]/50 backdrop-blur-xl">
 			<div className="flex items-center gap-4">
@@ -36,24 +44,43 @@ export const SearchResultsHeader = ({
 			</div>
 
 			<div className="flex items-center gap-2">
-				{Object.entries(counts).map(([source, count]) => (
-					<div
-						key={source}
-						className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-300"
-					>
-						<span
-							className={cn("w-1.5 h-1.5 rounded-full", {
-								"bg-indigo-500": source === "Main Sheet",
-								"bg-orange-500": source === "Orders",
-								"bg-purple-500": source === "Booking",
-								"bg-blue-500": source === "Call",
-								"bg-slate-500": source === "Archive",
-							})}
-						/>
-						<span>{source}</span>
-						<span className="text-gray-500 ml-1 font-mono">{count}</span>
-					</div>
-				))}
+				{Object.entries(counts).map(([source, count]) => {
+					const isActive =
+						activeSources.length === 0 || activeSources.includes(source);
+					return (
+						<button
+							key={source}
+							type="button"
+							onClick={() => onToggleSource(source)}
+							className={cn(
+								"flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all duration-200",
+								isActive
+									? "bg-white/10 border-white/10 text-gray-200"
+									: "bg-transparent border-white/5 text-gray-600 hover:text-gray-400 hover:border-white/10",
+							)}
+						>
+							<span
+								className={cn("w-1.5 h-1.5 rounded-full", {
+									"bg-indigo-500": source === "Main Sheet",
+									"bg-orange-500": source === "Orders",
+									"bg-purple-500": source === "Booking",
+									"bg-blue-500": source === "Call",
+									"bg-slate-500": source === "Archive",
+									"opacity-40": !isActive,
+								})}
+							/>
+							<span>{source}</span>
+							<span
+								className={cn(
+									"ml-1 font-mono",
+									isActive ? "text-gray-500" : "text-gray-700",
+								)}
+							>
+								{count}
+							</span>
+						</button>
+					);
+				})}
 				<div className="w-px h-6 bg-white/10 mx-2" />
 				<Button
 					onClick={onClear}

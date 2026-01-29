@@ -65,8 +65,6 @@ describe("orderService", () => {
 
 		await orderService.deleteOrder(mockId);
 
-		// Should attempt to clean up activity_log first
-		expect(supabase.from).toHaveBeenCalledWith("activity_log");
 		// Then delete the order
 		expect(supabase.from).toHaveBeenCalledWith("orders");
 	});

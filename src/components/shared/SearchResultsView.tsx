@@ -1,25 +1,28 @@
 "use client";
 
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
-import { Search as SearchIcon } from "lucide-react";
-import { useMemo, useCallback } from "react";
-import { toast } from "sonner";
 import { format } from "date-fns";
-import { PartStatusRenderer, ActionCellRenderer } from "@/components/grid/renderers";
+import { Search as SearchIcon } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
+import {
+	ActionCellRenderer,
+	PartStatusRenderer,
+} from "@/components/grid/renderers";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { Button } from "@/components/ui/button";
 import {
-	useSaveOrderMutation,
 	useBulkUpdateOrderStageMutation,
 	useOrdersQuery,
+	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
+import { useRowModals } from "@/hooks/useRowModals";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
-import { SearchResultsHeader } from "./search/SearchResultsHeader";
-import { SearchResultsGrid } from "./search/SearchResultsGrid";
-import { useRowModals } from "@/hooks/useRowModals";
 import { RowModals } from "./RowModals";
+import { SearchResultsGrid } from "./search/SearchResultsGrid";
+import { SearchResultsHeader } from "./search/SearchResultsHeader";
 
 // Custom renderer for Source Tag
 const SourceRenderer = (params: ICellRendererParams) => {
@@ -57,6 +60,17 @@ export const SearchResultsView = () => {
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
+	// Filter state
+	const [activeSources, setActiveSources] = useState<string[]>([]);
+
+	const handleToggleSource = useCallback((source: string) => {
+		setActiveSources((prev) =>
+			prev.includes(source)
+				? prev.filter((s) => s !== source)
+				: [...prev, source],
+		);
+	}, []);
+
 	// Fetch data from React Query (replacing old Zustand data)
 	const { data: rowData = [] } = useOrdersQuery("main");
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
@@ -67,23 +81,28 @@ export const SearchResultsView = () => {
 	const saveOrderMutation = useSaveOrderMutation();
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 
-	const handleUpdateOrder = useCallback((
-		id: string,
-		updates: Partial<PendingRow>,
-		stage?: string,
-	) => {
-		let mappedStage = (stage?.toLowerCase() || "main");
-		if (mappedStage === "main sheet") mappedStage = "main";
+	const handleUpdateOrder = useCallback(
+		(id: string, updates: Partial<PendingRow>, stage?: string) => {
+			let mappedStage = stage?.toLowerCase() || "main";
+			if (mappedStage === "main sheet") mappedStage = "main";
 
-		// Ensure strictly valid stage
-		const validStages = ["orders", "main", "call", "booking", "archive"];
-		if (!validStages.includes(mappedStage)) {
-			console.error(`Invalid stage detected: ${mappedStage}, defaulting to 'main'`);
-			mappedStage = "main";
-		}
+			// Ensure strictly valid stage
+			const validStages = ["orders", "main", "call", "booking", "archive"];
+			if (!validStages.includes(mappedStage)) {
+				console.error(
+					`Invalid stage detected: ${mappedStage}, defaulting to 'main'`,
+				);
+				mappedStage = "main";
+			}
 
-		return saveOrderMutation.mutateAsync({ id, updates, stage: mappedStage as any });
-	}, [saveOrderMutation]);
+			return saveOrderMutation.mutateAsync({
+				id,
+				updates,
+				stage: mappedStage as any,
+			});
+		},
+		[saveOrderMutation],
+	);
 
 	const {
 		activeModal,
@@ -117,7 +136,7 @@ export const SearchResultsView = () => {
 			...archiveRowData.map((r) => ({ ...r, sourceType: "Archive" })),
 		];
 
-		return allRows.filter((row) => {
+		const allFound = allRows.filter((row) => {
 			const searchString = [
 				(row as any).sourceType,
 				row.vin,
@@ -145,7 +164,21 @@ export const SearchResultsView = () => {
 
 			return terms.every((term) => searchString.includes(term));
 		});
-	}, [searchTerm, rowData, ordersRowData, bookingRowData, callRowData, archiveRowData]);
+
+		// 2. Apply Source Filters
+		if (activeSources.length === 0) return allFound;
+		return allFound.filter((row) =>
+			activeSources.includes((row as any).sourceType),
+		);
+	}, [
+		searchTerm,
+		rowData,
+		ordersRowData,
+		bookingRowData,
+		callRowData,
+		archiveRowData,
+		activeSources,
+	]);
 
 	const columns = useMemo((): ColDef<PendingRow>[] => {
 		const baseCols = getBaseColumns(
@@ -171,7 +204,7 @@ export const SearchResultsView = () => {
 				pinned: "left",
 				checkboxSelection: true,
 				headerCheckboxSelection: false,
-				width: 100
+				width: 100,
 			};
 
 		// Filter out 'selection' and 'actions' from baseCols as we handle them differently
@@ -214,9 +247,12 @@ export const SearchResultsView = () => {
 				},
 				cellEditor: "agSelectCellEditor",
 				cellEditorParams: {
-					values: Array.isArray(partStatuses) && partStatuses.length > 0
-						? partStatuses.filter((s) => s && typeof s.label === "string").map((s) => s.label)
-						: [],
+					values:
+						Array.isArray(partStatuses) && partStatuses.length > 0
+							? partStatuses
+								.filter((s) => s && typeof s.label === "string")
+								.map((s) => s.label)
+							: [],
 				},
 				cellClass: "flex items-center justify-center",
 			},
@@ -224,54 +260,117 @@ export const SearchResultsView = () => {
 	}, [partStatuses, handleNoteClick, handleReminderClick, handleAttachClick]);
 
 	const counts = useMemo(() => {
-		return searchResults.reduce((acc, curr) => {
-			const source = curr.sourceType || "Unknown";
-			acc[source] = (acc[source] || 0) + 1;
-			return acc;
-		}, {} as Record<string, number>);
-	}, [searchResults]);
+		const allRows = [
+			...rowData.map((r) => ({ ...r, sourceType: "Main Sheet" })),
+			...ordersRowData.map((r) => ({ ...r, sourceType: "Orders" })),
+			...bookingRowData.map((r) => ({ ...r, sourceType: "Booking" })),
+			...callRowData.map((r) => ({ ...r, sourceType: "Call" })),
+			...archiveRowData.map((r) => ({ ...r, sourceType: "Archive" })),
+		];
 
-	const onCellValueChanged = useCallback(async (event: any) => {
-		if (
-			event.colDef.field === "partStatus" &&
-			event.data?.id &&
-			event.newValue !== event.oldValue
-		) {
-			const newStatus = event.newValue;
-			const vin = event.data.vin;
-			const sourceType = event.data.sourceType;
+		const filteredBySearch = allRows.filter((row) => {
+			if (!searchTerm) return false;
+			const terms = searchTerm
+				.toLowerCase()
+				.split(/\s+/)
+				.filter((t) => t.length > 0);
 
-			// Await the update to avoid race conditions with bulk move
-			await handleUpdateOrder(event.data.id, { partStatus: newStatus }, sourceType);
+			const searchString = [
+				(row as any).sourceType,
+				row.vin,
+				row.customerName,
+				row.partNumber,
+				row.description,
+				row.mobile,
+				row.baseId,
+				row.trackingId,
+				row.model,
+				row.company || "Renault",
+				row.requester,
+				row.sabNumber,
+				row.acceptedBy,
+				row.rDate,
+				row.noteContent,
+				row.repairSystem,
+				row.actionNote,
+				row.bookingDate,
+				row.bookingNote,
+				row.archiveReason,
+			]
+				.map((field) => (field ? String(field).toLowerCase() : ""))
+				.join(" ");
 
-			// check status case-insensitively or as provided in labels
-			const isArrived = newStatus?.toLowerCase() === "arrived";
+			return terms.every((term) => searchString.includes(term));
+		});
 
-			if (isArrived && vin) {
-				let relevantParts: PendingRow[] = [];
-				if (sourceType === "Main Sheet") {
-					relevantParts = rowData.filter((r) => r.vin === vin);
-				} else if (sourceType === "Orders") {
-					relevantParts = ordersRowData.filter((r) => r.vin === vin);
-				}
+		return filteredBySearch.reduce(
+			(acc, curr) => {
+				const source = (curr as any).sourceType || "Unknown";
+				acc[source] = (acc[source] || 0) + 1;
+				return acc;
+			},
+			{} as Record<string, number>,
+		);
+	}, [
+		searchTerm,
+		rowData,
+		ordersRowData,
+		bookingRowData,
+		callRowData,
+		archiveRowData,
+	]);
 
-				if (relevantParts.length > 0) {
-					const allArrived = relevantParts.every((r) => {
-						if (r.id === event.data.id) return true;
-						return r.partStatus?.toLowerCase() === "arrived";
-					});
+	const onCellValueChanged = useCallback(
+		async (event: any) => {
+			if (
+				event.colDef.field === "partStatus" &&
+				event.data?.id &&
+				event.newValue !== event.oldValue
+			) {
+				const newStatus = event.newValue;
+				const vin = event.data.vin;
+				const sourceType = event.data.sourceType;
 
-					if (allArrived) {
-						const ids = relevantParts.map((p) => p.id);
-						await bulkUpdateStageMutation.mutateAsync({ ids, stage: "call" });
-						toast.success(`All parts for VIN ${vin} arrived! Moved to Call List.`, { duration: 5000 });
+				// Await the update to avoid race conditions with bulk move
+				await handleUpdateOrder(
+					event.data.id,
+					{ partStatus: newStatus },
+					sourceType,
+				);
+
+				// check status case-insensitively or as provided in labels
+				const isArrived = newStatus?.toLowerCase() === "arrived";
+
+				if (isArrived && vin) {
+					let relevantParts: PendingRow[] = [];
+					if (sourceType === "Main Sheet") {
+						relevantParts = rowData.filter((r) => r.vin === vin);
+					} else if (sourceType === "Orders") {
+						relevantParts = ordersRowData.filter((r) => r.vin === vin);
 					}
+
+					if (relevantParts.length > 0) {
+						const allArrived = relevantParts.every((r) => {
+							if (r.id === event.data.id) return true;
+							return r.partStatus?.toLowerCase() === "arrived";
+						});
+
+						if (allArrived) {
+							const ids = relevantParts.map((p) => p.id);
+							await bulkUpdateStageMutation.mutateAsync({ ids, stage: "call" });
+							toast.success(
+								`All parts for VIN ${vin} arrived! Moved to Call List.`,
+								{ duration: 5000 },
+							);
+						}
+					}
+				} else {
+					toast.success("Part status updated");
 				}
-			} else {
-				toast.success("Part status updated");
 			}
-		}
-	}, [handleUpdateOrder, rowData, ordersRowData, bulkUpdateStageMutation]);
+		},
+		[handleUpdateOrder, rowData, ordersRowData, bulkUpdateStageMutation],
+	);
 
 	if (!searchTerm) return null;
 

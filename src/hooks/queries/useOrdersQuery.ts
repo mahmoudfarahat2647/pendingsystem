@@ -7,6 +7,7 @@ export function useOrdersQuery(stage?: OrderStage) {
 		queryKey: ["orders", stage],
 		queryFn: async () => {
 			const data = await orderService.getOrders(stage);
+			if (!data) return [];
 			return data.map(orderService.mapSupabaseOrder);
 		},
 		staleTime: 1000 * 60 * 5, // 5 minutes
@@ -158,10 +159,3 @@ export function useDeleteOrderMutation() {
 	});
 }
 
-export function useRecentActivityQuery() {
-	return useQuery({
-		queryKey: ["activity"],
-		queryFn: () => orderService.getActivityLog(),
-		refetchInterval: 30000, // Refresh every 30 seconds
-	});
-}

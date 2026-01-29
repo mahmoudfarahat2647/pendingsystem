@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
 export const OrderFormSchema = z.object({
-    customerName: z.string().optional(),
+    customerName: z.string().min(1, "Customer name is required"),
     vin: z.string().min(1, "VIN is required"),
-    mobile: z.string().optional(),
+    mobile: z.string().min(1, "Mobile number is required"),
     cntrRdg: z.union([z.string(), z.number()]).transform((val) => typeof val === "string" ? parseInt(val, 10) || 0 : val),
-    model: z.string().optional(),
+    model: z.string().min(1, "Model is required"),
     repairSystem: z.string().default("Mechanical"),
     startWarranty: z.string().optional(),
     requester: z.string().optional(),
