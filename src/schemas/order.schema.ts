@@ -25,7 +25,7 @@ export const PartEntrySchema = z.object({
 });
 
 // Reminder Schema
-export const ReminderSchema = z
+const ReminderSchema = z
 	.object({
 		date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 		time: z.string().regex(/^\d{2}:\d{2}$/),

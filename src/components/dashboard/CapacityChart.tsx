@@ -6,7 +6,7 @@ interface CapacityChartProps {
 	data: { name: string; value: number; color: string }[];
 }
 
-export const CapacityChart = ({ data }: CapacityChartProps) => {
+const CapacityChart = ({ data }: CapacityChartProps) => {
 	return (
 		<ResponsiveContainer width="100%" height="100%">
 			<PieChart>

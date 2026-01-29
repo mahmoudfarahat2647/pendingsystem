@@ -30,7 +30,7 @@ export const exportToLogisticsCSV = (selected: PendingRow[]) => {
 /**
  * Exports data to a CSV file.
  */
-export const exportToCSV = (
+const exportToCSV = (
 	data: Array<Record<string, unknown>>,
 	filename: string,
 	headers?: string[],
@@ -82,11 +82,31 @@ export const exportWorkbookCSV = (stores: {
 
 	// Add "Source" column and format complex fields
 	const allData = [
-		...stores.orders.map((r) => ({ ...r, source: "Orders", reminderText: formatReminder(r.reminder) })),
-		...stores.mainSheet.map((r) => ({ ...r, source: "Main Sheet", reminderText: formatReminder(r.reminder) })),
-		...stores.booking.map((r) => ({ ...r, source: "Booking", reminderText: formatReminder(r.reminder) })),
-		...stores.callList.map((r) => ({ ...r, source: "Call List", reminderText: formatReminder(r.reminder) })),
-		...stores.archive.map((r) => ({ ...r, source: "Archive", reminderText: formatReminder(r.reminder) })),
+		...stores.orders.map((r) => ({
+			...r,
+			source: "Orders",
+			reminderText: formatReminder(r.reminder),
+		})),
+		...stores.mainSheet.map((r) => ({
+			...r,
+			source: "Main Sheet",
+			reminderText: formatReminder(r.reminder),
+		})),
+		...stores.booking.map((r) => ({
+			...r,
+			source: "Booking",
+			reminderText: formatReminder(r.reminder),
+		})),
+		...stores.callList.map((r) => ({
+			...r,
+			source: "Call List",
+			reminderText: formatReminder(r.reminder),
+		})),
+		...stores.archive.map((r) => ({
+			...r,
+			source: "Archive",
+			reminderText: formatReminder(r.reminder),
+		})),
 	];
 
 	if (allData.length === 0) return;

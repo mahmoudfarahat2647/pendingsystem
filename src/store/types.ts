@@ -1,3 +1,4 @@
+import type { GridState } from "ag-grid-community";
 import type {
 	AppNotification,
 	PartStatusDef,
@@ -5,7 +6,6 @@ import type {
 	StickyNote,
 	TodoItem,
 } from "@/types";
-import type { GridState } from "ag-grid-community";
 
 export interface OrdersState {
 	ordersRowData: PendingRow[];
@@ -130,13 +130,13 @@ export interface UndoRedoActions {
 	clearUndoRedo: () => void;
 }
 
-export interface GridSliceState {
+interface GridSliceState {
 	gridStates: Record<string, GridState>;
 	dirtyLayouts: Record<string, boolean>;
 	defaultLayouts: Record<string, GridState>;
 }
 
-export interface GridSliceActions {
+interface GridSliceActions {
 	saveGridState: (gridKey: string, state: GridState) => void;
 	getGridState: (gridKey: string) => GridState | null;
 	clearGridState: (gridKey: string) => void;

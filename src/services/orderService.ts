@@ -6,7 +6,7 @@ import type { PendingRow } from "@/types";
 
 export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
 
-export class ServiceError extends Error {
+class ServiceError extends Error {
 	code: string;
 	details?: unknown;
 

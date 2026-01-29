@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
 import { ColorPicker } from "../ColorPicker";
 
-export interface StatusManagementSectionProps {
+interface StatusManagementSectionProps {
 	title: string;
 	managedTitle: string;
 	statuses: PartStatusDef[];

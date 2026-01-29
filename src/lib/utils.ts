@@ -150,19 +150,6 @@ export function generateId(): string {
 }
 
 /**
- * Format date for display
- */
-export function formatDate(dateStr: string): string {
-	if (!dateStr) return "";
-	const date = new Date(dateStr);
-	return date.toLocaleDateString("en-GB", {
-		day: "2-digit",
-		month: "2-digit",
-		year: "numeric",
-	});
-}
-
-/**
  * Calculate the end date of a warranty (3 years from start)
  */
 export const calculateEndWarranty = (startDate: string): string => {

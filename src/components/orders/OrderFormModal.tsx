@@ -27,8 +27,8 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { SimpleDatePicker } from "@/components/ui/simple-date-picker";
 import { Label } from "@/components/ui/label";
+import { SimpleDatePicker } from "@/components/ui/simple-date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
 	Tooltip,
@@ -36,17 +36,13 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-	BeastModeSchema,
-	EasyModeSchema,
-	OrderFormSchema,
-} from "@/schemas/form.schema";
-import {
 	calculateEndWarranty,
 	calculateRemainingTime,
 	cn,
 	detectModelFromVin,
 	generateId,
 } from "@/lib/utils";
+import { BeastModeSchema, OrderFormSchema } from "@/schemas/form.schema";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 
@@ -111,8 +107,12 @@ export const OrderFormModal = ({
 		company: "Renault",
 	});
 
-	const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-	const [validationMode, setValidationMode] = useState<"easy" | "beast">("easy");
+	const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
+		{},
+	);
+	const [validationMode, setValidationMode] = useState<"easy" | "beast">(
+		"easy",
+	);
 	const [beastModeTimer, setBeastModeTimer] = useState<number | null>(null);
 	const [beastModeErrors, setBeastModeErrors] = useState<Set<string>>(
 		new Set(),
@@ -134,10 +134,14 @@ export const OrderFormModal = ({
 					customerName: first.customerName || "",
 					vin: first.vin || "",
 					mobile: first.mobile || "",
-					cntrRdg: first.cntrRdg !== null && first.cntrRdg !== undefined ? String(first.cntrRdg) : "",
+					cntrRdg:
+						first.cntrRdg !== null && first.cntrRdg !== undefined
+							? String(first.cntrRdg)
+							: "",
 					model: first.model || "",
 					repairSystem: first.repairSystem || "Mechanical",
-					startWarranty: first.startWarranty || new Date().toISOString().split("T")[0],
+					startWarranty:
+						first.startWarranty || new Date().toISOString().split("T")[0],
 					requester: first.requester || "",
 					sabNumber: first.sabNumber || "",
 					acceptedBy: first.acceptedBy || "",
@@ -173,11 +177,13 @@ export const OrderFormModal = ({
 					// Re-validate to show errors immediately
 					const result = BeastModeSchema.safeParse(initialFormData);
 					if (!result.success) {
-						const fieldErrors = new Set(Object.keys(result.error.flatten().fieldErrors));
+						const fieldErrors = new Set(
+							Object.keys(result.error.flatten().fieldErrors),
+						);
 						setBeastModeErrors(fieldErrors);
 					}
 				} else {
-					// 2. Auto-trigger Beast Mode ONLY if explicit validation fails AND no timer expired 
+					// 2. Auto-trigger Beast Mode ONLY if explicit validation fails AND no timer expired
 					// (Actually user requested: "if >30s, just see easy mode")
 					setValidationMode("easy");
 					setBeastModeErrors(new Set());
@@ -349,7 +355,7 @@ export const OrderFormModal = ({
 				if (
 					existingRow &&
 					existingRow.description.trim().toLowerCase() !==
-					part.description.trim().toLowerCase()
+						part.description.trim().toLowerCase()
 				) {
 					warnings[part.id] = {
 						type: "mismatch",
@@ -501,10 +507,16 @@ export const OrderFormModal = ({
 										<motion.div
 											className={cn(
 												"w-1.5 h-1.5 rounded-full",
-												beastModeTimer > 10 ? "bg-amber-500/50" : "bg-red-500/50",
+												beastModeTimer > 10
+													? "bg-amber-500/50"
+													: "bg-red-500/50",
 											)}
 											animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-											transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+											transition={{
+												duration: 2,
+												repeat: Infinity,
+												ease: "easeInOut",
+											}}
 										/>
 										<span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">
 											Commit Window:
@@ -512,7 +524,9 @@ export const OrderFormModal = ({
 										<span
 											className={cn(
 												"text-xs font-mono font-medium transition-colors duration-500",
-												beastModeTimer > 10 ? "text-amber-500/70" : "text-red-500/70",
+												beastModeTimer > 10
+													? "text-amber-500/70"
+													: "text-red-500/70",
 											)}
 										>
 											{beastModeTimer}s
@@ -612,7 +626,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 														getFieldError("customerName") &&
-														"border-red-500/50 ring-1 ring-red-500/20",
+															"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -668,7 +682,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
 														getFieldError("vin") &&
-														"border-red-500/50 ring-1 ring-red-500/20",
+															"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -697,7 +711,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 														getFieldError("cntrRdg") &&
-														"border-red-500/50 ring-1 ring-red-500/20",
+															"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -724,7 +738,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 														getFieldError("mobile") &&
-														"border-red-500/50 ring-1 ring-red-500/20",
+															"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -747,7 +761,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 														getFieldError("acceptedBy") &&
-														"border-red-500/50 ring-1 ring-red-500/20",
+															"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -772,7 +786,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 														getFieldError("sabNumber") &&
-														"border-red-500/50 ring-1 ring-red-500/20",
+															"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -787,7 +801,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"rounded-lg transition-all",
 														getFieldError("model") &&
-														"border-red-500/50 ring-1 ring-red-500/20",
+															"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -877,7 +891,6 @@ export const OrderFormModal = ({
 																)}
 															/>
 														</div>
-
 													</motion.div>
 												)}
 											</AnimatePresence>
@@ -1059,29 +1072,29 @@ export const OrderFormModal = ({
 																		<AlertCircle className="h-3 w-3" />
 																		<span className="text-[9px] font-bold uppercase tracking-tight">
 																			{partValidationWarnings[part.id].type ===
-																				"duplicate"
+																			"duplicate"
 																				? `${partValidationWarnings[part.id].value} in ${partValidationWarnings[part.id].location}`
 																				: `Existing Name: "${partValidationWarnings[part.id].value}"`}
 																		</span>
 																	</div>
 																	{partValidationWarnings[part.id].type ===
 																		"mismatch" && (
-																			<Button
-																				variant="ghost"
-																				size="icon"
-																				className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
-																				onClick={() =>
-																					handlePartChange(
-																						part.id,
-																						"description",
-																						partValidationWarnings[part.id].value,
-																					)
-																				}
-																				title="Apply existing name"
-																			>
-																				<CheckCircle2 className="h-3 w-3" />
-																			</Button>
-																		)}
+																		<Button
+																			variant="ghost"
+																			size="icon"
+																			className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
+																			onClick={() =>
+																				handlePartChange(
+																					part.id,
+																					"description",
+																					partValidationWarnings[part.id].value,
+																				)
+																			}
+																			title="Apply existing name"
+																		>
+																			<CheckCircle2 className="h-3 w-3" />
+																		</Button>
+																	)}
 																</div>
 															)}
 														</div>
@@ -1143,7 +1156,9 @@ export const OrderFormModal = ({
 										exit={{ opacity: 0, scale: 0.95 }}
 										className="flex items-center gap-2"
 									>
-										<span className="text-[9px] font-bold text-slate-500 uppercase">Warranty:</span>
+										<span className="text-[9px] font-bold text-slate-500 uppercase">
+											Warranty:
+										</span>
 										{isHighMileage ? (
 											<div
 												className="h-8 px-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center overflow-hidden shadow-inner uppercase tracking-tighter cursor-help"
@@ -1155,7 +1170,9 @@ export const OrderFormModal = ({
 											</div>
 										) : (
 											(() => {
-												const end = calculateEndWarranty(formData.startWarranty);
+												const end = calculateEndWarranty(
+													formData.startWarranty,
+												);
 												const remain = calculateRemainingTime(end);
 												const isExpired = remain === "Expired";
 												return (

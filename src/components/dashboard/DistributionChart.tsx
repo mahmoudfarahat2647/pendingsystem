@@ -6,7 +6,7 @@ interface DistributionChartProps {
 	data: { name: string; value: number }[];
 }
 
-export const DistributionChart = ({ data }: DistributionChartProps) => {
+const DistributionChart = ({ data }: DistributionChartProps) => {
 	return (
 		<ResponsiveContainer width="100%" height="100%">
 			<BarChart data={data}>
