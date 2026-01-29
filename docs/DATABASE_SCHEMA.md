@@ -1,6 +1,6 @@
 # Database Schema (Supabase)
 
-The Renault System uses Supabase (PostgreSQL) for persistence. Below is the structure of the primary tables and their relationships.
+The pendingsystem uses Supabase (PostgreSQL) for persistence. Below is the structure of the primary tables and their relationships.
 
 ## Table: `orders`
 

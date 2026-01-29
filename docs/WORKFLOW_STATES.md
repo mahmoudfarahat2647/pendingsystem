@@ -1,6 +1,6 @@
 # Workflow States and Transitions
 
-This document outlines the core business logic governing order stages and status transitions within the Renault System.
+This document outlines the core business logic governing order stages and status transitions within the pendingsystem.
 
 ## Order Stages (`OrderStage`)
 

@@ -1,6 +1,6 @@
 # TestSprite Integration Guide
 
-This document explains how to use TestSprite MCP Server alongside the existing testing tools in the Renault System project.
+This document explains how to use TestSprite MCP Server alongside the existing testing tools in the pendingsystem project.
 
 ## Overview
 

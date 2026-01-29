@@ -1,6 +1,6 @@
 # Environment Configuration
 
-This document lists the environment variables required to run the Renault System in development and production.
+This document lists the environment variables required to run the pendingsystem in development and production.
 
 ## Required Variables
 
@@ -15,7 +15,7 @@ These variables are foundational and must be defined in your `.env.local` file.
 
 | Variable | Description |
 | :--- | :--- |
-| `NEXT_PUBLIC_APP_NAME` | The display name for the application (defaults to "Renault System"). |
+| `NEXT_PUBLIC_APP_NAME` | The display name for the application (defaults to "pendingsystem"). |
 | `NEXT_PUBLIC_SENTRY_DSN` | (Future) Data Source Name for Sentry error tracking. |
 
 ## Backup & SMTP Configuration (GitHub Secrets)

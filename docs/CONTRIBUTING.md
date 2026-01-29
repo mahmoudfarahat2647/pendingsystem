@@ -1,6 +1,6 @@
-# Contributing to Renault System
+# Contributing to pendingsystem
 
-Welcome to the Renault System project! This guide provides information for developers who want to contribute to the codebase.
+Welcome to the pendingsystem project! This guide provides information for developers who want to contribute to the codebase.
 
 ## 🛠️ Development Setup
 

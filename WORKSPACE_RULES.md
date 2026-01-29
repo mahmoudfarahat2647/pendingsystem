@@ -1,4 +1,4 @@
-# Renault System - Workspace Development Rules
+# pendingsystem - Workspace Development Rules
 
 **Copy these rules to your AI assistant's memory for consistent development practices.**
 

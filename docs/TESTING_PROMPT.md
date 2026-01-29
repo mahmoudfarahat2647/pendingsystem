@@ -5,7 +5,7 @@ agent: 'agent'
 
 # Playwright Test Generator Prompt
 
-Use this prompt to generate automated tests for the Renault System using Playwright.
+Use this prompt to generate automated tests for the pendingsystem using Playwright.
 
 ## Instructions
 
