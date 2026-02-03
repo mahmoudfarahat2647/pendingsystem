@@ -3,10 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
-import { ClientErrorBoundary } from "@/components/shared/ClientErrorBoundary";
-import { Header } from "@/components/shared/Header";
-import { MainContentWrapper } from "@/components/shared/MainContentWrapper";
-import { Sidebar } from "@/components/shared/Sidebar";
 
 const inter = Inter({
 	subsets: ["latin"],
@@ -20,6 +16,18 @@ export const metadata: Metadata = {
 	description: "Logistics Command Center for automotive service centers",
 };
 
+/**
+ * Root layout providing global providers and dark theme.
+ * 
+ * Layout structure is handled by route groups:
+ * - (auth) - Minimal layout for login/forgot-password
+ * - (app) - Full layout with Sidebar/Header for protected pages
+ * 
+ * This layout only provides:
+ * - Dark theme enforcement
+ * - React Query provider
+ * - Toast notifications
+ */
 export default function RootLayout({
 	children,
 }: Readonly<{
@@ -29,22 +37,11 @@ export default function RootLayout({
 		<html lang="en" className="dark" suppressHydrationWarning>
 			<body className={inter.className} suppressHydrationWarning>
 				<QueryProvider>
-					<div className="flex h-screen overflow-hidden bg-background" suppressHydrationWarning>
-						<Sidebar />
-						<div className="flex flex-1 flex-col overflow-hidden">
-							<Header />
-							<main className="flex-1 overflow-y-auto p-6">
-								<MainContentWrapper>
-									<ClientErrorBoundary fallbackTitle="Page Error">
-										{children}
-									</ClientErrorBoundary>
-								</MainContentWrapper>
-							</main>
-						</div>
-					</div>
+					{children}
 					<Toaster position="top-right" richColors />
 				</QueryProvider>
 			</body>
 		</html>
 	);
 }
+
