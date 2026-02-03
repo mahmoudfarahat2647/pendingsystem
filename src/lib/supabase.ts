@@ -24,10 +24,31 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * - Use pagination for bulk queries
  * - Monitor connection usage in Supabase dashboard
  */
+const isBrowser = typeof window !== "undefined";
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 	auth: {
 		persistSession: true,
-		autoRefreshToken: true,
+		autoRefreshToken: isBrowser,
+		detectSessionInUrl: isBrowser,
+		storage: {
+			getItem: (key) => {
+				if (isBrowser) {
+					return localStorage.getItem(key);
+				}
+				return null;
+			},
+			setItem: (key, value) => {
+				if (isBrowser) {
+					localStorage.setItem(key, value);
+				}
+			},
+			removeItem: (key) => {
+				if (isBrowser) {
+					localStorage.removeItem(key);
+				}
+			},
+		},
 	},
 	db: {
 		schema: "public",

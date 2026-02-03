@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { createBookingSlice } from "./slices/bookingSlice";
 import { createInventorySlice } from "./slices/inventorySlice";
 import { createNotificationSlice } from "./slices/notificationSlice";
@@ -26,6 +26,14 @@ export const useAppStore = create<CombinedStore>()(
 		}),
 		{
 			name: "pending-sys-storage-v1.1",
+			// SSR-safe storage: Only access localStorage in browser environment
+			storage: createJSONStorage(() =>
+				typeof window !== "undefined" ? localStorage : {
+					getItem: () => null,
+					setItem: () => { },
+					removeItem: () => { },
+				}
+			),
 			// Optimize: Only persist critical UI preferences to reduce localStorage overhead
 			// Reference data (templates, statuses, models) load fresh from database via React Query
 			// This reduces initial load state from ~100KB to ~1KB

@@ -86,7 +86,7 @@ export const PendingRowSchema = z
 				}
 				return String(val || "");
 			},
-			z.string().min(1, "Model is required"),
+			z.string(),
 		),
 
 		// Logistics

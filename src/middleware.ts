@@ -1,3 +1,5 @@
+import { createClient } from "@/lib/supabase-middleware";
+import { ALLOWED_USER_EMAIL } from "@/lib/validations";
 import { type NextRequest, NextResponse } from "next/server";
 
 // Standard sliding window rate limiter
@@ -46,15 +48,93 @@ const CONFIGS = {
     DEFAULT: { limit: 100, windowMs: 60 * 1000 }, // 100 requests per minute
 };
 
-export function middleware(request: NextRequest) {
-    // Only rate limit API routes
-    if (!request.nextUrl.pathname.startsWith("/api")) {
+/**
+ * Next.js middleware providing two-layer security:
+ * 1. Authentication: Session validation and email verification
+ * 2. Rate limiting: API request throttling
+ *
+ * Authentication flow:
+ * - Public routes (login, forgot-password, static assets) bypass auth
+ * - Protected routes require valid session cookie
+ * - User email must match ALLOWED_USER_EMAIL
+ * - Invalid sessions redirect to /login
+ *
+ * Rate limiting flow:
+ * - API routes are rate limited by IP address
+ * - Different limits for backup vs general API routes
+ * - Returns 429 with retry-after headers when exceeded
+ *
+ * @param request - Incoming Next.js request
+ * @returns Response with auth redirect or rate limit headers
+ */
+export async function middleware(request: NextRequest) {
+    const path = request.nextUrl.pathname;
+
+    // ========================================
+    // AUTHENTICATION LAYER
+    // ========================================
+
+    // Public routes that don't require authentication
+    const publicPaths = ["/login", "/forgot-password"];
+    const isPublicPath = publicPaths.some(p => path.startsWith(p));
+
+    const isAsset =
+        path.startsWith("/_next/") ||
+        path.startsWith("/static/") ||
+        path.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)$/);
+
+    if (!isPublicPath && !isAsset) {
+        // Create Supabase client for middleware
+        const { supabase, response } = createClient(request);
+
+        // Validate session
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+        // No session - redirect to login
+        if (!user) {
+            // [CRITICAL] Don't redirect API calls, send 401 instead
+            if (path.startsWith("/api/")) {
+                return new NextResponse(
+                    JSON.stringify({ success: false, error: "Unauthorized" }),
+                    { status: 401, headers: { "Content-Type": "application/json" } }
+                );
+            }
+            const loginUrl = new URL("/login", request.url);
+            return NextResponse.redirect(loginUrl);
+        }
+
+        // Session exists but email doesn't match allowed user
+        if (user.email !== ALLOWED_USER_EMAIL) {
+            await supabase.auth.signOut();
+            if (path.startsWith("/api/")) {
+                return new NextResponse(
+                    JSON.stringify({ success: false, error: "Forbidden" }),
+                    { status: 403, headers: { "Content-Type": "application/json" } }
+                );
+            }
+            const loginUrl = new URL("/login", request.url);
+            return NextResponse.redirect(loginUrl);
+        }
+
+        // Valid session - continue with response (syncs cookies)
+        return response;
+    }
+
+    // ========================================
+    // RATE LIMITING LAYER (API routes only)
+    // ========================================
+
+    if (!path.startsWith("/api")) {
         return NextResponse.next();
     }
 
     // Identify the client (IP address)
-    const ip = (request as any).ip || request.headers.get("x-forwarded-for") || "unknown";
-    const path = request.nextUrl.pathname;
+    const ip =
+        (request as any).ip ||
+        request.headers.get("x-forwarded-for") ||
+        "unknown";
 
     // Determine which config to use
     const config = path.includes("/trigger-backup")
@@ -111,7 +191,15 @@ export function middleware(request: NextRequest) {
     return response;
 }
 
-// See "Matching Paths" below to learn more
+// Match all routes except Next.js internals
 export const config = {
-    matcher: "/api/:path*",
+    matcher: [
+        /*
+         * Match all request paths except:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         */
+        "/((?!_next/static|_next/image|favicon.ico).*)",
+    ],
 };
