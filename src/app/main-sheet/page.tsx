@@ -63,7 +63,7 @@ export default function MainSheetPage() {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = rowData.find((r) => r.id === id);
+				const row = rowData.find((r: any) => r.id === id);
 				let newActionNote = row?.actionNote || "";
 				if (reason && reason.trim()) {
 					const taggedNote = `${reason.trim()} #archive`;
@@ -119,7 +119,7 @@ export default function MainSheetPage() {
 
 	const filteredRowData = useMemo(() => {
 		if (!activeFilter) return rowData;
-		return rowData.filter((row) => row.partStatus === activeFilter);
+		return rowData.filter((row: any) => row.partStatus === activeFilter);
 	}, [rowData, activeFilter]);
 
 	const _handleSelectionChanged = useMemo(
@@ -283,18 +283,18 @@ export default function MainSheetPage() {
 										// Implementation: If "Arrived", check all parts for VIN. If all Arrived, move to Call List.
 										if (newStatus === "Arrived" && vin) {
 											// Find all parts for this same VIN in the current dataset
-											const vinParts = rowData.filter((r) => r.vin === vin);
+											const vinParts = rowData.filter((r: any) => r.vin === vin);
 
 											// Check if every part for this VIN is now "Arrived"
 											// (the current row just became "Arrived", so we check the persistent state for others)
-											const allArrived = vinParts.every((r) => {
+											const allArrived = vinParts.every((r: any) => {
 												if (r.id === params.data.id) return true; // Just updated this one
 												return r.partStatus === "Arrived";
 											});
 
 											if (allArrived && vinParts.length > 0) {
 												// Move all parts for this VIN to the "call" stage
-												const vinIds = vinParts.map((p) => p.id);
+												const vinIds = vinParts.map((p: any) => p.id);
 												await bulkUpdateStageMutation.mutateAsync({
 													ids: vinIds,
 													stage: "call",

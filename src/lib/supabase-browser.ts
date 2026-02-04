@@ -37,7 +37,6 @@ let browserClient: ReturnType<typeof createBrowserClient> | null = null;
  * Cookies are automatically managed by the browser and accessible to middleware.
  *
  * Security features:
- * - HTTP-only cookies prevent XSS attacks
  * - Automatic token refresh
  * - Compatible with Next.js middleware for route protection
  *
@@ -62,44 +61,6 @@ export function getSupabaseBrowserClient() {
 		browserClient = createBrowserClient(
 			supabaseUrl as string,
 			supabaseAnonKey as string,
-			{
-				cookieOptions,
-				cookies: {
-					get(name: string) {
-						return document.cookie
-							.split("; ")
-							.find((row) => row.startsWith(name + "="))
-							?.split("=")[1];
-					},
-					set(name: string, value: string, options: any) {
-						const segments = [
-							`${name}=${value}`,
-							`path=${options.path || "/"}`,
-						];
-
-						if (options.maxAge) {
-							segments.push(`max-age=${options.maxAge}`);
-						}
-
-						if (options.expires) {
-							segments.push(`expires=${options.expires.toUTCString()}`);
-						}
-
-						if (options.secure) {
-							segments.push("Secure");
-						}
-
-						if (options.sameSite) {
-							segments.push(`SameSite=${options.sameSite}`);
-						}
-
-						document.cookie = `${segments.join("; ")};`;
-					},
-					remove(name: string, options: any) {
-						document.cookie = `${name}=; path=${options.path || "/"}; max-age=0;`;
-					},
-				},
-			},
 		);
 	}
 

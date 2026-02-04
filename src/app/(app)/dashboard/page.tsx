@@ -64,7 +64,7 @@ export default function DashboardPage() {
             {
                 title: "CALL QUEUE",
                 // اللعب كله هنا: بنجيب الـ vin من كل سطر، والـ Set بتطير المتكرر، والـ size بيدينا العدد النهائي
-                value: new Set(callRowData.map((item) => item.vin)).size,
+                value: new Set(callRowData.map((item: any) => item.vin)).size,
                 subtext: "Unique Vehicles",
                 icon: Phone,
             },

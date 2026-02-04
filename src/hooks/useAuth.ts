@@ -41,7 +41,18 @@ export function useAuth() {
 			try {
 				const {
 					data: { user },
+					error,
 				} = await getSupabaseBrowserClient().auth.getUser();
+
+				if (error) {
+					// If we get a specific token error, clear the session
+					if (error.message.includes("Refresh Token Not Found") || error.message.includes("invalid_grant")) {
+						await getSupabaseBrowserClient().auth.signOut();
+					}
+					setUser(null);
+					return;
+				}
+
 				setUser(user ? { id: user.id, email: user.email ?? "" } : null);
 			} catch (error) {
 				console.error("Error checking user:", error);
@@ -112,10 +123,14 @@ export function useAuth() {
 			let attempts = 0;
 			const maxAttempts = 10;
 			while (attempts < maxAttempts) {
-				const { data: sessionData } =
-					await getSupabaseBrowserClient().auth.getSession();
-				if (sessionData.session) {
-					break;
+				try {
+					const { data: sessionData } =
+						await getSupabaseBrowserClient().auth.getSession();
+					if (sessionData.session) {
+						break;
+					}
+				} catch (e) {
+					console.warn("Session sync check failed:", e);
 				}
 				await new Promise((resolve) => setTimeout(resolve, 50));
 				attempts++;
