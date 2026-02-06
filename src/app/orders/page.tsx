@@ -107,10 +107,10 @@ export default function OrdersPage() {
 			console.log(`[DEBUG] Opening form with edit mode: ${edit}`);
 			console.log(`[DEBUG] Selected rows count: ${selectedRows.length}`);
 			console.log(`[DEBUG] Selected rows:`, selectedRows);
-			
+
 			setIsEditMode(edit);
 			setIsFormModalOpen(true);
-			
+
 			console.log(`[DEBUG] Form modal state set to: ${isFormModalOpen}`);
 		} catch (error) {
 			console.error(`[ERROR] Failed to open form:`, error);
@@ -175,15 +175,15 @@ export default function OrdersPage() {
 										// [CRITICAL] AUTO-MOVE FEATURE - DO NOT REMOVE
 										if (newStatus === "Arrived" && vin) {
 											const vinParts = ordersRowData.filter(
-												(r) => r.vin === vin,
+												(r: any) => r.vin === vin,
 											);
-											const allArrived = vinParts.every((r) => {
+											const allArrived = vinParts.every((r: any) => {
 												if (r.id === params.data.id) return true;
 												return r.partStatus === "Arrived";
 											});
 
 											if (allArrived && vinParts.length > 0) {
-												const ids = vinParts.map((p) => p.id);
+												const ids = vinParts.map((p: any) => p.id);
 												await bulkUpdateStageMutation.mutateAsync({
 													ids,
 													stage: "call",

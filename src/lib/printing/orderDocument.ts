@@ -22,7 +22,7 @@ import type { PendingRow } from "@/types";
  * - Parts Grid (3 columns)
  * - Footer: Notes, approval stamps, and signatures
  *
- * @author Renault System Development Team
+ * @author pendingsystem Development Team
  * @since 2025-12-25
  */
 

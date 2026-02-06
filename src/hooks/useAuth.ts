@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
-import { ALLOWED_USER_EMAIL } from "@/lib/validations";
+import { isAllowedEmail } from "@/lib/validations";
 
 interface User {
 	id: string;
@@ -39,10 +39,18 @@ export function useAuth() {
 		// Check active session on mount
 		const checkUser = async () => {
 			try {
-				const {
-					data: { user },
-				} = await getSupabaseBrowserClient().auth.getUser();
-				setUser(user ? { id: user.id, email: user.email ?? "" } : null);
+				const response = await fetch("/api/auth/user", {
+					method: "GET",
+					headers: { "Content-Type": "application/json" },
+				});
+
+				if (!response.ok) {
+					setUser(null);
+					return;
+				}
+
+				const payload = (await response.json()) as { user?: User | null };
+				setUser(payload.user ?? null);
 			} catch (error) {
 				console.error("Error checking user:", error);
 				setUser(null);
@@ -85,46 +93,54 @@ export function useAuth() {
 	 */
 	const login = async (email: string, password: string) => {
 		try {
+			const normalizedEmail = email.trim();
+
+			console.log("[useAuth] ===== LOGIN START =====");
+			console.log("[useAuth] Starting login for:", normalizedEmail);
+			console.log("[useAuth] Password length:", password.length);
 			setIsLoading(true);
 
-			const { data, error } =
-				await getSupabaseBrowserClient().auth.signInWithPassword({
-					email,
-					password,
-				});
+			console.log("[useAuth] Calling /api/auth/login...");
+			const response = await fetch("/api/auth/login", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ email: normalizedEmail, password }),
+			});
 
-			if (error) {
-				toast.error(error.message);
-				throw error;
+			if (!response.ok) {
+				const errorPayload = await response.json().catch(() => null);
+				const message = errorPayload?.error ?? "Login failed.";
+				console.error("[useAuth] Login API error:", message);
+				toast.error(message);
+				throw new Error(message);
 			}
 
-			// Additional client-side email check (UX layer)
-			if (data.user?.email !== ALLOWED_USER_EMAIL) {
-				await getSupabaseBrowserClient().auth.signOut();
+			const payload = (await response.json()) as { user?: User | null };
+			const user = payload.user;
+
+			if (!user || !isAllowedEmail(user.email)) {
 				toast.error("Unauthorized email address");
 				throw new Error("Unauthorized email address");
 			}
 
-			setUser({ id: data.user.id, email: data.user.email ?? "" });
+			console.log("[useAuth] Login success, setting user state...");
+			setUser(user);
+			console.log("[useAuth] Redirecting to dashboard...");
+			console.log("[useAuth] Calling router.push('/dashboard')...");
 
-			// Wait for session to sync to cookies before navigating
-			// This prevents race conditions with middleware checking auth
-			let attempts = 0;
-			const maxAttempts = 10;
-			while (attempts < maxAttempts) {
-				const { data: sessionData } =
-					await getSupabaseBrowserClient().auth.getSession();
-				if (sessionData.session) {
-					break;
-				}
-				await new Promise((resolve) => setTimeout(resolve, 50));
-				attempts++;
-			}
-
-			router.push("/dashboard");
+			router.replace("/dashboard");
+			console.log("[useAuth] Calling router.refresh()...");
 			router.refresh();
+			console.log("[useAuth] ===== LOGIN END =====");
 		} catch (error) {
-			console.error("Login error:", error);
+			console.error("[useAuth] ===== LOGIN ERROR =====");
+			console.error("[useAuth] Login error:", error);
+			console.error("[useAuth] Error type:", error instanceof Error ? error.constructor.name : typeof error);
+			if (error instanceof Error) {
+				console.error("[useAuth] Error message:", error.message);
+				console.error("[useAuth] Error stack:", error.stack);
+			}
+			console.error("[useAuth] ===== END ERROR =====");
 			throw error;
 		} finally {
 			setIsLoading(false);
@@ -142,7 +158,7 @@ export function useAuth() {
 	const logout = async () => {
 		try {
 			setIsLoading(true);
-			await getSupabaseBrowserClient().auth.signOut();
+			await fetch("/api/auth/logout", { method: "POST" });
 			setUser(null);
 			router.push("/login");
 			router.refresh();

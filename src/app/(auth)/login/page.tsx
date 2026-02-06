@@ -48,24 +48,28 @@ export default function LoginPage() {
      * 3. On success: Redirect to dashboard (handled in useAuth)
      * 4. On error: Display error toast
      */
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
 
-        // Validate form data
-        const result = loginSchema.safeParse({ email, password });
+		// Validate form data
+		const normalizedEmail = email.trim();
+		const result = loginSchema.safeParse({ email: normalizedEmail, password });
 
-        if (!result.success) {
-            const errors = result.error.issues.map((err) => err.message).join(", ");
-            toast.error(errors);
-            return;
-        }
+		if (!result.success) {
+			const errors = result.error.issues.map((err) => err.message).join(", ");
+			toast.error(errors);
+			return;
+		}
+		if (normalizedEmail !== email) {
+			setEmail(normalizedEmail);
+		}
 
-        try {
-            await login(email, password);
-        } catch (error) {
-            // Error handling is done in useAuth hook
-            console.error("Login failed:", error);
-        }
+		try {
+			await login(normalizedEmail, password);
+		} catch (error) {
+			// Error handling is done in useAuth hook
+			console.error("Login failed:", error);
+		}
     };
 
     return (

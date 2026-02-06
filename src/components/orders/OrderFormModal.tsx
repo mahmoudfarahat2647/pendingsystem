@@ -104,7 +104,7 @@ export const OrderFormModal = ({
 		requester: "",
 		sabNumber: "",
 		acceptedBy: "",
-		company: "Renault",
+		company: "pendingsystem",
 	});
 
 	const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
@@ -145,7 +145,7 @@ export const OrderFormModal = ({
 					requester: first.requester || "",
 					sabNumber: first.sabNumber || "",
 					acceptedBy: first.acceptedBy || "",
-					company: first.company || "Renault",
+					company: first.company || "pendingsystem",
 				};
 
 				const initialParts = selectedRows.map((row) => ({
@@ -201,7 +201,7 @@ export const OrderFormModal = ({
 					requester: "",
 					sabNumber: "",
 					acceptedBy: "",
-					company: "Renault",
+					company: "pendingsystem",
 				});
 				setParts([{ id: generateId(), partNumber: "", description: "" }]);
 				setIsBulkMode(false);
@@ -658,7 +658,7 @@ export const OrderFormModal = ({
 																: "premium-glow-indigo text-indigo-400 font-bold",
 														)}
 													>
-														<option value="Renault">Renault</option>
+														<option value="pendingsystem">pendingsystem</option>
 														<option value="Zeekr">Zeekr</option>
 													</select>
 													<ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500 pointer-events-none" />

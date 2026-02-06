@@ -32,8 +32,8 @@ Closes #(issue number)
 
 ## Documentation
 
-- [ ] Updated `docs/` folder (if architecture changed)
-- [ ] Updated `features.md` (if new feature added)
+- [ ] Updated `ENGINEERING.md` (if architecture or ops guidance changed)
+- [ ] Updated `FEATURES.md` (if new feature added)
 - [ ] Added JSDoc comments (if public API changed)
 - [ ] Updated troubleshooting guide (if known issue fixed)
 

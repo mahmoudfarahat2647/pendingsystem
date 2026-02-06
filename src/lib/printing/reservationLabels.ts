@@ -9,7 +9,7 @@ import type { PendingRow } from "@/types";
  * Labels are designed to be affixed to physical inventory items in the warehouse.
  *
  * ## Features
- * - **Renault Branding**: Official SVG logo with brand consistency
+ * - **pendingsystem Branding**: Official SVG logo with brand consistency
  * - **RTL Layout**: Right-to-left text flow for Arabic language
  * - **High Contrast**: 4px black borders for warehouse visibility
  * - **Grid System**: 2-column layout optimized for A4 printing
@@ -17,18 +17,18 @@ import type { PendingRow } from "@/types";
  *
  * ## Label Layout
  * Each label contains:
- * - Header: Renault logo + "Reserved Part" status
+ * - Header: pendingsystem logo + "Reserved Part" status
  * - Customer name (large, emphasized)
  * - Part description and reservation date
  * - VIN (monospace for clarity) and part number
  *
- * @author Renault System Development Team
+ * @author pendingsystem Development Team
  * @since 2025-12-25
  */
 
-const RENAULT_LOGO_SVG = `
+const PENDINGSYSTEM_LOGO_SVG = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 136.45 178.6" class="logo">
-        <title>Renault logo</title>
+        <title>pendingsystem logo</title>
         <polygon points="47.76 0 0 89.3 47.76 178.6 61.4 178.6 109.17 89.3 78.46 31.89 71.64 44.65 95.52 89.3 54.58 165.84 13.65 89.3 61.4 0 47.76 0"/>
         <polygon points="75.05 0 27.29 89.3 57.99 146.71 64.81 133.95 40.93 89.3 81.87 12.76 122.81 89.3 75.05 178.6 88.69 178.6 136.45 89.3 88.69 0 75.05 0"/>
     </svg>
@@ -74,8 +74,8 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
 		.map((row) => {
 			const today = new Date().toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
 			const isZeekr = row.company?.toLowerCase() === "zeekr";
-			const logoSvg = isZeekr ? ZEEKR_LOGO_SVG : RENAULT_LOGO_SVG;
-			const brandName = isZeekr ? "" : "RENAULT";
+			const logoSvg = isZeekr ? ZEEKR_LOGO_SVG : PENDINGSYSTEM_LOGO_SVG;
+			const brandName = isZeekr ? "" : "PENDINGSYSTEM";
 
 			return `
             <div class="label-box">

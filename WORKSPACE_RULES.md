@@ -96,9 +96,9 @@ const Component = () => {
 
 | Changed | Update File |
 |---------|------------|
-| Workflow stages | `docs/WORKFLOW_STATES.md` |
-| Database schema | `docs/DATABASE_SCHEMA.md` |
-| Environment vars | `docs/ENVIRONMENT.md` |
+| Workflow stages | `ENGINEERING.md#workflow-states` |
+| Database schema | `ENGINEERING.md#database-schema` |
+| Environment vars | `ENGINEERING.md#environment-configuration` |
 
 **Code comments**: Explain WHY, not WHAT. Tag critical logic with `[CRITICAL]`
 

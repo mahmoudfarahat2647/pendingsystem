@@ -1,5 +1,3 @@
-import { createClient } from "@/lib/supabase-middleware";
-import { ALLOWED_USER_EMAIL } from "@/lib/validations";
 import { type NextRequest, NextResponse } from "next/server";
 
 // Standard sliding window rate limiter
@@ -49,90 +47,39 @@ const CONFIGS = {
 };
 
 /**
- * Next.js middleware providing two-layer security:
- * 1. Authentication: Session validation and email verification
- * 2. Rate limiting: API request throttling
- *
- * Authentication flow:
- * - Public routes (login, forgot-password, static assets) bypass auth
- * - Protected routes require valid session cookie
- * - User email must match ALLOWED_USER_EMAIL
- * - Invalid sessions redirect to /login
- *
- * Rate limiting flow:
+ * Next.js middleware providing API rate limiting:
  * - API routes are rate limited by IP address
  * - Different limits for backup vs general API routes
  * - Returns 429 with retry-after headers when exceeded
  *
  * @param request - Incoming Next.js request
- * @returns Response with auth redirect or rate limit headers
+ * @returns Response with rate limit headers
  */
 export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;
-
-    // ========================================
-    // AUTHENTICATION LAYER
-    // ========================================
-
-    // Public routes that don't require authentication
-    const publicPaths = ["/login", "/forgot-password"];
-    const isPublicPath = publicPaths.some(p => path.startsWith(p));
-
-    const isAsset =
-        path.startsWith("/_next/") ||
-        path.startsWith("/static/") ||
-        path.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)$/);
-
-    if (!isPublicPath && !isAsset) {
-        // Create Supabase client for middleware
-        const { supabase, response } = createClient(request);
-
-        // Validate session
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
-
-        // No session - redirect to login
-        if (!user) {
-            // [CRITICAL] Don't redirect API calls, send 401 instead
-            if (path.startsWith("/api/")) {
-                return new NextResponse(
-                    JSON.stringify({ success: false, error: "Unauthorized" }),
-                    { status: 401, headers: { "Content-Type": "application/json" } }
-                );
-            }
-            const loginUrl = new URL("/login", request.url);
-            return NextResponse.redirect(loginUrl);
+    const debug =
+        process.env.NODE_ENV === "development" &&
+        process.env.MIDDLEWARE_DEBUG === "1";
+    const log = (...args: unknown[]) => {
+        if (debug) {
+            // eslint-disable-next-line no-console
+            console.log(...args);
         }
+    };
 
-        // Session exists but email doesn't match allowed user
-        if (user.email !== ALLOWED_USER_EMAIL) {
-            await supabase.auth.signOut();
-            if (path.startsWith("/api/")) {
-                return new NextResponse(
-                    JSON.stringify({ success: false, error: "Forbidden" }),
-                    { status: 403, headers: { "Content-Type": "application/json" } }
-                );
-            }
-            const loginUrl = new URL("/login", request.url);
-            return NextResponse.redirect(loginUrl);
-        }
-
-        // Valid session - continue with response (syncs cookies)
-        return response;
-    }
-
-    // ========================================
-    // RATE LIMITING LAYER (API routes only)
-    // ========================================
+    log("[middleware] ===== MIDDLEWARE START =====");
+    log("[middleware] Incoming request path:", path);
+    log("[middleware] Request method:", request.method);
+    log("[middleware] Request URL:", request.url);
 
     if (!path.startsWith("/api")) {
+        log("[middleware] Non-API route - skipping rate limiting");
         return NextResponse.next();
     }
 
     // Identify the client (IP address)
     const ip =
-        (request as any).ip ||
+        (request as { ip?: string }).ip ||
         request.headers.get("x-forwarded-for") ||
         "unknown";
 
@@ -141,7 +88,7 @@ export async function middleware(request: NextRequest) {
         ? CONFIGS.BACKUP
         : CONFIGS.DEFAULT;
 
-    const identifier = `${ip}:${path.includes("/trigger-backup") ? "backup" : "api"}`;
+    const identifier = `${ip}:${path.includes("/trigger-backup") ? "backup" : "api"} `;
 
     if (limiter.isRateLimited(identifier, config.limit, config.windowMs)) {
         const resetTime = limiter.getResetTimestamp(identifier, config.windowMs);

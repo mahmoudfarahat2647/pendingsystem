@@ -76,7 +76,7 @@ export default function ArchivePage() {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = archiveRowData.find((r) => r.id === id);
+				const row = archiveRowData.find((r: any) => r.id === id);
 				let newActionNote = row?.actionNote || "";
 				if (reason && reason.trim()) {
 					const taggedNote = `${reason.trim()} #archive`;

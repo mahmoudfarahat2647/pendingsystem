@@ -64,7 +64,7 @@ export default function DashboardPage() {
             {
                 title: "CALL QUEUE",
                 // اللعب كله هنا: بنجيب الـ vin من كل سطر، والـ Set بتطير المتكرر، والـ size بيدينا العدد النهائي
-                value: new Set(callRowData.map((item) => item.vin)).size,
+                value: new Set(callRowData.map((item: any) => item.vin)).size,
                 subtext: "Unique Vehicles",
                 icon: Phone,
             },
@@ -120,7 +120,7 @@ export default function DashboardPage() {
                             </div>
                             <div>
                                 <h1 className="text-4xl font-bold text-white tracking-tight">
-                                    RENAULT
+                                    PENDINGSYSTEM
                                 </h1>
                                 <p className="text-renault-yellow/90 font-medium tracking-widest text-xs mt-0.5">
                                     <span>PENDING SYSTEM</span>

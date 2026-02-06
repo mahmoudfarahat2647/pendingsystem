@@ -63,7 +63,7 @@ export const useOrdersPageHandlers = () => {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = ordersRowData.find((r) => r.id === id);
+				const row = ordersRowData.find((r: any) => r.id === id);
 				let newActionNote = row?.actionNote || "";
 				if (reason && reason.trim()) {
 					const taggedNote = `${reason.trim()} #archive`;

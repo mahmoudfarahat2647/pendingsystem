@@ -2,7 +2,7 @@ import { themeQuartz } from "ag-grid-community";
 
 // Define the custom theme based on Quartz
 export const gridTheme = themeQuartz.withParams({
-	accentColor: "#FFCC00", // Renault yellow
+	accentColor: "#FFCC00", // pendingsystem yellow
 	backgroundColor: "#0a0a0b",
 	foregroundColor: "#ffffff",
 	borderColor: "rgba(255, 255, 255, 0.08)",

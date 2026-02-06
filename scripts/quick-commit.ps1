@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# Renault System - Quick Commit Helper
+# pendingsystem - Quick Commit Helper
 # Usage: .\scripts\quick-commit.ps1 "your commit message"
 
 param(
