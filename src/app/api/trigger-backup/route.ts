@@ -1,6 +1,8 @@
 import { errorResponse, successResponse } from "@/lib/apiResponse";
 import { requireAllowedUser } from "@/lib/auth";
 
+export const runtime = "nodejs";
+
 // [CRITICAL] PROTECTED ROUTE - MANUAL BACKUP TRIGGER
 // Coordinates with GitHub Actions to run the protected backup script.
 export async function POST() {

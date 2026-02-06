@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase-server";
 import { isAllowedEmail, loginSchema } from "@/lib/validations";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 interface LoginPayload {
 	email: string;
 	password: string;

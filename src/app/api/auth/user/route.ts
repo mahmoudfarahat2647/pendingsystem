@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase-server";
 import { isAllowedEmail } from "@/lib/validations";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function GET() {
 	try {
 		const supabase = await createClient();

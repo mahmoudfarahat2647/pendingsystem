@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 /**
  * Logout API endpoint.
  * Clears the user's session by signing them out of Supabase.
