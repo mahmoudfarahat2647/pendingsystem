@@ -1,4 +1,4 @@
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -13,32 +13,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
 	);
 }
 
-/**
- * Cookie configuration for secure session storage.
- *
- * httpOnly: Browsers cannot set HttpOnly cookies from client-side JS
- * secure: Only sent over HTTPS in production (allows HTTP in development)
- * sameSite: 'lax' - cookies sent for top-level navigation and same-site requests
- * path: '/' - cookies available across entire site
- */
-const cookieOptions = {
-	httpOnly: false,
-	secure: process.env.NODE_ENV === "production",
-	sameSite: "lax" as const,
-	path: "/",
-};
-
-let browserClient: ReturnType<typeof createBrowserClient> | null = null;
+let browserClient: ReturnType<typeof createClient> | null = null;
 
 /**
  * Browser-side Supabase client for client components.
  *
- * Uses cookie-based session storage via @supabase/ssr.
- * Cookies are automatically managed by the browser and accessible to middleware.
+ * Uses stateless auth (no persisted session) via @supabase/supabase-js.
+ * Middleware authentication is handled separately via server-set cookies.
  *
  * Security features:
  * - Automatic token refresh
- * - Compatible with Next.js middleware for route protection
  *
  * @example
  * ```tsx
@@ -58,10 +42,13 @@ export function getSupabaseBrowserClient() {
 	}
 
 	if (!browserClient) {
-		browserClient = createBrowserClient(
-			supabaseUrl as string,
-			supabaseAnonKey as string,
-		);
+		browserClient = createClient(supabaseUrl as string, supabaseAnonKey as string, {
+			auth: {
+				persistSession: false,
+				autoRefreshToken: false,
+				detectSessionInUrl: false,
+			},
+		});
 	}
 
 	return browserClient;

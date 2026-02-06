@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
-    ALLOWED_USER_EMAIL,
+    isAllowedEmail,
     forgotPasswordSchema,
     type ForgotPasswordFormData,
 } from "@/lib/validations";
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
         }
 
         // Check if email is authorized
-        if (email !== ALLOWED_USER_EMAIL) {
+        if (!isAllowedEmail(email)) {
             toast.error(
                 "Password reset is only available for authorized users. Please contact your administrator.",
             );

@@ -181,7 +181,9 @@ function main() {
 	});
 
 	console.log(`\n📊 Total documented functions: ${totalFunctions}\n`);
-	console.log("💡 Tip: Run with --output flag to generate markdown\n");
+	console.log(
+		"Tip: Run with --output flag and paste into ENGINEERING.md (Store API section).\n",
+	);
 }
 
 main();

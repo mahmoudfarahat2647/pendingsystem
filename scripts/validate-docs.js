@@ -12,13 +12,11 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const DOCS_DIR = path.join(__dirname, "../docs");
+const DOCS_DIR = path.join(__dirname, "..");
 const REQUIRED_SECTIONS = {
-	"README.md": ["Documentation Index", "Quick Start"],
-	"STORE_API.md": ["Orders Slice", "Inventory Slice", "Usage Patterns"],
-	"ARCHITECTURE.md": ["Core Modules", "Data Flow", "Performance Optimizations"],
-	"COMPONENTS.md": ["Complex Stateful Components", "Best Practices"],
-	"TROUBLESHOOTING.md": ["Grid & Display Issues", "Debug Checklist"],
+	"README.md": ["Overview", "Quick Start", "Project Structure"],
+	"FEATURES.md": ["System Feature Registry"],
+	"ENGINEERING.md": ["Architecture", "Store API", "Components Guide", "Troubleshooting"],
 };
 
 const _AUTO_MARKERS = {

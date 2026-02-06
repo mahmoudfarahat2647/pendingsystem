@@ -30,6 +30,9 @@ export const Header = React.memo(function Header() {
 	const undo = useAppStore((state) => state.undo);
 	const redo = useAppStore((state) => state.redo);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
+	const searchTerm = useAppStore((state) => state.searchTerm);
+	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
+	const [searchInput, setSearchInput] = useState(searchTerm);
 
 	// Handle keyboard shortcuts
 	useEffect(() => {
@@ -95,6 +98,21 @@ export const Header = React.memo(function Header() {
 		return () =>
 			window.removeEventListener("check-notifications", handleManualCheck);
 	}, [checkNotifications]);
+
+	// Sync local input when global search changes externally (e.g., clear buttons elsewhere)
+	useEffect(() => {
+		setSearchInput(searchTerm);
+	}, [searchTerm]);
+
+	// Debounced search input (>= 300ms per workspace rules)
+	useEffect(() => {
+		const timeoutId = setTimeout(() => {
+			if (searchInput !== searchTerm) {
+				setSearchTerm(searchInput);
+			}
+		}, 350);
+		return () => clearTimeout(timeoutId);
+	}, [searchInput, searchTerm, setSearchTerm]);
 
 	return (
 		<header className="flex items-center justify-between h-20 px-8 border-b border-white/5 bg-transparent shrink-0">

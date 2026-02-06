@@ -54,6 +54,9 @@ const cookieOptions = {
 	secure: process.env.NODE_ENV === "production",
 	sameSite: "lax" as const,
 	path: "/",
+	// Session-only cookies (no maxAge/expires)
+	maxAge: undefined,
+	expires: undefined,
 };
 
 export async function createClient() {
@@ -74,7 +77,14 @@ export async function createClient() {
 			) {
 				try {
 					for (const { name, value, options } of cookiesToSet) {
-						cookieStore.set(name, value, options);
+						const isRemoval = options?.maxAge === 0;
+						const sanitizedOptions = (() => {
+							if (isRemoval || !options) return options;
+							// Strip Max-Age/Expires to force session-only cookies.
+							const { maxAge: _maxAge, expires: _expires, ...rest } = options;
+							return rest;
+						})();
+						cookieStore.set(name, value, sanitizedOptions);
 					}
 				} catch {
 					// The `setAll` method was called from a Server Component.

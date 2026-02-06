@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-	title: "Pending.Sys - Renault Logistics Command Center",
+	title: "Pending.Sys - pendingsystem Logistics Command Center",
 	description: "Logistics Command Center for automotive service centers",
 	icons: {
 		icon: "/favicon.svg",

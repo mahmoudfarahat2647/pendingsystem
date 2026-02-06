@@ -44,6 +44,8 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	gridStateKey,
 }: DataGridProps<T>) {
 	const gridId = useId();
+	const rowIdMapRef = useRef(new WeakMap<object, string>());
+	const rowIdCounterRef = useRef(0);
 
 	// Memoized callbacks
 	const {
@@ -151,9 +153,17 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	// Row ID getter for efficient updates
 	const getRowId = useMemo(
 		() => (params: { data: T }) => {
-			return (
-				params.data.id || params.data.vin || `row-${gridId}-${Math.random()}`
-			);
+			const data = params.data as unknown as object;
+			if (params.data.id) return params.data.id;
+			if (params.data.vin) return params.data.vin;
+
+			const cached = rowIdMapRef.current.get(data);
+			if (cached) return cached;
+
+			rowIdCounterRef.current += 1;
+			const fallbackId = `row-${gridId}-${rowIdCounterRef.current}`;
+			rowIdMapRef.current.set(data, fallbackId);
+			return fallbackId;
 		},
 		[gridId],
 	);

@@ -1,5 +1,5 @@
 import { createClient } from "./supabase-server";
-import { ALLOWED_USER_EMAIL } from "./validations";
+import { isAllowedEmail } from "./validations";
 
 /**
  * Result type for authentication checks.
@@ -56,7 +56,7 @@ export async function requireAllowedUser(): Promise<AuthResult> {
 	}
 
 	// Wrong user
-	if (user.email !== ALLOWED_USER_EMAIL) {
+	if (!isAllowedEmail(user.email)) {
 		await supabase.auth.signOut();
 		return {
 			success: false,
@@ -88,12 +88,14 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 		data: { user },
 	} = await supabase.auth.getUser();
 
-	if (!user || user.email !== ALLOWED_USER_EMAIL) {
+	const email = user?.email;
+
+	if (!user || !email || !isAllowedEmail(email)) {
 		return null;
 	}
 
 	return {
 		id: user.id,
-		email: user.email,
+		email,
 	};
 }

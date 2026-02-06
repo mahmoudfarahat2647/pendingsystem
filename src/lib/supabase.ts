@@ -11,7 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 /**
  * Universal Supabase client that redirects to the appropriate context-specific client.
  * 
- * - In the browser: Uses the cookie-based client from getSupabaseBrowserClient()
+ * - In the browser: Uses the localStorage-based client from getSupabaseBrowserClient()
  * - On the server: Uses a stateless client (auth disabled) to prevent session overlap
  * 
  * Note: For authenticated server-side operations, use createClient() from @/lib/supabase-server

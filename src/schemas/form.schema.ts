@@ -16,7 +16,7 @@ export const OrderFormSchema = z
 		requester: z.string().optional(),
 		sabNumber: z.string().optional(),
 		acceptedBy: z.string().optional(),
-		company: z.string().default("Renault"),
+		company: z.string().default("pendingsystem"),
 	})
 	.refine(
 		(data) => {

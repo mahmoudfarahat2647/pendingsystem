@@ -33,8 +33,10 @@ async function loginAsTestUser(page: any) {
 test.describe("Authentication System", () => {
 	test.describe.configure({ mode: "serial" });
 	test.beforeEach(async ({ page }) => {
-		// Clear cookies before each test
+		// Listen for console logs
+		page.on("console", (msg) => console.log(`[BROWSER] ${msg.text()}`));
 
+		// Clear cookies before each test
 		await page.context().clearCookies();
 		await page.goto("/login", { waitUntil: "domcontentloaded" });
 		await page.evaluate(() => {
@@ -269,5 +271,64 @@ test.describe("Authentication System", () => {
 		const htmlElement = page.locator("html");
 
 		await expect(htmlElement).toHaveClass(/dark/);
+	});
+
+	test("DEBUG: detailed login flow with console logging", async ({ page }) => {
+		test.setTimeout(30000);
+		test.skip(
+			!process.env.E2E_EMAIL || !process.env.E2E_PASSWORD,
+			"E2E credentials not provided",
+		);
+
+		console.log("\n===== DEBUG TEST: LOGIN FLOW =====");
+		console.log("Email:", ALLOWED_EMAIL);
+		console.log("Password length:", VALID_PASSWORD.length);
+
+		// Navigate to login page
+		await page.goto("/login", { waitUntil: "domcontentloaded" });
+		await page.waitForLoadState("networkidle");
+		console.log("✓ Navigated to login page");
+
+		// Fill in credentials
+		await page.getByLabel(/email/i).fill(ALLOWED_EMAIL);
+		await page.locator("#password").fill(VALID_PASSWORD);
+		console.log("✓ Filled in credentials");
+
+		// Set up response listener for auth API call
+		const authResponsePromise = page
+			.waitForResponse(
+				(response: any) =>
+					response.request().method() === "POST" &&
+					response.url().includes("/auth/v1/token"),
+				{ timeout: 15000 },
+			)
+			.catch(() => null);
+
+		// Click sign in button
+		console.log("✓ Clicking sign in button...");
+		await page.getByRole("button", { name: /sign in/i }).click();
+
+		// Wait for auth response
+		const authResponse = await authResponsePromise;
+		if (authResponse) {
+			console.log("✓ Auth response received");
+			console.log("  Status:", authResponse.status());
+			console.log("  OK:", authResponse.ok());
+			expect(authResponse.ok()).toBeTruthy();
+		} else {
+			console.log("✗ No auth response received within timeout");
+		}
+
+		// Wait for navigation to dashboard
+		try {
+			await expect(page).toHaveURL(/.*\/dashboard/, { timeout: 15000 });
+			console.log("✓ Successfully redirected to dashboard");
+		} catch (error) {
+			console.log("✗ Failed to redirect to dashboard");
+			console.log("  Current URL:", page.url());
+			throw error;
+		}
+
+		console.log("===== DEBUG TEST: LOGIN FLOW COMPLETE =====\n");
 	});
 });

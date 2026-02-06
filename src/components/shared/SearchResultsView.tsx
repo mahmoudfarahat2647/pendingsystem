@@ -81,6 +81,47 @@ export const SearchResultsView = () => {
 	const saveOrderMutation = useSaveOrderMutation();
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 
+const allRows = useMemo(() => {
+		return [
+			...rowData.map((r: any) => ({ ...r, sourceType: "Main Sheet" })),
+			...ordersRowData.map((r: any) => ({ ...r, sourceType: "Orders" })),
+			...bookingRowData.map((r: any) => ({ ...r, sourceType: "Booking" })),
+			...callRowData.map((r: any) => ({ ...r, sourceType: "Call" })),
+			...archiveRowData.map((r: any) => ({ ...r, sourceType: "Archive" })),
+		];
+	}, [rowData, ordersRowData, bookingRowData, callRowData, archiveRowData]);
+
+	const searchableRows = useMemo(() => {
+		return allRows.map((row) => {
+			const searchString = [
+				(row as any).sourceType,
+				row.vin,
+				row.customerName,
+				row.partNumber,
+				row.description,
+				row.mobile,
+				row.baseId,
+				row.trackingId,
+				row.model,
+				row.company || "pendingsystem",
+				row.requester,
+				row.sabNumber,
+				row.acceptedBy,
+				row.rDate,
+				row.noteContent,
+				row.repairSystem,
+				row.actionNote,
+				row.bookingDate,
+				row.bookingNote,
+				row.archiveReason,
+			]
+				.map((field) => (field ? String(field).toLowerCase() : ""))
+				.join(" " );
+
+			return { row, searchString };
+		});
+	}, [allRows]);
+
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>, stage?: string) => {
 			let mappedStage = stage?.toLowerCase() || "main";
@@ -147,7 +188,7 @@ export const SearchResultsView = () => {
 				row.baseId,
 				row.trackingId,
 				row.model,
-				row.company || "Renault",
+				row.company || "pendingsystem",
 				row.requester,
 				row.sabNumber,
 				row.acceptedBy,
@@ -285,7 +326,7 @@ export const SearchResultsView = () => {
 				row.baseId,
 				row.trackingId,
 				row.model,
-				row.company || "Renault",
+				row.company || "pendingsystem",
 				row.requester,
 				row.sabNumber,
 				row.acceptedBy,

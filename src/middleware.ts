@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase-middleware";
-import { ALLOWED_USER_EMAIL } from "@/lib/validations";
+import { isAllowedEmail } from "@/lib/validations";
 import { type NextRequest, NextResponse } from "next/server";
 
 // Standard sliding window rate limiter
@@ -69,58 +69,105 @@ const CONFIGS = {
  */
 export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;
+    const debug =
+        process.env.NODE_ENV === "development" &&
+        process.env.MIDDLEWARE_DEBUG === "1";
+    const log = (...args: unknown[]) => {
+        if (debug) {
+            // eslint-disable-next-line no-console
+            console.log(...args);
+        }
+    };
+
+    log("[middleware] ===== MIDDLEWARE START =====");
+    log("[middleware] Incoming request path:", path);
+    log("[middleware] Request method:", request.method);
+    log("[middleware] Request URL:", request.url);
 
     // ========================================
     // AUTHENTICATION LAYER
     // ========================================
 
     // Public routes that don't require authentication
-    const publicPaths = ["/login", "/forgot-password"];
+    const publicPaths = [
+        "/login",
+        "/forgot-password",
+        "/api/auth/session",
+        "/api/auth/login",
+        "/api/auth/user",
+        "/api/auth/logout",
+    ];
     const isPublicPath = publicPaths.some(p => path.startsWith(p));
-
-    const isAsset =
-        path.startsWith("/_next/") ||
-        path.startsWith("/static/") ||
-        path.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)$/);
+    const isAsset = path.startsWith("/_next/") || path.startsWith("/favicon.ico");
+    log("[middleware] isPublicPath:", isPublicPath);
+    log("[middleware] isAsset:", isAsset);
 
     if (!isPublicPath && !isAsset) {
+        log("[middleware] Path requires authentication check");
         // Create Supabase client for middleware
         const { supabase, response } = createClient(request);
 
         // Validate session
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
+        let user = null;
+
+        try {
+            log("[middleware] Calling supabase.auth.getUser()...");
+            const { data, error } = await supabase.auth.getUser();
+            if (!error) {
+                user = data.user;
+                log("[middleware] User found!");
+                log("[middleware] User ID:", user?.id);
+                log("[middleware] User email:", user?.email);
+            } else {
+                log("[middleware] No user session found (error):", error.message);
+                log("[middleware] Error status:", error.status);
+            }
+        } catch (e) {
+            log("[middleware] Error checking user:", e);
+            user = null;
+        }
 
         // No session - redirect to login
         if (!user) {
+            log("[middleware] No user session - redirecting to login");
             // [CRITICAL] Don't redirect API calls, send 401 instead
             if (path.startsWith("/api/")) {
+                log("[middleware] API route - returning 401");
                 return new NextResponse(
                     JSON.stringify({ success: false, error: "Unauthorized" }),
                     { status: 401, headers: { "Content-Type": "application/json" } }
                 );
             }
+            log("[middleware] Non-API route - redirecting to /login");
             const loginUrl = new URL("/login", request.url);
             return NextResponse.redirect(loginUrl);
         }
 
         // Session exists but email doesn't match allowed user
-        if (user.email !== ALLOWED_USER_EMAIL) {
+        if (!isAllowedEmail(user.email)) {
+            log("[middleware] Unauthorized email:", user.email);
+            log("[middleware] Signing out unauthorized user...");
             await supabase.auth.signOut();
             if (path.startsWith("/api/")) {
+                log("[middleware] API route - returning 403");
                 return new NextResponse(
                     JSON.stringify({ success: false, error: "Forbidden" }),
                     { status: 403, headers: { "Content-Type": "application/json" } }
                 );
             }
+            log("[middleware] Non-API route - redirecting to /login");
             const loginUrl = new URL("/login", request.url);
             return NextResponse.redirect(loginUrl);
         }
 
         // Valid session - continue with response (syncs cookies)
+        log("[middleware] Valid session - allowing request to proceed");
+        log("[middleware] ===== MIDDLEWARE END (AUTH PASSED) =====");
         return response;
     }
+
+    log("[middleware] Public path or asset - skipping auth check");
+    log("[middleware] ===== MIDDLEWARE END (PUBLIC/ASSET) =====");
 
     // ========================================
     // RATE LIMITING LAYER (API routes only)
@@ -141,7 +188,7 @@ export async function middleware(request: NextRequest) {
         ? CONFIGS.BACKUP
         : CONFIGS.DEFAULT;
 
-    const identifier = `${ip}:${path.includes("/trigger-backup") ? "backup" : "api"}`;
+    const identifier = `${ip}:${path.includes("/trigger-backup") ? "backup" : "api"} `;
 
     if (limiter.isRateLimited(identifier, config.limit, config.windowMs)) {
         const resetTime = limiter.getResetTimestamp(identifier, config.windowMs);

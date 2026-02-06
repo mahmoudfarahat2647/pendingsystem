@@ -95,7 +95,7 @@ export const Sidebar = React.memo(function Sidebar() {
 									viewBox="0 0 32 32"
 									className="w-6 h-6"
 									role="img"
-									aria-label="Renault Logo"
+									aria-label="pendingsystem Logo"
 								>
 									<g transform="translate(16, 16)">
 										<rect
@@ -155,7 +155,7 @@ export const Sidebar = React.memo(function Sidebar() {
 								viewBox="0 0 32 32"
 								className="w-6 h-6"
 								role="img"
-								aria-label="Renault Logo"
+								aria-label="pendingsystem Logo"
 							>
 								<g transform="translate(16, 16)">
 									<rect

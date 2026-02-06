@@ -381,12 +381,12 @@ async function runBackup() {
 		});
 
 		const mailOptions = {
-			from: `"Renault System" <${SMTP_USER}>`,
+			from: `"pendingsystem" <${SMTP_USER}>`,
 			to: recipients.join(", "),
-			subject: `[Backup] Renault System - ${dateStr}`,
+			subject: `[Backup] pendingsystem - ${dateStr}`,
 			html: `
           <h1>Automatic Backup Report</h1>
-          <p>This is an automated backup of your Renault System data.</p>
+          <p>This is an automated backup of your pendingsystem data.</p>
           <p><strong>Date (Cairo):</strong> ${new Date().toLocaleString("en-US", { timeZone: "Africa/Cairo" })}</p>
           <p><strong>Total Orders:</strong> ${mappedData.length}</p>
           <p><strong>Frequency:</strong> ${isScheduleRun ? settings.frequency : "Manual Trigger"}</p>

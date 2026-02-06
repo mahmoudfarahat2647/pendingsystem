@@ -59,7 +59,7 @@ describe('Zod Schemas', () => {
                 requester: "Admin",
                 sabNumber: "SAB123",
                 acceptedBy: "Agent",
-                company: "Renault"
+                company: "pendingsystem"
             };
             const result = OrderFormSchema.safeParse(validForm);
             expect(result.success).toBe(true);
@@ -77,7 +77,7 @@ describe('Zod Schemas', () => {
                 requester: "Admin",
                 sabNumber: "SAB123",
                 acceptedBy: "Agent",
-                company: "Renault"
+                company: "pendingsystem"
             };
             const result = OrderFormSchema.safeParse(invalidForm);
 

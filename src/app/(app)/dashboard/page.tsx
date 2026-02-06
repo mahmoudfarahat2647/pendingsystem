@@ -120,7 +120,7 @@ export default function DashboardPage() {
                             </div>
                             <div>
                                 <h1 className="text-4xl font-bold text-white tracking-tight">
-                                    RENAULT
+                                    PENDINGSYSTEM
                                 </h1>
                                 <p className="text-renault-yellow/90 font-medium tracking-widest text-xs mt-0.5">
                                     <span>PENDING SYSTEM</span>

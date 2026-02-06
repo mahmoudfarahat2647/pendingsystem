@@ -49,6 +49,9 @@ const cookieOptions = {
 	secure: process.env.NODE_ENV === "production",
 	sameSite: "lax" as const,
 	path: "/",
+	// Session-only cookies (no maxAge/expires)
+	maxAge: undefined,
+	expires: undefined,
 };
 
 export function createClient(request: NextRequest) {
@@ -72,7 +75,14 @@ export function createClient(request: NextRequest) {
 			setAll(cookiesToSet) {
 				for (const { name, value, options } of cookiesToSet) {
 					request.cookies.set(name, value);
-					response.cookies.set(name, value, options);
+					const isRemoval = options?.maxAge === 0;
+					const sanitizedOptions = (() => {
+						if (isRemoval || !options) return options;
+						// Strip Max-Age/Expires to force session-only cookies.
+						const { maxAge: _maxAge, expires: _expires, ...rest } = options;
+						return rest;
+					})();
+					response.cookies.set(name, value, sanitizedOptions);
 				}
 			},
 		},

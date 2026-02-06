@@ -2,8 +2,8 @@
 
 This file captures build/test commands and coding standards for this repo.
 Primary sources: `package.json`, `biome.json`, `tsconfig.json`, `vitest.config.ts`,
-`playwright.config.ts`, `docs/CONTRIBUTING.md`, `docs/DEVELOPMENT_RULES.md`,
-`WORKSPACE_RULES.md`, and `docs/README.md`.
+`playwright.config.ts`, `README.md`, `ENGINEERING.md#development-rules`,
+`WORKSPACE_RULES.md`, and `README.md`.
 
 No Cursor rules found in `.cursor/rules/` or `.cursorrules`.
 No Copilot rules found in `.github/copilot-instructions.md`.
@@ -54,7 +54,7 @@ npm run e2e -- --project=chromium
 Notes:
 - Playwright uses `tests/` and `*.e2e.spec.ts` (see `playwright.config.ts`).
 - Vitest uses `jsdom` and `src/test/setup.ts` (see `vitest.config.ts`).
-- Node.js 18.x or 20.x recommended (per `docs/CONTRIBUTING.md`).
+- Node.js 18.x or 20.x recommended (per `README.md`).
 
 ## Formatting & Linting (Biome)
 
@@ -137,11 +137,11 @@ Protected behaviors (do not change without explicit request):
 
 ## Documentation Updates
 
-- If you add or change a feature/UI/store action, update `features.md` (required).
+- If you add or change a feature/UI/store action, update `FEATURES.md` (required).
 - Also update docs when relevant:
-  - Workflow stages: `docs/WORKFLOW_STATES.md`
-  - Database schema: `docs/DATABASE_SCHEMA.md`
-  - Env vars: `docs/ENVIRONMENT.md`
+  - Workflow stages: `ENGINEERING.md#workflow-states`
+  - Database schema: `ENGINEERING.md#database-schema`
+  - Env vars: `ENGINEERING.md#environment-configuration`
 - Prefer JSDoc for public APIs, hooks, and complex utilities.
 
 ## Accessibility
