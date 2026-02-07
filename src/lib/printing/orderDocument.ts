@@ -46,38 +46,38 @@ import type { PendingRow } from "@/types";
  */
 /**
  * Checks if a part is in stock based on its partStatus.
- * 
+ *
  * @param {string} [status] - The status label of the part
  * @returns {boolean} True if status indicates part is in stock
  */
 const isPartInStock = (status?: string): boolean => {
-    if (!status) return false;
-    const inStockStatuses = ["arrived", "reserve", "labeled", "available"];
-    const normalized = status.toLowerCase().trim();
-    return inStockStatuses.includes(normalized);
+	if (!status) return false;
+	const inStockStatuses = ["arrived", "reserve", "labeled", "available"];
+	const normalized = status.toLowerCase().trim();
+	return inStockStatuses.includes(normalized);
 };
 
 export const printOrderDocument = (selected: PendingRow[]): void => {
-    // Validation: Ensure orders are selected
-    if (selected.length === 0) {
-        alert("Please select orders to print.");
-        return;
-    }
+	// Validation: Ensure orders are selected
+	if (selected.length === 0) {
+		alert("Please select orders to print.");
+		return;
+	}
 
-    // Group orders by VIN to generate one page per vehicle
-    const grouped: Record<string, PendingRow[]> = {};
-    selected.forEach((row) => {
-        const key = row.vin || "Unknown";
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(row);
-    });
+	// Group orders by VIN to generate one page per vehicle
+	const grouped: Record<string, PendingRow[]> = {};
+	selected.forEach((row) => {
+		const key = row.vin || "Unknown";
+		if (!grouped[key]) grouped[key] = [];
+		grouped[key].push(row);
+	});
 
-    // Open new window for print-isolated context
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+	// Open new window for print-isolated context
+	const printWindow = window.open("", "_blank");
+	if (!printWindow) return;
 
-    // Build complete HTML document
-    let htmlContent = `
+	// Build complete HTML document
+	let htmlContent = `
         <html>
         <head>
             <title>Print Orders - Pending.Sys</title>
@@ -262,32 +262,32 @@ export const printOrderDocument = (selected: PendingRow[]): void => {
         <body>
     `;
 
-    // Generate page content for each VIN
-    Object.keys(grouped).forEach((vin) => {
-        const rows = grouped[vin];
-        const info = rows[0];
+	// Generate page content for each VIN
+	Object.keys(grouped).forEach((vin) => {
+		const rows = grouped[vin];
+		const info = rows[0];
 
-        // Distribute parts across 3 columns (6 items per column)
-        const rowsPerCol = 6;
-        const col1 = rows.slice(0, rowsPerCol);
-        const col2 = rows.slice(rowsPerCol, rowsPerCol * 2);
-        const col3 = rows.slice(rowsPerCol * 2, rowsPerCol * 3);
+		// Distribute parts across 3 columns (6 items per column)
+		const rowsPerCol = 6;
+		const col1 = rows.slice(0, rowsPerCol);
+		const col2 = rows.slice(rowsPerCol, rowsPerCol * 2);
+		const col3 = rows.slice(rowsPerCol * 2, rowsPerCol * 3);
 
-        // Helper function to render a single part item
-        const renderPart = (p: PendingRow) => {
-            const inStock = isPartInStock(p.partStatus);
-            // Label icon SVG matching user preference
-            const labelIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="black" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>`;
-            const indicator = inStock ? labelIcon : "";
-            return `
+		// Helper function to render a single part item
+		const renderPart = (p: PendingRow) => {
+			const inStock = isPartInStock(p.partStatus);
+			// Label icon SVG matching user preference
+			const labelIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="black" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>`;
+			const indicator = inStock ? labelIcon : "";
+			return `
             <div class="part-item">
                 <span class="part-desc" style="${inStock ? "font-weight: 900;" : ""}">${indicator}${p.description || "-"}</span>
                 <span class="part-num">${p.partNumber || "-"}</span>
             </div>
         `;
-        };
+		};
 
-        htmlContent += `
+		htmlContent += `
             <div class="page">
                 <div class="header">
                     <div>
@@ -329,18 +329,18 @@ export const printOrderDocument = (selected: PendingRow[]): void => {
                 </div>
             </div>
         `;
-    });
+	});
 
-    htmlContent += `</body></html>`;
+	htmlContent += `</body></html>`;
 
-    // Inject HTML and trigger print
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+	// Inject HTML and trigger print
+	printWindow.document.write(htmlContent);
+	printWindow.document.close();
 
-    // Auto-trigger print dialog after font loading
-    setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-    }, 1000);
+	// Auto-trigger print dialog after font loading
+	setTimeout(() => {
+		printWindow.focus();
+		printWindow.print();
+		printWindow.close();
+	}, 1000);
 };

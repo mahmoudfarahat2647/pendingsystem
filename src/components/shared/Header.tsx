@@ -1,14 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import {
-	Download,
-	Redo2,
-	RefreshCw,
-	Search,
-	Undo2,
-	X,
-} from "lucide-react";
+import { Download, Redo2, RefreshCw, Search, Undo2, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -126,7 +119,7 @@ export const Header = React.memo(function Header() {
 						"relative flex items-center rounded-2xl transition-all duration-300",
 						"bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10",
 						isSearchFocused &&
-						"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
+							"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
 					)}
 				>
 					<Search className="absolute left-4 h-5 w-5 text-gray-500" />
@@ -219,7 +212,9 @@ export const Header = React.memo(function Header() {
 								const rawData = await orderService.getOrders();
 								const mappedData = rawData.map(orderService.mapSupabaseOrder);
 								exportAllSystemDataCSV(mappedData);
-								toast.success("Workbook exported successfully", { id: toastId });
+								toast.success("Workbook exported successfully", {
+									id: toastId,
+								});
 							} catch (error) {
 								console.error("Export failed:", error);
 								toast.error("Failed to export workbook", { id: toastId });

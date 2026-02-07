@@ -1,13 +1,10 @@
 "use client";
 
-import {
-	Bell,
-	Plus,
-	Trash2,
-} from "lucide-react";
-import { useEffect, useState } from "react";
 import { format } from "date-fns";
+import { Bell, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import DateTimePicker from "@/components/ui/date-time-picker";
 import {
 	Dialog,
 	DialogContent,
@@ -17,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import DateTimePicker from "@/components/ui/date-time-picker";
 import { useAppStore } from "@/store/useStore";
 
 interface EditReminderModalProps {
@@ -83,7 +79,7 @@ export const EditReminderModal = ({
 			onSave({
 				date: format(new Date(), "yyyy-MM-dd"),
 				time: "12:00",
-				subject
+				subject,
 			});
 		}
 		onOpenChange(false);

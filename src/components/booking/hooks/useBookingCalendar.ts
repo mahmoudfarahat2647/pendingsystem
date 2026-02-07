@@ -87,7 +87,9 @@ export function useBookingCalendar({
 			if (b.bookingDate && isAfter(new Date(b.bookingDate), twoYearsAgo)) {
 				if (!map[b.bookingDate]) map[b.bookingDate] = [];
 				// Only add if this VIN is not already in the list for this date
-				const vinExists = map[b.bookingDate].some((existing) => existing.vin === b.vin);
+				const vinExists = map[b.bookingDate].some(
+					(existing) => existing.vin === b.vin,
+				);
 				if (!vinExists) {
 					map[b.bookingDate].push(b);
 				}

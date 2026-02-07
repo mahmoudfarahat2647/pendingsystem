@@ -2,10 +2,10 @@
 
 import type { GridApi } from "ag-grid-community";
 import { Unlock } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
-import dynamic from "next/dynamic";
 import { MainSheetToolbar } from "@/components/main-sheet/MainSheetToolbar";
 
 const BookingCalendarModal = dynamic(
@@ -19,16 +19,17 @@ const RowModals = dynamic(
 	() => import("@/components/shared/RowModals").then((mod) => mod.RowModals),
 	{ ssr: false },
 );
+
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getMainSheetColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
+	useBulkUpdateOrderStageMutation,
 	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
-	useBulkUpdateOrderStageMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
@@ -283,7 +284,9 @@ export default function MainSheetPage() {
 										// Implementation: If "Arrived", check all parts for VIN. If all Arrived, move to Call List.
 										if (newStatus === "Arrived" && vin) {
 											// Find all parts for this same VIN in the current dataset
-											const vinParts = rowData.filter((r: any) => r.vin === vin);
+											const vinParts = rowData.filter(
+												(r: any) => r.vin === vin,
+											);
 
 											// Check if every part for this VIN is now "Arrived"
 											// (the current row just became "Arrived", so we check the persistent state for others)

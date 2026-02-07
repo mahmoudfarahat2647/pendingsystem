@@ -16,7 +16,12 @@ const DOCS_DIR = path.join(__dirname, "..");
 const REQUIRED_SECTIONS = {
 	"README.md": ["Overview", "Quick Start", "Project Structure"],
 	"FEATURES.md": ["System Feature Registry"],
-	"ENGINEERING.md": ["Architecture", "Store API", "Components Guide", "Troubleshooting"],
+	"ENGINEERING.md": [
+		"Architecture",
+		"Store API",
+		"Components Guide",
+		"Troubleshooting",
+	],
 };
 
 const _AUTO_MARKERS = {

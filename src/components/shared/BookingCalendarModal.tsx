@@ -9,14 +9,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { PendingRow } from "@/types";
 import { useAppStore } from "@/store/useStore";
+import type { PendingRow } from "@/types";
 import { BookingCalendarGrid } from "../booking/BookingCalendarGrid";
-import { BookingTasks } from "../booking/BookingTasks";
 import { BookingSidebarCustomerList } from "../booking/BookingSidebarCustomerList";
 import { BookingSidebarDetails } from "../booking/BookingSidebarDetails";
 import { BookingSidebarFooter } from "../booking/BookingSidebarFooter";
 import { BookingSidebarHeader } from "../booking/BookingSidebarHeader";
+import { BookingTasks } from "../booking/BookingTasks";
 import { useBookingCalendar } from "../booking/hooks/useBookingCalendar";
 
 interface BookingCalendarModalProps {
@@ -82,8 +82,6 @@ export const BookingCalendarModal = ({
 				<div className="flex-1 flex min-w-0">
 					{/* Column 1: Calendar & Tasks */}
 					<div className="w-[450px] p-10 flex flex-col bg-[#050505] border-r border-white/5 overflow-y-auto custom-scrollbar">
-
-
 						<BookingCalendarGrid
 							currentMonth={currentMonth}
 							selectedDate={selectedDate}
@@ -128,15 +126,13 @@ export const BookingCalendarModal = ({
 										selectedRows={selectedRows}
 										activeCustomerBookings={activeCustomerBookings}
 										consolidatedNotes={consolidatedNotes}
-										updateBookingStatus={() => { }}
+										updateBookingStatus={() => {}}
 										activeCustomerHistoryDates={activeCustomerHistoryDates}
 										onHistoryDateClick={(date) => {
 											setCurrentMonth(date);
 											handleDateSelect(date);
 										}}
 									/>
-
-
 								</div>
 
 								<BookingSidebarFooter

@@ -1,18 +1,27 @@
 "use client";
 
-import type { GridApi, ValueFormatterParams } from "ag-grid-community";
-import { CheckCircle, Download, Filter, RotateCcw, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import type { GridApi } from "ag-grid-community";
+import {
+	Archive,
+	Calendar,
+	CheckCircle,
+	Download,
+	Filter,
+	History as HistoryIcon,
+	RotateCcw,
+	Tag,
+	Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
+import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { getBaseColumns } from "@/components/shared/GridConfig";
+import { getBookingColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
+import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { RowModals } from "@/components/shared/RowModals";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
-import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
-import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -37,38 +46,39 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+	useBulkUpdateOrderStageMutation,
 	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
-	useBulkUpdateOrderStageMutation,
 } from "@/hooks/queries/useOrdersQuery";
+import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useRowModals } from "@/hooks/useRowModals";
+import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
-export default function ArchivePage() {
-	const { isDirty, saveLayout, saveAsDefault, resetLayout } = useColumnLayoutTracker("archive");
-	const { data: archiveRowData = [] } = useOrdersQuery("archive");
+export default function BookingPage() {
+	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
+		useColumnLayoutTracker("booking");
+	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
-	const setArchiveRowData = useAppStore((state) => state.setArchiveRowData);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
 	useEffect(() => {
-		if (archiveRowData) {
-			setArchiveRowData(archiveRowData);
+		if (bookingRowData) {
 			checkNotifications();
 		}
-	}, [archiveRowData, setArchiveRowData, checkNotifications]);
+	}, [bookingRowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			return saveOrderMutation.mutateAsync({ id, updates, stage: "archive" });
+			return saveOrderMutation.mutateAsync({ id, updates, stage: "booking" });
 		},
 		[saveOrderMutation],
 	);
@@ -76,30 +86,31 @@ export default function ArchivePage() {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = archiveRowData.find((r: any) => r.id === id);
-				let newActionNote = row?.actionNote || "";
-				if (reason && reason.trim()) {
-					const taggedNote = `${reason.trim()} #archive`;
-					newActionNote = newActionNote
-						? `${newActionNote}\n${taggedNote}`
-						: taggedNote;
-				}
-
 				saveOrderMutation.mutate({
 					id,
-					updates: { archiveReason: reason, actionNote: newActionNote },
+					updates: { archiveReason: reason },
 					stage: "archive",
 				});
 			}
 		},
-		[saveOrderMutation, archiveRowData],
+		[saveOrderMutation],
 	);
+
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
+	const [isRebookingModalOpen, setIsRebookingModalOpen] = useState(false);
+	const [rebookingSearchTerm, setRebookingSearchTerm] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+
+	const _handleSelectionChanged = useMemo(
+		() => (rows: PendingRow[]) => {
+			setSelectedRows(rows);
+		},
+		[],
+	);
 
 	const {
 		activeModal,
@@ -107,11 +118,23 @@ export default function ArchivePage() {
 		handleNoteClick,
 		handleReminderClick,
 		handleAttachClick,
+		handleArchiveClick,
 		closeModal,
 		saveNote,
 		saveReminder,
 		saveAttachment,
+		saveArchive,
 	} = useRowModals(handleUpdateOrder, handleSendToArchive);
+
+	const columns = useMemo(
+		() =>
+			getBookingColumns(
+				(row) => handleNoteClick(row, "booking"),
+				handleReminderClick,
+				handleAttachClick,
+			),
+		[handleNoteClick, handleReminderClick, handleAttachClick],
+	);
 
 	const handleConfirmReorder = async () => {
 		if (!reorderReason.trim()) {
@@ -119,10 +142,7 @@ export default function ArchivePage() {
 			return;
 		}
 		const ids = selectedRows.map((r) => r.id);
-		// 1. Move stage (bulk)
-		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "orders" });
-
-		// 2. Update status/note (sequential but optimistic)
+		// 1. Update status/note (sequential but optimistic)
 		for (const row of selectedRows) {
 			let newActionNote = row.actionNote || "";
 			const taggedNote = `Reorder Reason: ${reorderReason} #reorder`;
@@ -136,15 +156,55 @@ export default function ArchivePage() {
 					actionNote: newActionNote,
 					status: "Reorder",
 				},
-				stage: "orders",
+				stage: "booking",
 			});
 		}
+		// 2. Move stage (bulk)
+		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "orders" });
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");
 		toast.success(
 			`${selectedRows.length} row(s) sent back to Orders (Reorder)`,
 		);
+	};
+
+	const handleConfirmRebooking = async (
+		newDate: string,
+		newNote: string,
+		status?: string,
+	) => {
+		if (selectedRows.length === 0) return;
+		for (const row of selectedRows) {
+			const oldDate = row.bookingDate || "Unknown Date";
+			const historyLog = `Rescheduled from ${oldDate} to ${newDate}.`;
+			const fullNote = `${historyLog} ${newNote}`.trim();
+
+			const updatedBookingNote = row.bookingNote
+				? `${row.bookingNote}\n[System]: ${fullNote}`
+				: `[System]: ${fullNote}`;
+
+			// Append to actionNote for history
+			let newActionNote = row.actionNote || "";
+			const taggedNote = `${fullNote} #rebooking`;
+			newActionNote = newActionNote
+				? `${newActionNote}\n${taggedNote}`
+				: taggedNote;
+
+			await saveOrderMutation.mutateAsync({
+				id: row.id,
+				updates: {
+					bookingDate: newDate,
+					bookingNote: updatedBookingNote,
+					actionNote: newActionNote,
+					...(status ? { bookingStatus: status } : {}),
+				},
+				stage: "booking",
+			});
+		}
+		setIsRebookingModalOpen(false);
+		setSelectedRows([]);
+		toast.success(`Rescheduled ${selectedRows.length} booking(s) successfully`);
 	};
 
 	const handleUpdatePartStatus = (status: string) => {
@@ -154,31 +214,6 @@ export default function ArchivePage() {
 		});
 		toast.success(`Updated ${selectedRows.length} item(s) to ${status}`);
 	};
-
-	const columns = useMemo(() => {
-		const baseColumns = getBaseColumns(
-			(row) => handleNoteClick(row, "archive"),
-			handleReminderClick,
-			handleAttachClick,
-		);
-		return [
-			...baseColumns.slice(0, 3),
-			{
-				headerName: "BOOKING",
-				field: "bookingDate",
-				width: 120,
-				valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
-					if (!params.value) return "";
-					try {
-						return format(new Date(params.value), "EEE, MMM d, yyyy");
-					} catch {
-						return params.value;
-					}
-				},
-			},
-			...baseColumns.slice(3),
-		];
-	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
 
 	return (
 		<TooltipProvider>
@@ -220,6 +255,21 @@ export default function ArchivePage() {
 							onSaveAsDefault={saveAsDefault}
 							onReset={resetLayout}
 						/>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-gray-400 hover:text-white h-8 w-8"
+									onClick={() => printReservationLabels(selectedRows)}
+									disabled={selectedRows.length === 0}
+								>
+									<Tag className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Reserve/Print Label</TooltipContent>
+						</Tooltip>
 
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -274,6 +324,28 @@ export default function ArchivePage() {
 								<Button
 									size="icon"
 									variant="ghost"
+									className="text-gray-400 hover:text-white h-8 w-8"
+									onClick={() => {
+										if (selectedRows.length > 0) {
+											handleArchiveClick(
+												selectedRows[0],
+												selectedRows.map((r) => r.id),
+											);
+										}
+									}}
+									disabled={selectedRows.length === 0}
+								>
+									<Archive className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Archive</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
 									className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
 									onClick={() => setIsReorderModalOpen(true)}
 									disabled={selectedRows.length === 0}
@@ -286,7 +358,7 @@ export default function ArchivePage() {
 					</div>
 
 					<div className="flex items-center gap-1.5">
-						<VINLineCounter rows={archiveRowData} />
+						<VINLineCounter rows={bookingRowData} />
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
@@ -306,9 +378,9 @@ export default function ArchivePage() {
 
 				<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden mt-4">
 					<DataGrid
-						rowData={archiveRowData}
+						rowData={bookingRowData}
 						columnDefs={columns}
-						gridStateKey="archive"
+						gridStateKey="booking"
 						onSelectionChange={setSelectedRows}
 						onGridReady={(api) => setGridApi(api)}
 						showFloatingFilters={showFilters}
@@ -317,18 +389,6 @@ export default function ArchivePage() {
 					/>
 				</div>
 
-				<RowModals
-					activeModal={activeModal}
-					currentRow={currentRow}
-					onClose={closeModal}
-					onSaveNote={saveNote}
-					onSaveReminder={saveReminder}
-					onSaveAttachment={saveAttachment}
-					onSaveArchive={() => { }}
-					sourceTag="archive"
-				/>
-
-				{/* Reorder Reason Modal */}
 				<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
 					<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
 						<DialogHeader>
@@ -342,7 +402,7 @@ export default function ArchivePage() {
 								<Input
 									value={reorderReason}
 									onChange={(e) => setReorderReason(e.target.value)}
-									placeholder="e.g., Customer called back, error in archive"
+									placeholder="e.g., Wrong part, Customer cancelled"
 									className="bg-white/5 border-white/10 text-white"
 								/>
 							</div>
@@ -369,6 +429,25 @@ export default function ArchivePage() {
 					</DialogContent>
 				</Dialog>
 
+				<BookingCalendarModal
+					open={isRebookingModalOpen}
+					onOpenChange={setIsRebookingModalOpen}
+					selectedRows={selectedRows}
+					initialSearchTerm={rebookingSearchTerm}
+					onConfirm={handleConfirmRebooking}
+				/>
+
+				<RowModals
+					activeModal={activeModal}
+					currentRow={currentRow}
+					onClose={closeModal}
+					onSaveNote={saveNote}
+					onSaveReminder={saveReminder}
+					onSaveAttachment={saveAttachment}
+					onSaveArchive={saveArchive}
+					sourceTag="booking"
+				/>
+
 				<ConfirmDialog
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
@@ -377,12 +456,12 @@ export default function ArchivePage() {
 							await deleteOrderMutation.mutateAsync(row.id);
 						}
 						setSelectedRows([]);
-						toast.success("Archived record(s) deleted");
+						toast.success("Booking(s) deleted");
 						setShowDeleteConfirm(false);
 					}}
-					title="Delete Archived Records"
-					description={`Are you sure you want to permanently delete ${selectedRows.length} selected record(s)?`}
-					confirmText="Permanently Delete"
+					title="Delete Bookings"
+					description={`Are you sure you want to delete ${selectedRows.length} selected booking(s)?`}
+					confirmText="Delete"
 				/>
 			</div>
 		</TooltipProvider>

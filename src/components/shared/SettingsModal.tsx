@@ -14,21 +14,16 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
-import { PartStatusTab } from "./settings/PartStatusTab";
-
-
-import { ThemeTab } from "./settings/ThemeTab";
 import BackupReportsTab from "../reports/BackupReportsTab";
+import { PartStatusTab } from "./settings/PartStatusTab";
+import { ThemeTab } from "./settings/ThemeTab";
 
 interface SettingsModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }
 
-type TabType =
-	| "part-statuses"
-	| "theme-color"
-	| "backup-reports";
+type TabType = "part-statuses" | "theme-color" | "backup-reports";
 
 export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 	const [activeTab, setActiveTab] = useState<TabType>("part-statuses");
@@ -206,8 +201,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 						)}
 
 						{activeTab === "theme-color" && <ThemeTab />}
-
-
 
 						{activeTab === "backup-reports" && (
 							<BackupReportsTab isLocked={isLocked} />

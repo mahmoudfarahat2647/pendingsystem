@@ -1,23 +1,10 @@
 import { errorResponse, successResponse } from "@/lib/apiResponse";
-import { requireAllowedUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
-// [CRITICAL] PROTECTED ROUTE - MANUAL BACKUP TRIGGER
-// Coordinates with GitHub Actions to run the protected backup script.
+// Manual backup trigger coordinating with GitHub Actions.
 export async function POST() {
 	try {
-		// Verify authentication via cookies
-		const auth = await requireAllowedUser();
-		if (!auth.success) {
-			return new Response(
-				JSON.stringify({ success: false, error: auth.error?.message }),
-				{
-					status: auth.error?.status,
-					headers: { "Content-Type": "application/json" },
-				},
-			);
-		}
 		const githubToken = process.env.GITHUB_PAT;
 		// Prioritize env vars, but keep fallbacks if they match the user's hardcoded values from before,
 		// OR enforce them. The plan said "Add explicit checks", so we will require them or use the defaults IF they are safe.

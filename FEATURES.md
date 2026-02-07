@@ -33,6 +33,9 @@ Create an efficient logistics platform for pendingsystem service centers that re
   - Tabbed interface (Part Statuses, Appearance).
   - Accessible via Sidebar User Profile.
   - Centralized management for Part Status definitions.
+- **Access Control (Temporary Disabled)**:
+  - Legacy sign-in flows removed to unblock a future Clerk integration.
+  - App routes are currently accessible without a sign-in gate.
 
 ## Order Management (Orders Page)
 - **Data Grid**:

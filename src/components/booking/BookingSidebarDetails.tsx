@@ -1,5 +1,11 @@
-import { Car, ChevronRight, MessageSquare, Package, History as HistoryIcon } from "lucide-react";
 import { format } from "date-fns";
+import {
+	Car,
+	ChevronRight,
+	History as HistoryIcon,
+	MessageSquare,
+	Package,
+} from "lucide-react";
 import {
 	Popover,
 	PopoverContent,

@@ -81,7 +81,7 @@ export const SearchResultsView = () => {
 	const saveOrderMutation = useSaveOrderMutation();
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 
-const allRows = useMemo(() => {
+	const allRows = useMemo(() => {
 		return [
 			...rowData.map((r: any) => ({ ...r, sourceType: "Main Sheet" })),
 			...ordersRowData.map((r: any) => ({ ...r, sourceType: "Orders" })),
@@ -116,7 +116,7 @@ const allRows = useMemo(() => {
 				row.archiveReason,
 			]
 				.map((field) => (field ? String(field).toLowerCase() : ""))
-				.join(" " );
+				.join(" ");
 
 			return { row, searchString };
 		});
@@ -232,21 +232,21 @@ const allRows = useMemo(() => {
 		const actionsCol = baseCols.find((col) => col.colId === "actions");
 		const configuredActionsCol: ColDef<PendingRow> = actionsCol
 			? {
-				...actionsCol,
-				checkboxSelection: true,
-				headerCheckboxSelection: false, // User requested removal of header checkbox
-				pinned: "left", // User requested first position
-			}
+					...actionsCol,
+					checkboxSelection: true,
+					headerCheckboxSelection: false, // User requested removal of header checkbox
+					pinned: "left", // User requested first position
+				}
 			: {
-				// Fallback if not found (should typically be found)
-				headerName: "ACTIONS",
-				field: "id", // Fallback field
-				colId: "actions",
-				pinned: "left",
-				checkboxSelection: true,
-				headerCheckboxSelection: false,
-				width: 100,
-			};
+					// Fallback if not found (should typically be found)
+					headerName: "ACTIONS",
+					field: "id", // Fallback field
+					colId: "actions",
+					pinned: "left",
+					checkboxSelection: true,
+					headerCheckboxSelection: false,
+					width: 100,
+				};
 
 		// Filter out 'selection' and 'actions' from baseCols as we handle them differently
 		const remainingBaseCols = baseCols.filter(
@@ -291,8 +291,8 @@ const allRows = useMemo(() => {
 					values:
 						Array.isArray(partStatuses) && partStatuses.length > 0
 							? partStatuses
-								.filter((s) => s && typeof s.label === "string")
-								.map((s) => s.label)
+									.filter((s) => s && typeof s.label === "string")
+									.map((s) => s.label)
 							: [],
 				},
 				cellClass: "flex items-center justify-center",

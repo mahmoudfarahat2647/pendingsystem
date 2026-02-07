@@ -27,7 +27,13 @@ export function useBulkUpdateOrderStageMutation() {
 
 			// Snapshot current cache states for rollback
 			const previousOrdersCache: Record<string, any[] | undefined> = {};
-			const stages: OrderStage[] = ["orders", "main", "call", "booking", "archive"];
+			const stages: OrderStage[] = [
+				"orders",
+				"main",
+				"call",
+				"booking",
+				"archive",
+			];
 
 			for (const s of stages) {
 				previousOrdersCache[s] = queryClient.getQueryData(["orders", s]);
@@ -55,10 +61,13 @@ export function useBulkUpdateOrderStageMutation() {
 
 			// 2. Add to destination cache
 			if (movedRows.length > 0) {
-				queryClient.setQueryData(["orders", stage], (old: any[] | undefined) => {
-					const base = old || [];
-					return [...movedRows, ...base];
-				});
+				queryClient.setQueryData(
+					["orders", stage],
+					(old: any[] | undefined) => {
+						const base = old || [];
+						return [...movedRows, ...base];
+					},
+				);
 			}
 
 			return { previousOrdersCache };
@@ -129,9 +138,13 @@ export function useSaveOrderMutation() {
 			context?: { previousOrders?: any[] },
 		) => {
 			if (context?.previousOrders) {
-				queryClient.setQueryData(["orders", variables.stage], context.previousOrders);
+				queryClient.setQueryData(
+					["orders", variables.stage],
+					context.previousOrders,
+				);
 			}
-			const errorMessage = error?.message || error?.hint || error?.details || String(error);
+			const errorMessage =
+				error?.message || error?.hint || error?.details || String(error);
 			toast.error(`Error saving order: ${errorMessage}`);
 		},
 		onSettled: (_data, _error, variables) => {
@@ -158,4 +171,3 @@ export function useDeleteOrderMutation() {
 		},
 	});
 }
-

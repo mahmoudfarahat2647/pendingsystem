@@ -7,7 +7,6 @@ import {
 	ChevronRight,
 	FileSpreadsheet,
 	LayoutDashboard,
-	LogOut,
 	MoreVertical,
 	Phone,
 	ShoppingCart,
@@ -16,14 +15,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
 import { SettingsModal } from "./SettingsModal";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface NavItem {
 	href: string;
@@ -69,11 +61,6 @@ export const Sidebar = React.memo(function Sidebar() {
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const pathname = usePathname();
-	const { logout } = useAuth();
-
-	const handleLogout = async () => {
-		await logout();
-	};
 
 	return (
 		<aside
@@ -232,7 +219,10 @@ export const Sidebar = React.memo(function Sidebar() {
 
 									{/* Label */}
 									{!isCollapsed && (
-										<span className="relative z-10 text-sm tracking-wide" suppressHydrationWarning>
+										<span
+											className="relative z-10 text-sm tracking-wide"
+											suppressHydrationWarning
+										>
 											{item.label}
 										</span>
 									)}
@@ -272,7 +262,10 @@ export const Sidebar = React.memo(function Sidebar() {
 			</button>
 
 			{/* User Profile */}
-			<div className="border-t border-white/10 p-4 bg-black/20" suppressHydrationWarning>
+			<div
+				className="border-t border-white/10 p-4 bg-black/20"
+				suppressHydrationWarning
+			>
 				<div className="w-full flex items-center gap-2">
 					<button
 						type="button"
@@ -296,38 +289,30 @@ export const Sidebar = React.memo(function Sidebar() {
 						</div>
 						{!isCollapsed && (
 							<div className="flex-1 min-w-0">
-								<p className="text-sm font-semibold text-white truncate" suppressHydrationWarning>
+								<p
+									className="text-sm font-semibold text-white truncate"
+									suppressHydrationWarning
+								>
 									Mahmoud Farahat
 								</p>
-								<p className="text-xs text-gray-500 truncate" suppressHydrationWarning>System Creator</p>
+								<p
+									className="text-xs text-gray-500 truncate"
+									suppressHydrationWarning
+								>
+									System Creator
+								</p>
 							</div>
 						)}
 					</button>
 					{!isCollapsed && (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<button
-									type="button"
-									className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
-									aria-label="User menu"
-								>
-									<MoreVertical className="h-4 w-4" />
-								</button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent
-								side="top"
-								align="end"
-								className="bg-black/95 border-white/10 backdrop-blur-md"
-							>
-								<DropdownMenuItem
-									onClick={handleLogout}
-									className="text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer"
-								>
-									<LogOut className="mr-2 h-4 w-4" />
-									<span>Logout</span>
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
+						<button
+							type="button"
+							className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+							aria-label="User menu"
+							onClick={() => setSettingsOpen(true)}
+						>
+							<MoreVertical className="h-4 w-4" />
+						</button>
 					)}
 				</div>
 			</div>

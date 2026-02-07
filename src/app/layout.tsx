@@ -21,11 +21,10 @@ export const metadata: Metadata = {
 
 /**
  * Root layout providing global providers and dark theme.
- * 
+ *
  * Layout structure is handled by route groups:
- * - (auth) - Minimal layout for login/forgot-password
- * - (app) - Full layout with Sidebar/Header for protected pages
- * 
+ * - (app) - Full layout with Sidebar/Header for application pages
+ *
  * This layout only provides:
  * - Dark theme enforcement
  * - React Query provider
@@ -47,4 +46,3 @@ export default function RootLayout({
 		</html>
 	);
 }
-

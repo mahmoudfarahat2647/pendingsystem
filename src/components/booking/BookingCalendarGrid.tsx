@@ -97,8 +97,6 @@ export const BookingCalendarGrid = ({
 
 					const dayBookings = [...(bookingsByDateMap[dateKey] || [])];
 
-
-
 					return (
 						<button
 							type="button"
@@ -117,9 +115,9 @@ export const BookingCalendarGrid = ({
 								isSearchMatch && !isSelected && "text-emerald-500 font-bold",
 								isFaded && !isSelected && "opacity-20 pointer-events-none",
 								isActiveCustomerDate &&
-								!isSelected &&
-								!isFaded &&
-								"ring-1 ring-emerald-500/40 text-emerald-500",
+									!isSelected &&
+									!isFaded &&
+									"ring-1 ring-emerald-500/40 text-emerald-500",
 							)}
 						>
 							{format(day, "d")}
@@ -128,7 +126,6 @@ export const BookingCalendarGrid = ({
 									{dayBookings.length}
 								</div>
 							)}
-
 						</button>
 					);
 				})}

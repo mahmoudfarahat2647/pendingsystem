@@ -1,6 +1,11 @@
 "use client";
 
-import type { CellValueChangedEvent, ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
+import type {
+	CellValueChangedEvent,
+	ColDef,
+	GridApi,
+	GridReadyEvent,
+} from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
 
@@ -268,7 +273,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				// Loading state
 				loading={loading}
 				// [CRITICAL] REACTIVE CUSTOM COMPONENTS
-				// This MUST be true to allow React Cell Renderers (Action icons, etc.) to respond 
+				// This MUST be true to allow React Cell Renderers (Action icons, etc.) to respond
 				// immediately to React Query cache updates.
 				reactiveCustomComponents={true}
 			/>

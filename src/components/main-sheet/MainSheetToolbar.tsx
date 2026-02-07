@@ -14,9 +14,8 @@ import {
 	Trash2,
 	Unlock,
 } from "lucide-react";
-import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
-import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -29,6 +28,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef, PendingRow } from "@/types";
 
@@ -69,7 +69,8 @@ export const MainSheetToolbar = ({
 	onFilterChange,
 	rowData = [],
 }: MainSheetToolbarProps) => {
-	const { isDirty, saveLayout, saveAsDefault, resetLayout } = useColumnLayoutTracker("main-sheet");
+	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
+		useColumnLayoutTracker("main-sheet");
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
 
@@ -216,7 +217,7 @@ export const MainSheetToolbar = ({
 					isDirty={isDirty}
 					onSave={saveLayout}
 					onSaveAsDefault={saveAsDefault}
-	onReset={resetLayout}
+					onReset={resetLayout}
 				/>
 
 				<Tooltip>
@@ -278,7 +279,7 @@ export const MainSheetToolbar = ({
 						const colorClass = isHex
 							? ""
 							: status.color?.replace?.("text-", "bg-")?.split?.(" ")?.[0] ||
-							"bg-gray-400";
+								"bg-gray-400";
 
 						return (
 							<Tooltip key={status.id}>

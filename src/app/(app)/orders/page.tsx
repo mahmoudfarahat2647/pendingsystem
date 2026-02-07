@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
 import dynamic from "next/dynamic";
+import { useMemo } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
+import { OrderFormErrorBoundary } from "@/components/orders/OrderFormErrorBoundary";
 import { OrdersToolbar } from "@/components/orders/OrdersToolbar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getOrdersColumns } from "@/components/shared/GridConfig";
@@ -11,11 +12,12 @@ import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
-import { OrderFormErrorBoundary } from "@/components/orders/OrderFormErrorBoundary";
 
 const OrderFormModal = dynamic(
 	() =>
-		import("@/components/orders/OrderFormModal").then((mod) => mod.OrderFormModal),
+		import("@/components/orders/OrderFormModal").then(
+			(mod) => mod.OrderFormModal,
+		),
 	{ ssr: false },
 );
 const BookingCalendarModal = dynamic(
@@ -36,6 +38,7 @@ const RowModals = dynamic(
 	() => import("@/components/shared/RowModals").then((mod) => mod.RowModals),
 	{ ssr: false },
 );
+
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import { useOrdersPageHandlers } from "./useOrdersPageHandlers";

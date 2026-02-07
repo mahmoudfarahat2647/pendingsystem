@@ -263,7 +263,7 @@ All mutations (Notes, Reminders, Status updates) follow the [CRITICAL] optimisti
 1.  **Cancel**: In-flight refetches are cancelled to prevent race conditions.
 2.  **Snapshot**: Current cache state is saved for instant rollback on error.
 3.  **Update**: `queryClient.setQueryData` is called immediately, creating a **new object reference** (`{...row, ...updates}`).
-4.  **Inject**: `onSuccess` injects the server's authoritative response directly into the cache.
+4.  **Inject**: `onSuccess` injects the server's canonical response directly into the cache.
 5.  **Invalidate**: `onSettled` invalidates the query for eventual consistency, but **without artificial delays**.
 
 ### 2. Grid Reactivity Hardening
@@ -3039,7 +3039,7 @@ const mutation = useMutation({
 
 | Level | When to Use | Example |
 |-------|-----------|---------|
-| **ERROR** | Critical failures, API errors | Service layer exceptions, auth failures |
+| **ERROR** | Critical failures, API errors | Service layer exceptions, access control failures |
 | **WARN** | Potential issues, deprecations | Retry attempt #2, unusual state |
 | **INFO** | Important business events | User login, order created |
 | **DEBUG** | Development-only details | Component mount, state changes |
@@ -3077,7 +3077,7 @@ console.error(err);     // Stack trace only
 ### 4.3 Sensitive Data: Never Log
 
 **FORBIDDEN to log:**
-- Authentication tokens / API keys
+- Access tokens / API keys
 - Passwords, PINs, security questions
 - Personal data (SSN, DOB, phone numbers)
 - Payment card numbers
@@ -3085,10 +3085,10 @@ console.error(err);     // Stack trace only
 
 ```typescript
 // ❌ WRONG
-console.log('Auth token:', authToken);  // NEVER!
+console.log('Access token:', accessToken);  // NEVER!
 
 // ✅ CORRECT: Log identifiers only
-console.info('[auth]', {
+console.info('[access]', {
   userId: user.id,
   email: user.email,  // OK if needed for audit
   action: 'login_success'
@@ -3194,7 +3194,7 @@ Closes #456
 
 5. **Security**
    - [ ] No XSS vulnerabilities (input sanitization)
-   - [ ] API calls use proper auth
+   - [ ] API calls use proper access control
    - [ ] Sensitive data not logged
    - [ ] CORS headers appropriate
 
@@ -3568,7 +3568,7 @@ export async function getOrdersByStage(
 
 - **Code review**: All PRs reviewed by minimum 1 team member
 - **Architecture review**: Major features reviewed by tech lead
-- **Security review**: Auth, API, and data handling reviewed by security lead
+- **Security review**: Access control, API, and data handling reviewed by security lead
 
 ### 10.3 Metrics & Reporting
 
@@ -3705,14 +3705,14 @@ TestSprite complements our existing coverage by providing:
 - Form flows & validation
 - Visual states & layouts
 - Interactive components & stateful UI
-- Authorization & auth flows
+- Access control flows
 - Error handling (UI)
 
 ### Backend Testing
 - Functional API workflows
 - Contract & schema validation
 - Error handling & resilience
-- Authorization & authentication
+- Access control
 - Boundary & edge cases
 - Data integrity & persistence
 - Security testing
@@ -4793,7 +4793,7 @@ State Management (Zustand):
 
 Feature Protection & Performance:
 - **[CRITICAL] Reactivity Hardening**: Never revert the `valueGetter` in `GridConfig.tsx` to a simple `field: "id"`. The composite key is essential for triggering AG Grid cell refreshes on metadata updates.
-- **[CRITICAL] Optimistic UI**: Always use `onMutate` for immediate feedback and `onSuccess` for authoritative cache injection. 
+- **[CRITICAL] Optimistic UI**: Always use `onMutate` for immediate feedback and `onSuccess` for canonical cache injection. 
 - **[CRITICAL] No Delays**: Do NOT add `setTimeout` or artificial delays to `onSettled` or `invalidateQueries`. Reactivity must be handled via manual cache management.
 - **Data Binding**: Components must consume data directly from React Query. Avoid redundant syncing to Zustand unless the data is purely UI-local (selection, focus, etc.).
 

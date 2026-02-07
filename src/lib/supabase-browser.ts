@@ -18,20 +18,15 @@ let browserClient: ReturnType<typeof createClient> | null = null;
 /**
  * Browser-side Supabase client for client components.
  *
- * Uses stateless auth (no persisted session) via @supabase/supabase-js.
- * Middleware authentication is handled separately via server-set cookies.
- *
- * Security features:
- * - Automatic token refresh
+ * Uses stateless sessions (no persisted session) via @supabase/supabase-js.
  *
  * @example
  * ```tsx
  * import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
  *
- * const { data, error } = await getSupabaseBrowserClient().auth.signInWithPassword({
- *   email: "user@example.com",
- *   password: "password"
- * });
+ * const { data, error } = await getSupabaseBrowserClient()
+ *   .from("orders")
+ *   .select("*");
  * ```
  */
 export function getSupabaseBrowserClient() {
@@ -42,13 +37,17 @@ export function getSupabaseBrowserClient() {
 	}
 
 	if (!browserClient) {
-		browserClient = createClient(supabaseUrl as string, supabaseAnonKey as string, {
-			auth: {
-				persistSession: false,
-				autoRefreshToken: false,
-				detectSessionInUrl: false,
+		browserClient = createClient(
+			supabaseUrl as string,
+			supabaseAnonKey as string,
+			{
+				auth: {
+					persistSession: false,
+					autoRefreshToken: false,
+					detectSessionInUrl: false,
+				},
 			},
-		});
+		);
 	}
 
 	return browserClient;

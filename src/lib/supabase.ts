@@ -10,18 +10,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 /**
  * Universal Supabase client that redirects to the appropriate context-specific client.
- * 
+ *
  * - In the browser: Uses the localStorage-based client from getSupabaseBrowserClient()
- * - On the server: Uses a stateless client (auth disabled) to prevent session overlap
- * 
- * Note: For authenticated server-side operations, use createClient() from @/lib/supabase-server
+ * - On the server: Uses a stateless client (session features disabled) to prevent overlap
  */
-export const supabase = typeof window !== "undefined"
-	? getSupabaseBrowserClient()
-	: createSupabaseJS(supabaseUrl, supabaseAnonKey, {
-		auth: {
-			persistSession: false,
-			autoRefreshToken: false,
-			detectSessionInUrl: false,
-		},
-	});
+export const supabase =
+	typeof window !== "undefined"
+		? getSupabaseBrowserClient()
+		: createSupabaseJS(supabaseUrl, supabaseAnonKey, {
+				auth: {
+					persistSession: false,
+					autoRefreshToken: false,
+					detectSessionInUrl: false,
+				},
+			});

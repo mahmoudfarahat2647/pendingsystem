@@ -192,7 +192,8 @@ export const createNotificationSlice: StateCreator<
 					if (!row.endWarranty) return false;
 					const endDate = new Date(row.endWarranty);
 					return (
-						!Number.isNaN(endDate.getTime()) && endDate.getTime() < now.getTime()
+						!Number.isNaN(endDate.getTime()) &&
+						endDate.getTime() < now.getTime()
 					);
 				})
 				.map((row) => row.id),
@@ -205,7 +206,9 @@ export const createNotificationSlice: StateCreator<
 				.then(({ orderService }) => {
 					orderService.updateOrdersStage(expiredIds, "archive");
 				})
-				.catch((err) => console.error("Auto-archive background sync failed:", err));
+				.catch((err) =>
+					console.error("Auto-archive background sync failed:", err),
+				);
 		}
 	},
 });

@@ -55,14 +55,16 @@ export const useRowModals = (
 		async (content: string) => {
 			if (currentRow) {
 				try {
-					await onUpdate(currentRow.id, { actionNote: content }, sourceTag || undefined);
-					// @ts-ignore - Dynamic import might not have toast yet, but it's available in the project
+					await onUpdate(
+						currentRow.id,
+						{ actionNote: content },
+						sourceTag || undefined,
+					);
 					const { toast } = await import("sonner");
 					toast.success("Note saved successfully");
 					closeModal();
 				} catch (error) {
 					console.error("Failed to save note:", error);
-					// @ts-ignore
 					const { toast } = await import("sonner");
 					toast.error("Failed to save note");
 				}
@@ -97,10 +99,14 @@ export const useRowModals = (
 	const saveAttachment = useCallback(
 		(path: string | undefined) => {
 			if (currentRow) {
-				onUpdate(currentRow.id, {
-					attachmentPath: path,
-					hasAttachment: !!path,
-				}, sourceTag || undefined);
+				onUpdate(
+					currentRow.id,
+					{
+						attachmentPath: path,
+						hasAttachment: !!path,
+					},
+					sourceTag || undefined,
+				);
 				closeModal();
 			}
 		},
@@ -122,12 +128,16 @@ export const useRowModals = (
 						: currentRow.actionNote
 					: newNote;
 
-				onUpdate(currentRow.id, {
-					status: "Archived",
-					archiveReason: archiveReason,
-					archivedAt: new Date().toISOString(),
-					actionNote: combinedNote,
-				}, sourceTag || undefined);
+				onUpdate(
+					currentRow.id,
+					{
+						status: "Archived",
+						archiveReason: archiveReason,
+						archivedAt: new Date().toISOString(),
+						actionNote: combinedNote,
+					},
+					sourceTag || undefined,
+				);
 				closeModal();
 			}
 		},

@@ -1,6 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import type { PendingRow } from "@/types";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
+import type { PendingRow } from "@/types";
 
 // Mock window.open and window.print
 const mockWindowOpen = vi.fn();
@@ -8,7 +8,9 @@ const mockWindowPrint = vi.fn();
 const mockWindowClose = vi.fn();
 
 // Mock console methods to avoid noise in tests
-const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+const mockConsoleError = vi
+	.spyOn(console, "error")
+	.mockImplementation(() => {});
 
 describe("printReservationLabels", () => {
 	beforeEach(() => {
@@ -35,20 +37,22 @@ describe("printReservationLabels", () => {
 
 	it("should show alert when no items are selected", () => {
 		const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => {});
-		
+
 		printReservationLabels([]);
-		
-		expect(mockAlert).toHaveBeenCalledWith("Please select items to print reservation labels.");
+
+		expect(mockAlert).toHaveBeenCalledWith(
+			"Please select items to print reservation labels.",
+		);
 		expect(mockWindowOpen).not.toHaveBeenCalled();
-		
+
 		mockAlert.mockRestore();
 	});
 
 	it("should handle window.open failure gracefully", () => {
 		mockWindowOpen.mockReturnValue(null);
-		
+
 		printReservationLabels([createMockRow("test-id", "pendingsystem")]);
-		
+
 		// Should not throw error
 		expect(mockWindowOpen).toHaveBeenCalled();
 	});
@@ -63,7 +67,9 @@ describe("printReservationLabels", () => {
 		// Should contain pendingsystem logo
 		expect(writtenContent).toContain('viewBox="0 0 136.45 178.6"');
 		// Should contain PENDINGSYSTEM text
-		expect(writtenContent).toContain('<span class="brand">PENDINGSYSTEM</span>');
+		expect(writtenContent).toContain(
+			'<span class="brand">PENDINGSYSTEM</span>',
+		);
 		// Should NOT contain Zeekr logo
 		expect(writtenContent).not.toContain('viewBox="0 0 115 29"');
 	});
@@ -78,7 +84,9 @@ describe("printReservationLabels", () => {
 		// Should contain Zeekr logo
 		expect(writtenContent).toContain('viewBox="0 0 115 29"');
 		// Should NOT contain PENDINGSYSTEM text (removed for Zeekr)
-		expect(writtenContent).not.toContain('<span class="brand">PENDINGSYSTEM</span>');
+		expect(writtenContent).not.toContain(
+			'<span class="brand">PENDINGSYSTEM</span>',
+		);
 		// Should contain empty brand span for Zeekr
 		expect(writtenContent).toContain('<span class="brand"></span>');
 	});
@@ -103,10 +111,14 @@ describe("printReservationLabels", () => {
 
 			if (expectedLogo === "zeekr") {
 				expect(writtenContent).toContain('viewBox="0 0 115 29"');
-				expect(writtenContent).not.toContain('<span class="brand">PENDINGSYSTEM</span>');
+				expect(writtenContent).not.toContain(
+					'<span class="brand">PENDINGSYSTEM</span>',
+				);
 			} else {
 				expect(writtenContent).toContain('viewBox="0 0 136.45 178.6"');
-				expect(writtenContent).toContain('<span class="brand">PENDINGSYSTEM</span>');
+				expect(writtenContent).toContain(
+					'<span class="brand">PENDINGSYSTEM</span>',
+				);
 			}
 		});
 	});
@@ -127,7 +139,9 @@ describe("printReservationLabels", () => {
 
 			// Should default to pendingsystem branding
 			expect(writtenContent).toContain('viewBox="0 0 136.45 178.6"');
-			expect(writtenContent).toContain('<span class="brand">PENDINGSYSTEM</span>');
+			expect(writtenContent).toContain(
+				'<span class="brand">PENDINGSYSTEM</span>',
+			);
 		});
 	});
 
@@ -149,11 +163,15 @@ describe("printReservationLabels", () => {
 		expect(writtenContent).toContain('viewBox="0 0 115 29"'); // Zeekr
 
 		// Should have PENDINGSYSTEM text for pendingsystem orders
-		const renaultBrandCount = (writtenContent.match(/<span class="brand">PENDINGSYSTEM<\/span>/g) || []).length;
+		const renaultBrandCount = (
+			writtenContent.match(/<span class="brand">PENDINGSYSTEM<\/span>/g) || []
+		).length;
 		expect(renaultBrandCount).toBe(2); // Two pendingsystem orders
 
 		// Should have empty brand spans for Zeekr orders
-		const emptyBrandCount = (writtenContent.match(/<span class="brand"><\/span>/g) || []).length;
+		const emptyBrandCount = (
+			writtenContent.match(/<span class="brand"><\/span>/g) || []
+		).length;
 		expect(emptyBrandCount).toBe(2); // Two Zeekr orders
 	});
 
@@ -197,10 +215,16 @@ describe("printReservationLabels", () => {
 		const writtenContent = mockDoc.write.mock.calls[0][0];
 
 		// Should use fallback values (-) for missing fields
-		expect(writtenContent).toContain('<div class="field-value large-text">-</div>');
+		expect(writtenContent).toContain(
+			'<div class="field-value large-text">-</div>',
+		);
 		expect(writtenContent).toContain('<div class="field-value">-</div>');
-		expect(writtenContent).toContain('<div class="field-value vin-text">-</div>');
-		expect(writtenContent).toContain('<div class="field-value mono-text">-</div>');
+		expect(writtenContent).toContain(
+			'<div class="field-value vin-text">-</div>',
+		);
+		expect(writtenContent).toContain(
+			'<div class="field-value mono-text">-</div>',
+		);
 	});
 
 	it("should generate valid HTML structure", () => {
@@ -235,7 +259,11 @@ describe("printReservationLabels", () => {
 });
 
 // Helper function to create mock PendingRow objects
-function createMockRow(id: string, company: string | null, overrides: Partial<PendingRow> = {}): PendingRow {
+function createMockRow(
+	id: string,
+	company: string | null,
+	overrides: Partial<PendingRow> = {},
+): PendingRow {
 	return {
 		id,
 		baseId: "",

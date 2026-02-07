@@ -78,16 +78,13 @@ export const PendingRowSchema = z
 			(val) => Number(val) || 0,
 			z.number().nonnegative().default(0),
 		),
-		model: z.preprocess(
-			(val) => {
-				// Handle both string and string[] formats from database
-				if (Array.isArray(val)) {
-					return val.length > 0 ? String(val[0]) : "";
-				}
-				return String(val || "");
-			},
-			z.string(),
-		),
+		model: z.preprocess((val) => {
+			// Handle both string and string[] formats from database
+			if (Array.isArray(val)) {
+				return val.length > 0 ? String(val[0]) : "";
+			}
+			return String(val || "");
+		}, z.string()),
 
 		// Logistics
 		parts: z.array(PartEntrySchema).default([]),
