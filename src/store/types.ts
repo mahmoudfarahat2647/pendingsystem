@@ -2,55 +2,27 @@ import type { GridState } from "ag-grid-community";
 import type {
 	AppNotification,
 	PartStatusDef,
-	PendingRow,
 	StickyNote,
 	TodoItem,
 } from "@/types";
 
-export interface OrdersState {
-	ordersRowData: PendingRow[];
-}
+// Orders state removed - all order data now managed by React Query
+// This slice is kept as a placeholder for potential future UI-only order state
+export type OrdersState = {};
 
-export interface OrdersActions {
-	addOrder: (order: PendingRow) => void;
-	addOrders: (orders: PendingRow[]) => void;
-	updateOrder: (id: string, updates: Partial<PendingRow>) => void;
-	updateOrders: (ids: string[], updates: Partial<PendingRow>) => void;
-	deleteOrders: (ids: string[]) => void;
-	setOrdersRowData: (orders: PendingRow[]) => void;
-}
+export type OrdersActions = {};
 
-export interface InventoryState {
-	rowData: PendingRow[];
-	callRowData: PendingRow[];
-	archiveRowData: PendingRow[];
-}
+// Inventory state removed - all inventory data now managed by React Query
+// This slice is kept as a placeholder for potential future UI-only inventory state
+export type InventoryState = {};
 
-export interface InventoryActions {
-	commitToMainSheet: (ids: string[]) => void;
-	sendToCallList: (ids: string[]) => void;
-	sendToArchive: (ids: string[], actionNote?: string) => void;
-	sendToReorder: (ids: string[], actionNote: string) => void;
-	updatePartStatus: (id: string, partStatus: string) => void;
-	setRowData: (data: PendingRow[]) => void;
-	setCallRowData: (data: PendingRow[]) => void;
-	setArchiveRowData: (data: PendingRow[]) => void;
-}
+export type InventoryActions = {};
 
-export interface BookingState {
-	bookingRowData: PendingRow[];
-}
+// Booking state removed - all booking data now managed by React Query
+// This slice is kept as a placeholder for potential future UI-only booking state
+export type BookingState = {};
 
-export interface BookingActions {
-	sendToBooking: (
-		ids: string[],
-		bookingDate: string,
-		bookingNote?: string,
-		bookingStatus?: string,
-	) => void;
-	updateBookingStatus: (id: string, bookingStatus: string) => void;
-	setBookingRowData: (data: PendingRow[]) => void;
-}
+export type BookingActions = {};
 
 export interface NotificationState {
 	notifications: AppNotification[];
@@ -110,25 +82,11 @@ export interface UIActions {
 	clearBeastMode: (id: string) => void;
 }
 
-export interface UndoRedoSnapshot {
-	rowData: PendingRow[];
-	ordersRowData: PendingRow[];
-	bookingRowData: PendingRow[];
-	callRowData: PendingRow[];
-	archiveRowData: PendingRow[];
-}
+// Undo/Redo system removed - React Query optimistic updates provide immediate feedback
+// Manual undo can be implemented via UI if needed
+export type UndoRedoState = {};
 
-export interface UndoRedoState {
-	undoStack: UndoRedoSnapshot[];
-	redoStack: UndoRedoSnapshot[];
-}
-
-export interface UndoRedoActions {
-	pushUndo: () => void;
-	undo: () => void;
-	redo: () => void;
-	clearUndoRedo: () => void;
-}
+export type UndoRedoActions = {};
 
 interface GridSliceState {
 	gridStates: Record<string, GridState>;

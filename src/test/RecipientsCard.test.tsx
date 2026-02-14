@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RecipientsCard } from "../components/reports/RecipientsCard";
@@ -57,7 +57,19 @@ vi.mock("../components/ui/button", () => ({
 
 vi.mock("../components/ui/badge", () => ({
 	Badge: ({ children, variant, className, onClick }: any) => (
-		<div data-testid="email-badge" className={className} onClick={onClick}>
+		<div
+			data-testid="email-badge"
+			className={className}
+			onClick={onClick}
+			role="button"
+			tabIndex={0}
+			onKeyDown={(event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					onClick?.(event);
+				}
+			}}
+		>
 			{children}
 		</div>
 	),

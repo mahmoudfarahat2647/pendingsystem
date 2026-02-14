@@ -1,7 +1,6 @@
 import { format } from "date-fns";
 import {
 	Car,
-	ChevronRight,
 	History as HistoryIcon,
 	MessageSquare,
 	Package,
@@ -12,7 +11,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import type { BookingStatus, PendingRow } from "@/types";
+import type { PendingRow } from "@/types";
 
 interface BookingSidebarDetailsProps {
 	activeBookingRep?: PendingRow;

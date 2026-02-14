@@ -10,7 +10,7 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
@@ -20,7 +20,6 @@ import { InfoLabel } from "@/components/shared/InfoLabel";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { RowModals } from "@/components/shared/RowModals";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -64,17 +63,7 @@ export default function CallListPage() {
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
-
-	const checkNotifications = useAppStore((state) => state.checkNotifications);
-
-	useEffect(() => {
-		if (callRowData) {
-			checkNotifications();
-		}
-	}, [callRowData, checkNotifications]);
-
 	const partStatuses = useAppStore((state) => state.partStatuses);
-
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
@@ -136,7 +125,7 @@ export default function CallListPage() {
 	) => {
 		for (const row of selectedRows) {
 			let newActionNote = row.actionNote || "";
-			if (note && note.trim()) {
+			if (note?.trim()) {
 				const taggedNote = `${note.trim()} #booking`;
 				newActionNote = newActionNote
 					? `${newActionNote}\n${taggedNote}`

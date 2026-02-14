@@ -33,7 +33,7 @@ export function SimpleDatePicker({
 	placeholder = "YYYY-MM-DD",
 	className,
 	disabled = false,
-}: SimpleDatePickerProps) {
+}: Readonly<SimpleDatePickerProps>) {
 	const [open, setOpen] = React.useState(false);
 	const [inputValue, setInputValue] = React.useState(value || "");
 
@@ -162,7 +162,7 @@ export function SimpleDatePicker({
 						mode="single"
 						selected={selectedDate ?? undefined}
 						onSelect={handleCalendarSelect}
-						initialFocus
+						autoFocus
 						captionLayout="dropdown"
 						startMonth={new Date(2015, 0)}
 						endMonth={new Date(2040, 11)}

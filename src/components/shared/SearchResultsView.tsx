@@ -1,14 +1,15 @@
 "use client";
 
-import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import type {
+	CellValueChangedEvent,
+	ColDef,
+	ICellRendererParams,
+} from "ag-grid-community";
 import { format } from "date-fns";
 import { Search as SearchIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-	ActionCellRenderer,
-	PartStatusRenderer,
-} from "@/components/grid/renderers";
+import { PartStatusRenderer } from "@/components/grid/renderers";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,8 @@ import type { PendingRow } from "@/types";
 import { RowModals } from "./RowModals";
 import { SearchResultsGrid } from "./search/SearchResultsGrid";
 import { SearchResultsHeader } from "./search/SearchResultsHeader";
+
+type SearchResultRow = PendingRow & { sourceType: string };
 
 // Custom renderer for Source Tag
 const SourceRenderer = (params: ICellRendererParams) => {
@@ -54,6 +57,71 @@ const SourceRenderer = (params: ICellRendererParams) => {
 	);
 };
 
+// Helper to build a searchable string from a row
+const buildSearchString = (row: SearchResultRow) => {
+	return [
+		row.sourceType,
+		row.vin,
+		row.customerName,
+		row.partNumber,
+		row.description,
+		row.mobile,
+		row.baseId,
+		row.trackingId,
+		row.model,
+		row.company || "pendingsystem",
+		row.requester,
+		row.sabNumber,
+		row.acceptedBy,
+		row.rDate,
+		row.noteContent,
+		row.repairSystem,
+		row.actionNote,
+		row.bookingDate,
+		row.bookingNote,
+		row.archiveReason,
+	]
+		.map((field) => (field ? String(field).toLowerCase() : ""))
+		.join(" ");
+};
+
+const isPartStatusChangeEvent = (
+	event: CellValueChangedEvent<SearchResultRow>,
+): boolean => {
+	return (
+		event.colDef.field === "partStatus" &&
+		Boolean(event.data?.id) &&
+		event.newValue !== event.oldValue
+	);
+};
+
+const getRelevantPartsBySource = (
+	sourceType: string,
+	vin: string,
+	mainRows: PendingRow[],
+	orderRows: PendingRow[],
+): PendingRow[] => {
+	if (sourceType === "Main Sheet") {
+		return mainRows.filter((row) => row.vin === vin);
+	}
+
+	if (sourceType === "Orders") {
+		return orderRows.filter((row) => row.vin === vin);
+	}
+
+	return [];
+};
+
+const areAllRelevantPartsArrived = (
+	relevantParts: PendingRow[],
+	updatedPartId: string,
+): boolean => {
+	return relevantParts.every((row) => {
+		if (row.id === updatedPartId) return true;
+		return row.partStatus?.toLowerCase() === "arrived";
+	});
+};
+
 export const SearchResultsView = () => {
 	// Specific selectors to avoid broad re-renders
 	const searchTerm = useAppStore((state) => state.searchTerm);
@@ -63,7 +131,7 @@ export const SearchResultsView = () => {
 	// Filter state
 	const [activeSources, setActiveSources] = useState<string[]>([]);
 
-	const handleToggleSource = useCallback((source: string) => {
+	const _handleToggleSource = useCallback((source: string) => {
 		setActiveSources((prev) =>
 			prev.includes(source)
 				? prev.filter((s) => s !== source)
@@ -71,7 +139,7 @@ export const SearchResultsView = () => {
 		);
 	}, []);
 
-	// Fetch data from React Query (replacing old Zustand data)
+	// Fetch data from React Query
 	const { data: rowData = [] } = useOrdersQuery("main");
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
@@ -81,58 +149,24 @@ export const SearchResultsView = () => {
 	const saveOrderMutation = useSaveOrderMutation();
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 
-	const allRows = useMemo(() => {
+	// Primary tagged dataset
+	const allRows = useMemo((): SearchResultRow[] => {
 		return [
-			...rowData.map((r: any) => ({ ...r, sourceType: "Main Sheet" })),
-			...ordersRowData.map((r: any) => ({ ...r, sourceType: "Orders" })),
-			...bookingRowData.map((r: any) => ({ ...r, sourceType: "Booking" })),
-			...callRowData.map((r: any) => ({ ...r, sourceType: "Call" })),
-			...archiveRowData.map((r: any) => ({ ...r, sourceType: "Archive" })),
+			...rowData.map((r) => ({ ...r, sourceType: "Main Sheet" })),
+			...ordersRowData.map((r) => ({ ...r, sourceType: "Orders" })),
+			...bookingRowData.map((r) => ({ ...r, sourceType: "Booking" })),
+			...callRowData.map((r) => ({ ...r, sourceType: "Call" })),
+			...archiveRowData.map((r) => ({ ...r, sourceType: "Archive" })),
 		];
 	}, [rowData, ordersRowData, bookingRowData, callRowData, archiveRowData]);
-
-	const searchableRows = useMemo(() => {
-		return allRows.map((row) => {
-			const searchString = [
-				(row as any).sourceType,
-				row.vin,
-				row.customerName,
-				row.partNumber,
-				row.description,
-				row.mobile,
-				row.baseId,
-				row.trackingId,
-				row.model,
-				row.company || "pendingsystem",
-				row.requester,
-				row.sabNumber,
-				row.acceptedBy,
-				row.rDate,
-				row.noteContent,
-				row.repairSystem,
-				row.actionNote,
-				row.bookingDate,
-				row.bookingNote,
-				row.archiveReason,
-			]
-				.map((field) => (field ? String(field).toLowerCase() : ""))
-				.join(" ");
-
-			return { row, searchString };
-		});
-	}, [allRows]);
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>, stage?: string) => {
 			let mappedStage = stage?.toLowerCase() || "main";
 			if (mappedStage === "main sheet") mappedStage = "main";
 
-			// Ensure strictly valid stage
 			const validStages = ["orders", "main", "call", "booking", "archive"];
 			if (!validStages.includes(mappedStage)) {
-				console.error(
-					`Invalid stage detected: ${mappedStage}, defaulting to 'main'`,
-				);
 				mappedStage = "main";
 			}
 
@@ -159,7 +193,7 @@ export const SearchResultsView = () => {
 		sourceTag,
 	} = useRowModals(handleUpdateOrder);
 
-	// Aggregate Data - Memoized for performance
+	// Search Results derivation
 	const searchResults = useMemo(() => {
 		if (!searchTerm || searchTerm.trim().length === 0) return [];
 
@@ -169,57 +203,16 @@ export const SearchResultsView = () => {
 			.filter((t) => t.length > 0);
 		if (terms.length === 0) return [];
 
-		const allRows = [
-			...rowData.map((r: any) => ({ ...r, sourceType: "Main Sheet" })),
-			...ordersRowData.map((r: any) => ({ ...r, sourceType: "Orders" })),
-			...bookingRowData.map((r: any) => ({ ...r, sourceType: "Booking" })),
-			...callRowData.map((r: any) => ({ ...r, sourceType: "Call" })),
-			...archiveRowData.map((r: any) => ({ ...r, sourceType: "Archive" })),
-		];
-
-		const allFound = allRows.filter((row) => {
-			const searchString = [
-				(row as any).sourceType,
-				row.vin,
-				row.customerName,
-				row.partNumber,
-				row.description,
-				row.mobile,
-				row.baseId,
-				row.trackingId,
-				row.model,
-				row.company || "pendingsystem",
-				row.requester,
-				row.sabNumber,
-				row.acceptedBy,
-				row.rDate,
-				row.noteContent,
-				row.repairSystem,
-				row.actionNote,
-				row.bookingDate,
-				row.bookingNote,
-				row.archiveReason,
-			]
-				.map((field) => (field ? String(field).toLowerCase() : ""))
-				.join(" ");
-
+		const filteredBySearch = allRows.filter((row) => {
+			const searchString = buildSearchString(row);
 			return terms.every((term) => searchString.includes(term));
 		});
 
-		// 2. Apply Source Filters
-		if (activeSources.length === 0) return allFound;
-		return allFound.filter((row) =>
-			activeSources.includes((row as any).sourceType),
+		if (activeSources.length === 0) return filteredBySearch;
+		return filteredBySearch.filter((row) =>
+			activeSources.includes(row.sourceType),
 		);
-	}, [
-		searchTerm,
-		rowData,
-		ordersRowData,
-		bookingRowData,
-		callRowData,
-		archiveRowData,
-		activeSources,
-	]);
+	}, [searchTerm, allRows, activeSources]);
 
 	const columns = useMemo((): ColDef<PendingRow>[] => {
 		const baseCols = getBaseColumns(
@@ -228,19 +221,17 @@ export const SearchResultsView = () => {
 			(row) => handleAttachClick(row),
 		);
 
-		// Find and configure the actions column
 		const actionsCol = baseCols.find((col) => col.colId === "actions");
 		const configuredActionsCol: ColDef<PendingRow> = actionsCol
 			? {
 					...actionsCol,
 					checkboxSelection: true,
-					headerCheckboxSelection: false, // User requested removal of header checkbox
-					pinned: "left", // User requested first position
+					headerCheckboxSelection: false,
+					pinned: "left",
 				}
 			: {
-					// Fallback if not found (should typically be found)
 					headerName: "ACTIONS",
-					field: "id", // Fallback field
+					field: "id",
 					colId: "actions",
 					pinned: "left",
 					checkboxSelection: true,
@@ -248,7 +239,6 @@ export const SearchResultsView = () => {
 					width: 100,
 				};
 
-		// Filter out 'selection' and 'actions' from baseCols as we handle them differently
 		const remainingBaseCols = baseCols.filter(
 			(col) => col.colId !== "selection" && col.colId !== "actions",
 		);
@@ -301,114 +291,62 @@ export const SearchResultsView = () => {
 	}, [partStatuses, handleNoteClick, handleReminderClick, handleAttachClick]);
 
 	const counts = useMemo(() => {
-		const allRows = [
-			...rowData.map((r: any) => ({ ...r, sourceType: "Main Sheet" })),
-			...ordersRowData.map((r: any) => ({ ...r, sourceType: "Orders" })),
-			...bookingRowData.map((r: any) => ({ ...r, sourceType: "Booking" })),
-			...callRowData.map((r: any) => ({ ...r, sourceType: "Call" })),
-			...archiveRowData.map((r: any) => ({ ...r, sourceType: "Archive" })),
-		];
+		const terms =
+			searchTerm
+				?.toLowerCase()
+				.split(/\s+/)
+				.filter((t) => t.length > 0) || [];
+		if (terms.length === 0) return {};
 
 		const filteredBySearch = allRows.filter((row) => {
-			if (!searchTerm) return false;
-			const terms = searchTerm
-				.toLowerCase()
-				.split(/\s+/)
-				.filter((t) => t.length > 0);
-
-			const searchString = [
-				(row as any).sourceType,
-				row.vin,
-				row.customerName,
-				row.partNumber,
-				row.description,
-				row.mobile,
-				row.baseId,
-				row.trackingId,
-				row.model,
-				row.company || "pendingsystem",
-				row.requester,
-				row.sabNumber,
-				row.acceptedBy,
-				row.rDate,
-				row.noteContent,
-				row.repairSystem,
-				row.actionNote,
-				row.bookingDate,
-				row.bookingNote,
-				row.archiveReason,
-			]
-				.map((field) => (field ? String(field).toLowerCase() : ""))
-				.join(" ");
-
+			const searchString = buildSearchString(row);
 			return terms.every((term) => searchString.includes(term));
 		});
 
 		return filteredBySearch.reduce(
 			(acc, curr) => {
-				const source = (curr as any).sourceType || "Unknown";
+				const source = curr.sourceType || "Unknown";
 				acc[source] = (acc[source] || 0) + 1;
 				return acc;
 			},
 			{} as Record<string, number>,
 		);
-	}, [
-		searchTerm,
-		rowData,
-		ordersRowData,
-		bookingRowData,
-		callRowData,
-		archiveRowData,
-	]);
+	}, [searchTerm, allRows]);
 
 	const onCellValueChanged = useCallback(
-		async (event: any) => {
-			if (
-				event.colDef.field === "partStatus" &&
-				event.data?.id &&
-				event.newValue !== event.oldValue
-			) {
-				const newStatus = event.newValue;
-				const vin = event.data.vin;
-				const sourceType = event.data.sourceType;
+		async (event: CellValueChangedEvent<SearchResultRow>) => {
+			if (!isPartStatusChangeEvent(event)) return;
 
-				// Await the update to avoid race conditions with bulk move
-				await handleUpdateOrder(
-					event.data.id,
-					{ partStatus: newStatus },
-					sourceType,
-				);
+			const newStatus = event.newValue;
+			const vin = event.data.vin;
+			const sourceType = event.data.sourceType;
 
-				// check status case-insensitively or as provided in labels
-				const isArrived = newStatus?.toLowerCase() === "arrived";
+			// Await the update to avoid race conditions with bulk move
+			await handleUpdateOrder(event.data.id, { partStatus: newStatus }, sourceType);
 
-				if (isArrived && vin) {
-					let relevantParts: PendingRow[] = [];
-					if (sourceType === "Main Sheet") {
-						relevantParts = rowData.filter((r: any) => r.vin === vin);
-					} else if (sourceType === "Orders") {
-						relevantParts = ordersRowData.filter((r: any) => r.vin === vin);
-					}
-
-					if (relevantParts.length > 0) {
-						const allArrived = relevantParts.every((r) => {
-							if (r.id === event.data.id) return true;
-							return r.partStatus?.toLowerCase() === "arrived";
-						});
-
-						if (allArrived) {
-							const ids = relevantParts.map((p) => p.id);
-							await bulkUpdateStageMutation.mutateAsync({ ids, stage: "call" });
-							toast.success(
-								`All parts for VIN ${vin} arrived! Moved to Call List.`,
-								{ duration: 5000 },
-							);
-						}
-					}
-				} else {
-					toast.success("Part status updated");
-				}
+			// check status case-insensitively or as provided in labels
+			const isArrived = newStatus?.toLowerCase() === "arrived";
+			if (!isArrived || !vin) {
+				toast.success("Part status updated");
+				return;
 			}
+
+			const relevantParts = getRelevantPartsBySource(
+				sourceType,
+				vin,
+				rowData,
+				ordersRowData,
+			);
+			if (relevantParts.length === 0) return;
+
+			const allArrived = areAllRelevantPartsArrived(relevantParts, event.data.id);
+			if (!allArrived) return;
+
+			const ids = relevantParts.map((part) => part.id);
+			await bulkUpdateStageMutation.mutateAsync({ ids, stage: "call" });
+			toast.success(`All parts for VIN ${vin} arrived! Moved to Call List.`, {
+				duration: 5000,
+			});
 		},
 		[handleUpdateOrder, rowData, ordersRowData, bulkUpdateStageMutation],
 	);

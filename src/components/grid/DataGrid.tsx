@@ -11,7 +11,6 @@ import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
 
 import { gridTheme } from "@/lib/ag-grid-setup";
 import { useAppStore } from "@/store/useStore";
-import type { GridState } from "@/types";
 import { defaultColDef, defaultGridOptions } from "./config/defaultOptions";
 import { useGridCallbacks } from "./hooks/useGridCallbacks";
 import { useGridPerformance } from "./hooks/useGridPerformance";
@@ -47,7 +46,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	height = "100%",
 	showFloatingFilters = false,
 	gridStateKey,
-}: DataGridProps<T>) {
+}: Readonly<DataGridProps<T>>) {
 	const gridId = useId();
 	const rowIdMapRef = useRef(new WeakMap<object, string>());
 	const rowIdCounterRef = useRef(0);
@@ -272,10 +271,6 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				components={cellRenderers}
 				// Loading state
 				loading={loading}
-				// [CRITICAL] REACTIVE CUSTOM COMPONENTS
-				// This MUST be true to allow React Cell Renderers (Action icons, etc.) to respond
-				// immediately to React Query cache updates.
-				reactiveCustomComponents={true}
 			/>
 		</div>
 	);

@@ -40,7 +40,6 @@ const RowModals = dynamic(
 );
 
 import { useAppStore } from "@/store/useStore";
-import type { PendingRow } from "@/types";
 import { useOrdersPageHandlers } from "./useOrdersPageHandlers";
 
 export default function OrdersPage() {
@@ -78,7 +77,6 @@ export default function OrdersPage() {
 	} = useOrdersPageHandlers();
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
-	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
 	const {
 		activeModal,

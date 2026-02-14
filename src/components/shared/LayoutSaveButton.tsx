@@ -42,7 +42,7 @@ export function LayoutSaveButton({
 	onSaveAsDefault,
 	onReset,
 	className,
-}: LayoutSaveButtonProps) {
+}: Readonly<LayoutSaveButtonProps>) {
 	const [showConfirm, setShowConfirm] = useState(false);
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 

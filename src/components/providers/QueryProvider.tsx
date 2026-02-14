@@ -16,11 +16,13 @@ const Devtools =
 			)
 		: null;
 
+interface QueryProviderProps {
+	children: React.ReactNode;
+}
+
 export default function QueryProvider({
 	children,
-}: {
-	children: React.ReactNode;
-}) {
+}: Readonly<QueryProviderProps>) {
 	const [queryClient] = useState(
 		() =>
 			new QueryClient({

@@ -1,31 +1,27 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { Download, Redo2, RefreshCw, Search, Undo2, X } from "lucide-react";
+import { Download, RefreshCw, Search, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { exportAllSystemDataCSV, exportWorkbookCSV } from "@/lib/exportUtils";
+import { exportAllSystemDataCSV } from "@/lib/exportUtils";
 import { cn } from "@/lib/utils";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
-import type { AppNotification } from "@/types";
-import { CloudSync } from "./CloudSync";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 
 export const Header = React.memo(function Header() {
 	const _pathname = usePathname();
-	const router = useRouter();
+	const _router = useRouter();
 	const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-	const undoStack = useAppStore((state) => state.undoStack);
-	const redoStack = useAppStore((state) => state.redoStack);
-	const undo = useAppStore((state) => state.undo);
-	const redo = useAppStore((state) => state.redo);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
 	const [searchInput, setSearchInput] = useState(searchTerm);
+	const isAppleDevice =
+		typeof globalThis.navigator !== "undefined" &&
+		/Mac|iPhone|iPod|iPad/.test(globalThis.navigator.userAgent);
 
 	// Handle keyboard shortcuts
 	useEffect(() => {
@@ -45,24 +41,14 @@ export const Header = React.memo(function Header() {
 				e.preventDefault();
 				document.getElementById("global-search")?.focus();
 			}
-			// Cmd/Ctrl + Z for undo
-			if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
-				e.preventDefault();
-				undo();
-			}
-			// Cmd/Ctrl + Y OR Cmd/Ctrl + Shift + Z for redo
-			if (
-				(e.metaKey || e.ctrlKey) &&
-				(e.key === "y" || (e.shiftKey && e.key === "z"))
-			) {
-				e.preventDefault();
-				redo();
-			}
+			// Undo/Redo shortcuts removed along with the feature
 		};
 
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [undo, redo]);
+		const browserWindow = globalThis.window;
+		if (!browserWindow) return;
+		browserWindow.addEventListener("keydown", handleKeyDown);
+		return () => browserWindow.removeEventListener("keydown", handleKeyDown);
+	}, []);
 
 	// Notification Check Interval (Throttled to reduce lag)
 	useEffect(() => {
@@ -87,20 +73,35 @@ export const Header = React.memo(function Header() {
 		const handleManualCheck = () => {
 			checkNotifications();
 		};
-		window.addEventListener("check-notifications", handleManualCheck);
+		const browserWindow = globalThis.window;
+		if (!browserWindow) return;
+		browserWindow.addEventListener("check-notifications", handleManualCheck);
 		return () =>
-			window.removeEventListener("check-notifications", handleManualCheck);
+			browserWindow.removeEventListener(
+				"check-notifications",
+				handleManualCheck,
+			);
 	}, [checkNotifications]);
+
+	// Track the last value we pushed to the global store to avoid echo-back cycles
+	const lastPushedRef = React.useRef(searchTerm);
 
 	// Sync local input when global search changes externally (e.g., clear buttons elsewhere)
 	useEffect(() => {
-		setSearchInput(searchTerm);
+		// Only sync if the new global value is different from what we last pushed
+		// This prevents "echo" updates where we push 'A' -> global becomes 'A' -> we receive 'A'
+		// If we receive 'A' but local is already 'AB', we shouldn't revert to 'A'.
+		if (searchTerm !== lastPushedRef.current) {
+			setSearchInput(searchTerm);
+			lastPushedRef.current = searchTerm; // Accept external change as the new baseline
+		}
 	}, [searchTerm]);
 
 	// Debounced search input (>= 300ms per workspace rules)
 	useEffect(() => {
 		const timeoutId = setTimeout(() => {
 			if (searchInput !== searchTerm) {
+				lastPushedRef.current = searchInput; // Mark this as our update
 				setSearchTerm(searchInput);
 			}
 		}, 350);
@@ -128,26 +129,25 @@ export const Header = React.memo(function Header() {
 						type="text"
 						suppressHydrationWarning
 						placeholder="Search system (Cmd+K)..."
-						value={useAppStore((state) => state.searchTerm)}
-						onChange={(e) =>
-							useAppStore.getState().setSearchTerm(e.target.value)
-						}
+						value={searchInput}
+						onChange={(e) => setSearchInput(e.target.value)}
 						onFocus={() => setIsSearchFocused(true)}
 						onBlur={() => setIsSearchFocused(false)}
 						className="w-full pl-12 pr-12 py-3 bg-transparent text-sm text-white placeholder:text-gray-600 outline-none"
 					/>
 					<div className="absolute right-4 flex items-center gap-2">
-						{useAppStore((state) => state.searchTerm) && (
+						{searchTerm && (
 							<button
 								type="button"
-								onClick={() => useAppStore.getState().setSearchTerm("")}
+								onClick={() => setSearchTerm("")}
 								className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
 							>
 								<X className="h-3 w-3" />
 							</button>
 						)}
 						<kbd className="hidden sm:inline-flex h-6 items-center gap-1 rounded border border-white/10 bg-white/5 px-2 font-mono text-[10px] font-medium text-gray-400 opacity-100">
-							<span className="text-xs">⌘</span>K
+							<span className="text-xs">{isAppleDevice ? "⌘" : "Ctrl+"}</span>
+							<span className="ml-1">K</span>
 						</kbd>
 					</div>
 				</div>
@@ -155,53 +155,20 @@ export const Header = React.memo(function Header() {
 
 			{/* Right: Actions */}
 			<div className="flex items-center gap-3 ml-8">
-				{/* Action Buttons Group */}
-				<div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/5">
-					<button
-						type="button"
-						suppressHydrationWarning
-						onClick={undo}
-						disabled={undoStack.length === 0}
-						className={cn(
-							"p-2 rounded-lg transition-all",
-							undoStack.length > 0
-								? "text-gray-400 hover:text-white hover:bg-white/10"
-								: "text-gray-700 cursor-not-allowed",
-						)}
-						title="Undo (Cmd+Z)"
-					>
-						<Undo2 className="h-4 w-4" />
-					</button>
-					<div className="w-px h-4 bg-white/10" />
-					<button
-						type="button"
-						suppressHydrationWarning
-						onClick={redo}
-						disabled={redoStack.length === 0}
-						className={cn(
-							"p-2 rounded-lg transition-all",
-							redoStack.length > 0
-								? "text-gray-400 hover:text-white hover:bg-white/10"
-								: "text-gray-700 cursor-not-allowed",
-						)}
-						title="Redo (Cmd+Shift+Z)"
-					>
-						<Redo2 className="h-4 w-4" />
-					</button>
-				</div>
+				{/* Action Buttons Group removed (Undo/Redo) */}
 
 				<div className="flex items-center gap-2">
 					<button
 						type="button"
 						suppressHydrationWarning
-						onClick={() => window.location.reload()}
+						onClick={() => globalThis.window?.location.reload()}
 						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
 						title="Refresh Page"
 					>
 						<RefreshCw className="h-5 w-5" />
 					</button>
 
-					<CloudSync />
+					{/* CloudSync removed */}
 
 					<button
 						type="button"

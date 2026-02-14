@@ -38,21 +38,12 @@ import type { PendingRow } from "@/types";
 
 export default function MainSheetPage() {
 	const { data: rowData = [] } = useOrdersQuery("main");
-	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
-	const checkNotifications = useAppStore((state) => state.checkNotifications);
-
-	useEffect(() => {
-		if (rowData) {
-			checkNotifications();
-		}
-	}, [rowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
-	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
@@ -66,7 +57,7 @@ export default function MainSheetPage() {
 			for (const id of ids) {
 				const row = rowData.find((r: any) => r.id === id);
 				let newActionNote = row?.actionNote || "";
-				if (reason && reason.trim()) {
+				if (reason?.trim()) {
 					const taggedNote = `${reason.trim()} #archive`;
 					newActionNote = newActionNote
 						? `${newActionNote}\n${taggedNote}`
@@ -123,13 +114,6 @@ export default function MainSheetPage() {
 		return rowData.filter((row: any) => row.partStatus === activeFilter);
 	}, [rowData, activeFilter]);
 
-	const _handleSelectionChanged = useMemo(
-		() => (rows: PendingRow[]) => {
-			setSelectedRows(rows);
-		},
-		[],
-	);
-
 	const {
 		activeModal,
 		currentRow,
@@ -165,7 +149,7 @@ export default function MainSheetPage() {
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
 		selectedRows.forEach((row) => {
-			updatePartStatus(row.id, status);
+			handleUpdateOrder(row.id, { partStatus: status });
 		});
 		toast.success(`Part status updated to "${status}"`);
 	};
@@ -178,7 +162,7 @@ export default function MainSheetPage() {
 		for (const row of selectedRows) {
 			// Update stage and save booking details
 			let newActionNote = row.actionNote || "";
-			if (note && note.trim()) {
+			if (note?.trim()) {
 				const taggedNote = `${note.trim()} #booking`;
 				newActionNote = newActionNote
 					? `${newActionNote}\n${taggedNote}`

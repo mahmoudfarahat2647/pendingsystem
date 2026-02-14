@@ -18,7 +18,9 @@ interface ManualActionCardProps {
 	isLocked: boolean;
 }
 
-export function ManualActionCard({ isLocked }: ManualActionCardProps) {
+export function ManualActionCard({
+	isLocked,
+}: Readonly<ManualActionCardProps>) {
 	const { reportSettings, triggerManualBackup, isReportSettingsLoading } =
 		useAppStore();
 	const [isTriggering, setIsTriggering] = useState(false);
@@ -29,6 +31,7 @@ export function ManualActionCard({ isLocked }: ManualActionCardProps) {
 			await triggerManualBackup();
 			toast.success("Backup process started successfully");
 		} catch (error) {
+			console.error("Failed to trigger manual backup:", error);
 			toast.error("Failed to start backup");
 		} finally {
 			setIsTriggering(false);

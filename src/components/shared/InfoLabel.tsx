@@ -7,6 +7,46 @@ interface InfoLabelProps {
 	data: PendingRow | null;
 }
 
+interface PartStatusBadgeProps {
+	classNameParts: Array<string | string[] | false>;
+	style?: React.CSSProperties;
+}
+
+const normalizePartStatusColor = (color: string): string => {
+	if (!color.startsWith("#") && color.startsWith("text-")) {
+		return color.replace("text-", "bg-");
+	}
+
+	return color;
+};
+
+const getPartStatusBadgeProps = (color: string): PartStatusBadgeProps => {
+	if (color.startsWith("#")) {
+		return {
+			classNameParts: [],
+			style: {
+				backgroundColor: `${color}1A`,
+				borderColor: `${color}33`,
+				color,
+			},
+		};
+	}
+
+	if (color.includes(" ")) {
+		return {
+			classNameParts: [color],
+		};
+	}
+
+	return {
+		classNameParts: [
+			`${color.replace("bg-", "border-").split(" ")[0]}/20`,
+			color.replace("bg-", "text-").split(" ")[0],
+			color.includes("/") ? color : `${color}/10`,
+		],
+	};
+};
+
 export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
 	const partStatuses = useAppStore((state) => state.partStatuses);
@@ -33,11 +73,8 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 		? partStatuses.find((s) => s.label === data.partStatus)
 		: null;
 	// Default to cyan hex if not found, to ensure colorful fallback
-	let partStatsColor = partStatusDef?.color || "#06b6d4";
-	// If it's a tailwind class starting with text-, normalize it for class logic
-	if (!partStatsColor.startsWith("#") && partStatsColor.startsWith("text-")) {
-		partStatsColor = partStatsColor.replace("text-", "bg-");
-	}
+	const partStatsColor = normalizePartStatusColor(partStatusDef?.color || "#06b6d4");
+	const partStatusBadgeProps = getPartStatusBadgeProps(partStatsColor);
 
 	const _bgOpacity = statsColor.includes("/") ? "" : "/10";
 	const _borderOpacity = statsColor.includes("/") ? "" : "/20";
@@ -161,25 +198,9 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								<span
 									className={cn(
 										"px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest transition-all duration-300",
-										!partStatsColor.startsWith("#") &&
-											!partStatsColor.includes(" ") && [
-												`${partStatsColor.replace("bg-", "border-").split(" ")[0]}/20`,
-												partStatsColor.replace("bg-", "text-").split(" ")[0],
-												partStatsColor.includes("/")
-													? partStatsColor
-													: `${partStatsColor}/10`,
-											],
-										partStatsColor.includes(" ") && partStatsColor,
+										...partStatusBadgeProps.classNameParts,
 									)}
-									style={
-										partStatsColor.startsWith("#")
-											? {
-													backgroundColor: `${partStatsColor}1A`, // 10% opacity
-													borderColor: `${partStatsColor}33`, // 20% opacity
-													color: partStatsColor,
-												}
-											: undefined
-									}
+									style={partStatusBadgeProps.style}
 								>
 									{data.partStatus}
 								</span>

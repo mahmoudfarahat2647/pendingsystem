@@ -31,7 +31,7 @@ export class OrderFormErrorBoundary extends Component<Props, State> {
 		console.error("[OrderFormErrorBoundary] Error info:", errorInfo);
 
 		// Log error details for debugging
-		if (typeof window !== "undefined") {
+		if (typeof globalThis.window !== "undefined") {
 			console.error(
 				"[OrderFormErrorBoundary] Stack trace:",
 				errorInfo.componentStack,
@@ -86,7 +86,7 @@ export class OrderFormErrorBoundary extends Component<Props, State> {
 								<span>Try Again</span>
 							</Button>
 							<Button
-								onClick={() => window.location.reload()}
+								onClick={() => globalThis.window?.location.reload()}
 								variant="destructive"
 							>
 								Reload Page

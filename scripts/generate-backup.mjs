@@ -13,7 +13,7 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // SMTP Configuration
 const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
+const SMTP_PORT = Number.parseInt(process.env.SMTP_PORT || "587", 10);
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 
@@ -54,12 +54,91 @@ function getCairoDate() {
 	}
 
 	return {
-		day: parseInt(dateMap.day),
-		month: parseInt(dateMap.month),
-		year: parseInt(dateMap.year),
+		day: Number.parseInt(dateMap.day, 10),
+		month: Number.parseInt(dateMap.month, 10),
+		year: Number.parseInt(dateMap.year, 10),
 		weekday: dateMap.weekday, // e.g., "Monday"
 	};
 }
+
+/**
+ * Helper to validate and check weekly schedule
+ */
+function checkWeeklySchedule(frequency, cairo, dayNames) {
+	const parts = frequency.split("-");
+	const selectedDayIndex = Number.parseInt(parts[1], 10);
+
+	if (
+		Number.isNaN(selectedDayIndex) ||
+		selectedDayIndex < 0 ||
+		selectedDayIndex > 6
+	) {
+		console.error(
+			`Invalid Weekly format: ${frequency}. Expected "Weekly-0" to "Weekly-6". Skipping.`,
+		);
+		return null;
+	}
+
+	const selectedDayName = dayNames[selectedDayIndex];
+	const shouldRun = cairo.weekday === selectedDayName;
+	console.log(
+		`Weekly schedule: Selected ${selectedDayName} (index ${selectedDayIndex}), Today is ${cairo.weekday}. Run: ${shouldRun}`,
+	);
+	return shouldRun;
+}
+
+/**
+ * Helper to check if backup should run based on frequency settings
+ * Returns: true if should run, false if should skip, null if invalid
+ */
+function shouldRunBackup(frequency, cairo) {
+	const dayNames = [
+		"Sunday",
+		"Monday",
+		"Tuesday",
+		"Wednesday",
+		"Thursday",
+		"Friday",
+		"Saturday",
+	];
+
+	if (frequency === "Daily") {
+		console.log("Daily schedule: Running backup.");
+		return true;
+	}
+
+	if (frequency.startsWith("Weekly-")) {
+		return checkWeeklySchedule(frequency, cairo, dayNames);
+	}
+
+	if (frequency === "Weekly") {
+		const shouldRun = cairo.weekday === "Monday";
+		console.log(
+			`Weekly schedule (legacy): Defaulting to Monday. Today is ${cairo.weekday}. Run: ${shouldRun}`,
+		);
+		return shouldRun;
+	}
+
+	if (frequency === "Monthly") {
+		const shouldRun = cairo.day === 1;
+		console.log(
+			`Monthly schedule: Run on 1st. Today is ${cairo.day}. Run: ${shouldRun}`,
+		);
+		return shouldRun;
+	}
+
+	if (frequency === "Yearly") {
+		const shouldRun = cairo.day === 1 && cairo.month === 1;
+		console.log(
+			`Yearly schedule: Run on Jan 1st. Today is ${cairo.month}/${cairo.day}. Run: ${shouldRun}`,
+		);
+		return shouldRun;
+	}
+
+	console.error(`Unknown frequency format: ${frequency}. Skipping.`);
+	return null;
+}
+
 
 async function runBackup() {
 	const isScheduleRun = process.env.IS_SCHEDULE_RUN === "true";
@@ -104,70 +183,15 @@ async function runBackup() {
 			// [CRITICAL] Frequency Parsing Logic
 			// Format: "Daily", "Weekly-DayIndex" (e.g., "Weekly-3" for Wednesday),
 			// "Weekly" (legacy, defaults to Monday), "Monthly", "Yearly"
-			let shouldRun = false;
 			const frequency = settings.frequency || "Weekly";
+			const runNow = shouldRunBackup(frequency, cairo);
 
-			// Day name mapping for validation
-			const dayNames = [
-				"Sunday",
-				"Monday",
-				"Tuesday",
-				"Wednesday",
-				"Thursday",
-				"Friday",
-				"Saturday",
-			];
-
-			if (frequency === "Daily") {
-				// Run every day
-				shouldRun = true;
-				console.log("Daily schedule: Running backup.");
-			} else if (frequency.startsWith("Weekly-")) {
-				// Extract day index: "Weekly-3" => 3 (Wednesday)
-				const parts = frequency.split("-");
-				const selectedDayIndex = parseInt(parts[1]);
-
-				// Validation: Check if day index is valid (0-6)
-				if (
-					isNaN(selectedDayIndex) ||
-					selectedDayIndex < 0 ||
-					selectedDayIndex > 6
-				) {
-					console.error(
-						`Invalid Weekly format: ${frequency}. Expected "Weekly-0" to "Weekly-6". Skipping.`,
-					);
-					return;
-				}
-
-				const selectedDayName = dayNames[selectedDayIndex];
-				shouldRun = cairo.weekday === selectedDayName;
-				console.log(
-					`Weekly schedule: Selected ${selectedDayName} (index ${selectedDayIndex}), Today is ${cairo.weekday}. Run: ${shouldRun}`,
-				);
-			} else if (frequency === "Weekly") {
-				// Legacy format: Default to Monday for backward compatibility
-				shouldRun = cairo.weekday === "Monday";
-				console.log(
-					`Weekly schedule (legacy): Defaulting to Monday. Today is ${cairo.weekday}. Run: ${shouldRun}`,
-				);
-			} else if (frequency === "Monthly") {
-				// Run only on the 1st of the month
-				shouldRun = cairo.day === 1;
-				console.log(
-					`Monthly schedule: Run on 1st. Today is ${cairo.day}. Run: ${shouldRun}`,
-				);
-			} else if (frequency === "Yearly") {
-				// Run only on January 1st
-				shouldRun = cairo.day === 1 && cairo.month === 1;
-				console.log(
-					`Yearly schedule: Run on Jan 1st. Today is ${cairo.month}/${cairo.day}. Run: ${shouldRun}`,
-				);
-			} else {
-				console.error(`Unknown frequency format: ${frequency}. Skipping.`);
+			if (runNow === null) {
+				// Invalid frequency format
 				return;
 			}
 
-			if (!shouldRun) {
+			if (!runNow) {
 				console.log(
 					`Frequency is ${frequency}, but conditions not met. Skipping.`,
 				);
@@ -241,7 +265,7 @@ async function runBackup() {
 				const active = row.order_reminders.find((r) => !r.is_completed);
 				const primary = active || row.order_reminders[0]; // Fallback to first if all completed
 
-				if (primary && primary.remind_at) {
+				if (primary?.remind_at) {
 					const d = new Date(primary.remind_at);
 					reminderDate = d.toISOString().split("T")[0];
 					reminderTime = d.toTimeString().slice(0, 5);
@@ -256,11 +280,11 @@ async function runBackup() {
 				meta.parts && Array.isArray(meta.parts) && meta.parts.length > 0
 					? meta.parts
 					: [
-							{
-								partNumber: meta.partNumber || "",
-								description: meta.description || "",
-							},
-						];
+						{
+							partNumber: meta.partNumber || "",
+							description: meta.description || "",
+						},
+					];
 
 			// 3. Generate One Row Per Part
 			for (const part of parts) {
@@ -438,14 +462,14 @@ function generateCSV(data, headers) {
 				stringVal.includes('"') ||
 				stringVal.includes("\n")
 			) {
-				return `"${stringVal.replace(/"/g, '""')}"`;
+				return `"${stringVal.replaceAll('"', '""')}"`;
 			}
 			return stringVal;
 		});
 		rows.push(values.join(","));
 	}
 
-	return "\uFEFF" + rows.join("\n");
+	return `\uFEFF${rows.join("\n")}`;
 }
 
-runBackup();
+await runBackup();

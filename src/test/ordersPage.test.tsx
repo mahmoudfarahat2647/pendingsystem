@@ -1,4 +1,19 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+const createHandleOpenForm = (
+	setIsEditMode: (edit: boolean) => void,
+	setIsFormModalOpen: (open: boolean) => void,
+) => {
+	return (edit = false) => {
+		try {
+			console.log(`[DEBUG] Opening form with edit mode: ${edit}`);
+			setIsEditMode(edit);
+			setIsFormModalOpen(true);
+		} catch (error) {
+			console.error(`[ERROR] Failed to open form:`, error);
+		}
+	};
+};
 
 // Simple test to verify that the handleOpenForm function works as expected
 describe("OrdersPage - Create New Order Button", () => {
@@ -6,16 +21,10 @@ describe("OrdersPage - Create New Order Button", () => {
 		const setIsFormModalOpen = vi.fn();
 		const setIsEditMode = vi.fn();
 
-		// Simulate handleOpenForm function
-		const handleOpenForm = (edit = false) => {
-			try {
-				console.log(`[DEBUG] Opening form with edit mode: ${edit}`);
-				setIsEditMode(edit);
-				setIsFormModalOpen(true);
-			} catch (error) {
-				console.error(`[ERROR] Failed to open form:`, error);
-			}
-		};
+		const handleOpenForm = createHandleOpenForm(
+			setIsEditMode,
+			setIsFormModalOpen,
+		);
 
 		// Test creating new order (no rows selected)
 		handleOpenForm(false);
@@ -28,15 +37,10 @@ describe("OrdersPage - Create New Order Button", () => {
 		const setIsFormModalOpen = vi.fn();
 		const setIsEditMode = vi.fn();
 
-		const handleOpenForm = (edit = false) => {
-			try {
-				console.log(`[DEBUG] Opening form with edit mode: ${edit}`);
-				setIsEditMode(edit);
-				setIsFormModalOpen(true);
-			} catch (error) {
-				console.error(`[ERROR] Failed to open form:`, error);
-			}
-		};
+		const handleOpenForm = createHandleOpenForm(
+			setIsEditMode,
+			setIsFormModalOpen,
+		);
 
 		// Test editing existing order (rows selected)
 		handleOpenForm(true);
@@ -46,21 +50,16 @@ describe("OrdersPage - Create New Order Button", () => {
 	});
 
 	it("should handle errors gracefully when opening form fails", () => {
-		const setIsFormModalOpen = vi.fn((_open?: boolean) => {
+		const setIsFormModalOpen = vi.fn(() => {
 			throw new Error("Failed to open modal");
 		});
 		const setIsEditMode = vi.fn();
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		const handleOpenForm = (edit = false) => {
-			try {
-				console.log(`[DEBUG] Opening form with edit mode: ${edit}`);
-				setIsEditMode(edit);
-				setIsFormModalOpen(true);
-			} catch (error) {
-				console.error(`[ERROR] Failed to open form:`, error);
-			}
-		};
+		const handleOpenForm = createHandleOpenForm(
+			setIsEditMode,
+			setIsFormModalOpen,
+		);
 
 		handleOpenForm(false);
 

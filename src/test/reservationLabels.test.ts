@@ -8,7 +8,7 @@ const mockWindowPrint = vi.fn();
 const mockWindowClose = vi.fn();
 
 // Mock console methods to avoid noise in tests
-const mockConsoleError = vi
+const _mockConsoleError = vi
 	.spyOn(console, "error")
 	.mockImplementation(() => {});
 

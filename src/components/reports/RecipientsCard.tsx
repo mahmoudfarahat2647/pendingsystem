@@ -18,7 +18,7 @@ interface RecipientsCardProps {
 	isLocked: boolean;
 }
 
-export function RecipientsCard({ isLocked }: RecipientsCardProps) {
+export function RecipientsCard({ isLocked }: Readonly<RecipientsCardProps>) {
 	const { reportSettings, addEmailRecipient, removeEmailRecipient } =
 		useAppStore();
 	const [emailInput, setEmailInput] = useState("");
@@ -26,7 +26,7 @@ export function RecipientsCard({ isLocked }: RecipientsCardProps) {
 	const isLoading = !reportSettings;
 
 	const handleAddEmail = () => {
-		if (emailInput && emailInput.includes("@")) {
+		if (emailInput?.includes("@")) {
 			addEmailRecipient(emailInput);
 			setEmailInput("");
 		}

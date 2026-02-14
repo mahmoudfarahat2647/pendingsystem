@@ -8,7 +8,7 @@ export const OrderFormSchema = z
 		cntrRdg: z
 			.union([z.string(), z.number()])
 			.transform((val) =>
-				typeof val === "string" ? parseInt(val, 10) || 0 : val,
+				typeof val === "string" ? Number.parseInt(val, 10) || 0 : val,
 			),
 		model: z.string().min(1, "Model is required"),
 		repairSystem: z.string().default("Mechanical"),
@@ -41,7 +41,7 @@ export const BeastModeSchema = z
 		cntrRdg: z
 			.union([z.string(), z.number()])
 			.transform((val) =>
-				typeof val === "string" ? parseInt(val, 10) || 0 : val,
+				typeof val === "string" ? Number.parseInt(val, 10) || 0 : val,
 			),
 		model: z.string().min(1, "Vehicle model is required"),
 		repairSystem: z.string().min(1, "Repair system is required"),

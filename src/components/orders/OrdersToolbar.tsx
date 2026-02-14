@@ -76,7 +76,18 @@ export const OrdersToolbar = ({
 	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("orders");
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
-	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
+	const _isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
+	let addEditTooltipLabel = "Create Order";
+	if (selectedCount > 0) {
+		addEditTooltipLabel = selectedCount > 1 ? "Edit Orders" : "Edit Order";
+	}
+
+	let bookingTooltipLabel = "Booking";
+	if (selectedCount === 0) {
+		bookingTooltipLabel = "Select items to book";
+	} else if (uniqueVins.size > 1) {
+		bookingTooltipLabel = `Book items for ${uniqueVins.size} customers`;
+	}
 
 	return (
 		<div
@@ -106,11 +117,7 @@ export const OrdersToolbar = ({
 							)}
 						</Button>
 					</TooltipTrigger>
-					<TooltipContent>
-						{selectedCount > 0
-							? `Edit ${selectedCount > 1 ? "Orders" : "Order"}`
-							: "Create Order"}
-					</TooltipContent>
+					<TooltipContent>{addEditTooltipLabel}</TooltipContent>
 				</Tooltip>
 
 				<div
@@ -210,13 +217,7 @@ export const OrdersToolbar = ({
 							<Calendar className="h-3.5 w-3.5" />
 						</Button>
 					</TooltipTrigger>
-					<TooltipContent>
-						{selectedCount === 0
-							? "Select items to book"
-							: uniqueVins.size > 1
-								? `Book items for ${uniqueVins.size} customers`
-								: "Booking"}
-					</TooltipContent>
+					<TooltipContent>{bookingTooltipLabel}</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

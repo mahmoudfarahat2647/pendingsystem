@@ -59,7 +59,7 @@ export const EditAttachmentModal = ({
 			window.open(
 				path.startsWith("file://")
 					? path
-					: `file:///${path.replace(/\\/g, "/")}`,
+					: `file:///${path.replaceAll("\\", "/")}`,
 				"_blank",
 			);
 		}

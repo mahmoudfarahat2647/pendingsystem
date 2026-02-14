@@ -2,17 +2,18 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Supabase before importing anything that might use it
-vi.mock("@/lib/supabase", () => ({
-	supabase: {
-		from: vi.fn(() => ({
-			select: vi.fn(() => ({
-				eq: vi.fn(() => ({
-					single: vi.fn(() => Promise.resolve({ data: null, error: null })),
-				})),
-			})),
-		})),
-	},
-}));
+vi.mock("@/lib/supabase", () => {
+	const single = vi.fn(() => Promise.resolve({ data: null, error: null }));
+	const eq = vi.fn(() => ({ single }));
+	const select = vi.fn(() => ({ eq }));
+	const from = vi.fn(() => ({ select }));
+
+	return {
+		supabase: {
+			from,
+		},
+	};
+});
 
 import { useColumnLayoutTracker } from "../hooks/useColumnLayoutTracker";
 import { useAppStore } from "../store/useStore";
@@ -26,9 +27,9 @@ vi.mock("sonner", () => ({
 }));
 
 // Mock window.location.reload
-const originalLocation = window.location;
-delete (window as any).location;
-Object.defineProperty(window, "location", {
+const originalLocation = globalThis.location;
+delete (globalThis as any).location;
+Object.defineProperty(globalThis, "location", {
 	value: { ...originalLocation, reload: vi.fn() },
 	configurable: true,
 	writable: true,
@@ -78,6 +79,6 @@ describe("useColumnLayoutTracker", () => {
 			result.current.resetLayout();
 		});
 
-		expect(window.location.reload).toHaveBeenCalled();
+		expect(globalThis.location.reload).toHaveBeenCalled();
 	});
 });

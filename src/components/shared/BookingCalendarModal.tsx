@@ -1,13 +1,11 @@
 "use client";
 
-import { Search } from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -52,7 +50,6 @@ export const BookingCalendarModal = ({
 		preBookingStatus,
 		setPreBookingStatus,
 		searchQuery,
-		setSearchQuery,
 		selectedBookingId,
 		setSelectedBookingId,
 		searchMatchDates,

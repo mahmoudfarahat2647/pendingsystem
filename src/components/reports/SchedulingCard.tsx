@@ -9,13 +9,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAppStore } from "@/store/useStore";
 import FrequencyPicker from "./FrequencyPicker";
@@ -24,7 +17,7 @@ interface SchedulingCardProps {
 	isLocked: boolean;
 }
 
-export function SchedulingCard({ isLocked }: SchedulingCardProps) {
+export function SchedulingCard({ isLocked }: Readonly<SchedulingCardProps>) {
 	const { reportSettings, updateReportSettings, fetchReportSettings } =
 		useAppStore();
 

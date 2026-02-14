@@ -7,6 +7,21 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type CalendarProps = React.ComponentProps<typeof DayPicker>;
+type CalendarChevronProps = Parameters<
+	NonNullable<NonNullable<CalendarProps["components"]>["Chevron"]>
+>[0];
+
+function CalendarChevron(props: CalendarChevronProps) {
+	if (props.orientation === "left") {
+		return (
+			<ChevronLeft size={16} strokeWidth={2} {...props} aria-hidden="true" />
+		);
+	}
+
+	return (
+		<ChevronRight size={16} strokeWidth={2} {...props} aria-hidden="true" />
+	);
+}
 
 function Calendar({
 	className,
@@ -61,21 +76,7 @@ function Calendar({
 	);
 
 	const defaultComponents = {
-		Chevron: (props: any) => {
-			if (props.orientation === "left") {
-				return (
-					<ChevronLeft
-						size={16}
-						strokeWidth={2}
-						{...props}
-						aria-hidden="true"
-					/>
-				);
-			}
-			return (
-				<ChevronRight size={16} strokeWidth={2} {...props} aria-hidden="true" />
-			);
-		},
+		Chevron: CalendarChevron,
 	};
 
 	const mergedComponents = {

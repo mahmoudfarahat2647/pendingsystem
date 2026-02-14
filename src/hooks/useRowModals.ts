@@ -15,7 +15,7 @@ export const useRowModals = (
 		id: string,
 		updates: Partial<PendingRow>,
 		stage?: string,
-	) => Promise<unknown> | void,
+	) => Promise<unknown> | undefined,
 	onArchive?: (ids: string[], reason: string) => void,
 ) => {
 	const [activeModal, setActiveModal] = useState<RowModalType>(null);
@@ -86,9 +86,9 @@ export const useRowModals = (
 				// Check for notifications immediately after setting a reminder
 				// This ensures the notification appears if the reminder is already due
 				setTimeout(() => {
-					if (typeof window !== "undefined") {
+					if (typeof globalThis.window !== "undefined") {
 						// Trigger a global notification check
-						window.dispatchEvent(new Event("check-notifications"));
+						globalThis.window.dispatchEvent(new Event("check-notifications"));
 					}
 				}, 100);
 			}
@@ -122,10 +122,11 @@ export const useRowModals = (
 				const tag = "#archive";
 				const reasonText = archiveReason.trim();
 				const newNote = reasonText ? `${reasonText} ${tag}` : "";
+				const updatedExistingNote = reasonText
+					? `${currentRow.actionNote}\n${newNote}`
+					: currentRow.actionNote;
 				const combinedNote = currentRow.actionNote
-					? reasonText
-						? `${currentRow.actionNote}\n${newNote}`
-						: currentRow.actionNote
+					? updatedExistingNote
 					: newNote;
 
 				onUpdate(

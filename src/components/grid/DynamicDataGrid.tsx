@@ -1,6 +1,5 @@
 "use client";
 
-import type { ColDef, GridApi } from "ag-grid-community";
 import dynamic from "next/dynamic";
 import { memo } from "react";
 import { ClientErrorBoundary } from "@/components/shared/ClientErrorBoundary";
@@ -42,7 +41,7 @@ const DataGridComponent = dynamic(
 );
 
 // Preload the grid module during idle time
-if (typeof window !== "undefined") {
+if (typeof globalThis.window !== "undefined") {
 	const preloadGrid = async () => {
 		try {
 			// These imports will be prefetched by the browser
@@ -59,11 +58,12 @@ if (typeof window !== "undefined") {
 		}
 	};
 
-	if (typeof window !== "undefined") {
-		if ("requestIdleCallback" in window) {
-			requestIdleCallback(preloadGrid, { timeout: 2000 });
+	const browserWindow = globalThis.window;
+	if (browserWindow) {
+		if ("requestIdleCallback" in browserWindow) {
+			browserWindow.requestIdleCallback(preloadGrid, { timeout: 2000 });
 		} else {
-			setTimeout(preloadGrid, 1000);
+			globalThis.setTimeout(preloadGrid, 1000);
 		}
 	}
 }

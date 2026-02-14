@@ -39,7 +39,7 @@ export function EditableSelect({
 	placeholder = "Select option...",
 	emptyMessage = "No options found.",
 	className,
-}: EditableSelectProps) {
+}: Readonly<EditableSelectProps>) {
 	const [open, setOpen] = React.useState(false);
 	const [newItem, setNewItem] = React.useState("");
 
@@ -61,7 +61,7 @@ export function EditableSelect({
 					aria-expanded={open}
 					className={cn("w-full justify-between font-normal", className)}
 				>
-					{value ? value : placeholder}
+					{value || placeholder}
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>

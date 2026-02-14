@@ -17,10 +17,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase =
 	typeof window !== "undefined"
 		? getSupabaseBrowserClient()
-		: createSupabaseJS(supabaseUrl, supabaseAnonKey, {
-				auth: {
-					persistSession: false,
-					autoRefreshToken: false,
-					detectSessionInUrl: false,
-				},
-			});
+		: createSupabaseJS(supabaseUrl, supabaseAnonKey, {});

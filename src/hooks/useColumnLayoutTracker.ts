@@ -43,13 +43,13 @@ export function useColumnLayoutTracker(gridKey: string) {
 			clearGridState(gridKey);
 			setLayoutDirty(gridKey, false);
 			toast.info("Resetting to your default layout. Refreshing...");
-			window.location.reload();
+			globalThis.window?.location.reload();
 		} else {
 			// No user-defined default, clear everything to use the original code default
 			clearGridState(gridKey);
 			setLayoutDirty(gridKey, false);
 			toast.info("Resetting to original layout. Refreshing...");
-			window.location.reload();
+			globalThis.window?.location.reload();
 		}
 	}, [gridKey, clearGridState, setLayoutDirty, getDefaultLayout]);
 

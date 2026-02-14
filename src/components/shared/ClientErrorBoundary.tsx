@@ -54,7 +54,7 @@ export class ClientErrorBoundary extends Component<Props, State> {
 							{isChunkError ? (
 								<button
 									type="button"
-									onClick={() => window.location.reload()}
+									onClick={() => globalThis.window?.location.reload()}
 									className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm transition-colors border border-white/20"
 								>
 									Refresh Page

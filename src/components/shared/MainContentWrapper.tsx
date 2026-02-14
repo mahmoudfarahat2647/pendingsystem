@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import type React from "react";
-import { useAutoMoveVins } from "@/hooks/useAutoMoveVins";
 import { useAppStore } from "@/store/useStore";
 
 // Lazy load the search results view to avoid bundling AgGrid on initial load
@@ -22,10 +21,19 @@ interface MainContentWrapperProps {
 }
 
 export const MainContentWrapper = ({ children }: MainContentWrapperProps) => {
-	useAutoMoveVins(); // Activate the watcher
+	// const useAutoMoveVins removed - functionality moved to React Query mutations
+	// useAutoMoveVins(); // Activate the watcher
 
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const hasSearchTerm = searchTerm && searchTerm.trim().length > 0;
+
+	// Usage checks for part status removed as server data is no longer in Zustand
+	// TODO: Re-implement usage checks using React Query cache if needed
+	const _rowData: any[] = [];
+	const _ordersRowData: any[] = [];
+	const _callRowData: any[] = [];
+	const _bookingRowData: any[] = [];
+	const _archiveRowData: any[] = [];
 
 	if (hasSearchTerm) {
 		return <SearchResultsView />;

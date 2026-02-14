@@ -78,39 +78,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 						))}
 					</nav>
 					<div className="p-6 border-t border-white/5 space-y-3">
-						{!showPasswordPrompt ? (
-							<button
-								type="button"
-								onClick={() => {
-									if (isLocked) {
-										setShowPasswordPrompt(true);
-										setTimeout(() => passwordInputRef.current?.focus(), 100);
-									} else {
-										setIsLocked(true);
-									}
-								}}
-								className={cn(
-									"w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300",
-									isLocked
-										? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
-										: "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20",
-								)}
-							>
-								<div className="flex items-center gap-2">
-									{isLocked ? (
-										<Lock className="h-4 w-4" />
-									) : (
-										<Unlock className="h-4 w-4" />
-									)}
-									<span className="text-xs font-bold uppercase tracking-wider">
-										{isLocked ? "Locked" : "Unlocked"}
-									</span>
-								</div>
-								{!isLocked && (
-									<div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-								)}
-							</button>
-						) : (
+						{showPasswordPrompt ? (
 							<div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
 								<Input
 									ref={passwordInputRef}
@@ -163,6 +131,38 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									</Button>
 								</div>
 							</div>
+						) : (
+							<button
+								type="button"
+								onClick={() => {
+									if (isLocked) {
+										setShowPasswordPrompt(true);
+										setTimeout(() => passwordInputRef.current?.focus(), 100);
+									} else {
+										setIsLocked(true);
+									}
+								}}
+								className={cn(
+									"w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300",
+									isLocked
+										? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+										: "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20",
+								)}
+							>
+								<div className="flex items-center gap-2">
+									{isLocked ? (
+										<Lock className="h-4 w-4" />
+									) : (
+										<Unlock className="h-4 w-4" />
+									)}
+									<span className="text-xs font-bold uppercase tracking-wider">
+										{isLocked ? "Locked" : "Unlocked"}
+									</span>
+								</div>
+								{!isLocked && (
+									<div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+								)}
+							</button>
 						)}
 						<div className="flex items-center justify-between pt-2">
 							<div className="text-[10px] font-mono text-gray-700 tracking-widest uppercase">

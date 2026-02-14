@@ -15,11 +15,13 @@ export const PartStatusTab = ({ isLocked }: PartStatusTabProps) => {
 	const removePartStatusDef = useAppStore((state) => state.removePartStatusDef);
 
 	// Data for usage checks
-	const rowData = useAppStore((state) => state.rowData);
-	const ordersRowData = useAppStore((state) => state.ordersRowData);
-	const callRowData = useAppStore((state) => state.callRowData);
-	const archiveRowData = useAppStore((state) => state.archiveRowData);
-	const bookingRowData = useAppStore((state) => state.bookingRowData);
+	// Usage checks for part status removed as server data is no longer in Zustand
+	// TODO: Re-implement usage checks using React Query cache if needed
+	const rowData: any[] = [];
+	const ordersRowData: any[] = [];
+	const callRowData: any[] = [];
+	const bookingRowData: any[] = [];
+	const archiveRowData: any[] = [];
 
 	const getPartStatusUsage = (label: string) => {
 		const allRows = [

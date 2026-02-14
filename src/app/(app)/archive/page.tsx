@@ -3,7 +3,7 @@
 import type { GridApi, ValueFormatterParams } from "ag-grid-community";
 import { format } from "date-fns";
 import { CheckCircle, Download, Filter, RotateCcw, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -13,7 +13,6 @@ import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { RowModals } from "@/components/shared/RowModals";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -55,16 +54,6 @@ export default function ArchivePage() {
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
-	const setArchiveRowData = useAppStore((state) => state.setArchiveRowData);
-	const checkNotifications = useAppStore((state) => state.checkNotifications);
-
-	useEffect(() => {
-		if (archiveRowData) {
-			setArchiveRowData(archiveRowData);
-			checkNotifications();
-		}
-	}, [archiveRowData, setArchiveRowData, checkNotifications]);
-
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
 	const handleUpdateOrder = useCallback(
@@ -79,7 +68,7 @@ export default function ArchivePage() {
 			for (const id of ids) {
 				const row = archiveRowData.find((r: any) => r.id === id);
 				let newActionNote = row?.actionNote || "";
-				if (reason && reason.trim()) {
+				if (reason?.trim()) {
 					const taggedNote = `${reason.trim()} #archive`;
 					newActionNote = newActionNote
 						? `${newActionNote}\n${taggedNote}`

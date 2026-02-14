@@ -1,6 +1,5 @@
 import { format, isAfter, subYears } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
-import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 interface UseBookingCalendarOptions {
@@ -18,13 +17,15 @@ export function useBookingCalendar({
 	bookingData,
 	archiveData,
 }: UseBookingCalendarOptions) {
-	const storeBookingRowData = useAppStore((state) => state.bookingRowData);
-	const storeArchiveRowData = useAppStore((state) => state.archiveRowData);
-	const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
+	// These are now handled via props or React Query cache if needed
+	// For now, we rely on the passed in bookingData and archiveData
+	// const storeBookingRowData = useAppStore((state) => state.bookingRowData);
+	// const storeArchiveRowData = useAppStore((state) => state.archiveRowData);
+	// const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
 
-	// Use provided data if available, otherwise fall back to store data
-	const bookingRowData = bookingData ?? storeBookingRowData;
-	const archiveRowData = archiveData ?? storeArchiveRowData;
+	// Use provided data if available, fallback to empty array
+	const bookingRowData = bookingData ?? [];
+	const archiveRowData = archiveData ?? [];
 
 	const [currentMonth, setCurrentMonth] = useState(new Date());
 	const [selectedDate, setSelectedDate] = useState(new Date());
@@ -117,7 +118,7 @@ export function useBookingCalendar({
 		if (
 			sidebarGroupedBookings.length > 0 &&
 			(!selectedBookingId ||
-				!sidebarGroupedBookings.find((b) => b.id === selectedBookingId))
+				!sidebarGroupedBookings.some((b) => b.id === selectedBookingId))
 		) {
 			setSelectedBookingId(sidebarGroupedBookings[0].id);
 		} else if (sidebarGroupedBookings.length === 0) setSelectedBookingId(null);

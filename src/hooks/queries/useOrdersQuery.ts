@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { type OrderStage, orderService } from "@/services/orderService";
+import type { PendingRow } from "@/types";
 
 export function useOrdersQuery(stage?: OrderStage) {
 	return useQuery({
@@ -26,7 +27,7 @@ export function useBulkUpdateOrderStageMutation() {
 			await queryClient.cancelQueries({ queryKey: ["orders"] });
 
 			// Snapshot current cache states for rollback
-			const previousOrdersCache: Record<string, any[] | undefined> = {};
+			const previousOrdersCache: Record<string, PendingRow[] | undefined> = {};
 			const stages: OrderStage[] = [
 				"orders",
 				"main",
@@ -41,7 +42,7 @@ export function useBulkUpdateOrderStageMutation() {
 
 			// Optimistically move items between stages
 			// We find which rows are being moved by looking at all caches
-			const movedRows: any[] = [];
+			const movedRows: PendingRow[] = [];
 			const idSet = new Set(ids);
 
 			// 1. Remove from all possible source caches and collect the rows
@@ -63,7 +64,7 @@ export function useBulkUpdateOrderStageMutation() {
 			if (movedRows.length > 0) {
 				queryClient.setQueryData(
 					["orders", stage],
-					(old: any[] | undefined) => {
+					(old: PendingRow[] | undefined) => {
 						const base = old || [];
 						return [...movedRows, ...base];
 					},
@@ -113,14 +114,17 @@ export function useSaveOrderMutation() {
 
 			// Snapshot the previous value
 			// biome-ignore lint/suspicious/noExplicitAny: Query data
-			const previousOrders = queryClient.getQueryData<any[]>(["orders", stage]);
+			const previousOrders = queryClient.getQueryData<PendingRow[]>([
+				"orders",
+				stage,
+			]);
 
 			// Optimistically update to the new value
 			// Optimistically update to the new value
 			// Optimistically update to the new value
 			if (previousOrders) {
 				// biome-ignore lint/suspicious/noExplicitAny: Query data
-				queryClient.setQueryData<any[]>(["orders", stage], (old) => {
+				queryClient.setQueryData<PendingRow[]>(["orders", stage], (old) => {
 					if (!old) return [];
 					return old.map((order) =>
 						order.id === id ? { ...order, ...updates } : order,
@@ -153,9 +157,7 @@ export function useSaveOrderMutation() {
 			// Do NOT add delays here; the reactivity is handled by manual cache updates.
 			queryClient.invalidateQueries({ queryKey: ["orders", variables.stage] });
 		},
-		onSuccess: (_, variables) => {
-			void variables;
-		},
+		onSuccess: () => {},
 	});
 }
 
@@ -164,10 +166,9 @@ export function useDeleteOrderMutation() {
 
 	return useMutation({
 		mutationFn: (id: string) => orderService.deleteOrder(id),
-		onSuccess: (_, id) => {
+		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["orders"] });
 			toast.success("Order deleted");
-			void id;
 		},
 	});
 }

@@ -1,6 +1,5 @@
 import type { StateCreator } from "zustand";
 import { generateId } from "@/lib/utils";
-import type { PendingRow } from "@/types";
 import type { CombinedStore, UIActions, UIState } from "../types";
 
 const defaultPartStatuses = [
@@ -98,7 +97,7 @@ export const createUISlice: StateCreator<
 	},
 
 	addTodo: (text) => {
-		get().pushUndo();
+		// pushUndo removed with the feature
 		set((state) => ({
 			todos: [
 				...state.todos,
@@ -113,7 +112,7 @@ export const createUISlice: StateCreator<
 	},
 
 	toggleTodo: (id) => {
-		get().pushUndo();
+		// pushUndo removed with the feature
 		set((state) => ({
 			todos: state.todos.map((todo) =>
 				todo.id === id ? { ...todo, completed: !todo.completed } : todo,
@@ -122,14 +121,14 @@ export const createUISlice: StateCreator<
 	},
 
 	deleteTodo: (id) => {
-		get().pushUndo();
+		// pushUndo removed with the feature
 		set((state) => ({
 			todos: state.todos.filter((todo) => todo.id !== id),
 		}));
 	},
 
 	addNote: (content, color) => {
-		get().pushUndo();
+		// pushUndo removed with the feature
 		set((state) => ({
 			notes: [
 				...state.notes,
@@ -144,7 +143,7 @@ export const createUISlice: StateCreator<
 	},
 
 	updateNote: (id, content) => {
-		get().pushUndo();
+		// pushUndo removed with the feature
 		set((state) => ({
 			notes: state.notes.map((note) =>
 				note.id === id ? { ...note, content } : note,
@@ -153,7 +152,7 @@ export const createUISlice: StateCreator<
 	},
 
 	deleteNote: (id) => {
-		get().pushUndo();
+		// pushUndo removed with the feature
 		set((state) => ({
 			notes: state.notes.filter((note) => note.id !== id),
 		}));
@@ -206,8 +205,8 @@ export const createUISlice: StateCreator<
 		const statusToUpdate = state.partStatuses.find((s) => s.id === id);
 		if (!statusToUpdate) return;
 
-		const oldLabel = statusToUpdate.label;
-		const newLabel = updates.label;
+		const _oldLabel = statusToUpdate.label;
+		const _newLabel = updates.label;
 
 		set((state) => ({
 			partStatuses: state.partStatuses.map((s) =>
@@ -215,21 +214,8 @@ export const createUISlice: StateCreator<
 			),
 		}));
 
-		// If label changed, bulk update all rows
-		if (newLabel && newLabel !== oldLabel) {
-			const updateRows = (rows: PendingRow[]) =>
-				rows.map((row) =>
-					row.partStatus === oldLabel ? { ...row, partStatus: newLabel } : row,
-				);
-
-			set((state) => ({
-				ordersRowData: updateRows(state.ordersRowData),
-				rowData: updateRows(state.rowData),
-				callRowData: updateRows(state.callRowData),
-				archiveRowData: updateRows(state.archiveRowData),
-				bookingRowData: updateRows(state.bookingRowData),
-			}));
-		}
+		// If label changed, bulk update of server data rows in Zustand removed
+		// Server data is now managed solely by React Query cache.
 	},
 
 	removePartStatusDef: (id) => {

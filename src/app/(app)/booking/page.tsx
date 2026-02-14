@@ -3,16 +3,14 @@
 import type { GridApi } from "ag-grid-community";
 import {
 	Archive,
-	Calendar,
 	CheckCircle,
 	Download,
 	Filter,
-	History as HistoryIcon,
 	RotateCcw,
 	Tag,
 	Trash2,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
@@ -23,7 +21,6 @@ import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { RowModals } from "@/components/shared/RowModals";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -65,15 +62,6 @@ export default function BookingPage() {
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
-
-	const checkNotifications = useAppStore((state) => state.checkNotifications);
-
-	useEffect(() => {
-		if (bookingRowData) {
-			checkNotifications();
-		}
-	}, [bookingRowData, checkNotifications]);
-
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
 	const handleUpdateOrder = useCallback(
@@ -101,16 +89,8 @@ export default function BookingPage() {
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
 	const [isRebookingModalOpen, setIsRebookingModalOpen] = useState(false);
-	const [rebookingSearchTerm, setRebookingSearchTerm] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
-
-	const _handleSelectionChanged = useMemo(
-		() => (rows: PendingRow[]) => {
-			setSelectedRows(rows);
-		},
-		[],
-	);
 
 	const {
 		activeModal,
@@ -433,7 +413,6 @@ export default function BookingPage() {
 					open={isRebookingModalOpen}
 					onOpenChange={setIsRebookingModalOpen}
 					selectedRows={selectedRows}
-					initialSearchTerm={rebookingSearchTerm}
 					onConfirm={handleConfirmRebooking}
 				/>
 

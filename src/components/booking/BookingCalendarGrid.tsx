@@ -12,7 +12,7 @@ import {
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { BookingStatus, PendingRow } from "@/types";
+import type { PendingRow } from "@/types";
 
 interface BookingCalendarGridProps {
 	currentMonth: Date;
@@ -88,7 +88,7 @@ export const BookingCalendarGrid = ({
 			<div className="grid grid-cols-7 gap-3">
 				{calendarDays.map((day) => {
 					const dateKey = format(day, "yyyy-MM-dd");
-					const hasBookings = !!bookingsByDateMap[dateKey];
+					const _hasBookings = !!bookingsByDateMap[dateKey];
 					const isSearchMatch = searchQuery && searchMatchDates.has(dateKey);
 					const isSelected = isSameDay(day, selectedDate);
 					const isCurrentMonth = isSameMonth(day, monthStart);
@@ -97,6 +97,14 @@ export const BookingCalendarGrid = ({
 
 					const dayBookings = [...(bookingsByDateMap[dateKey] || [])];
 
+					let selectionClass = "hover:bg-white/5";
+					if (isSelected && searchQuery) {
+						selectionClass =
+							"ring-2 ring-emerald-500 text-emerald-400 bg-emerald-500/10";
+					} else if (isSelected) {
+						selectionClass = "ring-1 ring-white/50 text-white bg-white/10";
+					}
+
 					return (
 						<button
 							type="button"
@@ -104,14 +112,10 @@ export const BookingCalendarGrid = ({
 							onClick={() => onDateSelect(day)}
 							className={cn(
 								"relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-300 group",
-								!isCurrentMonth
-									? "text-gray-800"
-									: "text-gray-400 hover:text-white",
-								isSelected
-									? searchQuery
-										? "ring-2 ring-emerald-500 text-emerald-400 bg-emerald-500/10"
-										: "ring-1 ring-white/50 text-white bg-white/10"
-									: "hover:bg-white/5",
+								isCurrentMonth
+									? "text-gray-400 hover:text-white"
+									: "text-gray-800",
+								selectionClass,
 								isSearchMatch && !isSelected && "text-emerald-500 font-bold",
 								isFaded && !isSelected && "opacity-20 pointer-events-none",
 								isActiveCustomerDate &&

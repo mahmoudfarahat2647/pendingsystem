@@ -3,7 +3,6 @@
 import type { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { gridTheme } from "@/lib/ag-grid-setup";
-import type { PendingRow } from "@/types";
 
 interface SearchResultsGridProps {
 	rowData: any[];

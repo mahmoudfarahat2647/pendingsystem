@@ -1,11 +1,5 @@
-import { ChevronRight, MessageSquare, X } from "lucide-react";
+import { MessageSquare, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import type { BookingStatus, PendingRow } from "@/types";
 
 interface BookingSidebarHeaderProps {

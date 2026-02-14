@@ -3,7 +3,6 @@ import type { ApiResponse } from "@/lib/apiResponse";
 import { supabase } from "@/lib/supabase";
 import type {
 	CombinedStore,
-	ReportSettings,
 	ReportSettingsActions,
 	ReportSettingsState,
 } from "../types";
@@ -129,7 +128,7 @@ export const createReportSettingsSlice: StateCreator<
 					if (!errorData.success) {
 						errorMessage = errorData.error.message;
 					}
-				} catch (e) {
+				} catch (_e) {
 					// response wasn't JSON (e.g. 404 HTML or 500 crash)
 					errorMessage = `Server Error: ${response.status} ${response.statusText}`;
 				}

@@ -63,7 +63,13 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 		if (typeof value !== "string") {
 			displayValue = String(value || "");
 		}
-	} catch (_error) {
+	} catch (error) {
+		if (process.env.NODE_ENV === "development") {
+			console.error(
+				"[PartStatusRenderer] Failed to resolve status color",
+				error,
+			);
+		}
 		colorClass = "bg-gray-400";
 		displayValue = String(value || "Unknown");
 	}

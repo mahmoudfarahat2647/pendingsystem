@@ -63,6 +63,25 @@ describe("PendingRowSchema - Array Field Handling", () => {
 		}
 	});
 
+	it("should allow empty string for model", () => {
+		const dataWithEmptyModel = {
+			id: "test-id",
+			customerName: "John Doe",
+			mobile: "1234567890",
+			model: "", // Empty string
+			vin: "VIN123",
+			company: "Test Company",
+			parts: [],
+			stage: "orders",
+		};
+
+		const result = PendingRowSchema.safeParse(dataWithEmptyModel);
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.model).toBe("");
+		}
+	});
+
 	it("should handle mobile as array and convert to string", () => {
 		const dataWithArrayMobile = {
 			id: "test-id",
@@ -140,7 +159,8 @@ describe("PendingRowSchema - Array Field Handling", () => {
 			const fieldErrors = result.error.flatten().fieldErrors;
 			expect(fieldErrors.customerName).toBeDefined();
 			expect(fieldErrors.mobile).toBeDefined();
-			expect(fieldErrors.model).toBeDefined();
+			// model is no longer in fieldErrors because it succeeds and returns ""
+			expect(fieldErrors.model).toBeUndefined();
 		}
 	});
 
@@ -162,7 +182,8 @@ describe("PendingRowSchema - Array Field Handling", () => {
 			const fieldErrors = result.error.flatten().fieldErrors;
 			expect(fieldErrors.customerName).toBeDefined();
 			expect(fieldErrors.mobile).toBeDefined();
-			expect(fieldErrors.model).toBeDefined();
+			// model is no longer in fieldErrors because it succeeds and returns ""
+			expect(fieldErrors.model).toBeUndefined();
 		}
 	});
 

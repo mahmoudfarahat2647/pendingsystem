@@ -18,7 +18,7 @@ interface AppShellProps {
  *
  * @param children - Page content
  */
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children }: Readonly<AppShellProps>) {
 	return (
 		<div
 			className="flex h-screen overflow-hidden bg-background"

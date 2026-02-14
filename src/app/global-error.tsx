@@ -12,10 +12,10 @@ const inter = Inter({
 export default function GlobalError({
 	error,
 	reset,
-}: {
+}: Readonly<{
 	error: Error & { digest?: string };
 	reset: () => void;
-}) {
+}>) {
 	useEffect(() => {
 		console.error("Global Error:", error);
 	}, [error]);
@@ -60,7 +60,7 @@ export default function GlobalError({
 
 						<div className="flex flex-col gap-3">
 							<button
-								onClick={() => window.location.reload()}
+								onClick={() => globalThis.location.reload()}
 								className="w-full px-4 py-3 bg-renault-yellow hover:bg-yellow-500 text-black font-bold rounded-xl transition-all"
 							>
 								{isChunkError ? "Refresh Page" : "Reload System"}

@@ -11,12 +11,12 @@ import {
 	Package,
 	Pencil,
 	Plus,
-	Timer,
 	User,
 	X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { EditableSelect } from "@/components/shared/EditableSelect";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,6 +68,222 @@ interface OrderFormModalProps {
 	onSubmit: (formData: FormData, parts: PartEntry[]) => void;
 }
 
+interface ValidationRow {
+	vin?: string | null;
+	partNumber?: string | null;
+	id?: string;
+	description?: string;
+}
+
+interface ValidationList {
+	name: string;
+	rows: ValidationRow[];
+}
+
+interface PartValidationWarning {
+	type: "mismatch" | "duplicate";
+	value: string;
+	location?: string;
+}
+
+type FormErrors = Partial<Record<keyof FormData, string>>;
+type PartValidationWarnings = Record<string, PartValidationWarning>;
+
+const createDefaultFormData = (): FormData => ({
+	customerName: "",
+	vin: "",
+	mobile: "",
+	cntrRdg: "",
+	model: "",
+	repairSystem: "Mechanical",
+	startWarranty: new Date().toISOString().split("T")[0],
+	requester: "",
+	sabNumber: "",
+	acceptedBy: "",
+	company: "pendingsystem",
+});
+
+const createEmptyPart = (): PartEntry => ({
+	id: generateId(),
+	partNumber: "",
+	description: "",
+});
+
+const createInitialFormData = (row: PendingRow): FormData => ({
+	customerName: row.customerName || "",
+	vin: row.vin || "",
+	mobile: row.mobile || "",
+	cntrRdg:
+		row.cntrRdg !== null && row.cntrRdg !== undefined
+			? String(row.cntrRdg)
+			: "",
+	model: row.model || "",
+	repairSystem: row.repairSystem || "Mechanical",
+	startWarranty: row.startWarranty || new Date().toISOString().split("T")[0],
+	requester: row.requester || "",
+	sabNumber: row.sabNumber || "",
+	acceptedBy: row.acceptedBy || "",
+	company: row.company || "pendingsystem",
+});
+
+const createInitialParts = (rows: PendingRow[]): PartEntry[] =>
+	rows.map((row) => ({
+		id: generateId(),
+		partNumber: row.partNumber || "",
+		description: row.description || "",
+		rowId: row.id,
+	}));
+
+const calculateRemainingBeastModeTime = (triggerTime?: number): number => {
+	if (!triggerTime) return 0;
+	const elapsed = Math.floor((Date.now() - triggerTime) / 1000);
+	return elapsed < 30 ? 30 - elapsed : 0;
+};
+
+const getBeastModeFieldErrors = (data: FormData): Set<string> => {
+	const result = BeastModeSchema.safeParse(data);
+	if (result.success) return new Set();
+	const { fieldErrors } = z.flattenError(result.error);
+	return new Set(Object.keys(fieldErrors));
+};
+
+const mapSchemaFieldErrors = (
+	fieldErrors: Record<string, string[] | undefined>,
+): FormErrors => {
+	const newErrors: FormErrors = {};
+	for (const [key, messages] of Object.entries(fieldErrors)) {
+		newErrors[key as keyof FormData] = messages?.[0] || "";
+	}
+	return newErrors;
+};
+
+const normalizeDescription = (value?: string | null): string =>
+	(value || "").trim().toLowerCase();
+
+const buildPartValidationWarnings = (
+	parts: PartEntry[],
+	vin: string,
+	lists: ValidationList[],
+): PartValidationWarnings => {
+	const warnings: PartValidationWarnings = {};
+	const upperVin = vin.toUpperCase();
+
+	for (const part of parts) {
+		if (!part.partNumber || !vin) continue;
+		const upperPart = part.partNumber.toUpperCase();
+
+		for (const list of lists) {
+			const hasDuplicate = list.rows.some(
+				(row) =>
+					row.vin?.toUpperCase() === upperVin &&
+					row.partNumber?.toUpperCase() === upperPart &&
+					row.id !== part.rowId,
+			);
+			if (hasDuplicate) {
+				warnings[part.id] = {
+					type: "duplicate",
+					value: "The order already exists",
+					location: list.name,
+				};
+				break;
+			}
+		}
+		if (warnings[part.id]) continue;
+
+		for (const list of lists) {
+			const existingRow = list.rows.find(
+				(row) => row.partNumber?.toUpperCase() === upperPart,
+			);
+			if (!existingRow) continue;
+
+			if (
+				normalizeDescription(existingRow.description) !==
+				normalizeDescription(part.description)
+			) {
+				warnings[part.id] = {
+					type: "mismatch",
+					value: existingRow.description || "",
+				};
+				break;
+			}
+		}
+	}
+
+	return warnings;
+};
+
+const parsePersonalBulkFormData = (
+	bulkText: string,
+	currentFormData: FormData,
+): FormData | null => {
+	if (!bulkText.trim()) return null;
+	const rowParts = bulkText.split(/\t|\s{4,}/).filter(Boolean);
+	if (rowParts.length === 0) return null;
+
+	return {
+		...currentFormData,
+		customerName: rowParts[0]?.trim() || currentFormData.customerName,
+		vin: (rowParts[1]?.trim() || currentFormData.vin).toUpperCase(),
+		mobile: rowParts[2]?.trim() || currentFormData.mobile,
+		cntrRdg: rowParts[3]?.trim() || currentFormData.cntrRdg,
+		sabNumber: rowParts[4]?.trim() || currentFormData.sabNumber,
+		acceptedBy: rowParts[5]?.trim() || currentFormData.acceptedBy,
+	};
+};
+
+const parseBulkParts = (bulkText: string): PartEntry[] => {
+	if (!bulkText.trim()) return [];
+	const lines = bulkText.split("\n");
+
+	return lines
+		.map((line) => {
+			const rowParts = line.split(/\t|\s{4,}/).filter(Boolean);
+			if (rowParts.length === 0) return null;
+			return {
+				id: generateId(),
+				partNumber: rowParts[0]?.trim() || "",
+				description: rowParts.slice(1).join(" ").trim() || "",
+			};
+		})
+		.filter(
+			(part): part is PartEntry =>
+				part !== null && (part.partNumber !== "" || part.description !== ""),
+		);
+};
+
+const shouldReplaceInitialEmptyPart = (parts: PartEntry[]): boolean =>
+	parts.length === 1 && !parts[0].partNumber && !parts[0].description;
+
+const getDialogTitleText = (
+	isEditMode: boolean,
+	isMultiSelection: boolean,
+	selectedCount: number,
+): string => {
+	if (!isEditMode) return "New Logistics Request";
+	if (isMultiSelection) return `Bulk Edit (${selectedCount})`;
+	return "Modify Order";
+};
+
+const getValidationSummaryText = (warnings: PartValidationWarnings): string => {
+	const warningValues = Object.values(warnings);
+	if (warningValues.length === 0) return "";
+	if (warningValues.length === 1) {
+		const [warning] = warningValues;
+		if (warning.type === "duplicate") return "The order already exists";
+		return `(name is "${warning.value}")`;
+	}
+	return `(${warningValues.length} Mismatched Names)`;
+};
+
+const getSubmitButtonText = (
+	isEditMode: boolean,
+	isMultiSelection: boolean,
+): string => {
+	if (!isEditMode) return "Publish";
+	if (isMultiSelection) return "Commit Batch";
+	return "Commit";
+};
+
 export const OrderFormModal = ({
 	open,
 	onOpenChange,
@@ -75,11 +291,12 @@ export const OrderFormModal = ({
 	selectedRows,
 	onSubmit,
 }: OrderFormModalProps) => {
-	const rowData = useAppStore((state) => state.rowData);
-	const ordersRowData = useAppStore((state) => state.ordersRowData);
-	const callRowData = useAppStore((state) => state.callRowData);
-	const bookingRowData = useAppStore((state) => state.bookingRowData);
-	const archiveRowData = useAppStore((state) => state.archiveRowData);
+	// Server data access from Zustand removed - DUPLICATE VALIDATION DISABLED IN Modal
+	const rowData: ValidationRow[] = [];
+	const ordersRowData: ValidationRow[] = [];
+	const callRowData: ValidationRow[] = [];
+	const bookingRowData: ValidationRow[] = [];
+	const archiveRowData: ValidationRow[] = [];
 	const models = useAppStore((state) => state.models);
 	const addModel = useAppStore((state) => state.addModel);
 	const removeModel = useAppStore((state) => state.removeModel);
@@ -93,23 +310,8 @@ export const OrderFormModal = ({
 	const [isPersonalBulkMode, setIsPersonalBulkMode] = useState(false);
 	const [personalBulkText, setPersonalBulkText] = useState("");
 
-	const [formData, setFormData] = useState<FormData>({
-		customerName: "",
-		vin: "",
-		mobile: "",
-		cntrRdg: "",
-		model: "",
-		repairSystem: "Mechanical",
-		startWarranty: new Date().toISOString().split("T")[0],
-		requester: "",
-		sabNumber: "",
-		acceptedBy: "",
-		company: "pendingsystem",
-	});
-
-	const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
-		{},
-	);
+	const [formData, setFormData] = useState<FormData>(createDefaultFormData());
+	const [errors, setErrors] = useState<FormErrors>({});
 	const [validationMode, setValidationMode] = useState<"easy" | "beast">(
 		"easy",
 	);
@@ -118,101 +320,46 @@ export const OrderFormModal = ({
 		new Set(),
 	);
 
-	const [parts, setParts] = useState<PartEntry[]>([
-		{ id: generateId(), partNumber: "", description: "" },
-	]);
+	const [parts, setParts] = useState<PartEntry[]>([createEmptyPart()]);
 	const descriptionRefs = useRef<(HTMLInputElement | null)[]>([]);
 
 	const isMultiSelection = selectedRows.length > 1;
 
 	useEffect(() => {
-		if (open) {
-			let initialFormData: FormData;
-			if (isEditMode && selectedRows.length > 0) {
-				const first = selectedRows[0];
-				initialFormData = {
-					customerName: first.customerName || "",
-					vin: first.vin || "",
-					mobile: first.mobile || "",
-					cntrRdg:
-						first.cntrRdg !== null && first.cntrRdg !== undefined
-							? String(first.cntrRdg)
-							: "",
-					model: first.model || "",
-					repairSystem: first.repairSystem || "Mechanical",
-					startWarranty:
-						first.startWarranty || new Date().toISOString().split("T")[0],
-					requester: first.requester || "",
-					sabNumber: first.sabNumber || "",
-					acceptedBy: first.acceptedBy || "",
-					company: first.company || "pendingsystem",
-				};
+		if (!open) return;
 
-				const initialParts = selectedRows.map((row) => ({
-					id: generateId(),
-					partNumber: row.partNumber || "",
-					description: row.description || "",
-					rowId: row.id,
-				}));
-				setParts(initialParts);
-				setFormData(initialFormData);
-
-				// CRITICAL: BEAST MODE SYNC - TIMER PERSISTENCE
-				// 1. Check for Active Global Timer (from Commit failure)
-				const triggerTime = beastModeTriggers[first.id];
-				const now = Date.now();
-				let remainingGlobalTime = 0;
-
-				if (triggerTime) {
-					const elapsed = Math.floor((now - triggerTime) / 1000);
-					if (elapsed < 30) {
-						remainingGlobalTime = 30 - elapsed;
-					}
-				}
-
-				if (remainingGlobalTime > 0) {
-					// Open in Beast Mode with remaining time
-					setValidationMode("beast");
-					setBeastModeTimer(remainingGlobalTime);
-					// Re-validate to show errors immediately
-					const result = BeastModeSchema.safeParse(initialFormData);
-					if (!result.success) {
-						const fieldErrors = new Set(
-							Object.keys(result.error.flatten().fieldErrors),
-						);
-						setBeastModeErrors(fieldErrors);
-					}
-				} else {
-					// 2. Auto-trigger Beast Mode ONLY if explicit validation fails AND no timer expired
-					// (Actually user requested: "if >30s, just see easy mode")
-					setValidationMode("easy");
-					setBeastModeErrors(new Set());
-					setBeastModeTimer(null);
-				}
-			} else {
-				setFormData({
-					customerName: "",
-					vin: "",
-					mobile: "",
-					cntrRdg: "",
-					model: "",
-					repairSystem: "Mechanical",
-					startWarranty: new Date().toISOString().split("T")[0],
-					requester: "",
-					sabNumber: "",
-					acceptedBy: "",
-					company: "pendingsystem",
-				});
-				setParts([{ id: generateId(), partNumber: "", description: "" }]);
-				setIsBulkMode(false);
-				setBulkText("");
-				setIsPersonalBulkMode(false);
-				setPersonalBulkText("");
-				setValidationMode("easy");
-				setBeastModeErrors(new Set());
-				setBeastModeTimer(null);
-			}
+		if (!isEditMode || selectedRows.length === 0) {
+			setFormData(createDefaultFormData());
+			setParts([createEmptyPart()]);
+			setIsBulkMode(false);
+			setBulkText("");
+			setIsPersonalBulkMode(false);
+			setPersonalBulkText("");
+			setValidationMode("easy");
+			setBeastModeErrors(new Set());
+			setBeastModeTimer(null);
+			return;
 		}
+
+		const firstRow = selectedRows[0];
+		const initialFormData = createInitialFormData(firstRow);
+		const remainingGlobalTime = calculateRemainingBeastModeTime(
+			beastModeTriggers[firstRow.id],
+		);
+
+		setFormData(initialFormData);
+		setParts(createInitialParts(selectedRows));
+
+		if (remainingGlobalTime > 0) {
+			setValidationMode("beast");
+			setBeastModeTimer(remainingGlobalTime);
+			setBeastModeErrors(getBeastModeFieldErrors(initialFormData));
+			return;
+		}
+
+		setValidationMode("easy");
+		setBeastModeErrors(new Set());
+		setBeastModeTimer(null);
 	}, [open, isEditMode, selectedRows]);
 
 	useEffect(() => {
@@ -243,52 +390,29 @@ export const OrderFormModal = ({
 	}, [validationMode]);
 
 	const handlePersonalBulkImport = () => {
-		if (!personalBulkText.trim()) return;
-		const rowParts = personalBulkText.split(/\t|\s{4,}/).filter(Boolean);
-		if (rowParts.length > 0) {
-			setFormData((prev) => ({
-				...prev,
-				customerName: rowParts[0]?.trim() || prev.customerName,
-				vin: (rowParts[1]?.trim() || prev.vin).toUpperCase(),
-				mobile: rowParts[2]?.trim() || prev.mobile,
-				cntrRdg: rowParts[3]?.trim() || prev.cntrRdg,
-				sabNumber: rowParts[4]?.trim() || prev.sabNumber,
-				acceptedBy: rowParts[5]?.trim() || prev.acceptedBy,
-			}));
-			setPersonalBulkText("");
-			setIsPersonalBulkMode(false);
-			toast.success("Identity fields updated");
-		}
+		const importedFormData = parsePersonalBulkFormData(
+			personalBulkText,
+			formData,
+		);
+		if (!importedFormData) return;
+		setFormData(importedFormData);
+		setPersonalBulkText("");
+		setIsPersonalBulkMode(false);
+		toast.success("Identity fields updated");
 	};
 
 	const handleBulkImport = () => {
-		if (!bulkText.trim()) return;
-		const lines = bulkText.split("\n");
-		const newParts = lines
-			.map((line) => {
-				const rowParts = line.split(/\t|\s{4,}/).filter(Boolean);
-				if (rowParts.length === 0) return null;
-				return {
-					id: generateId(),
-					partNumber: rowParts[0]?.trim() || "",
-					description: rowParts.slice(1).join(" ").trim() || "",
-				};
-			})
-			.filter(
-				(p): p is PartEntry =>
-					p !== null && (p.partNumber !== "" || p.description !== ""),
-			);
+		const importedParts = parseBulkParts(bulkText);
+		if (importedParts.length === 0) return;
 
-		if (newParts.length > 0) {
-			if (parts.length === 1 && !parts[0].partNumber && !parts[0].description) {
-				setParts(newParts);
-			} else {
-				setParts([...parts, ...newParts]);
-			}
-			setBulkText("");
-			setIsBulkMode(false);
-			toast.success(`${newParts.length} parts imported`);
-		}
+		setParts(
+			shouldReplaceInitialEmptyPart(parts)
+				? importedParts
+				: [...parts, ...importedParts],
+		);
+		setBulkText("");
+		setIsBulkMode(false);
+		toast.success(`${importedParts.length} parts imported`);
 	};
 
 	const handleAddPartRow = () => {
@@ -309,72 +433,25 @@ export const OrderFormModal = ({
 
 	const isHighMileage = (parseInt(formData.cntrRdg, 10) || 0) >= 100000;
 
-	const partValidationWarnings = useMemo(() => {
-		const warnings: Record<
-			string,
-			{ type: "mismatch" | "duplicate"; value: string; location?: string }
-		> = {};
-		parts.forEach((part) => {
-			if (!part.partNumber || !formData.vin) return;
-
-			const upperVin = formData.vin.toUpperCase();
-			const upperPart = part.partNumber.toUpperCase();
-
-			const lists = [
+	const partValidationWarnings = useMemo(
+		() =>
+			buildPartValidationWarnings(parts, formData.vin, [
 				{ name: "Main Sheet", rows: rowData },
 				{ name: "Orders", rows: ordersRowData },
 				{ name: "Call List", rows: callRowData },
 				{ name: "Booking", rows: bookingRowData },
 				{ name: "Archive", rows: archiveRowData },
-			];
-
-			// 1. Check for duplicates (VIN + PartNumber)
-			for (const list of lists) {
-				if (
-					list.rows.some(
-						(r) =>
-							r.vin?.toUpperCase() === upperVin &&
-							r.partNumber?.toUpperCase() === upperPart &&
-							r.id !== part.rowId, // Exclude current row if editing
-					)
-				) {
-					warnings[part.id] = {
-						type: "duplicate",
-						value: `The order already exists`,
-						location: list.name,
-					};
-					return;
-				}
-			}
-
-			// 2. Check for description mismatch (PartNumber exists with different description)
-			for (const list of lists) {
-				const existingRow = list.rows.find(
-					(r) => r.partNumber?.toUpperCase() === upperPart,
-				);
-				if (
-					existingRow &&
-					existingRow.description.trim().toLowerCase() !==
-						part.description.trim().toLowerCase()
-				) {
-					warnings[part.id] = {
-						type: "mismatch",
-						value: existingRow.description,
-					};
-					return;
-				}
-			}
-		});
-		return warnings;
-	}, [
-		parts,
-		rowData,
-		ordersRowData,
-		callRowData,
-		bookingRowData,
-		archiveRowData,
-		formData.vin,
-	]);
+			]),
+		[
+			parts,
+			rowData,
+			ordersRowData,
+			callRowData,
+			bookingRowData,
+			archiveRowData,
+			formData.vin,
+		],
+	);
 
 	const hasValidationErrors = Object.keys(partValidationWarnings).length > 0;
 
@@ -388,13 +465,8 @@ export const OrderFormModal = ({
 	const validateForm = () => {
 		const result = OrderFormSchema.safeParse(formData);
 		if (!result.success) {
-			const fieldErrors = result.error.flatten().fieldErrors;
-			const newErrors: Partial<Record<keyof FormData, string>> = {};
-			for (const [key, messages] of Object.entries(fieldErrors)) {
-				// Type assertion needed because Object.entries returns string keys
-				newErrors[key as keyof FormData] = messages?.[0] || "";
-			}
-			setErrors(newErrors);
+			const { fieldErrors } = z.flattenError(result.error);
+			setErrors(mapSchemaFieldErrors(fieldErrors));
 			return false;
 		}
 		setErrors({});
@@ -415,12 +487,8 @@ export const OrderFormModal = ({
 				setBeastModeTimer(30);
 
 				// Collect missing fields for red highlights
-				const fieldErrors = result.error.flatten().fieldErrors;
-				const missingFields = new Set<string>();
-				for (const key of Object.keys(fieldErrors)) {
-					missingFields.add(key);
-				}
-				setBeastModeErrors(missingFields);
+				const { fieldErrors } = z.flattenError(result.error);
+				setBeastModeErrors(new Set(Object.keys(fieldErrors)));
 
 				// Show grouped toast (prevent duplicate toasts with fixed ID)
 				toast.error("Missing Info: Please complete the highlighted fields.", {
@@ -447,6 +515,16 @@ export const OrderFormModal = ({
 
 		onSubmit(formData, parts);
 	};
+
+	const dialogTitleText = getDialogTitleText(
+		isEditMode,
+		isMultiSelection,
+		selectedRows.length,
+	);
+	const validationSummaryText = getValidationSummaryText(
+		partValidationWarnings,
+	);
+	const submitButtonText = getSubmitButtonText(isEditMode, isMultiSelection);
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -481,11 +559,7 @@ export const OrderFormModal = ({
 							</div>
 							<div>
 								<DialogTitle className="text-lg font-bold tracking-tight text-white leading-none">
-									{isEditMode
-										? isMultiSelection
-											? `Bulk Edit (${selectedRows.length})`
-											: "Modify Order"
-										: "New Logistics Request"}
+									{dialogTitleText}
 								</DialogTitle>
 								<DialogDescription className="text-slate-500 text-[10px] mt-0.5 uppercase tracking-wider font-bold">
 									{isMultiSelection
@@ -1232,12 +1306,7 @@ export const OrderFormModal = ({
 									>
 										<AlertCircle className="h-3.5 w-3.5 animate-pulse" />
 										<span className="text-[10px] font-black uppercase tracking-wider">
-											{Object.values(partValidationWarnings).length === 1
-												? Object.values(partValidationWarnings)[0].type ===
-													"duplicate"
-													? "The order already exists"
-													: `(name is "${Object.values(partValidationWarnings)[0].value}")`
-												: `(${Object.values(partValidationWarnings).length} Mismatched Names)`}
+											{validationSummaryText}
 										</span>
 									</motion.div>
 								)}
@@ -1251,11 +1320,7 @@ export const OrderFormModal = ({
 								)}
 								onClick={handleLocalSubmit}
 							>
-								{isEditMode
-									? isMultiSelection
-										? "Commit Batch"
-										: "Commit"
-									: "Publish"}
+								{submitButtonText}
 								<CheckCircle2 className="ml-2 h-3 w-3" />
 							</Button>
 						</div>

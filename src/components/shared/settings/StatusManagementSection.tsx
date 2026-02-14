@@ -215,9 +215,9 @@ export const StatusManagementSection = ({
 														disabled={isLocked || !isDeletable}
 														className={cn(
 															"h-9 w-9 rounded-xl transition-all",
-															!isDeletable
-																? "text-gray-600 cursor-not-allowed"
-																: "text-gray-500 hover:text-red-400 hover:bg-red-400/10",
+															isDeletable
+																? "text-gray-500 hover:text-red-400 hover:bg-red-400/10"
+																: "text-gray-600 cursor-not-allowed",
 														)}
 													>
 														<Trash2 className="h-4 w-4" />
@@ -228,7 +228,7 @@ export const StatusManagementSection = ({
 												<TooltipContent>
 													<p>
 														Cannot delete: Currently used by {usageCount} item
-														{usageCount !== 1 ? "s" : ""}
+														{usageCount === 1 ? "" : "s"}
 													</p>
 												</TooltipContent>
 											)}

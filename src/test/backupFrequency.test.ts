@@ -19,10 +19,10 @@ function shouldRunBackup(
 		return true;
 	} else if (frequency.startsWith("Weekly-")) {
 		const parts = frequency.split("-");
-		const selectedDayIndex = parseInt(parts[1]);
+		const selectedDayIndex = Number.parseInt(parts[1], 10);
 
 		if (
-			isNaN(selectedDayIndex) ||
+			Number.isNaN(selectedDayIndex) ||
 			selectedDayIndex < 0 ||
 			selectedDayIndex > 6
 		) {

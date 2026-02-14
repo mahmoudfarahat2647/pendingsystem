@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ManualActionCard } from "../components/reports/ManualActionCard";
@@ -19,7 +19,7 @@ vi.mock("sonner", () => ({
 
 // Mock date-fns
 vi.mock("date-fns", () => ({
-	format: vi.fn((date, formatStr) => "January 1, 2024 at 12:00 PM"),
+	format: vi.fn((_date, _formatStr) => "January 1, 2024 at 12:00 PM"),
 }));
 
 // Mock UI components

@@ -1,10 +1,22 @@
 import type { PostgrestError } from "@supabase/supabase-js";
+import { z } from "zod";
 import { processBatch } from "@/lib/batchUtils";
 import { supabase } from "@/lib/supabase";
 import { PendingRowSchema } from "@/schemas/order.schema";
 import type { PendingRow } from "@/types";
 
 export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
+const UUID_LENGTH = 36;
+type Metadata = Record<string, unknown>;
+type SupabaseOrderPayload = {
+	order_number: unknown;
+	customer_name: unknown;
+	customer_phone: unknown;
+	vin: unknown;
+	company: unknown;
+	stage: OrderStage;
+	metadata: Metadata;
+};
 
 class ServiceError extends Error {
 	code: string;
@@ -22,6 +34,119 @@ function handleSupabaseError(error: PostgrestError): never {
 		hint: error.hint,
 		details: error.details,
 	});
+}
+
+async function loadCurrentMetadata(id?: string): Promise<Metadata> {
+	if (id?.length !== UUID_LENGTH) {
+		return {};
+	}
+
+	const { data: existing } = await supabase
+		.from("orders")
+		.select("metadata")
+		.eq("id", id)
+		.maybeSingle();
+
+	return (existing?.metadata as Metadata) || {};
+}
+
+function buildMetadataToStore(
+	currentMetadata: Metadata,
+	rest: Partial<PendingRow>,
+): Metadata {
+	const metadataToStore = { ...currentMetadata, ...(rest as Metadata) };
+	delete (metadataToStore as Metadata).id;
+	delete (metadataToStore as Metadata).stage;
+	delete (metadataToStore as Metadata).reminder;
+	return metadataToStore;
+}
+
+function buildSupabaseOrderPayload(
+	stage: OrderStage,
+	rest: Partial<PendingRow>,
+	metadataToStore: Metadata,
+): SupabaseOrderPayload {
+	const restRecord = rest as Record<string, unknown>;
+	return {
+		order_number: rest.trackingId || restRecord.order_number || null,
+		customer_name: rest.customerName || restRecord.customer_name,
+		customer_phone: rest.mobile || restRecord.customer_phone,
+		vin: rest.vin,
+		company: rest.company,
+		stage,
+		metadata: metadataToStore,
+	};
+}
+
+async function upsertOrder(
+	id: string | undefined,
+	supabaseOrder: SupabaseOrderPayload,
+): Promise<{ orderId: string | undefined; resultData: unknown }> {
+	if (id?.length === UUID_LENGTH) {
+		const { data, error } = await supabase
+			.from("orders")
+			.update(supabaseOrder)
+			.eq("id", id)
+			.select()
+			.single();
+		if (error) handleSupabaseError(error);
+		return { orderId: id, resultData: data };
+	}
+
+	const { data, error } = await supabase
+		.from("orders")
+		.insert([supabaseOrder])
+		.select()
+		.single();
+	if (error) handleSupabaseError(error);
+	return { orderId: data.id, resultData: data };
+}
+
+function toRemindAt(reminder: NonNullable<PendingRow["reminder"]>): string {
+	if (reminder.date && reminder.time) {
+		// CRITICAL: Timezone Handling
+		// We must construct the Date object using local time components (year, month, day, hours, minutes)
+		// and then convert to UTC via toISOString().
+		// DO NOT simply concatenate strings or use new Date() on a string without timezone,
+		// as that will be interpreted as UTC and shift the time by the timezone offset (e.g. +2h for Egypt).
+		const [year, month, day] = reminder.date.split("-").map(Number);
+		const [hours, minutes] = reminder.time.split(":").map(Number);
+		const localDate = new Date(year, month - 1, day, hours, minutes);
+		return localDate.toISOString();
+	}
+
+	return new Date().toISOString();
+}
+
+async function syncOrderReminder(
+	orderId: string | undefined,
+	reminder: Partial<PendingRow>["reminder"],
+): Promise<void> {
+	if (reminder === undefined || !orderId) {
+		return;
+	}
+
+	// Clear existing pending reminders
+	await supabase
+		.from("order_reminders")
+		.delete()
+		.eq("order_id", orderId)
+		.eq("is_completed", false);
+
+	if (!reminder) {
+		return;
+	}
+
+	const { error: reminderError } = await supabase
+		.from("order_reminders")
+		.insert({
+			order_id: orderId,
+			title: reminder.subject,
+			remind_at: toRemindAt(reminder),
+			is_completed: false,
+		});
+
+	if (reminderError) handleSupabaseError(reminderError);
 }
 
 export const orderService = {
@@ -95,111 +220,26 @@ export const orderService = {
 
 	async saveOrder(order: Partial<PendingRow> & { stage: OrderStage }) {
 		const { id, stage, reminder, ...rest } = order;
-
-		// 1. Prepare Metadata Merge
-		let currentMetadata: Record<string, unknown> = {};
-		if (id && id.length === 36) {
-			const { data: existing } = await supabase
-				.from("orders")
-				.select("metadata")
-				.eq("id", id)
-				.maybeSingle();
-			if (existing) {
-				currentMetadata = (existing.metadata as Record<string, unknown>) || {};
-			}
-		}
+		const currentMetadata = await loadCurrentMetadata(id);
 
 		// Ensure we don't store id, stage, or reminder in the metadata JSON itself
 		// to avoid confusion, though it wouldn't cause a schema error.
-		const metadataToStore = { ...currentMetadata, ...rest };
-		delete (metadataToStore as Record<string, unknown>).id;
-		delete (metadataToStore as Record<string, unknown>).stage;
-		delete (metadataToStore as Record<string, unknown>).reminder;
+		const metadataToStore = buildMetadataToStore(currentMetadata, rest);
 
 		// 2. Map strictly to table columns to avoid "column not found" errors
-		const supabaseOrder = {
-			order_number:
-				rest.trackingId ||
-				(rest as Record<string, unknown>).order_number ||
-				null,
-			customer_name:
-				rest.customerName || (rest as Record<string, unknown>).customer_name,
-			customer_phone:
-				rest.mobile || (rest as Record<string, unknown>).customer_phone,
-			vin: rest.vin,
-			company: rest.company,
-			stage: stage,
-			metadata: metadataToStore,
-		};
-
-		let orderId = id;
-		// biome-ignore lint/suspicious/noExplicitAny: Supabase return type
-		let resultData: any;
-
-		if (id && id.length === 36) {
-			const { data, error } = await supabase
-				.from("orders")
-				.update(supabaseOrder)
-				.eq("id", id)
-				.select()
-				.single();
-			if (error) handleSupabaseError(error);
-			resultData = data;
-		} else {
-			const { data, error } = await supabase
-				.from("orders")
-				.insert([supabaseOrder])
-				.select()
-				.single();
-			if (error) handleSupabaseError(error);
-			orderId = data.id;
-			resultData = data;
-		}
-
-		// 3. Handle Reminder in separate table
-		if (reminder !== undefined && orderId) {
-			// Clear existing pending reminders
-			await supabase
-				.from("order_reminders")
-				.delete()
-				.eq("order_id", orderId)
-				.eq("is_completed", false);
-
-			if (reminder) {
-				// Combine date and time into a single timestamp for remind_at
-				// Combine date and time into a single timestamp for remind_at
-				let remindAt: string | null = null;
-				if (reminder.date && reminder.time) {
-					// CRITICAL: Timezone Handling
-					// We must construct the Date object using local time components (year, month, day, hours, minutes)
-					// and then convert to UTC via toISOString().
-					// DO NOT simply concatenate strings or use new Date() on a string without timezone,
-					// as that will be interpreted as UTC and shift the time by the timezone offset (e.g. +2h for Egypt).
-					const [year, month, day] = reminder.date.split("-").map(Number);
-					const [hours, minutes] = reminder.time.split(":").map(Number);
-					const localDate = new Date(year, month - 1, day, hours, minutes);
-					remindAt = localDate.toISOString();
-				} else {
-					remindAt = new Date().toISOString();
-				}
-
-				const { error: reminderError } = await supabase
-					.from("order_reminders")
-					.insert({
-						order_id: orderId,
-						title: reminder.subject,
-						remind_at: remindAt,
-						is_completed: false,
-					});
-				if (reminderError) handleSupabaseError(reminderError);
-			}
-		}
+		const supabaseOrder = buildSupabaseOrderPayload(
+			stage,
+			rest,
+			metadataToStore,
+		);
+		const { orderId, resultData } = await upsertOrder(id, supabaseOrder);
+		await syncOrderReminder(orderId, reminder);
 
 		return resultData;
 	},
 
 	async deleteOrder(id: string) {
-		if (!id || id.length !== 36) {
+		if (id?.length !== UUID_LENGTH) {
 			console.warn(`Skipping delete for non-UUID id: ${id}`);
 			return;
 		}
@@ -245,7 +285,7 @@ export const orderService = {
 		}
 
 		const resultObj = {
-			...(row.metadata || {}),
+			...row.metadata,
 			id: row.id,
 			trackingId: row.order_number,
 			customerName: row.customer_name,
@@ -266,7 +306,7 @@ export const orderService = {
 
 		if (process.env.NODE_ENV === "development") {
 			if (!parseResult.success) {
-				const errorDetails = parseResult.error.flatten();
+				const errorDetails = z.flattenError(parseResult.error);
 				// Log the actual data that failed validation
 				console.error(
 					`[Strict Validation Failed] Order ID ${row.id} DATA:`,
@@ -286,7 +326,7 @@ export const orderService = {
 
 		// Production: Enhanced error logging and graceful fallback
 		if (!parseResult.success) {
-			const errorDetails = parseResult.error.flatten();
+			const errorDetails = z.flattenError(parseResult.error);
 			console.warn(
 				`[Zod Validation Warning] Invalid order data for ID ${row.id}:`,
 				{

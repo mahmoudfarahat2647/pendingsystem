@@ -1,7 +1,7 @@
 "use client";
 
 import type { GridApi } from "ag-grid-community";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import type { FormData } from "@/components/orders/OrderFormModal";
 import {
@@ -24,10 +24,6 @@ export const useOrdersPageHandlers = () => {
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 
-	const setOrdersRowData = useAppStore((state) => state.setOrdersRowData);
-	const checkNotifications = useAppStore((state) => state.checkNotifications);
-	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
-
 	// 2. Local State
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -38,19 +34,9 @@ export const useOrdersPageHandlers = () => {
 		useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
-	const [activeModal, setActiveModal] = useState<{
-		type: "note" | "reminder" | "archive" | "attachment";
-		row: PendingRow;
-	} | null>(null);
 
 	const triggerBeastMode = useAppStore((state) => state.triggerBeastMode);
-	const beastModeTriggers = useAppStore((state) => state.beastModeTriggers);
-	useEffect(() => {
-		if (ordersRowData) {
-			setOrdersRowData(ordersRowData);
-			checkNotifications();
-		}
-	}, [ordersRowData, setOrdersRowData, checkNotifications]);
+	const _beastModeTriggers = useAppStore((state) => state.beastModeTriggers);
 
 	// 4. Core Handlers
 	const handleUpdateOrder = useCallback(
@@ -65,7 +51,7 @@ export const useOrdersPageHandlers = () => {
 			for (const id of ids) {
 				const row = ordersRowData.find((r: any) => r.id === id);
 				let newActionNote = row?.actionNote || "";
-				if (reason && reason.trim()) {
+				if (reason?.trim()) {
 					const taggedNote = `${reason.trim()} #archive`;
 					newActionNote = newActionNote
 						? `${newActionNote}\n${taggedNote}`
@@ -82,102 +68,121 @@ export const useOrdersPageHandlers = () => {
 		[saveOrderMutation, ordersRowData],
 	);
 
+	const parseCounterReading = (value: FormData["cntrRdg"]) =>
+		Number.parseInt(String(value), 10) || 0;
+
+	const buildCommonData = (formData: FormData) => {
+		const isWarranty = formData.repairSystem === "ضمان";
+		const endWarranty = isWarranty
+			? calculateEndWarranty(formData.startWarranty)
+			: "";
+		const remainTime = isWarranty
+			? calculateRemainingTime(endWarranty)
+			: "";
+
+		return {
+			...formData,
+			cntrRdg: parseCounterReading(formData.cntrRdg),
+			endWarranty,
+			remainTime,
+		};
+	};
+
+	const buildOrderUpdates = (
+		commonData: ReturnType<typeof buildCommonData>,
+		part: PartEntry,
+		baseId: string,
+		requester: string,
+	) => ({
+		baseId,
+		trackingId: `ORD-${baseId}`,
+		...commonData,
+		partNumber: part.partNumber,
+		description: part.description,
+		parts: [part],
+		status: "Pending",
+		rDate: new Date().toISOString().split("T")[0],
+		requester,
+	});
+
+	const deleteOrdersByIds = async (ids: string[]) => {
+		for (const id of ids) {
+			await deleteOrderMutation.mutateAsync(id);
+		}
+	};
+
+	const saveEditedParts = async (formData: FormData, parts: PartEntry[]) => {
+		const existingRowIdsInModal = new Set(
+			parts.flatMap((part) => (part.rowId ? [part.rowId] : [])),
+		);
+		const removedRowIds = selectedRows
+			.filter((row) => !existingRowIdsInModal.has(row.id))
+			.map((row) => row.id);
+
+		if (removedRowIds.length > 0) {
+			await deleteOrdersByIds(removedRowIds);
+		}
+
+		const commonData = buildCommonData(formData);
+
+		for (const part of parts) {
+			if (part.rowId) {
+				await saveOrderMutation.mutateAsync({
+					id: part.rowId,
+					stage: "orders",
+					updates: {
+						...commonData,
+						partNumber: part.partNumber,
+						description: part.description,
+						parts: [part],
+					},
+				});
+				continue;
+			}
+
+			const baseId = String(
+				selectedRows[0]?.baseId || Date.now().toString().slice(-6),
+			);
+			await saveOrderMutation.mutateAsync({
+				id: "",
+				updates: buildOrderUpdates(commonData, part, baseId, formData.requester),
+				stage: "orders",
+			});
+		}
+
+		toast.success("Grid entries updated successfully");
+	};
+
+	const saveNewParts = async (formData: FormData, parts: PartEntry[]) => {
+		const baseId = Date.now().toString().slice(-6);
+		const commonData = buildCommonData(formData);
+
+		for (let index = 0; index < parts.length; index++) {
+			const part = parts[index];
+			const partBaseId =
+				parts.length > 1 ? `${baseId}-${index + 1}` : baseId;
+
+			await saveOrderMutation.mutateAsync({
+				id: "",
+				updates: buildOrderUpdates(
+					commonData,
+					part,
+					partBaseId,
+					formData.requester,
+				),
+				stage: "orders",
+			});
+		}
+
+		toast.success(`${parts.length} order(s) created`);
+	};
+
 	const handleSaveOrder = async (formData: FormData, parts: PartEntry[]) => {
 		try {
 			if (isEditMode) {
-				const existingRowIdsInModal = new Set(
-					parts.map((p) => p.rowId).filter(Boolean),
-				);
-				const removedRowIds = selectedRows
-					.filter((row) => !existingRowIdsInModal.has(row.id))
-					.map((row) => row.id);
-
-				if (removedRowIds.length > 0) {
-					for (const id of removedRowIds) {
-						await deleteOrderMutation.mutateAsync(id);
-					}
-				}
-
-				for (const part of parts) {
-					const isWarranty = formData.repairSystem === "ضمان";
-					const endWarranty = isWarranty
-						? calculateEndWarranty(formData.startWarranty)
-						: "";
-					const remainTime = isWarranty
-						? calculateRemainingTime(endWarranty)
-						: "";
-
-					const commonData = {
-						...formData,
-						cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
-						endWarranty,
-						remainTime,
-					};
-
-					if (part.rowId) {
-						await saveOrderMutation.mutateAsync({
-							id: part.rowId as string,
-							stage: "orders",
-							updates: {
-								...commonData,
-								partNumber: part.partNumber,
-								description: part.description,
-								parts: [part],
-							},
-						});
-					} else {
-						const baseId =
-							selectedRows[0]?.baseId || Date.now().toString().slice(-6);
-						await saveOrderMutation.mutateAsync({
-							id: "", // orderService handles new row creation if id is missing/empty, but here we expect saveOrder to handle it. Actually orderService.saveOrder expects id if it's an update.
-							updates: {
-								baseId,
-								trackingId: `ORD-${baseId}`,
-								...commonData,
-								partNumber: part.partNumber,
-								description: part.description,
-								parts: [part],
-								status: "Pending",
-								rDate: new Date().toISOString().split("T")[0],
-								requester: formData.requester,
-							},
-							stage: "orders",
-						});
-					}
-				}
-
-				toast.success("Grid entries updated successfully");
+				await saveEditedParts(formData, parts);
 			} else {
-				const baseId = Date.now().toString().slice(-6);
-				for (let index = 0; index < parts.length; index++) {
-					const part = parts[index];
-					const isWarranty = formData.repairSystem === "ضمان";
-					const endWarranty = isWarranty
-						? calculateEndWarranty(formData.startWarranty)
-						: "";
-					const remainTime = isWarranty
-						? calculateRemainingTime(endWarranty)
-						: "";
-
-					await saveOrderMutation.mutateAsync({
-						id: "",
-						updates: {
-							baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
-							trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
-							...formData,
-							cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
-							partNumber: part.partNumber,
-							description: part.description,
-							parts: [part],
-							status: "Pending",
-							rDate: new Date().toISOString().split("T")[0],
-							endWarranty,
-							remainTime,
-						},
-						stage: "orders",
-					});
-				}
-				toast.success(`${parts.length} order(s) created`);
+				await saveNewParts(formData, parts);
 			}
 			setIsFormModalOpen(false);
 		} catch (error: unknown) {
@@ -205,8 +210,11 @@ export const useOrdersPageHandlers = () => {
 			};
 			const result = BeastModeSchema.safeParse(validationPayload);
 			if (!result.success) {
-				const errorMessages = Object.entries(result.error.flatten().fieldErrors)
-					.map(([field, msgs]) => `${field}: ${msgs?.[0]}`)
+				const errorMessages = result.error.issues
+					.map((issue) => {
+						const field = issue.path.join(".") || "form";
+						return `${field}: ${issue.message}`;
+					})
 					.join(", ");
 				invalidRows.push({
 					id: row.trackingId || "Unknown",
@@ -253,7 +261,7 @@ export const useOrdersPageHandlers = () => {
 		// 1. Update details first (optimistic)
 		for (const row of selectedRows) {
 			let newActionNote = row.actionNote || "";
-			if (note && note.trim()) {
+			if (note?.trim()) {
 				const taggedNote = `${note.trim()} #booking`;
 				newActionNote = newActionNote
 					? `${newActionNote}\n${taggedNote}`
@@ -281,7 +289,7 @@ export const useOrdersPageHandlers = () => {
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
 		selectedRows.forEach((row) => {
-			updatePartStatus(row.id, status);
+			handleUpdateOrder(row.id, { partStatus: status });
 		});
 		toast.success(`Part status updated to "${status}"`);
 	};

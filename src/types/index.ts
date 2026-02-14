@@ -1,9 +1,5 @@
 import type { GridState } from "ag-grid-community";
-import {
-	type PartEntry,
-	type PendingRow,
-	Status,
-} from "@/schemas/order.schema";
+import type { PartEntry, PendingRow } from "@/schemas/order.schema";
 
 export type { PartEntry, PendingRow, GridState };
 

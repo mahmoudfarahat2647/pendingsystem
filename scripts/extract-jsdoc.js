@@ -78,7 +78,7 @@ function parseJsDoc(comment) {
  * Extract function signature from code
  */
 function _extractSignature(code, functionName) {
-	const regex = new RegExp(`${functionName}\\s*:\\s*\\((.*?)\\)\\s*=>`, "s");
+	const regex = new RegExp(String.raw`${functionName}\s*:\s*\((.*?)\)\s*=>`, "s");
 	const match = code.match(regex);
 	return match ? match[1] : "";
 }
