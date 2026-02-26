@@ -8,6 +8,10 @@ import {
 	getOrdersColumns,
 } from "../components/shared/GridConfig";
 
+const getHeaderCheckboxSelectionFilteredOnly = (
+	column: { headerCheckboxSelectionFilteredOnly?: boolean } | undefined,
+) => column?.headerCheckboxSelectionFilteredOnly;
+
 // Mock the store
 vi.mock("@/store/useStore", () => ({
 	useAppStore: Object.assign((fn: any) => fn({ bookingStatuses: [] }), {
@@ -22,8 +26,7 @@ describe("Grid Column Configuration Selection Fix", () => {
 			const selectionCol = columns.find((col) => col.colId === "selection");
 			expect(selectionCol).toBeDefined();
 			expect(selectionCol?.headerCheckboxSelection).toBe(true);
-			// @ts-expect-error - headerCheckboxSelectionFilteredOnly might not be in the ColDef types if using an older version but it is a valid ag-grid property
-			expect(selectionCol?.headerCheckboxSelectionFilteredOnly).toBe(true);
+			expect(getHeaderCheckboxSelectionFilteredOnly(selectionCol)).toBe(true);
 		});
 	});
 
@@ -44,8 +47,7 @@ describe("Grid Column Configuration Selection Fix", () => {
 					`Selection column missing for type ${type}`,
 				).toBeDefined();
 				expect(selectionCol?.headerCheckboxSelection).toBe(true);
-				// @ts-expect-error
-				expect(selectionCol?.headerCheckboxSelectionFilteredOnly).toBe(true);
+				expect(getHeaderCheckboxSelectionFilteredOnly(selectionCol)).toBe(true);
 			}
 		});
 	});
@@ -54,22 +56,19 @@ describe("Grid Column Configuration Selection Fix", () => {
 		it("getOrdersColumns should include updated selection config", () => {
 			const columns = getOrdersColumns([]);
 			const selectionCol = columns.find((col) => col.colId === "selection");
-			// @ts-expect-error
-			expect(selectionCol?.headerCheckboxSelectionFilteredOnly).toBe(true);
+			expect(getHeaderCheckboxSelectionFilteredOnly(selectionCol)).toBe(true);
 		});
 
 		it("getMainSheetColumns should include updated selection config", () => {
 			const columns = getMainSheetColumns([]);
 			const selectionCol = columns.find((col) => col.colId === "selection");
-			// @ts-expect-error
-			expect(selectionCol?.headerCheckboxSelectionFilteredOnly).toBe(true);
+			expect(getHeaderCheckboxSelectionFilteredOnly(selectionCol)).toBe(true);
 		});
 
 		it("getBookingColumns should include updated selection config", () => {
 			const columns = getBookingColumns();
 			const selectionCol = columns.find((col) => col.colId === "selection");
-			// @ts-expect-error
-			expect(selectionCol?.headerCheckboxSelectionFilteredOnly).toBe(true);
+			expect(getHeaderCheckboxSelectionFilteredOnly(selectionCol)).toBe(true);
 		});
 	});
 });

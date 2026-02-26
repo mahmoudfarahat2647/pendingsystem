@@ -12,22 +12,27 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useAppStore } from "@/store/useStore";
+import {
+	useAddEmailRecipientMutation,
+	useRemoveEmailRecipientMutation,
+	useReportSettingsQuery,
+} from "@/hooks/queries/useReportSettingsQuery";
 
 interface RecipientsCardProps {
 	isLocked: boolean;
 }
 
 export function RecipientsCard({ isLocked }: RecipientsCardProps) {
-	const { reportSettings, addEmailRecipient, removeEmailRecipient } =
-		useAppStore();
+	const { data: reportSettings } = useReportSettingsQuery();
+	const addEmailRecipientMutation = useAddEmailRecipientMutation();
+	const removeEmailRecipientMutation = useRemoveEmailRecipientMutation();
 	const [emailInput, setEmailInput] = useState("");
 
 	const isLoading = !reportSettings;
 
 	const handleAddEmail = () => {
 		if (emailInput && emailInput.includes("@")) {
-			addEmailRecipient(emailInput);
+			addEmailRecipientMutation.mutate(emailInput);
 			setEmailInput("");
 		}
 	};
@@ -60,6 +65,7 @@ export function RecipientsCard({ isLocked }: RecipientsCardProps) {
 						type="button"
 						onClick={handleAddEmail}
 						size="icon"
+						aria-label="Add email recipient"
 						disabled={isLoading || isLocked}
 					>
 						<Plus className="h-4 w-4" />
@@ -75,7 +81,8 @@ export function RecipientsCard({ isLocked }: RecipientsCardProps) {
 								<button
 									type="button"
 									className="ml-2 ring-offset-background transition-colors hover:text-destructive focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full disabled:opacity-50"
-									onClick={() => removeEmailRecipient(email)}
+									onClick={() => removeEmailRecipientMutation.mutate(email)}
+									aria-label={`Remove ${email}`}
 									disabled={isLocked}
 								>
 									<X className="h-3 w-3" />

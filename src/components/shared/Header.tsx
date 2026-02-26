@@ -9,7 +9,7 @@ import { exportAllSystemDataCSV, exportWorkbookCSV } from "@/lib/exportUtils";
 import { cn } from "@/lib/utils";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
-import type { AppNotification } from "@/types";
+import type { PendingRow } from "@/types";
 import { CloudSync } from "./CloudSync";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 
@@ -26,6 +26,7 @@ export const Header = React.memo(function Header() {
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
 	const [searchInput, setSearchInput] = useState(searchTerm);
+	const hasSearchInput = searchInput.trim().length > 0;
 
 	// Handle keyboard shortcuts
 	useEffect(() => {
@@ -128,19 +129,21 @@ export const Header = React.memo(function Header() {
 						type="text"
 						suppressHydrationWarning
 						placeholder="Search system (Cmd+K)..."
-						value={useAppStore((state) => state.searchTerm)}
-						onChange={(e) =>
-							useAppStore.getState().setSearchTerm(e.target.value)
-						}
+						value={searchInput}
+						onChange={(e) => setSearchInput(e.target.value)}
 						onFocus={() => setIsSearchFocused(true)}
 						onBlur={() => setIsSearchFocused(false)}
 						className="w-full pl-12 pr-12 py-3 bg-transparent text-sm text-white placeholder:text-gray-600 outline-none"
 					/>
 					<div className="absolute right-4 flex items-center gap-2">
-						{useAppStore((state) => state.searchTerm) && (
+						{hasSearchInput && (
 							<button
 								type="button"
-								onClick={() => useAppStore.getState().setSearchTerm("")}
+								onClick={() => {
+									setSearchInput("");
+									setSearchTerm("");
+								}}
+								aria-label="Clear search"
 								className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
 							>
 								<X className="h-3 w-3" />
@@ -162,6 +165,7 @@ export const Header = React.memo(function Header() {
 						suppressHydrationWarning
 						onClick={undo}
 						disabled={undoStack.length === 0}
+						aria-label="Undo"
 						className={cn(
 							"p-2 rounded-lg transition-all",
 							undoStack.length > 0
@@ -178,6 +182,7 @@ export const Header = React.memo(function Header() {
 						suppressHydrationWarning
 						onClick={redo}
 						disabled={redoStack.length === 0}
+						aria-label="Redo"
 						className={cn(
 							"p-2 rounded-lg transition-all",
 							redoStack.length > 0
@@ -195,6 +200,7 @@ export const Header = React.memo(function Header() {
 						type="button"
 						suppressHydrationWarning
 						onClick={() => window.location.reload()}
+						aria-label="Refresh page"
 						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
 						title="Refresh Page"
 					>
@@ -210,7 +216,15 @@ export const Header = React.memo(function Header() {
 							const toastId = toast.loading("Preparing full system export...");
 							try {
 								const rawData = await orderService.getOrders();
-								const mappedData = rawData.map(orderService.mapSupabaseOrder);
+								const mappedData: PendingRow[] = [];
+								for (const row of rawData) {
+									const mapped = orderService.mapSupabaseOrder(
+										row as Record<string, unknown>,
+									);
+									if (mapped) {
+										mappedData.push(mapped);
+									}
+								}
 								exportAllSystemDataCSV(mappedData);
 								toast.success("Workbook exported successfully", {
 									id: toastId,
@@ -220,6 +234,7 @@ export const Header = React.memo(function Header() {
 								toast.error("Failed to export workbook", { id: toastId });
 							}
 						}}
+						aria-label="Export workbook"
 						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
 						title="Extract All (Workbook)"
 					>

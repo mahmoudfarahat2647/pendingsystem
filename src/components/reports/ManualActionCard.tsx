@@ -2,8 +2,7 @@
 
 import { format } from "date-fns";
 import { Loader2, Send } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner"; // Assuming sonner is installed as per package.json
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -12,26 +11,25 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { useAppStore } from "@/store/useStore";
+import {
+	useReportSettingsQuery,
+	useTriggerManualBackupMutation,
+} from "@/hooks/queries/useReportSettingsQuery";
 
 interface ManualActionCardProps {
 	isLocked: boolean;
 }
 
 export function ManualActionCard({ isLocked }: ManualActionCardProps) {
-	const { reportSettings, triggerManualBackup, isReportSettingsLoading } =
-		useAppStore();
-	const [isTriggering, setIsTriggering] = useState(false);
+	const { data: reportSettings } = useReportSettingsQuery();
+	const triggerManualBackupMutation = useTriggerManualBackupMutation();
 
 	const handleTriggerBackup = async () => {
 		try {
-			setIsTriggering(true);
-			await triggerManualBackup();
+			await triggerManualBackupMutation.mutateAsync();
 			toast.success("Backup process started successfully");
-		} catch (error) {
+		} catch {
 			toast.error("Failed to start backup");
-		} finally {
-			setIsTriggering(false);
 		}
 	};
 
@@ -62,10 +60,10 @@ export function ManualActionCard({ isLocked }: ManualActionCardProps) {
 						variant="destructive"
 						onClick={handleTriggerBackup}
 						disabled={
-							isReportSettingsLoading || isTriggering || isLoading || isLocked
+							triggerManualBackupMutation.isPending || isLoading || isLocked
 						}
 					>
-						{isReportSettingsLoading || isTriggering ? (
+						{triggerManualBackupMutation.isPending ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 								Sending...

@@ -26,21 +26,21 @@ import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
+	useBulkDeleteOrdersMutation,
 	useBulkUpdateOrderStageMutation,
-	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
+import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function MainSheetPage() {
 	const { data: rowData = [] } = useOrdersQuery("main");
-	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
-	const deleteOrderMutation = useDeleteOrderMutation();
+	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
@@ -64,14 +64,12 @@ export default function MainSheetPage() {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = rowData.find((r: any) => r.id === id);
-				let newActionNote = row?.actionNote || "";
-				if (reason && reason.trim()) {
-					const taggedNote = `${reason.trim()} #archive`;
-					newActionNote = newActionNote
-						? `${newActionNote}\n${taggedNote}`
-						: taggedNote;
-				}
+				const row = rowData.find((r) => r.id === id);
+				const newActionNote = appendTaggedActionNote(
+					row?.actionNote,
+					reason,
+					"archive",
+				);
 
 				saveOrderMutation.mutate({
 					id,
@@ -176,14 +174,11 @@ export default function MainSheetPage() {
 		status?: string,
 	) => {
 		for (const row of selectedRows) {
-			// Update stage and save booking details
-			let newActionNote = row.actionNote || "";
-			if (note && note.trim()) {
-				const taggedNote = `${note.trim()} #booking`;
-				newActionNote = newActionNote
-					? `${newActionNote}\n${taggedNote}`
-					: taggedNote;
-			}
+			const newActionNote = appendTaggedActionNote(
+				row.actionNote,
+				note,
+				"booking",
+			);
 
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
@@ -246,7 +241,7 @@ export default function MainSheetPage() {
 							}}
 							onSendToCallList={async () => {
 								if (selectedRows.length === 0) return;
-								const ids = selectedRows.map((r) => r.id);
+								const ids = getSelectedIds(selectedRows);
 								await bulkUpdateStageMutation.mutateAsync({
 									ids,
 									stage: "call",
@@ -349,9 +344,9 @@ export default function MainSheetPage() {
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
 				onConfirm={async () => {
-					for (const row of selectedRows) {
-						await deleteOrderMutation.mutateAsync(row.id);
-					}
+					await bulkDeleteOrdersMutation.mutateAsync(
+						getSelectedIds(selectedRows),
+					);
 					setSelectedRows([]);
 					toast.success("Row(s) deleted");
 					setShowDeleteConfirm(false);

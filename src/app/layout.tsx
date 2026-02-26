@@ -4,6 +4,16 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
 
+const APP_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const metadataBase = (() => {
+	try {
+		return new URL(APP_URL);
+	} catch {
+		return new URL("http://localhost:3000");
+	}
+})();
+
 const inter = Inter({
 	subsets: ["latin"],
 	display: "swap",
@@ -12,8 +22,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+	metadataBase,
 	title: "Pending.Sys - pendingsystem Logistics Command Center",
 	description: "Logistics Command Center for automotive service centers",
+	alternates: {
+		canonical: "/",
+	},
 	icons: {
 		icon: "/favicon.svg",
 	},

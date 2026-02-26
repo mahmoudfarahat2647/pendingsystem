@@ -40,7 +40,6 @@ const RowModals = dynamic(
 );
 
 import { useAppStore } from "@/store/useStore";
-import type { PendingRow } from "@/types";
 import { useOrdersPageHandlers } from "./useOrdersPageHandlers";
 
 export default function OrdersPage() {
@@ -78,7 +77,6 @@ export default function OrdersPage() {
 	} = useOrdersPageHandlers();
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
-	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
 	const {
 		activeModal,
@@ -106,19 +104,8 @@ export default function OrdersPage() {
 	);
 
 	const handleOpenForm = (edit = false) => {
-		try {
-			console.log(`[DEBUG] Opening form with edit mode: ${edit}`);
-			console.log(`[DEBUG] Selected rows count: ${selectedRows.length}`);
-			console.log(`[DEBUG] Selected rows:`, selectedRows);
-
-			setIsEditMode(edit);
-			setIsFormModalOpen(true);
-
-			console.log(`[DEBUG] Form modal state set to: ${isFormModalOpen}`);
-		} catch (error) {
-			console.error(`[ERROR] Failed to open form:`, error);
-			toast.error("Failed to open order form. Please try again.");
-		}
+		setIsEditMode(edit);
+		setIsFormModalOpen(true);
 	};
 
 	return (
@@ -213,7 +200,7 @@ export default function OrdersPage() {
 						<OrderFormModal
 							open={isFormModalOpen}
 							onOpenChange={(open) => {
-								console.log(`[DEBUG] Modal open change: ${open}`);
+
 								setIsFormModalOpen(open);
 							}}
 							isEditMode={isEditMode}

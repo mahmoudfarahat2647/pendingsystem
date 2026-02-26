@@ -3,11 +3,9 @@
 import type { GridApi } from "ag-grid-community";
 import {
 	Archive,
-	Calendar,
 	CheckCircle,
 	Download,
 	Filter,
-	History as HistoryIcon,
 	RotateCcw,
 	Tag,
 	Trash2,
@@ -23,7 +21,6 @@ import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { RowModals } from "@/components/shared/RowModals";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -46,13 +43,14 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+	useBulkDeleteOrdersMutation,
 	useBulkUpdateOrderStageMutation,
-	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useRowModals } from "@/hooks/useRowModals";
+import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -63,7 +61,7 @@ export default function BookingPage() {
 		useColumnLayoutTracker("booking");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
-	const deleteOrderMutation = useDeleteOrderMutation();
+	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
@@ -101,7 +99,7 @@ export default function BookingPage() {
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
 	const [isRebookingModalOpen, setIsRebookingModalOpen] = useState(false);
-	const [rebookingSearchTerm, setRebookingSearchTerm] = useState("");
+	const [rebookingSearchTerm] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 
@@ -141,14 +139,14 @@ export default function BookingPage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = selectedRows.map((r) => r.id);
+		const ids = getSelectedIds(selectedRows);
 		// 1. Update status/note (sequential but optimistic)
 		for (const row of selectedRows) {
-			let newActionNote = row.actionNote || "";
-			const taggedNote = `Reorder Reason: ${reorderReason} #reorder`;
-			newActionNote = newActionNote
-				? `${newActionNote}\n${taggedNote}`
-				: taggedNote;
+			const newActionNote = appendTaggedActionNote(
+				row.actionNote,
+				`Reorder Reason: ${reorderReason}`,
+				"reorder",
+			);
 
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
@@ -185,11 +183,11 @@ export default function BookingPage() {
 				: `[System]: ${fullNote}`;
 
 			// Append to actionNote for history
-			let newActionNote = row.actionNote || "";
-			const taggedNote = `${fullNote} #rebooking`;
-			newActionNote = newActionNote
-				? `${newActionNote}\n${taggedNote}`
-				: taggedNote;
+			const newActionNote = appendTaggedActionNote(
+				row.actionNote,
+				fullNote,
+				"rebooking",
+			);
 
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
@@ -452,9 +450,9 @@ export default function BookingPage() {
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
 					onConfirm={async () => {
-						for (const row of selectedRows) {
-							await deleteOrderMutation.mutateAsync(row.id);
-						}
+						await bulkDeleteOrdersMutation.mutateAsync(
+							getSelectedIds(selectedRows),
+						);
 						setSelectedRows([]);
 						toast.success("Booking(s) deleted");
 						setShowDeleteConfirm(false);

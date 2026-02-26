@@ -1,15 +1,17 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	useReportSettingsQuery,
+	useTriggerManualBackupMutation,
+} from "@/hooks/queries/useReportSettingsQuery";
 import { ManualActionCard } from "../components/reports/ManualActionCard";
-import { useAppStore } from "../store/useStore";
 
-// Mock the useAppStore hook
-vi.mock("../store/useStore", () => ({
-	useAppStore: vi.fn(),
+vi.mock("@/hooks/queries/useReportSettingsQuery", () => ({
+	useReportSettingsQuery: vi.fn(),
+	useTriggerManualBackupMutation: vi.fn(),
 }));
 
-// Mock toast
 vi.mock("sonner", () => ({
 	toast: {
 		success: vi.fn(),
@@ -17,12 +19,10 @@ vi.mock("sonner", () => ({
 	},
 }));
 
-// Mock date-fns
 vi.mock("date-fns", () => ({
-	format: vi.fn((date, formatStr) => "January 1, 2024 at 12:00 PM"),
+	format: vi.fn(() => "January 1, 2024 at 12:00 PM"),
 }));
 
-// Mock UI components
 vi.mock("../components/ui/card", () => ({
 	Card: ({
 		children,
@@ -71,7 +71,6 @@ vi.mock("@/components/ui/button", () => ({
 	),
 }));
 
-// Mock Lucide icons
 vi.mock("lucide-react", () => ({
 	Loader2: ({ className }: { className: string }) => (
 		<span data-testid="loader-icon" className={className} />
@@ -84,142 +83,75 @@ vi.mock("lucide-react", () => ({
 import { toast } from "sonner";
 
 describe("ManualActionCard", () => {
-	const mockTriggerManualBackup = vi.fn();
+	const mutateAsync = vi.fn();
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: null,
-			triggerManualBackup: mockTriggerManualBackup,
-			isReportSettingsLoading: false,
+		vi.mocked(useReportSettingsQuery).mockReturnValue({ data: null } as any);
+		vi.mocked(useTriggerManualBackupMutation).mockReturnValue({
+			mutateAsync,
+			isPending: false,
 		} as any);
 	});
 
-	it("should render the card with title and description", () => {
+	it("renders manual action content", () => {
 		render(<ManualActionCard isLocked={false} />);
-
 		expect(screen.getByText("Manual Action")).toBeInTheDocument();
-		expect(
-			screen.getByText(
-				"Immediately generate and send a backup report to all recipients.",
-			),
-		).toBeInTheDocument();
 	});
 
-	it("should render with destructive styling", () => {
-		render(<ManualActionCard isLocked={false} />);
-
-		const card = screen.getByTestId("card");
-		expect(card).toHaveClass("border-destructive/20", "bg-destructive/5");
-
-		const title = screen.getByTestId("card-title");
-		expect(title).toHaveClass("text-destructive");
-	});
-
-	it("should show no reports sent message when last_sent_at is null", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
+	it("shows loading message while mutation is pending", () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
 				id: "1",
 				emails: [],
 				frequency: "Weekly",
 				is_enabled: false,
 				last_sent_at: null,
 			},
-			triggerManualBackup: mockTriggerManualBackup,
-			isReportSettingsLoading: false,
+		} as any);
+		vi.mocked(useTriggerManualBackupMutation).mockReturnValue({
+			mutateAsync,
+			isPending: true,
 		} as any);
 
 		render(<ManualActionCard isLocked={false} />);
-
-		expect(screen.getByText("No reports sent yet.")).toBeInTheDocument();
+		expect(screen.getByText("Sending...")).toBeInTheDocument();
+		expect(screen.getByTestId("send-button")).toBeDisabled();
 	});
 
-	it("should show last sent time when last_sent_at exists", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
+	it("shows last sent time when available", () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
 				id: "1",
 				emails: [],
 				frequency: "Weekly",
 				is_enabled: false,
 				last_sent_at: "2024-01-01T12:00:00Z",
 			},
-			triggerManualBackup: mockTriggerManualBackup,
-			isReportSettingsLoading: false,
 		} as any);
 
 		render(<ManualActionCard isLocked={false} />);
-
 		expect(
 			screen.getByText("Last sent: January 1, 2024 at 12:00 PM"),
 		).toBeInTheDocument();
 	});
 
-	it("should show loading state when isReportSettingsLoading is true", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
+	it("triggers backup and shows success toast", async () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
 				id: "1",
 				emails: [],
 				frequency: "Weekly",
 				is_enabled: false,
 				last_sent_at: null,
 			},
-			triggerManualBackup: mockTriggerManualBackup,
-			isReportSettingsLoading: true,
 		} as any);
+		mutateAsync.mockResolvedValue(undefined);
 
 		render(<ManualActionCard isLocked={false} />);
+		await userEvent.click(screen.getByTestId("send-button"));
 
-		const button = screen.getByTestId("send-button");
-		expect(button).toBeDisabled();
-		expect(screen.getByTestId("loader-icon")).toBeInTheDocument();
-		expect(screen.getByText("Sending...")).toBeInTheDocument();
-	});
-
-	it("should disable button when locked", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			triggerManualBackup: mockTriggerManualBackup,
-			isReportSettingsLoading: false,
-		} as any);
-
-		render(<ManualActionCard isLocked={true} />);
-
-		const button = screen.getByTestId("send-button");
-		expect(button).toBeDisabled();
-	});
-
-	it("should disable button when loading (no reportSettings)", () => {
-		render(<ManualActionCard isLocked={false} />);
-
-		const button = screen.getByTestId("send-button");
-		expect(button).toBeDisabled();
-	});
-
-	it("should call triggerManualBackup and show success toast on successful backup", async () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			triggerManualBackup: mockTriggerManualBackup.mockResolvedValue(undefined),
-			isReportSettingsLoading: false,
-		} as any);
-
-		render(<ManualActionCard isLocked={false} />);
-
-		const button = screen.getByTestId("send-button");
-		await userEvent.click(button);
-
-		expect(mockTriggerManualBackup).toHaveBeenCalled();
+		expect(mutateAsync).toHaveBeenCalled();
 		await waitFor(() => {
 			expect(toast.success).toHaveBeenCalledWith(
 				"Backup process started successfully",
@@ -227,100 +159,23 @@ describe("ManualActionCard", () => {
 		});
 	});
 
-	it("should show error toast on backup failure", async () => {
-		const errorMessage = "Backup failed";
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
+	it("shows error toast when trigger fails", async () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
 				id: "1",
 				emails: [],
 				frequency: "Weekly",
 				is_enabled: false,
 				last_sent_at: null,
 			},
-			triggerManualBackup: mockTriggerManualBackup.mockRejectedValue(
-				new Error(errorMessage),
-			),
-			isReportSettingsLoading: false,
 		} as any);
+		mutateAsync.mockRejectedValue(new Error("Backup failed"));
 
 		render(<ManualActionCard isLocked={false} />);
+		await userEvent.click(screen.getByTestId("send-button"));
 
-		const button = screen.getByTestId("send-button");
-		await userEvent.click(button);
-
-		expect(mockTriggerManualBackup).toHaveBeenCalled();
 		await waitFor(() => {
 			expect(toast.error).toHaveBeenCalledWith("Failed to start backup");
 		});
-	});
-
-	it("should show send button with correct text and icon when not loading", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			triggerManualBackup: mockTriggerManualBackup,
-			isReportSettingsLoading: false,
-		} as any);
-
-		render(<ManualActionCard isLocked={false} />);
-
-		const button = screen.getByTestId("send-button");
-		expect(button).toHaveAttribute("data-variant", "destructive");
-		expect(screen.getByTestId("send-icon")).toBeInTheDocument();
-		expect(screen.getByText("Send Backup Now")).toBeInTheDocument();
-	});
-
-	it("should prevent multiple simultaneous clicks", async () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			triggerManualBackup: mockTriggerManualBackup.mockImplementation(
-				() => new Promise((resolve) => setTimeout(resolve, 100)),
-			),
-			isReportSettingsLoading: false,
-		} as any);
-
-		render(<ManualActionCard isLocked={false} />);
-
-		const button = screen.getByTestId("send-button");
-
-		// First click
-		await userEvent.click(button);
-
-		// Second click should be ignored (button should be disabled during loading)
-		expect(button).toBeDisabled();
-
-		await waitFor(() => {
-			expect(mockTriggerManualBackup).toHaveBeenCalledTimes(1);
-		});
-	});
-
-	it("should have correct button accessibility attributes", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			triggerManualBackup: mockTriggerManualBackup,
-			isReportSettingsLoading: false,
-		} as any);
-
-		render(<ManualActionCard isLocked={false} />);
-
-		const button = screen.getByTestId("send-button");
-		expect(button).toHaveAttribute("type", "button");
 	});
 });

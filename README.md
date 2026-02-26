@@ -37,9 +37,15 @@ pendingsystem is a Next.js-based logistics management platform for pendingsystem
 - Run quality checks before opening a PR:
   ```bash
   npm run lint
+  npm run type-check
   npm run test
   npm run build
   ```
+
+## Security & CI
+- CI runs quality gates (`lint`, `type-check`, `test`, `build`) on pushes and pull requests.
+- CI also runs `gitleaks` to catch committed secrets early.
+- Keep `.env.local` and `.vscode/mcp.json` local-only (both are gitignored).
 
 ## Development Commands
 ```bash

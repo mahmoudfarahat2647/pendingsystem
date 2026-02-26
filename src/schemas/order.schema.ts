@@ -58,7 +58,9 @@ export const PendingRowSchema = z
 				if (Array.isArray(val)) {
 					return val.length > 0 ? String(val[0]) : "";
 				}
-				return String(val || "");
+				return typeof val === "string" || typeof val === "number"
+					? String(val)
+					: "";
 			},
 			z.string().min(1, "Customer name is required"),
 		),
@@ -70,7 +72,9 @@ export const PendingRowSchema = z
 				if (Array.isArray(val)) {
 					return val.length > 0 ? String(val[0]) : "";
 				}
-				return String(val || "");
+				return typeof val === "string" || typeof val === "number"
+					? String(val)
+					: "";
 			},
 			z.string().min(1, "Mobile number is required"),
 		),
@@ -83,7 +87,9 @@ export const PendingRowSchema = z
 			if (Array.isArray(val)) {
 				return val.length > 0 ? String(val[0]) : "";
 			}
-			return String(val || "");
+			return typeof val === "string" || typeof val === "number"
+				? String(val)
+				: "";
 		}, z.string()),
 
 		// Logistics

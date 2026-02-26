@@ -114,8 +114,12 @@ Create an efficient logistics platform for pendingsystem service centers that re
   - "Clear All" functionality to wipe all alerts at once.
 
 ## Archive
-- **Archive Page**: Read-only view of completed items.
-- **Reorder**: Ability to move archived items back to Orders for re-processing.
+- **Archive Page**: Operational archive view for completed items (not read-only).
+- **Reorder**: Move archived items back to Orders with required reason tagging (`#reorder`).
+- **Archive Actions**:
+  - Update part status in bulk.
+  - Edit notes/reminders/attachments via row action modals.
+  - Permanently delete selected archived records with confirmation.
 
 ## System Reports & Backup ([PROTECTED])
 - **Automated Email Reports**:
@@ -123,6 +127,9 @@ Create an efficient logistics platform for pendingsystem service centers that re
   - Supports user-defined day selection for Weekly reports.
   - Emails sent at 10:00 AM Cairo Time (08:00 UTC).
   - "Send Backup Now" manual trigger.
+- **Client Data Flow**:
+  - Report settings now use service + React Query boundaries (`src/services/reportSettingsService.ts`, `src/hooks/queries/useReportSettingsQuery.ts`).
+  - Report cards consume query/mutation hooks directly; Zustand report settings slice is retained as a legacy compatibility layer.
 - **Security & Integrity**:
   - Run via GitHub Actions to ensure isolated environment.
   - Requires Service Role Key for complete data access.

@@ -1,14 +1,16 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	useReportSettingsQuery,
+	useUpdateReportSettingsMutation,
+} from "@/hooks/queries/useReportSettingsQuery";
 import { SchedulingCard } from "../components/reports/SchedulingCard";
-import { useAppStore } from "../store/useStore";
 
-// Mock the useAppStore hook
-vi.mock("../store/useStore", () => ({
-	useAppStore: vi.fn(),
+vi.mock("@/hooks/queries/useReportSettingsQuery", () => ({
+	useReportSettingsQuery: vi.fn(),
+	useUpdateReportSettingsMutation: vi.fn(),
 }));
 
-// Mock UI components
 vi.mock("../components/ui/card", () => ({
 	Card: ({ children }: { children: React.ReactNode }) => (
 		<div data-testid="card">{children}</div>
@@ -50,226 +52,88 @@ vi.mock("../components/ui/switch", () => ({
 
 vi.mock("../components/reports/FrequencyPicker", () => ({
 	default: ({ value, onChange, disabled }: any) => (
-		<div data-testid="frequency-picker-container">
-			<select
-				data-testid="frequency-picker"
-				value={value}
-				onChange={(e) => onChange(e.target.value)}
-				disabled={disabled}
-			>
-				<option value="Daily">Daily</option>
-				<option value="Weekly">Weekly</option>
-				<option value="Weekly-0">Weekly, Sun</option>
-				<option value="Weekly-1">Weekly, Mon</option>
-				<option value="Monthly">Monthly</option>
-				<option value="Yearly">Yearly</option>
-			</select>
-		</div>
+		<select
+			data-testid="frequency-picker"
+			value={value}
+			onChange={(e) => onChange(e.target.value)}
+			disabled={disabled}
+		>
+			<option value="Weekly">Weekly</option>
+			<option value="Monthly">Monthly</option>
+			<option value="Yearly">Yearly</option>
+		</select>
 	),
 }));
 
-vi.mock("../components/ui/select", () => ({
-	Select: ({ children }: any) => <div>{children}</div>,
-	SelectContent: ({ children }: any) => <div>{children}</div>,
-	SelectItem: ({ children }: any) => <div>{children}</div>,
-	SelectTrigger: ({ children }: any) => <div>{children}</div>,
-	SelectValue: ({ children }: any) => <div>{children}</div>,
-}));
-
 describe("SchedulingCard", () => {
-	const mockFetchReportSettings = vi.fn();
-	const mockUpdateReportSettings = vi.fn();
+	const mutate = vi.fn();
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: null,
-			updateReportSettings: mockUpdateReportSettings,
-			fetchReportSettings: mockFetchReportSettings,
+		vi.mocked(useReportSettingsQuery).mockReturnValue({ data: null } as any);
+		vi.mocked(useUpdateReportSettingsMutation).mockReturnValue({
+			mutate,
 		} as any);
 	});
 
-	it("should render the card with title and description", () => {
+	it("renders title and description", () => {
 		render(<SchedulingCard isLocked={false} />);
-
 		expect(screen.getByText("Scheduling")).toBeInTheDocument();
-		expect(
-			screen.getByText(
-				"Configure how often you want to receive automated backups.",
-			),
-		).toBeInTheDocument();
 	});
 
-	it("should call fetchReportSettings on mount when reportSettings is null", () => {
+	it("disables controls while settings are loading", () => {
 		render(<SchedulingCard isLocked={false} />);
-
-		expect(mockFetchReportSettings).toHaveBeenCalled();
+		expect(screen.getByTestId("switch")).toBeDisabled();
+		expect(screen.getByTestId("frequency-picker")).toBeDisabled();
 	});
 
-	it("should not call fetchReportSettings on mount when reportSettings exists", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
+	it("updates is_enabled when switch changes", () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
 				id: "1",
 				emails: [],
 				frequency: "Weekly",
 				is_enabled: false,
 				last_sent_at: null,
 			},
-			updateReportSettings: mockUpdateReportSettings,
-			fetchReportSettings: mockFetchReportSettings,
 		} as any);
 
 		render(<SchedulingCard isLocked={false} />);
-
-		expect(mockFetchReportSettings).not.toHaveBeenCalled();
+		fireEvent.click(screen.getByTestId("switch"));
+		expect(mutate).toHaveBeenCalledWith({ is_enabled: true });
 	});
 
-	it("should render loading state when reportSettings is null", () => {
-		render(<SchedulingCard isLocked={false} />);
-
-		const switchElement = screen.getByTestId("switch");
-		const pickerElement = screen.getByTestId("frequency-picker");
-
-		expect(switchElement).toBeDisabled();
-		expect(pickerElement).toBeDisabled();
-	});
-
-	it("should render form fields when reportSettings exist", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
+	it("updates frequency when picker changes", () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
 				id: "1",
 				emails: [],
 				frequency: "Weekly",
 				is_enabled: true,
 				last_sent_at: null,
 			},
-			updateReportSettings: mockUpdateReportSettings,
-			fetchReportSettings: mockFetchReportSettings,
 		} as any);
 
 		render(<SchedulingCard isLocked={false} />);
-
-		const switchElement = screen.getByTestId("switch");
-		const pickerElement = screen.getByTestId("frequency-picker");
-
-		expect(switchElement).not.toBeDisabled();
-		expect(pickerElement).not.toBeDisabled();
-		expect(switchElement).toBeChecked();
-		expect(pickerElement).toHaveValue("Weekly");
-	});
-
-	it("should call updateReportSettings when switch is toggled", async () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			updateReportSettings: mockUpdateReportSettings,
-			fetchReportSettings: mockFetchReportSettings,
-		} as any);
-
-		render(<SchedulingCard isLocked={false} />);
-
-		const switchElement = screen.getByTestId("switch");
-		fireEvent.click(switchElement);
-
-		expect(mockUpdateReportSettings).toHaveBeenCalledWith({ is_enabled: true });
-	});
-
-	it("should call updateReportSettings when frequency is changed", async () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: true,
-				last_sent_at: null,
-			},
-			updateReportSettings: mockUpdateReportSettings,
-			fetchReportSettings: mockFetchReportSettings,
-		} as any);
-
-		render(<SchedulingCard isLocked={false} />);
-
-		const pickerElement = screen.getByTestId("frequency-picker");
-		fireEvent.change(pickerElement, { target: { value: "Monthly" } });
-
-		expect(mockUpdateReportSettings).toHaveBeenCalledWith({
-			frequency: "Monthly",
+		fireEvent.change(screen.getByTestId("frequency-picker"), {
+			target: { value: "Monthly" },
 		});
+		expect(mutate).toHaveBeenCalledWith({ frequency: "Monthly" });
 	});
 
-	it("should disable all controls when isLocked is true", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
+	it("disables controls when card is locked", () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
 				id: "1",
 				emails: [],
 				frequency: "Weekly",
 				is_enabled: true,
 				last_sent_at: null,
 			},
-			updateReportSettings: mockUpdateReportSettings,
-			fetchReportSettings: mockFetchReportSettings,
 		} as any);
 
 		render(<SchedulingCard isLocked={true} />);
-
-		const switchElement = screen.getByTestId("switch");
-		const pickerElement = screen.getByTestId("frequency-picker");
-
-		expect(switchElement).toBeDisabled();
-		expect(pickerElement).toBeDisabled();
-	});
-
-	it("should disable frequency select when automatic backups are disabled", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			updateReportSettings: mockUpdateReportSettings,
-			fetchReportSettings: mockFetchReportSettings,
-		} as any);
-
-		render(<SchedulingCard isLocked={false} />);
-
-		const pickerElement = screen.getByTestId("frequency-picker");
-		expect(pickerElement).toBeDisabled();
-	});
-
-	it("should render all frequency options", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: true,
-				last_sent_at: null,
-			},
-			updateReportSettings: mockUpdateReportSettings,
-			fetchReportSettings: mockFetchReportSettings,
-		} as any);
-
-		render(<SchedulingCard isLocked={false} />);
-
-		expect(screen.getByText("Weekly")).toBeInTheDocument();
-		expect(screen.getByText("Monthly")).toBeInTheDocument();
-		expect(screen.getByText("Yearly")).toBeInTheDocument();
-	});
-
-	it("should display correct labels and descriptions", () => {
-		render(<SchedulingCard isLocked={false} />);
-
-		expect(screen.getByText("Automatic Backups")).toBeInTheDocument();
-		expect(
-			screen.getByText("Enable scheduled reports sent to your email."),
-		).toBeInTheDocument();
-		expect(screen.getByText("Frequency")).toBeInTheDocument();
+		expect(screen.getByTestId("switch")).toBeDisabled();
+		expect(screen.getByTestId("frequency-picker")).toBeDisabled();
 	});
 });

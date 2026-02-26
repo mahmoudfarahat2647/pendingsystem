@@ -101,8 +101,10 @@ export default function FrequencyPicker({
 								<div className="flex justify-between px-1 w-full">
 									{optionsList.map((op) => {
 										return (
-											<motion.div
+											<motion.button
 												key={op}
+												type="button"
+												aria-label={`Set frequency to ${op}`}
 												layout
 												initial={{
 													filter: "blur(8px)",
@@ -129,14 +131,16 @@ export default function FrequencyPicker({
 													></motion.div>
 												)}
 												<span className="relative z-10">{op}</span>
-											</motion.div>
+											</motion.button>
 										);
 									})}
 								</div>
 							</motion.div>
 							<AnimatePresence>
-								<motion.div
+								<motion.button
 									key="check-button"
+									type="button"
+									aria-label="Confirm frequency"
 									layoutId="button"
 									onClick={handleConfirm}
 									initial={{
@@ -156,11 +160,13 @@ export default function FrequencyPicker({
 									className="bg-primary px-[10px] justify-center text-primary-foreground flex h-full items-center cursor-pointer"
 								>
 									<HugeiconsIcon icon={Tick02Icon} size={16} />
-								</motion.div>
+								</motion.button>
 							</AnimatePresence>
 						</div>
 					) : (
-						<motion.div
+						<motion.button
+							type="button"
+							aria-label="Open frequency picker"
 							onClick={() => setIsOptionOpen(true)}
 							className="rounded-full w-fit px-0 p-0 relative flex gap-0 items-center cursor-pointer"
 						>
@@ -190,7 +196,7 @@ export default function FrequencyPicker({
 									/>
 								</motion.div>
 							</AnimatePresence>
-						</motion.div>
+						</motion.button>
 					)}
 				</div>
 				<AnimatePresence mode="popLayout">
@@ -216,8 +222,10 @@ export default function FrequencyPicker({
 						>
 							{days.map((d, index) => {
 								return (
-									<motion.div
+									<motion.button
 										key={d}
+										type="button"
+										aria-label={`Select ${d}`}
 										layout
 										initial={{
 											filter: "blur(8px)",
@@ -251,7 +259,7 @@ export default function FrequencyPicker({
 												className="absolute h-full w-full bg-secondary inset-0 rounded-3xl"
 											></motion.div>
 										)}
-									</motion.div>
+									</motion.button>
 								);
 							})}
 						</motion.div>

@@ -13,7 +13,6 @@ import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { RowModals } from "@/components/shared/RowModals";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -36,13 +35,14 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+	useBulkDeleteOrdersMutation,
 	useBulkUpdateOrderStageMutation,
-	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useRowModals } from "@/hooks/useRowModals";
+import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -52,18 +52,16 @@ export default function ArchivePage() {
 		useColumnLayoutTracker("archive");
 	const { data: archiveRowData = [] } = useOrdersQuery("archive");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
-	const deleteOrderMutation = useDeleteOrderMutation();
+	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
-	const setArchiveRowData = useAppStore((state) => state.setArchiveRowData);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
 	useEffect(() => {
 		if (archiveRowData) {
-			setArchiveRowData(archiveRowData);
 			checkNotifications();
 		}
-	}, [archiveRowData, setArchiveRowData, checkNotifications]);
+	}, [archiveRowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
@@ -77,14 +75,12 @@ export default function ArchivePage() {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = archiveRowData.find((r: any) => r.id === id);
-				let newActionNote = row?.actionNote || "";
-				if (reason && reason.trim()) {
-					const taggedNote = `${reason.trim()} #archive`;
-					newActionNote = newActionNote
-						? `${newActionNote}\n${taggedNote}`
-						: taggedNote;
-				}
+				const row = archiveRowData.find((r) => r.id === id);
+				const newActionNote = appendTaggedActionNote(
+					row?.actionNote,
+					reason,
+					"archive",
+				);
 
 				saveOrderMutation.mutate({
 					id,
@@ -119,17 +115,17 @@ export default function ArchivePage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = selectedRows.map((r) => r.id);
+		const ids = getSelectedIds(selectedRows);
 		// 1. Move stage (bulk)
 		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "orders" });
 
 		// 2. Update status/note (sequential but optimistic)
 		for (const row of selectedRows) {
-			let newActionNote = row.actionNote || "";
-			const taggedNote = `Reorder Reason: ${reorderReason} #reorder`;
-			newActionNote = newActionNote
-				? `${newActionNote}\n${taggedNote}`
-				: taggedNote;
+			const newActionNote = appendTaggedActionNote(
+				row.actionNote,
+				`Reorder Reason: ${reorderReason}`,
+				"reorder",
+			);
 
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
@@ -374,9 +370,9 @@ export default function ArchivePage() {
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
 					onConfirm={async () => {
-						for (const row of selectedRows) {
-							await deleteOrderMutation.mutateAsync(row.id);
-						}
+						await bulkDeleteOrdersMutation.mutateAsync(
+							getSelectedIds(selectedRows),
+						);
 						setSelectedRows([]);
 						toast.success("Archived record(s) deleted");
 						setShowDeleteConfirm(false);

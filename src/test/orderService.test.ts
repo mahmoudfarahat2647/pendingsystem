@@ -93,10 +93,38 @@ describe("orderService", () => {
 
 		const result = orderService.mapSupabaseOrder(supabaseRow);
 
+		expect(result).not.toBeNull();
+		if (!result) {
+			throw new Error("Expected mapped row");
+		}
+
 		expect(result.id).toBe("1");
 		expect(result.trackingId).toBe("T1");
 		expect(result.customerName).toBe("John");
 		expect(result.partNumber).toBe("P1");
 		expect(result.reminder?.subject).toBe("Call");
+	});
+
+	it("should return null for invalid mapped row", () => {
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		const invalidRow = {
+			id: "2",
+			order_number: "T2",
+			customer_name: "",
+			customer_phone: "",
+			vin: "",
+			metadata: {},
+		};
+
+		const result = orderService.mapSupabaseOrder(invalidRow);
+
+		expect(result).toBeNull();
+		expect(warnSpy).toHaveBeenCalledWith(
+			"[orderService.mapSupabaseOrder] validation_failed",
+			expect.objectContaining({ orderId: "2" }),
+		);
+
+		warnSpy.mockRestore();
 	});
 });

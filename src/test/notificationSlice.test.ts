@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
+import { getOrdersQueryKey, queryClient } from "@/lib/queryClient";
 import { orderService } from "@/services/orderService";
 import { createNotificationSlice } from "../store/slices/notificationSlice";
 import type { CombinedStore } from "../store/types";
@@ -40,6 +41,11 @@ describe("notificationSlice", () => {
 	const sendToArchiveMock = vi.fn();
 
 	const createTestStore = (rows: PendingRow[]) => {
+		queryClient.setQueryData(getOrdersQueryKey("orders"), rows);
+		queryClient.setQueryData(getOrdersQueryKey("main"), []);
+		queryClient.setQueryData(getOrdersQueryKey("booking"), []);
+		queryClient.setQueryData(getOrdersQueryKey("call"), []);
+
 		return create<CombinedStore>(
 			(...a) =>
 				({
@@ -47,7 +53,7 @@ describe("notificationSlice", () => {
 					...createNotificationSlice(a[0], a[1], a[2] as any),
 					// Mock other slices/state required by checkNotifications
 					rowData: [],
-					ordersRowData: rows, // Put rows in orders for this test
+					ordersRowData: [],
 					bookingRowData: [],
 					callRowData: [],
 					archiveRowData: [],
@@ -63,6 +69,7 @@ describe("notificationSlice", () => {
 	});
 
 	afterEach(() => {
+		queryClient.clear();
 		vi.useRealTimers();
 	});
 

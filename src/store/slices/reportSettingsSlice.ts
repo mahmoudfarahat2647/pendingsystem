@@ -1,9 +1,7 @@
 import type { StateCreator } from "zustand";
-import type { ApiResponse } from "@/lib/apiResponse";
-import { supabase } from "@/lib/supabase";
+import { reportSettingsService } from "@/services/reportSettingsService";
 import type {
 	CombinedStore,
-	ReportSettings,
 	ReportSettingsActions,
 	ReportSettingsState,
 } from "../types";
@@ -23,40 +21,11 @@ export const createReportSettingsSlice: StateCreator<
 	fetchReportSettings: async () => {
 		set({ isReportSettingsLoading: true, reportSettingsError: null });
 		try {
-			const { data, error } = await supabase
-				.from("report_settings")
-				.select("*")
-				.order("updated_at", { ascending: false })
-				.limit(1)
-				.maybeSingle();
-
-			if (error && error.code !== "PGRST116") {
-				throw error;
-			}
-
-			// If no settings exist, create default
-			if (!data) {
-				const { data: newData, error: createError } = await supabase
-					.from("report_settings")
-					.insert([
-						{
-							emails: [],
-							frequency: "Weekly",
-							is_enabled: false,
-						},
-					])
-					.select()
-					.single();
-
-				if (createError) throw createError;
-				set({ reportSettings: newData });
-			} else {
-				set({ reportSettings: data });
-			}
-		} catch (error: any) {
+			const reportSettings = await reportSettingsService.getReportSettings();
+			set({ reportSettings });
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : "Unknown error";
 			console.error("Failed to fetch report settings:", error);
-			// Fallback to default in-memory settings so UI isn't disabled
-			// This handles cases where migration hasn't run yet
 			set({
 				reportSettings: {
 					id: "temp-id",
@@ -65,7 +34,7 @@ export const createReportSettingsSlice: StateCreator<
 					is_enabled: false,
 					last_sent_at: null,
 				},
-				reportSettingsError: error.message,
+				reportSettingsError: message,
 			});
 		} finally {
 			set({ isReportSettingsLoading: false });
@@ -78,17 +47,14 @@ export const createReportSettingsSlice: StateCreator<
 
 		set({ isReportSettingsLoading: true, reportSettingsError: null });
 		try {
-			const { data, error } = await supabase
-				.from("report_settings")
-				.update(settings)
-				.eq("id", currentSettings.id)
-				.select()
-				.single();
-
-			if (error) throw error;
-			set({ reportSettings: data });
-		} catch (error: any) {
-			set({ reportSettingsError: error.message });
+			const reportSettings = await reportSettingsService.updateReportSettings(
+				currentSettings.id,
+				settings,
+			);
+			set({ reportSettings });
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : "Unknown error";
+			set({ reportSettingsError: message });
 		} finally {
 			set({ isReportSettingsLoading: false });
 		}
@@ -106,44 +72,19 @@ export const createReportSettingsSlice: StateCreator<
 		const currentSettings = get().reportSettings;
 		if (!currentSettings) return;
 
-		const newEmails = currentSettings.emails.filter((e) => e !== email);
+		const newEmails = currentSettings.emails.filter((item) => item !== email);
 		await get().updateReportSettings({ emails: newEmails });
 	},
 
 	triggerManualBackup: async () => {
 		set({ isReportSettingsLoading: true, reportSettingsError: null });
 		try {
-			// Call our Next.js API route using absolute path to prevent resolution issues
-			const response = await fetch("/api/trigger-backup", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-			});
-
-			if (!response.ok) {
-				// Handle non-200 responses gracefully
-				let errorMessage = "Backup failed";
-				try {
-					const errorData = (await response.json()) as ApiResponse;
-					if (!errorData.success) {
-						errorMessage = errorData.error.message;
-					}
-				} catch (e) {
-					// response wasn't JSON (e.g. 404 HTML or 500 crash)
-					errorMessage = `Server Error: ${response.status} ${response.statusText}`;
-				}
-				throw new Error(errorMessage);
-			}
-
-			const data = (await response.json()) as ApiResponse;
-			console.log("Backup triggered successfully:", data);
-
-			// Refresh settings to update last_sent_at
+			await reportSettingsService.triggerManualBackup();
 			await get().fetchReportSettings();
-		} catch (error: any) {
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : "Unknown error";
 			console.error("Trigger backup error:", error);
-			set({ reportSettingsError: error.message });
+			set({ reportSettingsError: message });
 		} finally {
 			set({ isReportSettingsLoading: false });
 		}

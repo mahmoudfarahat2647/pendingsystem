@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import {
 	Card,
 	CardContent,
@@ -9,15 +8,11 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useAppStore } from "@/store/useStore";
+import {
+	useReportSettingsQuery,
+	useUpdateReportSettingsMutation,
+} from "@/hooks/queries/useReportSettingsQuery";
 import FrequencyPicker from "./FrequencyPicker";
 
 interface SchedulingCardProps {
@@ -25,14 +20,8 @@ interface SchedulingCardProps {
 }
 
 export function SchedulingCard({ isLocked }: SchedulingCardProps) {
-	const { reportSettings, updateReportSettings, fetchReportSettings } =
-		useAppStore();
-
-	useEffect(() => {
-		if (!reportSettings) {
-			fetchReportSettings();
-		}
-	}, [reportSettings, fetchReportSettings]);
+	const { data: reportSettings } = useReportSettingsQuery();
+	const updateReportSettingsMutation = useUpdateReportSettingsMutation();
 
 	const isLoading = !reportSettings;
 
@@ -56,7 +45,7 @@ export function SchedulingCard({ isLocked }: SchedulingCardProps) {
 						id="auto-backup"
 						checked={reportSettings?.is_enabled ?? false}
 						onCheckedChange={(checked) =>
-							updateReportSettings({ is_enabled: checked })
+							updateReportSettingsMutation.mutate({ is_enabled: checked })
 						}
 						disabled={isLoading || isLocked}
 					/>
@@ -66,7 +55,9 @@ export function SchedulingCard({ isLocked }: SchedulingCardProps) {
 					<Label className="text-sm font-medium">Frequency</Label>
 					<FrequencyPicker
 						value={reportSettings?.frequency || "Weekly"}
-						onChange={(value) => updateReportSettings({ frequency: value })}
+						onChange={(value) =>
+							updateReportSettingsMutation.mutate({ frequency: value })
+						}
 						disabled={isLoading || !reportSettings?.is_enabled || isLocked}
 					/>
 				</div>

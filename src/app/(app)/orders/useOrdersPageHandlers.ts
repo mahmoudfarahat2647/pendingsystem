@@ -5,12 +5,13 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { FormData } from "@/components/orders/OrderFormModal";
 import {
+	useBulkDeleteOrdersMutation,
 	useBulkUpdateOrderStageMutation,
-	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { exportToLogisticsCSV } from "@/lib/exportUtils";
+import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
 import { calculateEndWarranty, calculateRemainingTime } from "@/lib/utils";
 import { BeastModeSchema } from "@/schemas/form.schema";
@@ -21,10 +22,9 @@ export const useOrdersPageHandlers = () => {
 	// 1. Data & Store
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
 	const saveOrderMutation = useSaveOrderMutation();
-	const deleteOrderMutation = useDeleteOrderMutation();
+	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation();
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 
-	const setOrdersRowData = useAppStore((state) => state.setOrdersRowData);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
@@ -44,13 +44,11 @@ export const useOrdersPageHandlers = () => {
 	} | null>(null);
 
 	const triggerBeastMode = useAppStore((state) => state.triggerBeastMode);
-	const beastModeTriggers = useAppStore((state) => state.beastModeTriggers);
 	useEffect(() => {
 		if (ordersRowData) {
-			setOrdersRowData(ordersRowData);
 			checkNotifications();
 		}
-	}, [ordersRowData, setOrdersRowData, checkNotifications]);
+	}, [ordersRowData, checkNotifications]);
 
 	// 4. Core Handlers
 	const handleUpdateOrder = useCallback(
@@ -63,14 +61,12 @@ export const useOrdersPageHandlers = () => {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = ordersRowData.find((r: any) => r.id === id);
-				let newActionNote = row?.actionNote || "";
-				if (reason && reason.trim()) {
-					const taggedNote = `${reason.trim()} #archive`;
-					newActionNote = newActionNote
-						? `${newActionNote}\n${taggedNote}`
-						: taggedNote;
-				}
+				const row = ordersRowData.find((r) => r.id === id);
+				const newActionNote = appendTaggedActionNote(
+					row?.actionNote,
+					reason,
+					"archive",
+				);
 
 				saveOrderMutation.mutate({
 					id,
@@ -93,9 +89,7 @@ export const useOrdersPageHandlers = () => {
 					.map((row) => row.id);
 
 				if (removedRowIds.length > 0) {
-					for (const id of removedRowIds) {
-						await deleteOrderMutation.mutateAsync(id);
-					}
+					await bulkDeleteOrdersMutation.mutateAsync(removedRowIds);
 				}
 
 				for (const part of parts) {
@@ -252,13 +246,11 @@ export const useOrdersPageHandlers = () => {
 
 		// 1. Update details first (optimistic)
 		for (const row of selectedRows) {
-			let newActionNote = row.actionNote || "";
-			if (note && note.trim()) {
-				const taggedNote = `${note.trim()} #booking`;
-				newActionNote = newActionNote
-					? `${newActionNote}\n${taggedNote}`
-					: taggedNote;
-			}
+			const newActionNote = appendTaggedActionNote(
+				row.actionNote,
+				note,
+				"booking",
+			);
 
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
@@ -315,16 +307,14 @@ export const useOrdersPageHandlers = () => {
 
 	const handleSendToCallList = async () => {
 		if (selectedRows.length === 0) return;
-		const ids = selectedRows.map((r) => r.id);
+		const ids = getSelectedIds(selectedRows);
 		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "call" });
 		setSelectedRows([]);
 		toast.success(`${selectedRows.length} order(s) sent to Call List`);
 	};
 
 	const handleDeleteSelected = async () => {
-		for (const row of selectedRows) {
-			await deleteOrderMutation.mutateAsync(row.id);
-		}
+		await bulkDeleteOrdersMutation.mutateAsync(getSelectedIds(selectedRows));
 		setSelectedRows([]);
 		toast.success("Order(s) deleted");
 		setShowDeleteConfirm(false);

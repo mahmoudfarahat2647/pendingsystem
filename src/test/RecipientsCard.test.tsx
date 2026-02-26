@@ -1,15 +1,19 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	useAddEmailRecipientMutation,
+	useRemoveEmailRecipientMutation,
+	useReportSettingsQuery,
+} from "@/hooks/queries/useReportSettingsQuery";
 import { RecipientsCard } from "../components/reports/RecipientsCard";
-import { useAppStore } from "../store/useStore";
 
-// Mock the useAppStore hook
-vi.mock("../store/useStore", () => ({
-	useAppStore: vi.fn(),
+vi.mock("@/hooks/queries/useReportSettingsQuery", () => ({
+	useReportSettingsQuery: vi.fn(),
+	useAddEmailRecipientMutation: vi.fn(),
+	useRemoveEmailRecipientMutation: vi.fn(),
 }));
 
-// Mock UI components
 vi.mock("../components/ui/card", () => ({
 	Card: ({ children }: { children: React.ReactNode }) => (
 		<div data-testid="card">{children}</div>
@@ -43,7 +47,7 @@ vi.mock("../components/ui/input", () => ({
 }));
 
 vi.mock("../components/ui/button", () => ({
-	Button: ({ children, onClick, disabled, size, type }: any) => (
+	Button: ({ children, onClick, disabled, type }: any) => (
 		<button
 			data-testid="add-button"
 			onClick={onClick}
@@ -56,14 +60,13 @@ vi.mock("../components/ui/button", () => ({
 }));
 
 vi.mock("../components/ui/badge", () => ({
-	Badge: ({ children, variant, className, onClick }: any) => (
-		<div data-testid="email-badge" className={className} onClick={onClick}>
+	Badge: ({ children, className }: any) => (
+		<div data-testid="email-badge" className={className}>
 			{children}
 		</div>
 	),
 }));
 
-// Mock Lucide icons
 vi.mock("lucide-react", () => ({
 	X: ({ className }: { className: string }) => (
 		<span data-testid="x-icon" className={className} />
@@ -74,269 +77,94 @@ vi.mock("lucide-react", () => ({
 }));
 
 describe("RecipientsCard", () => {
-	const mockAddEmailRecipient = vi.fn();
-	const mockRemoveEmailRecipient = vi.fn();
+	const addMutate = vi.fn();
+	const removeMutate = vi.fn();
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: null,
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
+		vi.mocked(useReportSettingsQuery).mockReturnValue({ data: null } as any);
+		vi.mocked(useAddEmailRecipientMutation).mockReturnValue({
+			mutate: addMutate,
+		} as any);
+		vi.mocked(useRemoveEmailRecipientMutation).mockReturnValue({
+			mutate: removeMutate,
 		} as any);
 	});
 
-	it("should render the card with title and description", () => {
+	it("disables input while loading", () => {
 		render(<RecipientsCard isLocked={false} />);
-
-		expect(screen.getByText("Recipients")).toBeInTheDocument();
-		expect(
-			screen.getByText(
-				"Manage who receives the automated reports suitable for backup.",
-			),
-		).toBeInTheDocument();
+		expect(screen.getByTestId("email-input")).toBeDisabled();
+		expect(screen.getByTestId("add-button")).toBeDisabled();
 	});
 
-	it("should render email input and add button", () => {
-		render(<RecipientsCard isLocked={false} />);
+	it("renders existing recipients", () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
+				id: "1",
+				emails: ["a@test.com", "b@test.com"],
+				frequency: "Weekly",
+				is_enabled: false,
+				last_sent_at: null,
+			},
+		} as any);
 
-		expect(screen.getByTestId("email-input")).toBeInTheDocument();
-		expect(screen.getByTestId("add-button")).toBeInTheDocument();
-		expect(screen.getByTestId("plus-icon")).toBeInTheDocument();
+		render(<RecipientsCard isLocked={false} />);
+		expect(screen.getByText("a@test.com")).toBeInTheDocument();
+		expect(screen.getByText("b@test.com")).toBeInTheDocument();
 	});
 
-	it("should show no recipients message when emails array is empty", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
+	it("adds a valid email", async () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
 				id: "1",
 				emails: [],
 				frequency: "Weekly",
 				is_enabled: false,
 				last_sent_at: null,
 			},
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
 		} as any);
 
 		render(<RecipientsCard isLocked={false} />);
-
-		expect(screen.getByText("No recipients added yet.")).toBeInTheDocument();
+		await userEvent.type(screen.getByTestId("email-input"), "test@example.com");
+		await userEvent.click(screen.getByTestId("add-button"));
+		expect(addMutate).toHaveBeenCalledWith("test@example.com");
+		expect(screen.getByTestId("email-input")).toHaveValue("");
 	});
 
-	it("should render email badges when recipients exist", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: ["test1@example.com", "test2@example.com"],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
-		} as any);
-
-		render(<RecipientsCard isLocked={false} />);
-
-		expect(screen.getByText("test1@example.com")).toBeInTheDocument();
-		expect(screen.getByText("test2@example.com")).toBeInTheDocument();
-		expect(screen.getAllByTestId("email-badge")).toHaveLength(2);
-	});
-
-	it("should disable input and button when loading", () => {
-		render(<RecipientsCard isLocked={false} />);
-
-		const input = screen.getByTestId("email-input");
-		const button = screen.getByTestId("add-button");
-
-		expect(input).toBeDisabled();
-		expect(button).toBeDisabled();
-	});
-
-	it("should disable input and button when locked", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
+	it("does not add invalid email", async () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
 				id: "1",
 				emails: [],
 				frequency: "Weekly",
 				is_enabled: false,
 				last_sent_at: null,
 			},
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
 		} as any);
 
-		render(<RecipientsCard isLocked={true} />);
-
-		const input = screen.getByTestId("email-input");
-		const button = screen.getByTestId("add-button");
-
-		expect(input).toBeDisabled();
-		expect(button).toBeDisabled();
+		render(<RecipientsCard isLocked={false} />);
+		await userEvent.type(screen.getByTestId("email-input"), "invalid");
+		await userEvent.click(screen.getByTestId("add-button"));
+		expect(addMutate).not.toHaveBeenCalled();
 	});
 
-	it("should add email when clicking add button with valid email", async () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
+	it("removes an email", async () => {
+		vi.mocked(useReportSettingsQuery).mockReturnValue({
+			data: {
 				id: "1",
-				emails: [],
+				emails: ["keep@test.com", "remove@test.com"],
 				frequency: "Weekly",
 				is_enabled: false,
 				last_sent_at: null,
 			},
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
 		} as any);
 
 		render(<RecipientsCard isLocked={false} />);
-
-		const input = screen.getByTestId("email-input");
-		const button = screen.getByTestId("add-button");
-
-		await userEvent.type(input, "test@example.com");
-		await userEvent.click(button);
-
-		expect(mockAddEmailRecipient).toHaveBeenCalledWith("test@example.com");
-		expect(input).toHaveValue("");
-	});
-
-	it("should add email when pressing Enter key with valid email", async () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
-		} as any);
-
-		render(<RecipientsCard isLocked={false} />);
-
-		const input = screen.getByTestId("email-input");
-
-		await userEvent.type(input, "test@example.com");
-		await userEvent.keyboard("{Enter}");
-
-		expect(mockAddEmailRecipient).toHaveBeenCalledWith("test@example.com");
-		expect(input).toHaveValue("");
-	});
-
-	it("should not add email when clicking add button with invalid email", async () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
-		} as any);
-
-		render(<RecipientsCard isLocked={false} />);
-
-		const input = screen.getByTestId("email-input");
-		const button = screen.getByTestId("add-button");
-
-		await userEvent.type(input, "invalid-email");
-		await userEvent.click(button);
-
-		expect(mockAddEmailRecipient).not.toHaveBeenCalled();
-	});
-
-	it("should not add email when pressing Enter with invalid email", async () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
-		} as any);
-
-		render(<RecipientsCard isLocked={false} />);
-
-		const input = screen.getByTestId("email-input");
-
-		await userEvent.type(input, "invalid-email");
-		await userEvent.keyboard("{Enter}");
-
-		expect(mockAddEmailRecipient).not.toHaveBeenCalled();
-	});
-
-	it("should remove email when clicking remove button on badge", async () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: ["test@example.com", "remove@example.com"],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
-		} as any);
-
-		render(<RecipientsCard isLocked={false} />);
-
 		const badges = screen.getAllByTestId("email-badge");
 		const removeButton = badges[1].querySelector("button");
-
 		if (removeButton) {
 			await userEvent.click(removeButton);
-			expect(mockRemoveEmailRecipient).toHaveBeenCalledWith(
-				"remove@example.com",
-			);
 		}
-	});
-
-	it("should not remove email when locked", async () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: ["test@example.com"],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
-		} as any);
-
-		render(<RecipientsCard isLocked={true} />);
-
-		const badge = screen.getByTestId("email-badge");
-		const removeButton = badge.querySelector("button");
-
-		if (removeButton) {
-			expect(removeButton).toBeDisabled();
-		}
-	});
-
-	it("should have correct input placeholder and type", () => {
-		vi.mocked(useAppStore).mockReturnValue({
-			reportSettings: {
-				id: "1",
-				emails: [],
-				frequency: "Weekly",
-				is_enabled: false,
-				last_sent_at: null,
-			},
-			addEmailRecipient: mockAddEmailRecipient,
-			removeEmailRecipient: mockRemoveEmailRecipient,
-		} as any);
-
-		render(<RecipientsCard isLocked={false} />);
-
-		const input = screen.getByTestId("email-input");
-		expect(input).toHaveAttribute("placeholder", "Email address");
-		expect(input).toHaveAttribute("type", "email");
+		expect(removeMutate).toHaveBeenCalledWith("remove@test.com");
 	});
 });

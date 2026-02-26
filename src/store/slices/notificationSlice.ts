@@ -1,4 +1,5 @@
 import type { StateCreator } from "zustand";
+import { getOrdersByStageFromCache } from "@/lib/queryClient";
 import { generateId } from "@/lib/utils";
 import type { AppNotification } from "@/types";
 import type {
@@ -70,10 +71,26 @@ export const createNotificationSlice: StateCreator<
 		>[] = [];
 
 		const sources = [
-			{ data: state.rowData, name: "Main Sheet", path: "/main-sheet" },
-			{ data: state.ordersRowData, name: "Orders", path: "/orders" },
-			{ data: state.bookingRowData, name: "Booking", path: "/booking" },
-			{ data: state.callRowData, name: "Call List", path: "/call-list" },
+			{
+				data: getOrdersByStageFromCache("main"),
+				name: "Main Sheet",
+				path: "/main-sheet",
+			},
+			{
+				data: getOrdersByStageFromCache("orders"),
+				name: "Orders",
+				path: "/orders",
+			},
+			{
+				data: getOrdersByStageFromCache("booking"),
+				name: "Booking",
+				path: "/booking",
+			},
+			{
+				data: getOrdersByStageFromCache("call"),
+				name: "Call List",
+				path: "/call-list",
+			},
 		];
 
 		for (const source of sources) {

@@ -1,0 +1,10 @@
+title = "pendingsystem gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Allow tracked environment template"
+paths = [
+	'''^\.env\.example$''',
+]

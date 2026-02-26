@@ -97,6 +97,7 @@ export const OrdersToolbar = ({
 									: "bg-renault-yellow hover:bg-renault-yellow/90 text-black",
 							)}
 							size="icon"
+							aria-label={selectedCount > 0 ? "Edit order" : "Create order"}
 							onClick={onAddEdit}
 						>
 							{selectedCount > 0 ? (
@@ -123,6 +124,7 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
+							aria-label="Reserve"
 							className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
 							onClick={onReserve}
 							disabled={selectedCount === 0}
@@ -138,6 +140,7 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
+							aria-label="Share to logistics"
 							className="text-gray-400 hover:text-white h-8 w-8"
 							onClick={onShareToLogistics}
 							disabled={selectedCount === 0}
@@ -153,6 +156,7 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
+							aria-label="Set link or path"
 							className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 h-8 w-8"
 							onClick={onBulkAttach}
 							disabled={selectedCount === 0}
@@ -168,6 +172,7 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
+							aria-label="Print order"
 							className="text-gray-400 hover:text-white h-8 w-8"
 							onClick={onPrint}
 							disabled={selectedCount === 0}
@@ -183,6 +188,7 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
+							aria-label="Archive"
 							className="text-gray-400 hover:text-white h-8 w-8"
 							disabled={selectedCount === 0}
 							onClick={onArchive}
@@ -198,6 +204,7 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
+							aria-label="Booking"
 							className={cn(
 								"h-8 w-8 transition-colors",
 								selectedCount > 0
@@ -224,6 +231,7 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
+							aria-label="Send to call list"
 							className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
 							onClick={onCallList}
 							disabled={selectedCount === 0}
@@ -239,6 +247,7 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
+							aria-label="Extract"
 							className="text-gray-400 hover:text-white h-8 w-8"
 							onClick={onExtract}
 						>
@@ -253,6 +262,7 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
+							aria-label="Toggle filters"
 							className="text-gray-400 hover:text-white h-8 w-8"
 							onClick={onFilterToggle}
 						>
@@ -281,6 +291,7 @@ export const OrdersToolbar = ({
 								<Button
 									variant="ghost"
 									size="icon"
+									aria-label="Update part status"
 									className="text-gray-400 hover:text-white h-8 w-8"
 									disabled={selectedCount === 0}
 								>
@@ -324,6 +335,7 @@ export const OrdersToolbar = ({
 					<TooltipTrigger asChild>
 						<Button
 							className="bg-green-600 hover:bg-green-500 text-white border-none rounded-md h-8 w-28"
+							aria-label="Commit to main sheet"
 							onClick={onCommit}
 							disabled={selectedCount === 0}
 						>
@@ -345,6 +357,7 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
+							aria-label="Delete"
 							className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 							onClick={onDelete}
 							disabled={selectedCount === 0}

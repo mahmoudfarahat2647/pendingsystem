@@ -43,13 +43,14 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+	useBulkDeleteOrdersMutation,
 	useBulkUpdateOrderStageMutation,
-	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useRowModals } from "@/hooks/useRowModals";
+import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -62,7 +63,7 @@ export default function CallListPage() {
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const { data: archiveRowData = [] } = useOrdersQuery("archive");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
-	const deleteOrderMutation = useDeleteOrderMutation();
+	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
@@ -135,13 +136,11 @@ export default function CallListPage() {
 		status?: string,
 	) => {
 		for (const row of selectedRows) {
-			let newActionNote = row.actionNote || "";
-			if (note && note.trim()) {
-				const taggedNote = `${note.trim()} #booking`;
-				newActionNote = newActionNote
-					? `${newActionNote}\n${taggedNote}`
-					: taggedNote;
-			}
+			const newActionNote = appendTaggedActionNote(
+				row.actionNote,
+				note,
+				"booking",
+			);
 
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
@@ -163,15 +162,15 @@ export default function CallListPage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = selectedRows.map((r) => r.id);
+		const ids = getSelectedIds(selectedRows);
 		// Send to Orders stage with status and note
 		// 1. Update status/note first (optimistic)
 		for (const row of selectedRows) {
-			let newActionNote = row.actionNote || "";
-			const taggedNote = `Reorder Reason: ${reorderReason} #reorder`;
-			newActionNote = newActionNote
-				? `${newActionNote}\n${taggedNote}`
-				: taggedNote;
+			const newActionNote = appendTaggedActionNote(
+				row.actionNote,
+				`Reorder Reason: ${reorderReason}`,
+				"reorder",
+			);
 
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
@@ -437,9 +436,9 @@ export default function CallListPage() {
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
 					onConfirm={async () => {
-						for (const row of selectedRows) {
-							await deleteOrderMutation.mutateAsync(row.id);
-						}
+						await bulkDeleteOrdersMutation.mutateAsync(
+							getSelectedIds(selectedRows),
+						);
 						setSelectedRows([]);
 						toast.success("Row(s) deleted");
 					}}

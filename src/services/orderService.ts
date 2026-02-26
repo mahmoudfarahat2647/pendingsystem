@@ -24,6 +24,8 @@ function handleSupabaseError(error: PostgrestError): never {
 	});
 }
 
+const isUuid = (id: string): boolean => id.length === 36;
+
 export const orderService = {
 	async getOrders(stage?: OrderStage) {
 		// Use explicit selection to avoid potential schema cache issues with '*'
@@ -199,7 +201,7 @@ export const orderService = {
 	},
 
 	async deleteOrder(id: string) {
-		if (!id || id.length !== 36) {
+		if (!id || !isUuid(id)) {
 			console.warn(`Skipping delete for non-UUID id: ${id}`);
 			return;
 		}
@@ -209,8 +211,29 @@ export const orderService = {
 		if (error) handleSupabaseError(error);
 	},
 
-	// biome-ignore lint/suspicious/noExplicitAny: Supabase row type is loosely defined
-	mapSupabaseOrder(row: any): PendingRow {
+	async deleteOrders(ids: string[]) {
+		if (ids.length === 0) return;
+
+		const validIds = ids.filter(isUuid);
+		if (validIds.length === 0) {
+			console.warn("Skipping bulk delete; no valid UUID ids", {
+				count: ids.length,
+			});
+			return;
+		}
+
+		if (validIds.length !== ids.length) {
+			console.warn("Skipping non-UUID ids during bulk delete", {
+				totalIds: ids.length,
+				validIds: validIds.length,
+			});
+		}
+
+		const { error } = await supabase.from("orders").delete().in("id", validIds);
+		if (error) handleSupabaseError(error);
+	},
+
+	mapSupabaseOrder(row: Record<string, unknown>): PendingRow | null {
 		// Map back the first active reminder if exists via the join
 		let reminder: { date: string; time: string; subject: string } | null = null;
 		if (
@@ -245,7 +268,7 @@ export const orderService = {
 		}
 
 		const resultObj = {
-			...(row.metadata || {}),
+			...(typeof row.metadata === "object" && row.metadata ? row.metadata : {}),
 			id: row.id,
 			trackingId: row.order_number,
 			customerName: row.customer_name,
@@ -263,57 +286,16 @@ export const orderService = {
 		// Safe parse with Zod to validate and normalize data structure
 		// This handles legacy field synchronization via the schema transform
 		const parseResult = PendingRowSchema.safeParse(resultObj);
-
-		if (process.env.NODE_ENV === "development") {
-			if (!parseResult.success) {
-				const errorDetails = parseResult.error.flatten();
-				// Log the actual data that failed validation
-				console.error(
-					`[Strict Validation Failed] Order ID ${row.id} DATA:`,
-					JSON.stringify(resultObj, null, 2),
-				);
-				// Log the error details explicitly
-				console.error(
-					`[Strict Validation Failed] Order ID ${row.id} ERRORS:`,
-					JSON.stringify(errorDetails, null, 2),
-				);
-
-				// Don't throw - log and proceed with raw data to keep system functional
-				return resultObj as PendingRow;
-			}
-			return parseResult.data;
-		}
-
-		// Production: Enhanced error logging and graceful fallback
 		if (!parseResult.success) {
-			const errorDetails = parseResult.error.flatten();
-			console.warn(
-				`[Zod Validation Warning] Invalid order data for ID ${row.id}:`,
-				{
-					orderId: row.id,
-					errors: errorDetails.fieldErrors,
-					data: resultObj,
-					timestamp: new Date().toISOString(),
-				},
-			);
-
-			// Log specific array field issues for debugging
-			const arrayFields = ["customerName", "mobile", "model"];
-			const arrayFieldIssues = arrayFields.filter(
-				(field) =>
-					Array.isArray(resultObj[field]) && resultObj[field].length > 0,
-			);
-
-			if (arrayFieldIssues.length > 0) {
-				console.warn(
-					`[Array Field Detected] Order ID ${row.id} has array fields that should be strings:`,
-					arrayFieldIssues,
-				);
-			}
-
-			// Even if validation fails, return raw object cast to PendingRow.
-			// Note: Transforms did NOT run, so legacy fields might be out of sync if validation failed.
-			return resultObj as PendingRow;
+			const flattenedErrors = parseResult.error.flatten();
+			console.warn("[orderService.mapSupabaseOrder] validation_failed", {
+				orderId: row.id,
+				fieldErrors: flattenedErrors.fieldErrors,
+				formErrors: flattenedErrors.formErrors,
+				data: resultObj,
+				timestamp: new Date().toISOString(),
+			});
+			return null;
 		}
 
 		return parseResult.data;

@@ -12,18 +12,22 @@ export function CloudSync() {
 	const [isSyncing, setIsSyncing] = useState(false);
 	const [completed, setCompleted] = useState(false);
 
-	const store = useAppStore();
+	const ordersRowData = useAppStore((state) => state.ordersRowData);
+	const rowData = useAppStore((state) => state.rowData);
+	const callRowData = useAppStore((state) => state.callRowData);
+	const bookingRowData = useAppStore((state) => state.bookingRowData);
+	const archiveRowData = useAppStore((state) => state.archiveRowData);
 	const saveMutation = useSaveOrderMutation();
 
 	const syncData = async () => {
 		setIsSyncing(true);
 		try {
 			const migrations = [
-				{ data: store.ordersRowData, stage: "orders" as OrderStage },
-				{ data: store.rowData, stage: "main" as OrderStage },
-				{ data: store.callRowData, stage: "call" as OrderStage },
-				{ data: store.bookingRowData, stage: "booking" as OrderStage },
-				{ data: store.archiveRowData, stage: "archive" as OrderStage },
+				{ data: ordersRowData, stage: "orders" as OrderStage },
+				{ data: rowData, stage: "main" as OrderStage },
+				{ data: callRowData, stage: "call" as OrderStage },
+				{ data: bookingRowData, stage: "booking" as OrderStage },
+				{ data: archiveRowData, stage: "archive" as OrderStage },
 			];
 
 			let total = 0;

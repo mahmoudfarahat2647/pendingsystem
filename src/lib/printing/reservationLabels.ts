@@ -1,5 +1,15 @@
 import type { PendingRow } from "@/types";
 
+const escapeHtml = (value: unknown): string => {
+	const normalized = value == null ? "" : String(value);
+	return normalized
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#39;");
+};
+
 /**
  * @module ReservationLabelPrinter
  * @description Professional reservation label generator for physical part tagging in automotive workshops
@@ -76,6 +86,10 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
 			const isZeekr = row.company?.toLowerCase() === "zeekr";
 			const logoSvg = isZeekr ? ZEEKR_LOGO_SVG : PENDINGSYSTEM_LOGO_SVG;
 			const brandName = isZeekr ? "" : "PENDINGSYSTEM";
+			const customerName = escapeHtml(row.customerName || "-");
+			const description = escapeHtml(row.description || "-");
+			const vin = escapeHtml(row.vin || "-");
+			const partNumber = escapeHtml(row.partNumber || "-");
 
 			return `
             <div class="label-box">
@@ -91,14 +105,14 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                 <!-- Row 1: Customer Full Name -->
                 <div class="row name-row">
                     <div class="field-label">اسم العميل (Customer Name)</div>
-                    <div class="field-value large-text">${row.customerName || "-"}</div>
+                    <div class="field-value large-text">${customerName}</div>
                 </div>
 
                 <!-- Row 2: Part Description & Date -->
                 <div class="row split-row">
                     <div class="cell main-cell">
                         <div class="field-label">اسم القطعة (Part Description)</div>
-                        <div class="field-value">${row.description || "-"}</div>
+                        <div class="field-value">${description}</div>
                     </div>
                     <div class="cell side-cell date-cell">
                         <div class="field-label">تاريخ الحجز (Date)</div>
@@ -110,11 +124,11 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                 <div class="row split-row last">
                     <div class="cell main-cell">
                         <div class="field-label">رقم الشاسيه (VIN)</div>
-                        <div class="field-value vin-text">${row.vin || "-"}</div>
+                        <div class="field-value vin-text">${vin}</div>
                     </div>
                     <div class="cell side-cell part-no-cell">
                         <div class="field-label">رقم القطعة (Part No)</div>
-                        <div class="field-value mono-text">${row.partNumber || "-"}</div>
+                        <div class="field-value mono-text">${partNumber}</div>
                     </div>
                 </div>
             </div>
