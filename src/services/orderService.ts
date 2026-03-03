@@ -2,7 +2,12 @@ import type { PostgrestError } from "@supabase/supabase-js";
 import { processBatch } from "@/lib/batchUtils";
 import { supabase } from "@/lib/supabase";
 import { PendingRowSchema } from "@/schemas/order.schema";
-import type { PendingRow } from "@/types";
+import type {
+	DescriptionConflictResult,
+	DuplicateCheckResult,
+	PendingRow,
+} from "@/types";
+import { isUuid } from "@/lib/orderWorkflow";
 
 export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
 
@@ -24,7 +29,6 @@ function handleSupabaseError(error: PostgrestError): never {
 	});
 }
 
-const isUuid = (id: string): boolean => id.length === 36;
 
 export const orderService = {
 	async getOrders(stage?: OrderStage) {
@@ -299,5 +303,111 @@ export const orderService = {
 		}
 
 		return parseResult.data;
+	},
+
+	async checkHistoricalVinPartDuplicate(
+		vin: string,
+		partNumber: string,
+		currentRowId?: string,
+	): Promise<DuplicateCheckResult> {
+		if (!vin || !partNumber) {
+			return { isDuplicate: false };
+		}
+
+		const normalizedVin = vin.trim().toUpperCase();
+		const normalizedPart = partNumber.trim().toUpperCase();
+
+		if (normalizedVin.length < 6 || !normalizedPart) {
+			return { isDuplicate: false };
+		}
+
+		const { data, error } = await supabase
+			.from("orders")
+			.select("id, vin, part_number, stage, metadata")
+			.ilike("vin", normalizedVin)
+			.limit(100);
+
+		if (error) {
+			console.warn(
+				"[orderService] checkHistoricalVinPartDuplicate error:",
+				error,
+			);
+			return { isDuplicate: false };
+		}
+
+		for (const row of data || []) {
+			if (currentRowId && row.id === currentRowId) continue;
+
+			const rowPart = (row.metadata as Record<string, unknown>)?.partNumber as
+				| string
+				| undefined;
+			if (rowPart?.toUpperCase() === normalizedPart) {
+				return {
+					isDuplicate: true,
+					existingRow: {
+						id: row.id,
+						vin: row.vin || "",
+						stage: row.stage,
+					} as PendingRow,
+					location: row.stage || "history",
+				};
+			}
+		}
+
+		return { isDuplicate: false };
+	},
+
+	async checkHistoricalDescriptionConflict(
+		partNumber: string,
+		currentDescription: string,
+		currentRowId?: string,
+	): Promise<DescriptionConflictResult> {
+		if (!partNumber || !currentDescription) {
+			return { hasConflict: false };
+		}
+
+		const normalizedPart = partNumber.trim().toUpperCase();
+		const normalizedDesc = currentDescription.trim().toLowerCase();
+
+		const { data, error } = await supabase
+			.from("orders")
+			.select("id, vin, stage, metadata")
+			.limit(200);
+
+		if (error) {
+			console.warn(
+				"[orderService] checkHistoricalDescriptionConflict error:",
+				error,
+			);
+			return { hasConflict: false };
+		}
+
+		for (const row of data || []) {
+			if (currentRowId && row.id === currentRowId) continue;
+
+			const rowPart = (row.metadata as Record<string, unknown>)?.partNumber as
+				| string
+				| undefined;
+			const rowDesc = (row.metadata as Record<string, unknown>)?.description as
+				| string
+				| undefined;
+
+			if (
+				rowPart?.toUpperCase() === normalizedPart &&
+				rowDesc?.trim().toLowerCase() !== normalizedDesc
+			) {
+				return {
+					hasConflict: true,
+					existingDescription: rowDesc,
+					existingRow: {
+						id: row.id,
+						vin: row.vin || "",
+						stage: row.stage,
+					} as PendingRow,
+				};
+			}
+		}
+
+		return { hasConflict: false };
 	},
 };

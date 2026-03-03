@@ -1,22 +1,27 @@
 import { z } from "zod";
+import {
+	ALLOWED_COMPANIES,
+	DEFAULT_COMPANY,
+	VIN_MIN_LENGTH,
+} from "@/lib/ordersValidationConstants";
 
 export const OrderFormSchema = z
 	.object({
 		customerName: z.string().min(1, "Customer name is required"),
-		vin: z.string().min(1, "VIN is required"),
+		vin: z.string().min(1, "VIN is required").optional().or(z.literal("")),
 		mobile: z.string().min(1, "Mobile number is required"),
 		cntrRdg: z
 			.union([z.string(), z.number()])
 			.transform((val) =>
 				typeof val === "string" ? parseInt(val, 10) || 0 : val,
 			),
-		model: z.string().min(1, "Model is required"),
+		model: z.string().optional().or(z.literal("")),
 		repairSystem: z.string().default("Mechanical"),
 		startWarranty: z.string().optional(),
 		requester: z.string().optional(),
 		sabNumber: z.string().optional(),
 		acceptedBy: z.string().optional(),
-		company: z.string().default("pendingsystem"),
+		company: z.string().default(DEFAULT_COMPANY),
 	})
 	.refine(
 		(data) => {
@@ -28,6 +33,17 @@ export const OrderFormSchema = z
 		{
 			message: "Ineligible for Warranty: Vehicle exceeds 100,000 KM",
 			path: ["cntrRdg"],
+		},
+	)
+	.refine(
+		(data) => {
+			return ALLOWED_COMPANIES.includes(
+				data.company as (typeof ALLOWED_COMPANIES)[number],
+			);
+		},
+		{
+			message: "Invalid company. Only Zeekr and Renalt are allowed",
+			path: ["company"],
 		},
 	);
 
@@ -60,5 +76,16 @@ export const BeastModeSchema = z
 		{
 			message: "Ineligible for Warranty: Vehicle exceeds 100,000 KM",
 			path: ["cntrRdg"],
+		},
+	)
+	.refine(
+		(data) => {
+			return ALLOWED_COMPANIES.includes(
+				data.company as (typeof ALLOWED_COMPANIES)[number],
+			);
+		},
+		{
+			message: "Invalid company. Only Zeekr and Renalt are allowed",
+			path: ["company"],
 		},
 	);

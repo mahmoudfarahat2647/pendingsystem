@@ -1,4 +1,4 @@
-# AGENTS.md - Guidance for coding agents
+﻿# AGENTS.md - Guidance for coding agents
 
 This file captures build/test commands and coding standards for this repo.
 Primary sources: `package.json`, `biome.json`, `tsconfig.json`, `vitest.config.ts`,

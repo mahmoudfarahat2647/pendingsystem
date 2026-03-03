@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	AlertTriangle,
 	Archive,
 	Calendar,
 	ChevronLeft,
@@ -9,12 +10,23 @@ import {
 	LayoutDashboard,
 	MoreVertical,
 	Phone,
+	Save,
 	ShoppingCart,
+	X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useStore";
 import { SettingsModal } from "./SettingsModal";
 
 interface NavItem {
@@ -60,7 +72,50 @@ const navItems: NavItem[] = [
 export const Sidebar = React.memo(function Sidebar() {
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+		null,
+	);
 	const pathname = usePathname();
+	const router = useRouter();
+	const currentEditVin = useAppStore((state) => state.currentEditVin);
+	const clearCurrentEditVin = useAppStore((state) => state.clearCurrentEditVin);
+	const ordersRowData = useAppStore((state) => state.ordersRowData);
+	const rowData = useAppStore((state) => state.rowData);
+
+	const getTargetTabVin = (targetHref: string): string | null => {
+		if (targetHref === "/orders" && ordersRowData.length > 0) {
+			return ordersRowData[0]?.vin || null;
+		}
+		if (targetHref === "/main-sheet" && rowData.length > 0) {
+			return rowData[0]?.vin || null;
+		}
+		return null;
+	};
+
+	const handleNavigation = (href: string, e: React.MouseEvent) => {
+		if (!currentEditVin) {
+			return;
+		}
+
+		const targetVin = getTargetTabVin(href);
+		if (targetVin && targetVin.toUpperCase() !== currentEditVin.toUpperCase()) {
+			e.preventDefault();
+			setPendingNavigation(href);
+			return;
+		}
+	};
+
+	const confirmNavigation = () => {
+		if (pendingNavigation) {
+			clearCurrentEditVin();
+			router.push(pendingNavigation);
+			setPendingNavigation(null);
+		}
+	};
+
+	const cancelNavigation = () => {
+		setPendingNavigation(null);
+	};
 
 	return (
 		<aside
@@ -206,6 +261,7 @@ export const Sidebar = React.memo(function Sidebar() {
 										isCollapsed && "justify-center px-2",
 									)}
 									title={isCollapsed ? item.label : undefined}
+									onClick={(e) => handleNavigation(item.href, e)}
 								>
 									{/* Icon */}
 									<div
@@ -318,6 +374,40 @@ export const Sidebar = React.memo(function Sidebar() {
 			</div>
 
 			<SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+			<Dialog
+				open={pendingNavigation !== null}
+				onOpenChange={(open) => !open && cancelNavigation()}
+			>
+				<DialogContent className="bg-[#0c0c0e] border-white/10 text-slate-200">
+					<DialogTitle className="flex items-center gap-2 text-lg font-bold">
+						<AlertTriangle className="h-5 w-5 text-amber-500" />
+						Unsaved Changes
+					</DialogTitle>
+					<DialogDescription className="text-slate-400 text-sm">
+						You have an active edit for VIN{" "}
+						<span className="text-white font-mono">{currentEditVin}</span>.
+						Navigating to another tab will discard your changes.
+					</DialogDescription>
+					<DialogFooter className="mt-4">
+						<Button
+							variant="ghost"
+							onClick={cancelNavigation}
+							className="text-slate-400 hover:text-white"
+						>
+							<X className="h-4 w-4 mr-2" />
+							Cancel
+						</Button>
+						<Button
+							onClick={confirmNavigation}
+							className="bg-amber-500 hover:bg-amber-400 text-black"
+						>
+							<Save className="h-4 w-4 mr-2" />
+							Save & Continue
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</aside>
 	);
 });

@@ -36,6 +36,18 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+	ALLOWED_COMPANIES,
+	DEFAULT_COMPANY,
+	ValidationMode,
+} from "@/lib/ordersValidationConstants";
+import {
+	checkDescriptionConflict,
+	checkVinPartDuplicate,
+	findSameOrderDuplicateIndices,
+	normalizeVin,
+	shouldSkipDuplicateCheck,
+} from "@/lib/orderWorkflow";
+import {
 	calculateEndWarranty,
 	calculateRemainingTime,
 	cn,
@@ -87,6 +99,8 @@ export const OrderFormModal = ({
 	const addRepairSystem = useAppStore((state) => state.addRepairSystem);
 	const removeRepairSystem = useAppStore((state) => state.removeRepairSystem);
 	const beastModeTriggers = useAppStore((state) => state.beastModeTriggers);
+	const setCurrentEditVin = useAppStore((state) => state.setCurrentEditVin);
+	const clearCurrentEditVin = useAppStore((state) => state.clearCurrentEditVin);
 
 	const [isBulkMode, setIsBulkMode] = useState(false);
 	const [bulkText, setBulkText] = useState("");
@@ -104,7 +118,7 @@ export const OrderFormModal = ({
 		requester: "",
 		sabNumber: "",
 		acceptedBy: "",
-		company: "pendingsystem",
+		company: DEFAULT_COMPANY,
 	});
 
 	const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
@@ -145,7 +159,7 @@ export const OrderFormModal = ({
 					requester: first.requester || "",
 					sabNumber: first.sabNumber || "",
 					acceptedBy: first.acceptedBy || "",
-					company: first.company || "pendingsystem",
+					company: first.company || DEFAULT_COMPANY,
 				};
 
 				const initialParts = selectedRows.map((row) => ({
@@ -156,6 +170,10 @@ export const OrderFormModal = ({
 				}));
 				setParts(initialParts);
 				setFormData(initialFormData);
+
+				if (first.vin) {
+					setCurrentEditVin(first.vin, first.id);
+				}
 
 				// CRITICAL: BEAST MODE SYNC - TIMER PERSISTENCE
 				// 1. Check for Active Global Timer (from Commit failure)
@@ -201,7 +219,7 @@ export const OrderFormModal = ({
 					requester: "",
 					sabNumber: "",
 					acceptedBy: "",
-					company: "pendingsystem",
+					company: DEFAULT_COMPANY,
 				});
 				setParts([{ id: generateId(), partNumber: "", description: "" }]);
 				setIsBulkMode(false);
@@ -212,6 +230,8 @@ export const OrderFormModal = ({
 				setBeastModeErrors(new Set());
 				setBeastModeTimer(null);
 			}
+		} else {
+			clearCurrentEditVin();
 		}
 	}, [open, isEditMode, selectedRows]);
 
@@ -312,57 +332,76 @@ export const OrderFormModal = ({
 	const partValidationWarnings = useMemo(() => {
 		const warnings: Record<
 			string,
-			{ type: "mismatch" | "duplicate"; value: string; location?: string }
+			{
+				type: "mismatch" | "duplicate" | "same-order-duplicate";
+				value: string;
+				location?: string;
+			}
 		> = {};
-		parts.forEach((part) => {
-			if (!part.partNumber || !formData.vin) return;
+
+		const allRows = [
+			...rowData,
+			...ordersRowData,
+			...callRowData,
+			...bookingRowData,
+			...archiveRowData,
+		];
+
+		const duplicateIndices = findSameOrderDuplicateIndices(parts);
+
+		parts.forEach((part, index) => {
+			if (!part.partNumber) return;
+
+			if (duplicateIndices.includes(index)) {
+				warnings[part.id] = {
+					type: "same-order-duplicate",
+					value: "Duplicate part number in this order",
+				};
+				return;
+			}
+
+			if (!formData.vin) return;
 
 			const upperVin = formData.vin.toUpperCase();
 			const upperPart = part.partNumber.toUpperCase();
 
-			const lists = [
-				{ name: "Main Sheet", rows: rowData },
-				{ name: "Orders", rows: ordersRowData },
-				{ name: "Call List", rows: callRowData },
-				{ name: "Booking", rows: bookingRowData },
-				{ name: "Archive", rows: archiveRowData },
-			];
+			if (
+				!shouldSkipDuplicateCheck(
+					formData.vin,
+					validationMode === "beast"
+						? ValidationMode.BEAST
+						: ValidationMode.DEFAULT,
+				)
+			) {
+				const duplicateResult = checkVinPartDuplicate(
+					formData.vin,
+					part.partNumber,
+					allRows,
+					part.rowId,
+				);
 
-			// 1. Check for duplicates (VIN + PartNumber)
-			for (const list of lists) {
-				if (
-					list.rows.some(
-						(r) =>
-							r.vin?.toUpperCase() === upperVin &&
-							r.partNumber?.toUpperCase() === upperPart &&
-							r.id !== part.rowId, // Exclude current row if editing
-					)
-				) {
+				if (duplicateResult.isDuplicate) {
 					warnings[part.id] = {
 						type: "duplicate",
-						value: `The order already exists`,
-						location: list.name,
+						value: "The order already exists",
+						location: duplicateResult.location,
 					};
 					return;
 				}
 			}
 
-			// 2. Check for description mismatch (PartNumber exists with different description)
-			for (const list of lists) {
-				const existingRow = list.rows.find(
-					(r) => r.partNumber?.toUpperCase() === upperPart,
-				);
-				if (
-					existingRow &&
-					existingRow.description.trim().toLowerCase() !==
-						part.description.trim().toLowerCase()
-				) {
-					warnings[part.id] = {
-						type: "mismatch",
-						value: existingRow.description,
-					};
-					return;
-				}
+			const conflictResult = checkDescriptionConflict(
+				part.partNumber,
+				part.description,
+				allRows,
+				part.rowId,
+			);
+
+			if (conflictResult.hasConflict) {
+				warnings[part.id] = {
+					type: "mismatch",
+					value: conflictResult.existingDescription || "",
+				};
 			}
 		});
 		return warnings;
@@ -374,6 +413,7 @@ export const OrderFormModal = ({
 		bookingRowData,
 		archiveRowData,
 		formData.vin,
+		validationMode,
 	]);
 
 	const hasValidationErrors = Object.keys(partValidationWarnings).length > 0;
@@ -402,19 +442,16 @@ export const OrderFormModal = ({
 	};
 
 	const handleLocalSubmit = () => {
-		// Identify if we are attempting a "Commit" (Beast Mode Trigger)
-		const isCommitAction = isEditMode && !isMultiSelection; // "Commit" label is shown here
+		const isCommitAction = isEditMode && !isMultiSelection;
+		const isBeastMode = validationMode === "beast";
 
-		if (isCommitAction || validationMode === "beast") {
-			// Validate with Beast Mode schema
+		if (isCommitAction || isBeastMode) {
 			const result = BeastModeSchema.safeParse(formData);
 
 			if (!result.success) {
-				// Enter Beast Mode
 				setValidationMode("beast");
 				setBeastModeTimer(30);
 
-				// Collect missing fields for red highlights
 				const fieldErrors = result.error.flatten().fieldErrors;
 				const missingFields = new Set<string>();
 				for (const key of Object.keys(fieldErrors)) {
@@ -422,30 +459,69 @@ export const OrderFormModal = ({
 				}
 				setBeastModeErrors(missingFields);
 
-				// Show grouped toast (prevent duplicate toasts with fixed ID)
 				toast.error("Missing Info: Please complete the highlighted fields.", {
 					id: "beast-mode-validation-error",
 				});
 				return;
 			}
-		}
 
-		// Regular validation (Easy Mode) for non-commit or if beast passed
-		const isFormValid = validateForm();
+			if (hasValidationErrors) {
+				const hasSameOrderDup = Object.values(partValidationWarnings).some(
+					(w) => w.type === "same-order-duplicate",
+				);
+				if (hasSameOrderDup) {
+					toast.error(
+						"Duplicate part numbers in this order. Please remove duplicates.",
+					);
+					return;
+				}
 
-		if (hasValidationErrors) {
-			toast.error(
-				"Please correct mismatched part descriptions before submitting.",
+				const hasVinPartDup = Object.values(partValidationWarnings).some(
+					(w) => w.type === "duplicate",
+				);
+				if (hasVinPartDup) {
+					toast.error(
+						"This VIN + part combination already exists. Please review.",
+					);
+					return;
+				}
+
+				const hasMismatch = Object.values(partValidationWarnings).some(
+					(w) => w.type === "mismatch",
+				);
+				if (hasMismatch) {
+					toast.error(
+						"Description conflicts must be resolved. Please use the existing description.",
+					);
+					return;
+				}
+			}
+		} else {
+			const isFormValid = validateForm();
+
+			const hasSameOrderDup = Object.values(partValidationWarnings).some(
+				(w) => w.type === "same-order-duplicate",
 			);
-			return;
-		}
+			if (hasSameOrderDup) {
+				toast.error(
+					"Duplicate part numbers in this order. Please remove duplicates.",
+				);
+				return;
+			}
 
-		if (!isFormValid && validationMode !== "beast") {
-			toast.error("Please fill in all required fields correctly.");
-			return;
+			if (hasValidationErrors && !isFormValid) {
+				toast.error("Please correct the issues before submitting.");
+				return;
+			}
+
+			if (!isFormValid) {
+				toast.error("Please fill in all required fields correctly.");
+				return;
+			}
 		}
 
 		onSubmit(formData, parts);
+		clearCurrentEditVin();
 	};
 
 	return (
@@ -658,8 +734,18 @@ export const OrderFormModal = ({
 																: "premium-glow-indigo text-indigo-400 font-bold",
 														)}
 													>
-														<option value="pendingsystem">pendingsystem</option>
-														<option value="Zeekr">Zeekr</option>
+														{!ALLOWED_COMPANIES.includes(
+															formData.company as (typeof ALLOWED_COMPANIES)[number],
+														) && (
+															<option value={formData.company}>
+																{formData.company}
+															</option>
+														)}
+														{ALLOWED_COMPANIES.map((company) => (
+															<option key={company} value={company}>
+																{company}
+															</option>
+														))}
 													</select>
 													<ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500 pointer-events-none" />
 												</div>
@@ -1116,7 +1202,10 @@ export const OrderFormModal = ({
 
 							<div className="mt-4 pt-4 border-t border-white/5">
 								<div className="flex items-center gap-2 group">
-									<MapPin className="h-3 w-3 text-slate-600" />
+									<User
+										className="h-3 w-3 text-slate-600"
+										aria-label="Requester"
+									/>
 									<Input
 										placeholder="Requester / Branch"
 										value={formData.requester}
@@ -1129,6 +1218,7 @@ export const OrderFormModal = ({
 												? "focus:border-amber-500/20"
 												: "focus:border-indigo-500/20",
 										)}
+										aria-label="Requester name"
 									/>
 								</div>
 							</div>
