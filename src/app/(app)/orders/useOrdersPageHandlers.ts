@@ -220,6 +220,17 @@ export const useOrdersPageHandlers = () => {
 			return;
 		}
 
+		// 1b. Part number + description check
+		const rowsMissingParts = selectedRows.filter(
+			(row) => !row.partNumber?.trim() || !row.description?.trim(),
+		);
+		if (rowsMissingParts.length > 0) {
+			toast.error(
+				`${rowsMissingParts.length} order(s) missing part number or description. Complete all part fields before advancing.`,
+			);
+			return;
+		}
+
 		// 2. Attachment Check
 		const rowsWithoutPaths = selectedRows.filter(
 			(row) => !row.attachmentPath?.trim(),
@@ -243,6 +254,17 @@ export const useOrdersPageHandlers = () => {
 		status?: string,
 	) => {
 		const ids = selectedRows.map((r) => r.id);
+
+		// Part number + description required before booking
+		const rowsMissingParts = selectedRows.filter(
+			(row) => !row.partNumber?.trim() || !row.description?.trim(),
+		);
+		if (rowsMissingParts.length > 0) {
+			toast.error(
+				`${rowsMissingParts.length} order(s) missing part number or description. Complete all part fields before booking.`,
+			);
+			return;
+		}
 
 		// 1. Update details first (optimistic)
 		for (const row of selectedRows) {
@@ -307,6 +329,18 @@ export const useOrdersPageHandlers = () => {
 
 	const handleSendToCallList = async () => {
 		if (selectedRows.length === 0) return;
+
+		// Part number + description required before sending to call list
+		const rowsMissingParts = selectedRows.filter(
+			(row) => !row.partNumber?.trim() || !row.description?.trim(),
+		);
+		if (rowsMissingParts.length > 0) {
+			toast.error(
+				`${rowsMissingParts.length} order(s) missing part number or description. Complete all part fields before sending to Call List.`,
+			);
+			return;
+		}
+
 		const ids = getSelectedIds(selectedRows);
 		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "call" });
 		setSelectedRows([]);

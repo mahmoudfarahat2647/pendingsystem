@@ -31,6 +31,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { formatVinForDisplay, hasMixedVinSelection } from "@/lib/orderWorkflow";
 import { cn } from "@/lib/utils";
 import type { PartStatus, PendingRow } from "@/types";
 
@@ -77,6 +78,8 @@ export const OrdersToolbar = ({
 		useColumnLayoutTracker("orders");
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
+	const hasMixedVins = hasMixedVinSelection(selectedRows);
+	const isEditDisabled = selectedCount > 0 && hasMixedVins;
 
 	return (
 		<div
@@ -95,10 +98,18 @@ export const OrdersToolbar = ({
 								selectedCount > 0
 									? "bg-amber-500 hover:bg-amber-600 text-black"
 									: "bg-renault-yellow hover:bg-renault-yellow/90 text-black",
+								isEditDisabled && "opacity-50 cursor-not-allowed",
 							)}
 							size="icon"
-							aria-label={selectedCount > 0 ? "Edit order" : "Create order"}
+							aria-label={
+								isEditDisabled
+									? "Cannot edit multiple VINs at once"
+									: selectedCount > 0
+										? "Edit order"
+										: "Create order"
+							}
 							onClick={onAddEdit}
+							disabled={isEditDisabled}
 						>
 							{selectedCount > 0 ? (
 								<Pencil className="h-4 w-4" />
@@ -108,9 +119,11 @@ export const OrdersToolbar = ({
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>
-						{selectedCount > 0
-							? `Edit ${selectedCount > 1 ? "Orders" : "Order"}`
-							: "Create Order"}
+						{isEditDisabled
+							? "Cannot edit multiple VINs at once. Select items with the same VIN to edit."
+							: selectedCount > 0
+								? `Edit ${selectedCount > 1 ? "Orders" : "Order"}`
+								: "Create Order"}
 					</TooltipContent>
 				</Tooltip>
 

@@ -210,8 +210,12 @@ description: "Task list for Orders tab validation refactor implementation"
 - [X] T049 [US6] Set/clear edit-session VIN state on form open/save/cancel in `src/app/(app)/orders/useOrdersPageHandlers.ts`
 - [X] T050 [US6] Implement VIN mismatch navigation guard flow in `src/components/shared/Sidebar.tsx`
 - [X] T051 [US6] Use shared dialog prompt with current/target VIN details in `src/components/shared/Sidebar.tsx` and `src/components/ui/dialog.tsx`
+- [ ] T052 [US6] Add normalized VIN bucket helper with blank-VIN handling in `src/lib/orderWorkflow.ts`
+- [ ] T053 [US6] Apply mixed-VIN edit gating to all form-open entry points in `src/components/orders/OrdersToolbar.tsx` and `src/app/(app)/orders/useOrdersPageHandlers.ts`
+- [ ] T054 [US6] Add disabled-action guidance on hover and keyboard focus in `src/components/orders/OrdersToolbar.tsx`
+- [ ] T055 [US6] Apply normalized VIN comparison/blank-VIN mismatch behavior in `src/components/shared/Sidebar.tsx` and `src/components/orders/OrderFormModal.tsx`
 
-**Checkpoint**: US6 independently enforces VIN-based cross-tab editing guardrails.
+**Checkpoint**: US6 independently enforces mixed-VIN edit restrictions and safe cross-tab transitions.
 
 ---
 
@@ -219,11 +223,11 @@ description: "Task list for Orders tab validation refactor implementation"
 
 **Purpose**: Final hardening, documentation, and full verification across stories.
 
-- [X] T052 [P] Update feature behavior documentation in `FEATURES.md`
-- [X] T053 [P] Add/update JSDoc for new validation APIs in `src/services/orderService.ts` and `src/lib/orderWorkflow.ts`
-- [ ] T054 Run and fix unit/component regressions in `src/test/OrderFormModal.test.tsx`, `src/test/orderService.test.ts`, and `src/test/ordersPage.test.tsx`
-- [ ] T055 Run and fix end-to-end validation flow in `tests/orders-validation.e2e.spec.ts`
-- [X] T056 Execute and fix full quality gates from `D:/pendingsystem` using `npm run lint`, `npm run test`, and `npm run build`
+- [X] T056 [P] Update feature behavior documentation in `FEATURES.md`
+- [X] T057 [P] Add/update JSDoc for new validation APIs in `src/services/orderService.ts` and `src/lib/orderWorkflow.ts`
+- [ ] T058 Run and fix unit/component regressions in `src/test/OrderFormModal.test.tsx`, `src/test/orderService.test.ts`, and `src/test/ordersPage.test.tsx`
+- [ ] T059 Run and fix end-to-end validation flow in `tests/orders-validation.e2e.spec.ts`
+- [X] T060 Execute and fix full quality gates from `D:/pendingsystem` using `npm run lint`, `npm run test`, and `npm run build`
 
 ---
 

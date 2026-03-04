@@ -13,6 +13,11 @@
 - Q: How should duplicate VIN + part checks work when a default-mode order has only a partial VIN? -> A: Skip VIN+part duplicate checks when VIN is partial.
 - Q: In beast mode, if duplicate VIN + part is found, should user be able to proceed anyway? -> A: No, block progression until resolved.
 - Q: In default mode, when same part number has a conflicting description in history, should system warn immediately or defer to beast mode validation? -> A: Show inline red warning text under description and allow one-click copy of the existing description for fast correction.
+- Q: Should mixed-VIN edit blocking apply in one tab only or all grid sheets with form editing? -> A: Apply it across all grid sheets that support form editing.
+- Q: How should blank VIN rows be handled in mixed-selection edit validation? -> A: Treat blank VIN as a distinct VIN; mixed blank/non-blank selection is blocked.
+- Q: Should only the edit icon be blocked, or every form-open entry point? -> A: Block all form-opening entry points when mixed VINs are selected.
+- Q: Should blocked-action guidance be pointer-only or also keyboard-accessible? -> A: Show the same tooltip/guidance on hover and keyboard focus.
+- Q: Should VIN comparison for mixed-selection gating be exact string or normalized? -> A: Use normalized VIN comparison (trim + case-insensitive).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -115,12 +120,14 @@ Order processors need to prevent editing across different tabs when different VI
 
 **Why this priority**: Prevents data confusion and ensures organized workflow, improves user experience by enforcing logical boundaries.
 
-**Independent Test**: Can be fully tested by selecting a different VIN in one tab, then attempting to edit in another tab and verifying restrictions are enforced.
+**Independent Test**: Can be fully tested by selecting rows with different VINs in any grid sheet, attempting to open edit via icon/double-click/keyboard path, and verifying the edit action stays blocked with accessible guidance.
 
 **Acceptance Scenarios**:
 
-1. **Given** tab A has VIN "ABC12" selected and tab B has VIN "XYZ99" selected, **When** the user attempts to edit data in one tab, **Then** navigation to other tabs with different VINs is restricted or warned
-2. **Given** the user has selected a VIN in the current tab, **When** they navigate to another tab with a different VIN, **Then** they are prompted to confirm the switch
+1. **Given** selected rows in a grid contain more than one normalized VIN value, **When** the user attempts to open the form through any edit entry point, **Then** form opening is blocked
+2. **Given** mixed-VIN selection is active in a grid sheet, **When** the user hovers or focuses the disabled edit action, **Then** a tooltip explains that opening different VINs is not allowed
+3. **Given** selected rows include both blank VIN and non-blank VIN values, **When** edit is attempted, **Then** the action remains blocked as a mixed-VIN selection
+4. **Given** the user has unsaved edits and navigates to another tab with a different VIN context, **When** navigation is attempted, **Then** the system requires save-first confirmation before allowing the switch
 
 ---
 
@@ -157,6 +164,8 @@ Order staff need the requester field (for names) to display an appropriate perso
 
 - What happens when a user switches between default and beast modes with an incomplete order?
 - How does the system handle concurrent edits in different tabs with conflicting VIN selections?
+- How does the system handle mixed selections where VIN values differ only by casing or accidental leading/trailing spaces?
+- What happens if rows with blank VIN values are selected together with rows that have populated VIN values?
 - What happens when a part number has been assigned multiple descriptions over time and an older description reappears?
 - How does the system behave if validation rules are changed mid-session (e.g., mode switch during entry)?
 - What occurs when a duplicate is detected after the user has already filled in additional fields and is attempting to save?
@@ -209,12 +218,18 @@ Order staff need the requester field (for names) to display an appropriate perso
 - **FR-027**: System MUST display a validation error if a user attempts to add a duplicate part number to the current order
 - **FR-028**: System MUST identify which part number is duplicated when validation fails
 
-#### Cross-Tab Editing Restrictions
-- **FR-029**: System MUST prevent direct editing across tabs if different VINs are selected in different tabs
-- **FR-030**: System MUST prompt the user when attempting to switch tabs with different VINs selected
-- **FR-031**: System MUST display the VINs being compared in the prompt
-- **FR-032**: System MUST allow the user to switch tabs only if the current tab data is saved first
-- **FR-033**: System MUST allow the user to cancel the tab switch and return to the current tab
+#### Cross-Tab and Mixed-VIN Editing Restrictions
+- **FR-029**: System MUST enforce mixed-VIN edit blocking across all grid sheets that support opening the order form.
+- **FR-030**: System MUST block form opening when the current selection contains more than one normalized VIN value.
+- **FR-031**: System MUST apply mixed-VIN blocking to all form-opening entry points (edit icon, row-level edit triggers, keyboard shortcuts, and equivalent UI paths).
+- **FR-032**: System MUST treat blank VIN as a distinct VIN value; mixed blank/non-blank selections are blocked from form opening.
+- **FR-033**: System MUST compare VIN values using normalization (trimmed, case-insensitive) before determining uniqueness.
+- **FR-033a**: System MUST display disabled-action guidance stating that opening different VINs is not allowed.
+- **FR-033b**: System MUST expose the same disabled-action guidance on hover and keyboard focus.
+- **FR-033c**: System MUST prompt the user when attempting to switch tabs with different VINs selected.
+- **FR-033d**: System MUST display the VINs being compared in the prompt when available.
+- **FR-033e**: System MUST allow the user to switch tabs only if the current tab data is saved first.
+- **FR-033f**: System MUST allow the user to cancel the tab switch and return to the current tab.
 
 #### Mode Selection and Switching
 - **FR-034**: System MUST provide a clear mechanism for selecting between default mode and beast mode
@@ -241,6 +256,8 @@ Order staff need the requester field (for names) to display an appropriate perso
 - **SC-006**: Users report improved UI clarity after requester icon change (qualitative feedback in user testing)
 - **SC-007**: Order advancement failures due to missing validation are reduced to 0% in beast mode
 - **SC-008**: Company dropdown now contains exactly 2 options (Zeekr, Renalt) with no "pendingsystem" option
+- **SC-009**: In UAT, 100% of mixed-VIN selections across grid sheets keep form-open actions disabled until selection resolves to a single normalized VIN.
+- **SC-010**: In UAT, 100% of blocked mixed-VIN edit actions display the guidance message on both mouse hover and keyboard focus.
 
 ## Assumptions
 
@@ -249,9 +266,9 @@ Order staff need the requester field (for names) to display an appropriate perso
 3. **Duplicate Detection Scope**: Duplicate checks include all workflow tabs and historical orders, not just current session
 4. **Validation Persistence**: When switching to beast mode, all previously entered data in default mode is retained and validated
 5. **Part Number Format**: Part numbers are case-sensitive and compared exactly as entered
-6. **VIN Comparison**: VINs are compared as exact strings (full or partial)
+6. **VIN Comparison**: VINs are compared using normalized values (trimmed and case-insensitive)
 7. **Warning Handling**: In default mode, warnings can be informational and non-blocking; in beast mode, duplicate VIN + part warnings block progression until resolved
-8. **Cross-Tab Restrictions**: Different VINs in different tabs trigger restrictions only when user is actively editing across tabs
+8. **Cross-Tab Restrictions**: Mixed-VIN edit blocking is enforced on all grid sheets and all form-opening entry points, while save-first prompts apply to cross-tab VIN mismatch navigation
 9. **Icon Change**: Person icon follows standard UI conventions for contact/name fields
 10. **Error Messages**: All validation errors are displayed in user-friendly language with guidance on how to resolve them
 
@@ -262,3 +279,13 @@ Order staff need the requester field (for names) to display an appropriate perso
 **Q2 - Default Mode Duplicate Behavior**: In default mode, duplicate VIN + part number combinations SHALL be allowed **silently without any warnings or restrictions**. This aligns with the "without restrictions or warnings" requirement for busy periods while still maintaining duplicate prevention in beast mode.
 
 **Q3 - Cross-Tab Navigation Logic**: When attempting to navigate to a different tab with a different VIN selected, the system SHALL **allow navigation if the current tab data is saved first**. This provides flexibility while ensuring no unsaved work is lost and prevents accidental data corruption from concurrent multi-VIN editing.
+
+**Q4 - Mixed-VIN Blocking Scope**: Mixed-VIN edit blocking SHALL apply to **all grid sheets that support order-form editing**, not only one tab. This prevents bypassing edit restrictions by switching sheets.
+
+**Q5 - Blank VIN Behavior**: Blank VIN values SHALL be treated as a **distinct VIN value** during mixed-selection checks. Selecting blank + non-blank VIN rows is considered mixed and blocks form opening.
+
+**Q6 - Edit Entry Points**: Mixed-VIN blocking SHALL apply to **all form-opening entry points** (icon, keyboard, row-level triggers, and equivalent paths), not just the primary edit icon.
+
+**Q7 - Accessibility for Blocked Action Guidance**: The blocked-action explanation SHALL be available on **hover and keyboard focus** to ensure accessible guidance parity.
+
+**Q8 - VIN Normalization Rule**: VIN uniqueness checks for mixed-selection gating SHALL use **trimmed, case-insensitive normalization** to avoid false mismatches from formatting differences.

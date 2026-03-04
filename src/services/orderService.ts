@@ -271,17 +271,23 @@ export const orderService = {
 			}
 		}
 
+		const metadata =
+			typeof row.metadata === "object" && row.metadata
+				? (row.metadata as Record<string, unknown>)
+				: {};
+
 		const resultObj = {
-			...(typeof row.metadata === "object" && row.metadata ? row.metadata : {}),
+			...metadata,
 			id: row.id,
 			trackingId: row.order_number,
-			customerName: row.customer_name,
-			mobile: row.customer_phone,
-			vin: row.vin,
+			// Prefer the dedicated column value when non-empty; otherwise keep the
+			// value already present in the metadata JSON (set during save).
+			customerName: (row.customer_name as string) || metadata.customerName || "",
+			mobile: (row.customer_phone as string) || metadata.mobile || "",
+			vin: (row.vin as string) || metadata.vin || "",
 			company: row.company,
 			reminder: reminder,
 			stage: row.stage,
-			// stage logic is handled by the tab we are in
 		};
 
 		// [CRITICAL] Strict Data Validation Mapping

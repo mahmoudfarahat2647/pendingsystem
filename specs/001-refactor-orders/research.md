@@ -32,12 +32,13 @@
   - Beast-only conflict feedback (too late for user correction).
   - Block immediately in Default Mode (conflicts with permissive rush-entry requirement).
 
-## Decision 5: Cross-tab restriction key uses VIN only
+## Decision 5: VIN-based edit restrictions across sheets
 
-- Decision: Cross-tab edit restriction is triggered by VIN mismatch only (not model mismatch), and users may switch tabs after saving current tab changes.
-- Rationale: Explicitly matches clarified behavior and reduces accidental cross-editing without blocking valid workflows.
+- Decision: Use VIN mismatch only as the restriction key, enforce mixed-VIN edit blocking across all grid sheets that support form editing, and keep save-first confirmation for cross-tab switches.
+- Rationale: Prevents invalid multi-vehicle edits consistently while preserving intended workflow flexibility.
 - Alternatives considered:
   - VIN-or-model lock (stricter but rejected by clarification).
+  - Cross-tab-only restriction without per-sheet edit blocking (allows bypass in same sheet).
   - Hard lock until cancel/discard (too disruptive).
 
 ## Decision 6: Validation data source pattern
@@ -63,6 +64,38 @@
 - Alternatives considered:
   - Unit-only coverage (insufficient for modal/flow behavior).
   - Manual QA only (not acceptable for merge gate).
+
+## Decision 9: Blank VIN treatment in mixed-selection gating
+
+- Decision: Treat blank VIN as a distinct VIN value; blank + non-blank selections are considered mixed and blocked from form opening.
+- Rationale: Prevents accidental edit mixing between incomplete and identified vehicle records.
+- Alternatives considered:
+  - Ignore blank VIN in uniqueness checks (creates bypass risk).
+  - Always block any selection containing a blank VIN (too restrictive for single-blank edit use cases).
+
+## Decision 10: Form-open entry-point enforcement
+
+- Decision: Apply mixed-VIN block to all form-opening entry points (icon, keyboard shortcut, row triggers, equivalent edit affordances).
+- Rationale: Ensures users cannot bypass business constraints through alternate interaction paths.
+- Alternatives considered:
+  - Icon-only blocking (inconsistent and bypassable).
+  - Partial entry-point coverage (complex and error-prone).
+
+## Decision 11: Accessible blocked-action guidance
+
+- Decision: Show blocked-action explanation on both hover and keyboard focus.
+- Rationale: Meets constitution accessibility requirements and gives consistent guidance for pointer and keyboard users.
+- Alternatives considered:
+  - Hover-only tooltip (fails keyboard parity).
+  - Static page text only (insufficiently contextual).
+
+## Decision 12: VIN normalization for uniqueness checks
+
+- Decision: Normalize VIN values (trim + case-insensitive) before mixed-selection uniqueness checks.
+- Rationale: Avoids false mismatches caused by formatting noise while preserving strict identity semantics.
+- Alternatives considered:
+  - Exact string comparison (false blocks with whitespace/case variance).
+  - Trim-only normalization (still case-fragile).
 
 ## Clarification Resolution Status
 

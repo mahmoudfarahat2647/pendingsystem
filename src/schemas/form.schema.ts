@@ -16,7 +16,7 @@ export const OrderFormSchema = z
 				typeof val === "string" ? parseInt(val, 10) || 0 : val,
 			),
 		model: z.string().optional().or(z.literal("")),
-		repairSystem: z.string().default("Mechanical"),
+		repairSystem: z.string().default(""),
 		startWarranty: z.string().optional(),
 		requester: z.string().optional(),
 		sabNumber: z.string().optional(),
@@ -58,7 +58,8 @@ export const BeastModeSchema = z
 			.union([z.string(), z.number()])
 			.transform((val) =>
 				typeof val === "string" ? parseInt(val, 10) || 0 : val,
-			),
+			)
+			.pipe(z.number().min(1, "KM reading is required")),
 		model: z.string().min(1, "Vehicle model is required"),
 		repairSystem: z.string().min(1, "Repair system is required"),
 		sabNumber: z.string().min(1, "SAB Number is required"),

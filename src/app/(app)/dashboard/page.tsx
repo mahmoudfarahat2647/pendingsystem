@@ -13,6 +13,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { cn } from "@/lib/utils";
+import type { PendingRow } from "@/types";
 
 const CapacityChart = dynamic(
 	() => import("@/components/dashboard/CapacityChart"),
@@ -64,7 +65,7 @@ export default function DashboardPage() {
 			{
 				title: "CALL QUEUE",
 				// اللعب كله هنا: بنجيب الـ vin من كل سطر، والـ Set بتطير المتكرر، والـ size بيدينا العدد النهائي
-				value: new Set(callRowData.map((item: any) => item.vin)).size,
+				value: new Set(callRowData.map((item: PendingRow) => item.vin)).size,
 				subtext: "Unique Vehicles",
 				icon: Phone,
 			},
@@ -73,18 +74,16 @@ export default function DashboardPage() {
 		[rowData, ordersRowData, callRowData],
 	);
 
-	// Memoize calendar data
-	const calendarData = useMemo(() => {
-		const now = new Date();
-		const year = now.getFullYear();
-		const month = now.getMonth();
-		const firstDay = new Date(year, month, 1).getDay();
-		const daysInMonth = new Date(year, month + 1, 0).getDate();
-		const today = now.getDate();
-		const monthName = now.toLocaleString("en-US", { month: "long" });
+	// Generate calendar data (not memoized so it stays fresh if the page stays open)
+	const now = new Date();
+	const year = now.getFullYear();
+	const month = now.getMonth();
+	const firstDay = new Date(year, month, 1).getDay();
+	const daysInMonth = new Date(year, month + 1, 0).getDate();
+	const today = now.getDate();
+	const monthName = now.toLocaleString("en-US", { month: "long" });
 
-		return { year, month, firstDay, daysInMonth, today, monthName };
-	}, []);
+	const calendarData = { year, month, firstDay, daysInMonth, today, monthName };
 
 	// Memoize chart data
 	const pieData = useMemo(

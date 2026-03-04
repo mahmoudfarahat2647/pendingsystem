@@ -30,6 +30,10 @@
 1. Trigger guard on VIN mismatch only.
 2. Require save-first behavior before tab switch when mismatch exists.
 3. Allow canceling the switch.
+4. Apply mixed-VIN edit blocking across all grid sheets that support form editing.
+5. Block all form-opening entry points when selection contains multiple normalized VIN values.
+6. Treat blank VIN as a distinct VIN bucket in mixed-selection checks.
+7. Show blocked-action guidance on both hover and keyboard focus.
 
 ## 4) Validate data flow and architecture
 
@@ -44,13 +48,19 @@ Recommended minimum additions/updates:
 - `src/test/ordersPage.test.tsx`
   - Default vs Beast mode behavior.
   - Company options and requester icon assertions.
+  - Mixed-VIN edit eligibility across grid sheets.
 - `src/test/orderService.test.ts`
   - Historical duplicate and description conflict checks.
 - `src/test/OrderFormModal.test.tsx` (new if absent)
   - Inline description warning + copy action.
   - Duplicate part number within-order blocking.
+  - Mixed-VIN form-open block for icon and non-icon entry points.
+- `src/test/Sidebar.test.tsx`
+  - Save-first cross-tab prompt when VIN mismatch exists.
+  - Keyboard-focus guidance parity for blocked actions.
 - `tests/orders-validation.e2e.spec.ts` (new)
   - Save-first cross-tab VIN mismatch guard.
+  - Mixed-VIN selection keeps edit actions disabled until single-VIN selection is restored.
 
 ## 6) Run verification gates
 

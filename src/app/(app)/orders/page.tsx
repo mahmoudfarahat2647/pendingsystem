@@ -12,6 +12,7 @@ import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
+import { hasMixedVinSelection } from "@/lib/orderWorkflow";
 
 const OrderFormModal = dynamic(
 	() =>
@@ -104,6 +105,12 @@ export default function OrdersPage() {
 	);
 
 	const handleOpenForm = (edit = false) => {
+		if (edit && hasMixedVinSelection(selectedRows)) {
+			toast.error(
+				"Cannot edit multiple VINs at once. Select items with the same VIN to edit.",
+			);
+			return;
+		}
 		setIsEditMode(edit);
 		setIsFormModalOpen(true);
 	};
@@ -200,7 +207,6 @@ export default function OrdersPage() {
 						<OrderFormModal
 							open={isFormModalOpen}
 							onOpenChange={(open) => {
-
 								setIsFormModalOpen(open);
 							}}
 							isEditMode={isEditMode}

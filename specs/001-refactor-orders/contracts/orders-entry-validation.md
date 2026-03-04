@@ -101,3 +101,29 @@ Defines the user-facing validation contract for creating/editing orders in Defau
 
 1. Requester input uses a person/name icon (not location).
 2. Field help/tooltip text must communicate requester-name intent.
+
+## 6) Mixed-VIN Edit Eligibility Contract
+
+### Input
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| selectedRows | Array<RowRef> | Yes | Current grid selection |
+| entryPoint | String | Yes | Icon, keyboard shortcut, row trigger, or equivalent |
+
+### Output
+
+| Field | Type | Notes |
+|-------|------|-------|
+| canOpenForm | Boolean | Final edit-open decision |
+| reasonCode | `none` \| `mixed-vin-selection` | Blocking reason |
+| guidanceMessage | String \| null | Disabled-action guidance text |
+
+### Contract Rules
+
+1. VIN comparison uses normalized values (trimmed and case-insensitive).
+2. Blank VIN is treated as a distinct VIN value.
+3. If more than one VIN bucket is present in selection, return `canOpenForm=false`.
+4. Mixed-VIN block must be enforced for all form-opening entry points.
+5. When blocked, `guidanceMessage` must explain that opening different VINs is not allowed.
+6. Guidance must be available for both hover and keyboard focus states.

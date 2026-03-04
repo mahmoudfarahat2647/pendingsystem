@@ -52,6 +52,8 @@ export const PendingRowSchema = z
 			.transform((v) => v || ""),
 
 		// Customer Info
+		// Allow empty string — draft orders may have no customer name yet.
+		// Strict .min(1) validation is enforced by BeastModeSchema on Commit only.
 		customerName: z.preprocess(
 			(val) => {
 				// Handle both string and string[] formats from database
@@ -62,10 +64,12 @@ export const PendingRowSchema = z
 					? String(val)
 					: "";
 			},
-			z.string().min(1, "Customer name is required"),
+			z.string(),
 		),
 		company: z.string().nullish(), // Allow null
-		vin: z.string().min(1, "VIN is required"),
+		// Allow empty string — draft orders may have no VIN yet.
+		vin: z.string().default(""),
+		// Allow empty string — draft orders may have no mobile yet.
 		mobile: z.preprocess(
 			(val) => {
 				// Handle both string and string[] formats from database
@@ -76,7 +80,7 @@ export const PendingRowSchema = z
 					? String(val)
 					: "";
 			},
-			z.string().min(1, "Mobile number is required"),
+			z.string(),
 		),
 		cntrRdg: z.preprocess(
 			(val) => Number(val) || 0,

@@ -83,13 +83,15 @@ export const Sidebar = React.memo(function Sidebar() {
 	const rowData = useAppStore((state) => state.rowData);
 
 	const getTargetTabVin = (targetHref: string): string | null => {
-		if (targetHref === "/orders" && ordersRowData.length > 0) {
-			return ordersRowData[0]?.vin || null;
+		if (targetHref === "/orders") {
+			const targetRow = ordersRowData.find(r => r.vin?.toUpperCase() === currentEditVin?.toUpperCase());
+			return targetRow ? currentEditVin : "different-context";
 		}
-		if (targetHref === "/main-sheet" && rowData.length > 0) {
-			return rowData[0]?.vin || null;
+		if (targetHref === "/main-sheet") {
+			const targetRow = rowData.find(r => r.vin?.toUpperCase() === currentEditVin?.toUpperCase());
+			return targetRow ? currentEditVin : "different-context";
 		}
-		return null;
+		return "different-context";
 	};
 
 	const handleNavigation = (href: string, e: React.MouseEvent) => {

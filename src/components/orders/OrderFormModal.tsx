@@ -113,7 +113,7 @@ export const OrderFormModal = ({
 		mobile: "",
 		cntrRdg: "",
 		model: "",
-		repairSystem: "Mechanical",
+		repairSystem: "",
 		startWarranty: new Date().toISOString().split("T")[0],
 		requester: "",
 		sabNumber: "",
@@ -153,7 +153,7 @@ export const OrderFormModal = ({
 							? String(first.cntrRdg)
 							: "",
 					model: first.model || "",
-					repairSystem: first.repairSystem || "Mechanical",
+					repairSystem: first.repairSystem || "",
 					startWarranty:
 						first.startWarranty || new Date().toISOString().split("T")[0],
 					requester: first.requester || "",
@@ -214,7 +214,7 @@ export const OrderFormModal = ({
 					mobile: "",
 					cntrRdg: "",
 					model: "",
-					repairSystem: "Mechanical",
+					repairSystem: "",
 					startWarranty: new Date().toISOString().split("T")[0],
 					requester: "",
 					sabNumber: "",
@@ -442,10 +442,11 @@ export const OrderFormModal = ({
 	};
 
 	const handleLocalSubmit = () => {
-		const isCommitAction = isEditMode && !isMultiSelection;
+		// Beast mode is activated externally by the grid toolbar Commit button (triggerBeastMode).
+		// The form's own Commit/Publish buttons are always permissive (draft saves).
 		const isBeastMode = validationMode === "beast";
 
-		if (isCommitAction || isBeastMode) {
+		if (isBeastMode) {
 			const result = BeastModeSchema.safeParse(formData);
 
 			if (!result.success) {
@@ -496,9 +497,19 @@ export const OrderFormModal = ({
 					return;
 				}
 			}
+			// Beast mode: require at least one part with both partNumber AND description
+			const hasValidPart = parts.some(
+				(p) => p.partNumber.trim() !== "" && p.description.trim() !== "",
+			);
+			if (!hasValidPart) {
+				toast.error(
+					"Part number and description are required. Please complete the components section.",
+				);
+				return;
+			}
 		} else {
-			const isFormValid = validateForm();
-
+			// Draft Mode (Publish): permissive — save whatever data is entered.
+			// Only block on same-order duplicate part numbers (data integrity, not validation).
 			const hasSameOrderDup = Object.values(partValidationWarnings).some(
 				(w) => w.type === "same-order-duplicate",
 			);
@@ -509,15 +520,7 @@ export const OrderFormModal = ({
 				return;
 			}
 
-			if (hasValidationErrors && !isFormValid) {
-				toast.error("Please correct the issues before submitting.");
-				return;
-			}
-
-			if (!isFormValid) {
-				toast.error("Please fill in all required fields correctly.");
-				return;
-			}
+			// Note: validateForm object-level schema is not enforced for Draft/Publish Mode.
 		}
 
 		onSubmit(formData, parts);
@@ -702,7 +705,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 														getFieldError("customerName") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -737,10 +740,10 @@ export const OrderFormModal = ({
 														{!ALLOWED_COMPANIES.includes(
 															formData.company as (typeof ALLOWED_COMPANIES)[number],
 														) && (
-															<option value={formData.company}>
-																{formData.company}
-															</option>
-														)}
+																<option value={formData.company}>
+																	{formData.company}
+																</option>
+															)}
 														{ALLOWED_COMPANIES.map((company) => (
 															<option key={company} value={company}>
 																{company}
@@ -768,7 +771,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
 														getFieldError("vin") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -797,15 +800,15 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 														getFieldError("cntrRdg") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
 													)}
 												/>
-												{errors.cntrRdg && (
+												{getFieldError("cntrRdg") && (
 													<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1 leading-tight">
-														{errors.cntrRdg}
+														{errors.cntrRdg ?? "KM reading is required"}
 													</p>
 												)}
 											</div>
@@ -824,7 +827,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 														getFieldError("mobile") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -847,7 +850,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 														getFieldError("acceptedBy") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -872,7 +875,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 														getFieldError("sabNumber") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -887,7 +890,7 @@ export const OrderFormModal = ({
 													className={cn(
 														"rounded-lg transition-all",
 														getFieldError("model") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+														"ring-2 ring-red-500/50",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -904,9 +907,9 @@ export const OrderFormModal = ({
 														placeholder="Select model..."
 													/>
 												</div>
-												{errors.model && (
+												{getFieldError("model") && (
 													<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
-														{errors.model}
+														{errors.model ?? "Vehicle model is required"}
 													</p>
 												)}
 											</div>
@@ -933,6 +936,8 @@ export const OrderFormModal = ({
 												<div
 													className={cn(
 														"rounded-lg transition-all",
+														getFieldError("repairSystem") &&
+														"ring-2 ring-red-500/50",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -946,8 +951,14 @@ export const OrderFormModal = ({
 														}
 														onAdd={addRepairSystem}
 														onRemove={removeRepairSystem}
+														placeholder="Select repair system"
 													/>
 												</div>
+												{getFieldError("repairSystem") && (
+													<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
+														{errors.repairSystem ?? "Repair system is required"}
+													</p>
+												)}
 											</div>
 											<AnimatePresence mode="wait">
 												{formData.repairSystem === "ضمان" && (
@@ -1107,6 +1118,9 @@ export const OrderFormModal = ({
 																			isEditMode
 																				? "focus:ring-amber-500/30"
 																				: "focus:ring-indigo-500/30",
+																			validationMode === "beast" &&
+																			!part.partNumber.trim() &&
+																			"border-red-500/50 ring-1 ring-red-500/30",
 																		)}
 																	/>
 																</div>
@@ -1140,6 +1154,9 @@ export const OrderFormModal = ({
 																			isEditMode
 																				? "focus:ring-amber-500/30"
 																				: "focus:ring-indigo-500/30",
+																			validationMode === "beast" &&
+																			!part.description.trim() &&
+																			"border-red-500/50 ring-1 ring-red-500/30",
 																		)}
 																	/>
 																</div>
@@ -1158,29 +1175,29 @@ export const OrderFormModal = ({
 																		<AlertCircle className="h-3 w-3" />
 																		<span className="text-[9px] font-bold uppercase tracking-tight">
 																			{partValidationWarnings[part.id].type ===
-																			"duplicate"
+																				"duplicate"
 																				? `${partValidationWarnings[part.id].value} in ${partValidationWarnings[part.id].location}`
 																				: `Existing Name: "${partValidationWarnings[part.id].value}"`}
 																		</span>
 																	</div>
 																	{partValidationWarnings[part.id].type ===
 																		"mismatch" && (
-																		<Button
-																			variant="ghost"
-																			size="icon"
-																			className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
-																			onClick={() =>
-																				handlePartChange(
-																					part.id,
-																					"description",
-																					partValidationWarnings[part.id].value,
-																				)
-																			}
-																			title="Apply existing name"
-																		>
-																			<CheckCircle2 className="h-3 w-3" />
-																		</Button>
-																	)}
+																			<Button
+																				variant="ghost"
+																				size="icon"
+																				className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
+																				onClick={() =>
+																					handlePartChange(
+																						part.id,
+																						"description",
+																						partValidationWarnings[part.id].value,
+																					)
+																				}
+																				title="Apply existing name"
+																			>
+																				<CheckCircle2 className="h-3 w-3" />
+																			</Button>
+																		)}
 																</div>
 															)}
 														</div>
@@ -1207,13 +1224,16 @@ export const OrderFormModal = ({
 										aria-label="Requester"
 									/>
 									<Input
-										placeholder="Requester / Branch"
+										placeholder="Requester"
 										value={formData.requester}
 										onChange={(e) =>
 											setFormData({ ...formData, requester: e.target.value })
 										}
 										className={cn(
-											"bg-transparent border-transparent h-8 text-xs px-0 hover:bg-white/5 focus:bg-white/5 focus:border-white/5 transition-all text-slate-400 focus:text-slate-200",
+											"h-8 text-xs px-0 transition-all text-slate-400 focus:text-slate-200",
+											getFieldError("requester")
+												? "bg-white/5 border-red-500/50 ring-2 ring-red-500/50"
+												: "bg-transparent border-transparent hover:bg-white/5 focus:bg-white/5 focus:border-white/5",
 											isEditMode
 												? "focus:border-amber-500/20"
 												: "focus:border-indigo-500/20",
@@ -1343,8 +1363,8 @@ export const OrderFormModal = ({
 							>
 								{isEditMode
 									? isMultiSelection
-										? "Commit Batch"
-										: "Commit"
+										? "Confirm Batch"
+										: "Confirm"
 									: "Publish"}
 								<CheckCircle2 className="ml-2 h-3 w-3" />
 							</Button>

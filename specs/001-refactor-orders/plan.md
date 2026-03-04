@@ -1,54 +1,48 @@
-# Implementation Plan: Orders Tab Validation Refactor
+# Implementation Plan: Orders Tab Refactoring with Dual-Mode Validation
 
-**Branch**: `001-refactor-orders` | **Date**: 2026-03-03 | **Spec**: `specs/001-refactor-orders/spec.md`
-**Input**: Feature specification from `specs/001-refactor-orders/spec.md`
+**Branch**: `001-refactor-orders` | **Date**: 2026-03-03 | **Spec**: `D:/pendingsystem/specs/001-refactor-orders/spec.md`
+**Input**: Feature specification from `/specs/001-refactor-orders/spec.md`
 
 ## Summary
 
-Refactor the Orders tab entry flow to support dual-mode validation (Default permissive mode and Beast strict mode), enforce duplicate and consistency rules across stage tabs/history, apply save-first cross-tab VIN guardrails, and deliver requested UI fixes (company options and requester icon).
-
-Technical approach: keep strict separation between UI state and backend data, centralize historical checks through service/query patterns, add mode-aware validation contracts, and cover the behavior with unit/component/e2e tests before merge.
+Refine Orders workflow validation by keeping fast permissive entry in Default Mode, enforcing hard quality gates in Beast Mode, and preventing invalid edit operations for mixed VIN selections across all grid sheets. The implementation extends existing service-layer + React Query architecture, adds canonical duplicate/conflict checks, tightens cross-tab VIN safeguards, and standardizes blocking guidance accessibility.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x (strict), React 19, Next.js 15  
-**Primary Dependencies**: React Query v5, Zod, Supabase JS, Zustand (UI-only usage), Lucide React, shadcn/ui Dialog, Sonner  
-**Storage**: Supabase PostgreSQL (`orders`, `order_reminders`) + order metadata object  
-**Testing**: Vitest + Testing Library (unit/component), Playwright (e2e)  
-**Target Platform**: Internal web app (desktop-first, responsive), Node 18/20 build/runtime tooling  
-**Project Type**: Single-project Next.js web application  
-**Performance Goals**: Beast-mode blocker feedback <= 500ms; maintain grid responsiveness (<100ms target from constitution)  
-**Constraints**: Service-layer Supabase access only; no backend data mirroring into Zustand; no `any`; preserve optimistic mutation pattern and protected workflow behaviors  
-**Scale/Scope**: Five active workflow tabs plus historical order records; internal service-center operational volume (hundreds of active rows per stage)
+**Language/Version**: TypeScript 5.x, React 19, Next.js 15  
+**Primary Dependencies**: `@tanstack/react-query` v5, `zustand` v5 (UI-only), `zod` v4, `@supabase/supabase-js` v2, `ag-grid-community` v32, shadcn/ui Dialog, Lucide React, Framer Motion  
+**Storage**: Supabase PostgreSQL (`orders`, `order_reminders`, metadata JSON)  
+**Testing**: Vitest + Testing Library (unit/component), Playwright (E2E)  
+**Target Platform**: Internal web app (desktop-first browser usage)  
+**Project Type**: Web application (single Next.js project)  
+**Performance Goals**: Sub-second validation feedback for blocking checks; preserve existing grid render responsiveness (<100ms target from constitution)  
+**Constraints**: No `any`; backend data via React Query only; Supabase access only in `src/services`; Zod validation at schema/service boundary; shared Dialog for modal prompts; tooltip + keyboard-focus guidance for icon-only blocked actions  
+**Scale/Scope**: Internal service-center volume (hundreds of active rows per stage, growing archive, five active stage tabs)
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-### Pre-Phase 0 Gate Review
-
-| Gate | Constitution Principle | Status | Plan Evidence |
-|------|------------------------|--------|---------------|
-| State data boundaries | Principle 1 (React Query vs Zustand) | PASS | Validation reads use query/service data; no new backend mirror state in Zustand |
-| Service access boundary | Principle 2 (service layer) | PASS | Duplicate/history checks planned via service-level access patterns |
-| Runtime validation | Principle 3 (Zod validation) | PASS | Form and order data constraints remain schema-validated |
-| Type safety | Principles 4 and 7 | PASS | No `any` introduction, strict typing preserved |
-| UI consistency/accessibility | Principle 9 | PASS | Shared `Dialog`, Lucide icons, inline accessible warnings |
-| Protected behaviors | Protected Behaviors section | PASS | No plan to alter GridConfig composite getter, auto-move, or workflow exceptions |
-| Quality gates | Principle 8 and Testing Requirements | PASS | `lint`, `test`, `build` maintained as merge gate |
-| Documentation obligations | Principle 10 | PASS | `FEATURES.md` update included in implementation workflow |
-
-**Gate Result (Pre-Phase 0)**: PASS
-
-### Post-Phase 1 Re-check
+### Pre-Research Gate Review
 
 | Gate | Status | Notes |
 |------|--------|-------|
-| Architecture and boundaries preserved | PASS | Data model and contracts keep service/query boundaries explicit |
-| Validation requirements testable | PASS | Contracts and quickstart define measurable checks by mode |
-| No constitution violations introduced by design | PASS | No exceptions required |
+| Principle 1: State separation | PASS | Backend/order datasets remain React Query-driven; only UI-local guard state in Zustand |
+| Principle 2: Service layer | PASS | Historical duplicate/conflict checks routed through `src/services/orderService.ts` |
+| Principle 3: Zod validation | PASS | Form strict/permissive behavior and service mappings remain schema-backed |
+| Principle 4/7: No `any`, strict typing | PASS | New contracts and models typed explicitly |
+| Principle 8: Testing non-negotiable | PASS | Unit/component/e2e updates included in scope and quickstart gates |
+| Principle 9: UI/UX consistency + accessibility | PASS | Shared Dialog + tooltip + aria/focus guidance mandated |
+| Principle 10: Documentation updates | PASS | `FEATURES.md` + spec/plan artifacts included |
+| Protected behaviors unchanged | PASS | No planned change to auto-move, booking single-VIN, GridConfig protected logic |
 
-**Gate Result (Post-Phase 1)**: PASS
+### Post-Design Gate Review
+
+| Gate | Status | Notes |
+|------|--------|-------|
+| Architecture compliance after design | PASS | Data model/contracts align with service + React Query pattern |
+| Accessibility and UX consistency | PASS | Mixed-VIN blocked state explicitly requires hover + keyboard-focus guidance |
+| Testability and measurable gates | PASS | Contracts and quickstart define deterministic validation and verification steps |
 
 ## Project Structure
 
@@ -63,7 +57,7 @@ specs/001-refactor-orders/
 ├── contracts/
 │   ├── orders-entry-validation.md
 │   └── cross-tab-edit-guard.md
-└── tasks.md                # Created later by /speckit.tasks
+└── tasks.md
 ```
 
 ### Source Code (repository root)
@@ -72,66 +66,53 @@ specs/001-refactor-orders/
 src/
 ├── app/
 │   └── (app)/orders/
-│       ├── page.tsx
-│       └── useOrdersPageHandlers.ts
 ├── components/
-│   └── orders/
-│       ├── OrderFormModal.tsx
-│       ├── OrdersToolbar.tsx
-│       └── OrderFormErrorBoundary.tsx
+│   ├── orders/
+│   └── shared/
 ├── hooks/
 │   └── queries/
-│       ├── useOrdersQuery.ts
-│       ├── useSaveOrderMutation.ts
-│       ├── useBulkUpdateOrderStageMutation.ts
-│       └── useDeleteOrderMutation.ts
+├── lib/
 ├── schemas/
-│   ├── form.schema.ts
-│   └── order.schema.ts
 ├── services/
-│   └── orderService.ts
-└── test/
-    ├── ordersPage.test.tsx
-    ├── orderService.test.ts
-    └── OrderFormModal.test.tsx      # expected add/update
+├── store/
+├── test/
+└── types/
 
 tests/
-└── orders-validation.e2e.spec.ts    # expected add
+└── *.e2e.spec.ts
 ```
 
-**Structure Decision**: Use the existing single Next.js project structure and implement feature-specific changes in orders components/hooks/services/schemas with corresponding `src/test` and `tests` coverage updates.
+**Structure Decision**: Keep single-project Next.js structure. Implement behavior in existing Orders modal/handlers/sidebar/store/service layers; avoid introducing new top-level apps or alternate data-access paths.
 
-## Phase 0: Research Output
+## Phase 0: Research Decisions
 
-Research completed in `specs/001-refactor-orders/research.md` with decisions on:
+Research is consolidated in `research.md` and resolves mode semantics, duplicate scope, blocking behavior, historical consistency, and VIN-based guard logic. Additional clarification-driven decisions now codified:
 
-1. Mode semantics and naming compatibility.
-2. Full vs partial VIN duplicate-check behavior.
-3. Beast-mode blocking policy.
-4. Description conflict UX and historical consistency scope.
-5. VIN-only cross-tab guard behavior.
-6. Data-source architecture for validation checks.
+1. Mixed-VIN edit blocking applies to all grid sheets with order-form editing.
+2. Blank VIN is treated as a distinct VIN in mixed-selection checks.
+3. All form-opening entry points must enforce mixed-VIN blocking (not icon-only).
+4. Blocked-action guidance must be available on hover and keyboard focus.
+5. VIN comparisons for mixed-selection gating use trimmed case-insensitive normalization.
 
-All planning-stage clarifications are resolved.
+## Phase 1: Design & Contracts
 
-## Phase 1: Design and Contracts Output
+Artifacts produced/updated in this phase:
 
-Generated artifacts:
+- `data-model.md`: entities and validation-state models for mode rules, duplicate checks, and edit-eligibility gating.
+- `contracts/orders-entry-validation.md`: behavioral contract for submit validation, duplicate checks, and description conflict handling.
+- `contracts/cross-tab-edit-guard.md`: guard contract for save-first navigation and mixed-VIN edit blocking.
+- `quickstart.md`: implementation sequence, test coverage targets, and verification commands.
 
-- Data model: `specs/001-refactor-orders/data-model.md`
-- Validation contract: `specs/001-refactor-orders/contracts/orders-entry-validation.md`
-- Cross-tab guard contract: `specs/001-refactor-orders/contracts/cross-tab-edit-guard.md`
-- Implementation/verification runbook: `specs/001-refactor-orders/quickstart.md`
+## Agent Context Update
 
-## Phase 2: Task Planning Approach
+Run after design artifact updates:
 
-Implementation tasks should be decomposed into these streams:
+```powershell
+.specify/scripts/powershell/update-agent-context.ps1 -AgentType opencode
+```
 
-1. Orders form UX adjustments (company options + requester icon).
-2. Mode-aware validation logic (default vs beast) and duplicate/conflict checks.
-3. Cross-tab VIN save-first guard behavior.
-4. Test coverage updates (unit/component/e2e) and documentation updates.
+This refreshes agent-specific context with current stack and planning decisions while preserving manual additions between markers.
 
 ## Complexity Tracking
 
-No constitution violations identified. No exception justification required.
+No constitution violations require special justification for this plan.

@@ -12,7 +12,7 @@ import type { PartEntry, PendingRow } from "@/types";
  * @returns True if valid UUID
  */
 export const isUuid = (id: string): boolean =>
-	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+	/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 
 /**
  * Appends a tagged note to an existing action note string.
@@ -139,20 +139,21 @@ export function checkDescriptionConflict(
 
 export function findSameOrderDuplicates(parts: PartEntry[]): PartEntry[] {
 	const seen = new Map<string, PartEntry>();
-	const duplicates: PartEntry[] = [];
+	const duplicates = new Set<PartEntry>();
 
 	for (const part of parts) {
 		const key = part.partNumber.trim().toUpperCase();
 		if (!key) continue;
 
 		if (seen.has(key)) {
-			duplicates.push(part);
+			duplicates.add(seen.get(key)!);
+			duplicates.add(part);
 		} else {
 			seen.set(key, part);
 		}
 	}
 
-	return duplicates;
+	return Array.from(duplicates);
 }
 
 export function findSameOrderDuplicateIndices(parts: PartEntry[]): number[] {

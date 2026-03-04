@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [x] No [NEEDS CLARIFICATION] markers remain (3 clarifications resolved)
+- [x] No [NEEDS CLARIFICATION] markers remain (8 clarifications resolved)
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,7 +31,7 @@
 
 ## Clarifications Resolved
 
-All three clarification questions have been answered and integrated into the specification:
+All clarification questions have been answered and integrated into the specification.
 
 ### Q1: Part Number Description Validation Scope ✓ RESOLVED
 
@@ -57,15 +57,23 @@ All three clarification questions have been answered and integrated into the spe
 
 ---
 
+### Q4-Q8: Mixed-VIN Edit Guard Details ✓ RESOLVED
+
+**Decision**: Mixed-VIN edit blocking applies across all editable grid sheets, treats blank VIN as distinct, covers all form-open entry points, uses normalized VIN comparison, and requires hover + keyboard-focus guidance.
+
+**Rationale**: Eliminates edit bypass paths and preserves consistent, accessible blocking behavior.
+
+---
+
 ## Status
 
-- **Clarifications pending**: No (all 3 resolved)
+- **Clarifications pending**: No (all 8 resolved)
 - **Validation status**: ✓ PASSED - Specification is complete and ready for next phase
 - **Next step**: Ready for `/speckit.clarify` or `/speckit.plan` command
 
 ## Notes
 
 - All specification items pass quality validation
-- Specification is comprehensive with 36 functional requirements and 8 user stories
+- Specification is comprehensive and includes testable requirements across all user stories
 - All clarifications have been resolved and integrated into the spec
 - Specification is ready for planning phase

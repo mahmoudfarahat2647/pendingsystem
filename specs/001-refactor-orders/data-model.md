@@ -71,6 +71,20 @@ Represents one persisted order row in the workflow dataset.
 | hasUnsavedChanges | Boolean | Save-first gating condition |
 | requiresSaveFirst | Boolean | True when VIN mismatch is detected |
 
+## Entity: EditEligibilityState (Derived)
+
+Represents whether the order form may be opened from the current grid selection.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| selectedRowCount | Number | Current selected rows in active grid |
+| normalizedVinSet | Set<String> | Trimmed, case-insensitive VIN values from selection |
+| hasBlankVin | Boolean | True when one or more selected rows have blank VIN |
+| isMixedVinSelection | Boolean | True when selection contains more than one VIN bucket (blank is its own bucket) |
+| canOpenFormEdit | Boolean | False when mixed-VIN block applies |
+| blockReasonCode | Enum | `none` \| `mixed-vin-selection` |
+| blockGuidanceMessage | String \| null | Tooltip message shown on blocked action |
+
 ## Relationships
 
 - OrderRecord 1 -> N PartEntry (through `metadata.parts` and legacy mirror fields).
@@ -85,6 +99,8 @@ Represents one persisted order row in the workflow dataset.
    - Beast Mode: duplicate blocks progression.
 3. Part description consistency: one canonical description per normalized part number across historical data.
 4. Intra-order uniqueness: duplicate part numbers within the same order are not allowed.
+5. Mixed-selection edit gating uses normalized VIN uniqueness (trim + case-insensitive).
+6. Blank VIN is treated as a distinct VIN bucket in mixed-selection gating.
 
 ## Lifecycle and State Transitions
 
@@ -100,6 +116,12 @@ Represents one persisted order row in the workflow dataset.
 - `easy -> beast`: on strict progression attempt or beast trigger.
 - `beast -> easy`: after timer expiry or user returns to permissive flow.
 - Beast progression gate: blocked when required fields or blocking duplicate validations fail.
+
+### Edit-eligibility transitions
+
+- `canOpenFormEdit=true -> false`: when active grid selection changes from one VIN bucket to mixed VIN buckets.
+- `canOpenFormEdit=false -> true`: when selection resolves to a single VIN bucket.
+- Mixed-VIN blocked state applies to all form-open entry points in supported grid sheets.
 
 ## Validation Matrix by Mode
 
