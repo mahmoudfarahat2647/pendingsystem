@@ -329,7 +329,7 @@ export const orderService = {
 
 		const { data, error } = await supabase
 			.from("orders")
-			.select("id, vin, part_number, stage, metadata")
+			.select("id, vin, stage, metadata")
 			.ilike("vin", normalizedVin)
 			.limit(100);
 
@@ -375,10 +375,12 @@ export const orderService = {
 		const normalizedPart = partNumber.trim().toUpperCase();
 		const normalizedDesc = currentDescription.trim().toLowerCase();
 
+		// NOTE: Scans existing orders for part-description conflicts.
+		// A proper DB-level partNumber filter requires a dedicated column or GIN index.
 		const { data, error } = await supabase
 			.from("orders")
 			.select("id, vin, stage, metadata")
-			.limit(200);
+			.limit(1000);
 
 		if (error) {
 			console.warn(

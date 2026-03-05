@@ -165,8 +165,9 @@ describe("findSameOrderDuplicates", () => {
 		const partB = { id: "2", partNumber: "PART-A", description: "Desc A" };
 		const parts: PartEntry[] = [partA, partB];
 		const result = findSameOrderDuplicates(parts);
-		expect(result).toHaveLength(1);
-		expect(result[0].id).toBe("2");
+		expect(result).toHaveLength(2);
+		expect(result[1].id).toBe("2");
+		expect(result[0].id).toBe("1");
 	});
 
 	it("should handle multiple duplicates of same part", () => {
@@ -175,7 +176,7 @@ describe("findSameOrderDuplicates", () => {
 		const partC = { id: "3", partNumber: "PART-A", description: "Desc A" };
 		const parts: PartEntry[] = [partA, partB, partC];
 		const result = findSameOrderDuplicates(parts);
-		expect(result).toHaveLength(2);
+		expect(result).toHaveLength(3);
 	});
 
 	it("should be case insensitive", () => {
@@ -183,7 +184,7 @@ describe("findSameOrderDuplicates", () => {
 			{ id: "1", partNumber: "PART-A", description: "Desc A" },
 			{ id: "2", partNumber: "part-a", description: "Desc A" },
 		];
-		expect(findSameOrderDuplicates(parts)).toHaveLength(1);
+		expect(findSameOrderDuplicates(parts)).toHaveLength(2);
 	});
 
 	it("should skip empty part numbers", () => {
@@ -199,7 +200,7 @@ describe("findSameOrderDuplicates", () => {
 			{ id: "1", partNumber: "  PART-A  ", description: "Desc A" },
 			{ id: "2", partNumber: "PART-A", description: "Desc A" },
 		];
-		expect(findSameOrderDuplicates(parts)).toHaveLength(1);
+		expect(findSameOrderDuplicates(parts)).toHaveLength(2);
 	});
 });
 
@@ -219,7 +220,7 @@ describe("findSameOrderDuplicateIndices", () => {
 			{ id: "3", partNumber: "PART-A", description: "Desc A" },
 		];
 		const result = findSameOrderDuplicateIndices(parts);
-		expect(result).toEqual([2]);
+		expect(result).toEqual([0, 2]);
 	});
 
 	it("should return all duplicate indices for repeated parts", () => {
@@ -229,7 +230,7 @@ describe("findSameOrderDuplicateIndices", () => {
 			{ id: "3", partNumber: "PART-A", description: "Desc A" },
 		];
 		const result = findSameOrderDuplicateIndices(parts);
-		expect(result).toEqual([1, 2]);
+		expect(result).toEqual([0, 1, 2]);
 	});
 
 	it("should be case insensitive", () => {
@@ -237,7 +238,7 @@ describe("findSameOrderDuplicateIndices", () => {
 			{ id: "1", partNumber: "PART-A", description: "Desc A" },
 			{ id: "2", partNumber: "part-a", description: "Desc A" },
 		];
-		expect(findSameOrderDuplicateIndices(parts)).toEqual([1]);
+		expect(findSameOrderDuplicateIndices(parts)).toEqual([0, 1]);
 	});
 
 	it("should skip empty part numbers", () => {

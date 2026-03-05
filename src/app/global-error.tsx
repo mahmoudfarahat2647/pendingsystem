@@ -1,13 +1,10 @@
 "use client";
 
-import { Inter } from "next/font/google";
+
 import { useEffect } from "react";
 import "./globals.css";
 
-const inter = Inter({
-	subsets: ["latin"],
-	display: "swap",
-});
+
 
 export default function GlobalError({
 	error,
@@ -27,7 +24,7 @@ export default function GlobalError({
 
 	return (
 		<html lang="en">
-			<body className={inter.className}>
+			<body className="font-sans">
 				<div className="flex h-screen w-full flex-col items-center justify-center bg-[#0a0a0b] text-white p-6">
 					<div className="w-full max-w-md p-8 rounded-2xl bg-[#141416] border border-white/10 shadow-2xl space-y-6 text-center">
 						<div className="w-16 h-16 mx-auto rounded-full bg-red-500/10 flex items-center justify-center">

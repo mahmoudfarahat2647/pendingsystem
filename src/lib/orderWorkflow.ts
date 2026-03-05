@@ -12,7 +12,9 @@ import type { PartEntry, PendingRow } from "@/types";
  * @returns True if valid UUID
  */
 export const isUuid = (id: string): boolean =>
-	/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+	/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+		id,
+	);
 
 /**
  * Appends a tagged note to an existing action note string.
@@ -166,6 +168,10 @@ export function findSameOrderDuplicateIndices(parts: PartEntry[]): number[] {
 		if (!key) continue;
 
 		if (seen.has(key)) {
+			const firstIndex = seen.get(key)!;
+			if (!duplicateIndices.includes(firstIndex)) {
+				duplicateIndices.push(firstIndex);
+			}
 			duplicateIndices.push(i);
 		} else {
 			seen.set(key, i);
@@ -189,4 +195,63 @@ export function getValidationModeFromString(
 	mode: "easy" | "beast",
 ): ValidationMode {
 	return mode === "beast" ? ValidationMode.BEAST : ValidationMode.DEFAULT;
+}
+
+export const BLANK_VIN_BUCKET = "(blank VIN)";
+
+export function getVinBucket(vin: string | null | undefined): string {
+	if (!vin) return BLANK_VIN_BUCKET;
+	const normalized = normalizeVin(vin);
+	return normalized || BLANK_VIN_BUCKET;
+}
+
+export function getNormalizedVinBuckets(
+	rows: PendingRow[],
+): Map<string, PendingRow[]> {
+	const buckets = new Map<string, PendingRow[]>();
+	for (const row of rows) {
+		const bucket = getVinBucket(row.vin);
+		if (!buckets.has(bucket)) {
+			buckets.set(bucket, []);
+		}
+		buckets.get(bucket)!.push(row);
+	}
+	return buckets;
+}
+
+export function formatVinForDisplay(vin: string | null | undefined): string {
+	if (!vin) return "(blank VIN)";
+	const normalized = normalizeVin(vin);
+	return normalized || "(blank VIN)";
+}
+
+export function hasMixedVinSelection(rows: PendingRow[]): boolean {
+	if (rows.length <= 1) return false;
+	const firstVin = normalizeVin(rows[0].vin || "");
+	return rows.some((row) => normalizeVin(row.vin || "") !== firstVin);
+}
+
+/**
+ * Maps an internal stage key to a user-friendly display name.
+ * @param stage - The internal stage string (e.g. "main", "booking")
+ * @returns The professional display name for the UI
+ */
+export function getStageDisplayName(stage: string | undefined): string {
+	if (!stage) return "Unknown Stage";
+
+	const stageMap: Record<string, string> = {
+		orders: "Orders",
+		main: "Main Sheet",
+		booking: "Booking",
+		call: "Call List",
+		archive: "Archive",
+	};
+
+	const lowerStage = stage.toLowerCase();
+	if (stageMap[lowerStage]) {
+		return stageMap[lowerStage];
+	}
+
+	// Fallback to capitalized string
+	return stage.charAt(0).toUpperCase() + stage.slice(1);
 }
