@@ -108,12 +108,20 @@ export async function GET() {
 			dbUsedMB,
 			storageUsedMB,
 		});
-	} catch (error: any) {
-		console.error("Storage stats error:", error);
-		return NextResponse.json(
-			{ error: error.message || "Internal server error" },
-			{ status: 500 },
-		);
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			console.error("Storage stats error:", error.message);
+			return NextResponse.json(
+				{ error: error.message },
+				{ status: 500 },
+			);
+		} else {
+			console.error("Storage stats error:", error);
+			return NextResponse.json(
+				{ error: "Internal server error" },
+				{ status: 500 },
+			);
+		}
 	}
 }
 

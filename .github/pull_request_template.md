@@ -65,6 +65,6 @@ Any additional context or decisions made during development.
 
 ---
 
-**Reviewers**: @maintainer1 @maintainer2
+**Reviewer**: Self-review
 
 **Deployment**: Requires testing in staging environment

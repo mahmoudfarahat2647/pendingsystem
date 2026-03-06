@@ -8,9 +8,9 @@ const mockWindowPrint = vi.fn();
 const mockWindowClose = vi.fn();
 
 // Mock console methods to avoid noise in tests
-const mockConsoleError = vi
+const _mockConsoleError = vi
 	.spyOn(console, "error")
-	.mockImplementation(() => {});
+	.mockImplementation(() => { });
 
 describe("printReservationLabels", () => {
 	beforeEach(() => {
@@ -36,7 +36,7 @@ describe("printReservationLabels", () => {
 	});
 
 	it("should show alert when no items are selected", () => {
-		const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => {});
+		const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => { });
 
 		printReservationLabels([]);
 
