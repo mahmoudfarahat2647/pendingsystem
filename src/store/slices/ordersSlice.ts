@@ -17,7 +17,7 @@ export const createOrdersSlice: StateCreator<
 	[["zustand/persist", unknown]],
 	[],
 	OrdersState & OrdersActions
-> = (set, get) => ({
+> = (set, _get) => ({
 	ordersRowData: [],
 
 	/**

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { ValidationMode } from "@/lib/ordersValidationConstants";
 import {
 	BLANK_VIN_BUCKET,
 	checkVinPartDuplicate,

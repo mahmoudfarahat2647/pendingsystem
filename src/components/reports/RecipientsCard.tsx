@@ -31,7 +31,7 @@ export function RecipientsCard({ isLocked }: RecipientsCardProps) {
 	const isLoading = !reportSettings;
 
 	const handleAddEmail = () => {
-		if (emailInput && emailInput.includes("@")) {
+		if (emailInput?.includes("@")) {
 			addEmailRecipientMutation.mutate(emailInput);
 			setEmailInput("");
 		}

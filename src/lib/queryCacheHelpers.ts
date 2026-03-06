@@ -34,7 +34,7 @@ export const getErrorMessage = (error: unknown): string => {
 	}
 
 	// Truncate to avoid leaking huge payloads into toasts
-	return message.length > 200 ? message.slice(0, 197) + "..." : message;
+	return message.length > 200 ? `${message.slice(0, 197)}...` : message;
 };
 
 export const getMovedRowsById = (

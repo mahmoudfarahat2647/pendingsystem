@@ -1,6 +1,5 @@
 "use client";
 
-import type { ColDef, GridApi } from "ag-grid-community";
 import dynamic from "next/dynamic";
 import { memo } from "react";
 import { ClientErrorBoundary } from "@/components/shared/ClientErrorBoundary";

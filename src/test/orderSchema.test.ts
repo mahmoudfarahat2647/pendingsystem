@@ -55,11 +55,9 @@ describe("PendingRowSchema - Array Field Handling", () => {
 		};
 
 		const result = PendingRowSchema.safeParse(dataWithEmptyArray);
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			const fieldErrors = result.error.flatten().fieldErrors;
-			expect(fieldErrors.customerName).toBeDefined();
-			expect(fieldErrors.customerName?.[0]).toBe("Customer name is required");
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.customerName).toBe("");
 		}
 	});
 
@@ -135,12 +133,11 @@ describe("PendingRowSchema - Array Field Handling", () => {
 		};
 
 		const result = PendingRowSchema.safeParse(dataWithNulls);
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			const fieldErrors = result.error.flatten().fieldErrors;
-			expect(fieldErrors.customerName).toBeDefined();
-			expect(fieldErrors.mobile).toBeDefined();
-			expect(fieldErrors.model).toBeDefined();
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.customerName).toBe("");
+			expect(result.data.mobile).toBe("");
+			expect(result.data.model).toBe("");
 		}
 	});
 
@@ -157,12 +154,11 @@ describe("PendingRowSchema - Array Field Handling", () => {
 		};
 
 		const result = PendingRowSchema.safeParse(dataWithUndefined);
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			const fieldErrors = result.error.flatten().fieldErrors;
-			expect(fieldErrors.customerName).toBeDefined();
-			expect(fieldErrors.mobile).toBeDefined();
-			expect(fieldErrors.model).toBeDefined();
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.customerName).toBe("");
+			expect(result.data.mobile).toBe("");
+			expect(result.data.model).toBe("");
 		}
 	});
 

@@ -38,7 +38,7 @@ export const useOrdersPageHandlers = () => {
 		useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
-	const [activeModal, setActiveModal] = useState<{
+	const [_activeModal, _setActiveModal] = useState<{
 		type: "note" | "reminder" | "archive" | "attachment";
 		row: PendingRow;
 	} | null>(null);

@@ -54,9 +54,9 @@ function getCairoDate() {
 	}
 
 	return {
-		day: Number.parseInt(dateMap.day),
-		month: Number.parseInt(dateMap.month),
-		year: Number.parseInt(dateMap.year),
+		day: Number.parseInt(dateMap.day, 10),
+		month: Number.parseInt(dateMap.month, 10),
+		year: Number.parseInt(dateMap.year, 10),
 		weekday: dateMap.weekday, // e.g., "Monday"
 	};
 }
@@ -68,7 +68,7 @@ function getCairoDate() {
  */
 function parseWeeklyDayIndex(frequency) {
 	const parts = frequency.split("-");
-	const dayIndex = Number.parseInt(parts[1]);
+	const dayIndex = Number.parseInt(parts[1], 10);
 
 	if (Number.isNaN(dayIndex) || dayIndex < 0 || dayIndex > 6) {
 		console.error(
@@ -167,7 +167,7 @@ function shouldRunToday(settings, isScheduleRun) {
 			cairo.day,
 			undefined,
 			undefined,
-			"Monthly schedule: Run on 1st. Today is " + cairo.day + ".",
+			`Monthly schedule: Run on 1st. Today is ${cairo.day}.`,
 		);
 	}
 
@@ -215,7 +215,7 @@ function processOrders(rawOrders) {
 			const active = row.order_reminders.find((r) => !r.is_completed);
 			const primary = active || row.order_reminders[0];
 
-			if (primary && primary.remind_at) {
+			if (primary?.remind_at) {
 				const d = new Date(primary.remind_at);
 				reminderDate = d.toISOString().split("T")[0];
 				reminderTime = d.toTimeString().slice(0, 5);
@@ -461,5 +461,5 @@ function generateCSV(data, headers) {
 		rows.push(values.join(","));
 	}
 
-	return "\uFEFF" + rows.join("\n");
+	return `\uFEFF${rows.join("\n")}`;
 }

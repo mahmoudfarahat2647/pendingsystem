@@ -1,11 +1,10 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { Download, Redo2, RefreshCw, Search, Undo2, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { exportAllSystemDataCSV, exportWorkbookCSV } from "@/lib/exportUtils";
+import { exportAllSystemDataCSV } from "@/lib/exportUtils";
 import { cn } from "@/lib/utils";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
@@ -15,7 +14,7 @@ import { NotificationsDropdown } from "./NotificationsDropdown";
 
 export const Header = React.memo(function Header() {
 	const _pathname = usePathname();
-	const router = useRouter();
+	const _router = useRouter();
 	const [isSearchFocused, setIsSearchFocused] = useState(false);
 
 	const undoStack = useAppStore((state) => state.undoStack);

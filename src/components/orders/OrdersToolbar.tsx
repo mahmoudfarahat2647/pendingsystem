@@ -31,7 +31,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
-import { formatVinForDisplay, hasMixedVinSelection } from "@/lib/orderWorkflow";
+import { hasMixedVinSelection } from "@/lib/orderWorkflow";
 import { cn } from "@/lib/utils";
 import type { PartStatus, PendingRow } from "@/types";
 
@@ -77,7 +77,7 @@ export const OrdersToolbar = ({
 	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("orders");
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
-	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
+	const _isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
 	const hasMixedVins = hasMixedVinSelection(selectedRows);
 	const isEditDisabled = selectedCount > 0 && hasMixedVins;
 

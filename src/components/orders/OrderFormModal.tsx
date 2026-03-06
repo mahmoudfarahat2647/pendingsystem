@@ -7,11 +7,9 @@ import {
 	ChevronsUpDown,
 	ClipboardList,
 	FileSpreadsheet,
-	MapPin,
 	Package,
 	Pencil,
 	Plus,
-	Timer,
 	User,
 	X,
 } from "lucide-react";
@@ -45,7 +43,6 @@ import {
 	checkDescriptionConflict,
 	checkVinPartDuplicate,
 	findSameOrderDuplicateIndices,
-	normalizeVin,
 	shouldSkipDuplicateCheck,
 } from "@/lib/orderWorkflow";
 import {
@@ -150,7 +147,7 @@ export const OrderFormModal = ({
 	const [asyncDuplicateWarnings, setAsyncDuplicateWarnings] = useState<
 		Record<string, { location: string; vin: string; partNumber: string } | null>
 	>({});
-	const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+	const [_isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
 
 	const isMultiSelection = selectedRows.length > 1;
 
@@ -434,8 +431,8 @@ export const OrderFormModal = ({
 
 			if (!formData.vin) return;
 
-			const upperVin = formData.vin.toUpperCase();
-			const upperPart = part.partNumber.toUpperCase();
+			const _upperVin = formData.vin.toUpperCase();
+			const _upperPart = part.partNumber.toUpperCase();
 
 			if (
 				!shouldSkipDuplicateCheck(
@@ -508,7 +505,7 @@ export const OrderFormModal = ({
 		return errors[fieldName] !== undefined;
 	};
 
-	const validateForm = () => {
+	const _validateForm = () => {
 		const result = OrderFormSchema.safeParse(formData);
 		if (!result.success) {
 			const fieldErrors = result.error.flatten().fieldErrors;

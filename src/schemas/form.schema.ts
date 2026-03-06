@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { isAllowedCompanyName, normalizeCompanyName } from "@/lib/company";
-import {
-	DEFAULT_COMPANY,
-	VIN_MIN_LENGTH,
-} from "@/lib/ordersValidationConstants";
+import { DEFAULT_COMPANY } from "@/lib/ordersValidationConstants";
 
 export const OrderFormSchema = z
 	.object({

@@ -39,7 +39,7 @@ export default function FrequencyPicker({
 		if (value.includes("-")) {
 			const [freq, dayIdx] = value.split("-");
 			setOption(freq as options);
-			setDay(parseInt(dayIdx) || 0);
+			setDay(parseInt(dayIdx, 10) || 0);
 		} else {
 			setOption(value as options);
 			if (value === "Weekly") {
@@ -63,7 +63,10 @@ export default function FrequencyPicker({
 		return (
 			<div className="w-full h-10 px-3 py-2 rounded-md border border-input bg-muted/50 text-muted-foreground opacity-50 cursor-not-allowed flex items-center justify-between">
 				<span>
-					{value.replace(/-(\d)/, (match, p1) => `, ${days[parseInt(p1)]}`)}
+					{value.replace(
+						/-(\d)/,
+						(_match, p1) => `, ${days[parseInt(p1, 10)]}`,
+					)}
 				</span>
 				<HugeiconsIcon icon={UnfoldMoreIcon} size={14} className="-rotate-90" />
 			</div>

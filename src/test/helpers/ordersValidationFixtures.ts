@@ -1,4 +1,3 @@
-import type { ValidationMode as ValidationModeType } from "@/lib/ordersValidationConstants";
 import {
 	ALLOWED_COMPANIES,
 	DUPLICATE_CHECK_VIN_MIN_LENGTH,
@@ -177,8 +176,7 @@ export const createDescriptionConflictScenario = (
 		(row) => row.partNumber?.toUpperCase() === upperPart,
 	);
 	if (
-		existingRow &&
-		existingRow.description &&
+		existingRow?.description &&
 		existingRow.description.trim().toLowerCase() !==
 			currentDescription.trim().toLowerCase()
 	) {

@@ -214,7 +214,7 @@ export function getNormalizedVinBuckets(
 		if (!buckets.has(bucket)) {
 			buckets.set(bucket, []);
 		}
-		buckets.get(bucket)!.push(row);
+		buckets.get(bucket)?.push(row);
 	}
 	return buckets;
 }

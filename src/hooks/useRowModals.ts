@@ -15,7 +15,7 @@ export const useRowModals = (
 		id: string,
 		updates: Partial<PendingRow>,
 		stage?: string,
-	) => Promise<unknown> | void,
+	) => Promise<unknown> | undefined,
 	onArchive?: (ids: string[], reason: string) => void,
 ) => {
 	const [activeModal, setActiveModal] = useState<RowModalType>(null);

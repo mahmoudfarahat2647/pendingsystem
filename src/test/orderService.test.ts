@@ -54,7 +54,7 @@ describe("orderService", () => {
 	});
 
 	it("should delete an order with valid UUID", async () => {
-		const mockId = "00000000-0000-0000-0000-000000000000";
+		const mockId = "123e4567-e89b-42d3-a456-426614174000"; // Valid v4 UUID
 		// biome-ignore lint/suspicious/noExplicitAny: Mocking Supabase client
 		const mockDelete = vi.fn().mockReturnThis();
 		const mockEq = vi.fn().mockResolvedValue({ error: null });
@@ -109,7 +109,7 @@ describe("orderService", () => {
 		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		const invalidRow = {
-			id: "2",
+			id: "", // Invalid because PendingRowSchema requires id.min(1)
 			order_number: "T2",
 			customer_name: "",
 			customer_phone: "",
@@ -122,7 +122,7 @@ describe("orderService", () => {
 		expect(result).toBeNull();
 		expect(warnSpy).toHaveBeenCalledWith(
 			"[orderService.mapSupabaseOrder] validation_failed",
-			expect.objectContaining({ orderId: "2" }),
+			expect.objectContaining({ orderId: "" }),
 		);
 
 		warnSpy.mockRestore();

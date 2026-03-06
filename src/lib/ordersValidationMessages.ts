@@ -110,11 +110,11 @@ export function getValidationMessage(
 	if (!baseMessage) return undefined;
 
 	if (mode === "beast" && key === "DESCRIPTION_CONFLICT") {
-		return VALIDATION_MESSAGES["DESCRIPTION_CONFLICT_BLOCKING"];
+		return VALIDATION_MESSAGES.DESCRIPTION_CONFLICT_BLOCKING;
 	}
 
 	if (mode === "beast" && key === "VIN_PART_DUPLICATE_WARNING") {
-		return VALIDATION_MESSAGES["VIN_PART_DUPLICATE_BLOCKING"];
+		return VALIDATION_MESSAGES.VIN_PART_DUPLICATE_BLOCKING;
 	}
 
 	return baseMessage;

@@ -20,7 +20,9 @@ export function useBookingCalendar({
 }: UseBookingCalendarOptions) {
 	const storeBookingRowData = useAppStore((state) => state.bookingRowData);
 	const storeArchiveRowData = useAppStore((state) => state.archiveRowData);
-	const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
+	const _updateBookingStatus = useAppStore(
+		(state) => state.updateBookingStatus,
+	);
 
 	// Use provided data if available, otherwise fall back to store data
 	const bookingRowData = bookingData ?? storeBookingRowData;
