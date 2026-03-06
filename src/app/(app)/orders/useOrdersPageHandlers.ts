@@ -59,7 +59,7 @@ export const useOrdersPageHandlers = () => {
 	);
 
 	const handleSendToArchive = useCallback(
-		(ids: string[], reason: string) => {
+		async (ids: string[], reason: string) => {
 			for (const id of ids) {
 				const row = ordersRowData.find((r) => r.id === id);
 				const newActionNote = appendTaggedActionNote(
@@ -68,14 +68,16 @@ export const useOrdersPageHandlers = () => {
 					"archive",
 				);
 
-				saveOrderMutation.mutate({
+				await saveOrderMutation.mutateAsync({
 					id,
 					updates: { archiveReason: reason, actionNote: newActionNote },
-					stage: "archive",
+					stage: "orders",
 				});
 			}
+
+			await bulkUpdateStageMutation.mutateAsync({ ids, stage: "archive" });
 		},
-		[saveOrderMutation, ordersRowData],
+		[saveOrderMutation, bulkUpdateStageMutation, ordersRowData],
 	);
 
 	const handleSaveOrder = async (formData: FormData, parts: PartEntry[]) => {

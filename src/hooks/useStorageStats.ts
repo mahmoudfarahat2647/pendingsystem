@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 interface StorageStats {
-	dbUsedMB: number;
+	dbUsedMB: number | null;
 	storageUsedMB: number;
 	loading: boolean;
 	error: string | null;
@@ -16,7 +16,7 @@ interface StorageStats {
  */
 export function useStorageStats() {
 	const [stats, setStats] = useState<StorageStats>({
-		dbUsedMB: 0,
+		dbUsedMB: null,
 		storageUsedMB: 0,
 		loading: true,
 		error: null,
@@ -35,7 +35,7 @@ export function useStorageStats() {
 
 				if (isMounted) {
 					setStats({
-						dbUsedMB: data.dbUsedMB,
+						dbUsedMB: data.dbUsedMB ?? null,
 						storageUsedMB: data.storageUsedMB,
 						loading: false,
 						error: null,

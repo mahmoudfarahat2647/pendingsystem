@@ -281,7 +281,7 @@ export const OrderFormModal = ({
 			const result = await orderService.checkHistoricalVinPartDuplicate(
 				vin,
 				partNumber,
-				isEditMode ? selectedRows[0]?.id : undefined,
+				isEditMode ? selectedRows.map((r) => r.id) : undefined,
 			);
 
 			if (result.isDuplicate) {
@@ -616,7 +616,7 @@ export const OrderFormModal = ({
 						const result = await orderService.checkHistoricalVinPartDuplicate(
 							formData.vin,
 							part.partNumber,
-							isEditMode ? selectedRows[0]?.id : undefined,
+							isEditMode ? selectedRows.map((r) => r.id) : undefined,
 						);
 
 						if (result.isDuplicate) {

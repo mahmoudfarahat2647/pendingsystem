@@ -10,7 +10,6 @@ import {
 	LayoutDashboard,
 	MoreVertical,
 	Phone,
-	Save,
 	ShoppingCart,
 	X,
 } from "lucide-react";
@@ -404,8 +403,8 @@ export const Sidebar = React.memo(function Sidebar() {
 							onClick={confirmNavigation}
 							className="bg-amber-500 hover:bg-amber-400 text-black"
 						>
-							<Save className="h-4 w-4 mr-2" />
-							Save & Continue
+							<AlertTriangle className="h-4 w-4 mr-2" />
+							Discard & Continue
 						</Button>
 					</DialogFooter>
 				</DialogContent>

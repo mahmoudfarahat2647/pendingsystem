@@ -314,7 +314,7 @@ export const orderService = {
 	async checkHistoricalVinPartDuplicate(
 		vin: string,
 		partNumber: string,
-		currentRowId?: string,
+		excludeIds?: string | string[],
 	): Promise<DuplicateCheckResult> {
 		if (!vin || !partNumber) {
 			return { isDuplicate: false };
@@ -326,6 +326,15 @@ export const orderService = {
 		if (normalizedVin.length < 6 || !normalizedPart) {
 			return { isDuplicate: false };
 		}
+
+		// Normalize to a Set for O(1) lookups
+		const excludeSet = new Set(
+			Array.isArray(excludeIds)
+				? excludeIds
+				: excludeIds
+					? [excludeIds]
+					: [],
+		);
 
 		const { data, error } = await supabase
 			.from("orders")
@@ -342,7 +351,7 @@ export const orderService = {
 		}
 
 		for (const row of data || []) {
-			if (currentRowId && row.id === currentRowId) continue;
+			if (excludeSet.has(row.id)) continue;
 
 			const rowPart = (row.metadata as Record<string, unknown>)?.partNumber as
 				| string

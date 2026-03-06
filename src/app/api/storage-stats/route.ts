@@ -1,7 +1,50 @@
 import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+
+/**
+ * Recursively lists all files in a storage bucket, traversing subdirectories
+ * and paginating beyond the 1,000-item limit per request.
+ *
+ * @param supabase - Authenticated Supabase client
+ * @param bucketId - ID of the storage bucket to list
+ * @param prefix - Current directory prefix (empty string for root)
+ * @returns Total size in bytes of all files found
+ */
+async function getRecursiveBucketSize(
+	supabase: SupabaseClient,
+	bucketId: string,
+	prefix = "",
+): Promise<number> {
+	let totalSize = 0;
+	let offset = 0;
+	const PAGE_SIZE = 1000;
+
+	while (true) {
+		const { data: items, error } = await supabase.storage
+			.from(bucketId)
+			.list(prefix, { limit: PAGE_SIZE, offset });
+
+		if (error || !items || items.length === 0) break;
+
+		for (const item of items) {
+			if (item.id === null) {
+				// Directory — recurse into it
+				const subPrefix = prefix ? `${prefix}/${item.name}` : item.name;
+				totalSize += await getRecursiveBucketSize(supabase, bucketId, subPrefix);
+			} else {
+				totalSize += item.metadata?.size || 0;
+			}
+		}
+
+		if (items.length < PAGE_SIZE) break;
+		offset += PAGE_SIZE;
+	}
+
+	return totalSize;
+}
 
 /**
  * GET /api/storage-stats
@@ -32,56 +75,38 @@ export async function GET() {
 			},
 		});
 
-		// 1. Get Database Size
-		// We use Postgres internal functions to get the size of the current database
+		// 1. Get Database Size via RPC
 		const { data: dbData, error: dbError } = await supabase.rpc(
 			"get_database_size_bytes",
 		);
 
-		let dbSizeBytes = 0;
+		let dbSizeBytes: number | null = null;
 		if (dbError) {
-			// If RPC is not defined, we cannot run raw SQL via supabase-js easily.
-			// We just log the error and use the fallback.
 			console.error("Error fetching DB size via RPC:", dbError);
 		} else {
 			dbSizeBytes = dbData;
 		}
 
-		// Since we might not have the RPC "get_database_size_bytes" defined yet,
-		// and create-client doesn't allow raw SQL, I will assume a default or
-		// use a simpler approach if I can't find a way to run raw SQL.
-		// Actually, let's try to fetch storage first which is definitely possible via API.
-
-		// 2. Get File Storage Size
+		// 2. Get File Storage Size (recursive + paginated)
 		const { data: buckets, error: bucketError } =
 			await supabase.storage.listBuckets();
 
 		let storageSizeBytes = 0;
 		if (!bucketError && buckets) {
 			for (const bucket of buckets) {
-				const { data: files, error: fileError } = await supabase.storage
-					.from(bucket.id)
-					.list("", { limit: 1000 });
-
-				if (!fileError && files) {
-					storageSizeBytes += files.reduce(
-						(acc, file) => acc + (file.metadata?.size || 0),
-						0,
-					);
-				}
+				storageSizeBytes += await getRecursiveBucketSize(supabase, bucket.id);
 			}
 		}
 
-		// Fallback for DB size if RPC fails:
-		// We can't really get it without RPC. I'll recommend the user to add the RPC.
-		// For now, I'll return a placeholder for DB if it fails, but I'll try to get it.
-
-		const dbUsedMB = Number((dbSizeBytes / (1024 * 1024)).toFixed(2));
+		const dbUsedMB =
+			dbSizeBytes !== null
+				? Number((dbSizeBytes / (1024 * 1024)).toFixed(2))
+				: null;
 		const storageUsedMB = Number((storageSizeBytes / (1024 * 1024)).toFixed(2));
 
 		return NextResponse.json({
-			dbUsedMB: dbUsedMB > 0 ? dbUsedMB : 15.5, // Realistic fallback if RPC is missing
-			storageUsedMB: storageUsedMB,
+			dbUsedMB,
+			storageUsedMB,
 		});
 	} catch (error: any) {
 		console.error("Storage stats error:", error);
@@ -91,3 +116,4 @@ export async function GET() {
 		);
 	}
 }
+
