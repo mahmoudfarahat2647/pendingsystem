@@ -57,6 +57,7 @@ export default function GlobalError({
 
 						<div className="flex flex-col gap-3">
 							<button
+								type="button"
 								onClick={() => window.location.reload()}
 								className="w-full rounded-xl bg-renault-yellow px-4 py-3 font-bold text-black transition-all hover:bg-yellow-500"
 							>
@@ -64,6 +65,7 @@ export default function GlobalError({
 							</button>
 							{!isChunkError && (
 								<button
+									type="button"
 									onClick={() => reset()}
 									className="w-full rounded-xl border border-white/5 bg-white/5 px-4 py-3 font-medium text-white transition-all hover:bg-white/10"
 								>
