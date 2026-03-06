@@ -1,9 +1,12 @@
 import { z } from "zod";
 import {
-	ALLOWED_COMPANIES,
 	DEFAULT_COMPANY,
 	VIN_MIN_LENGTH,
 } from "@/lib/ordersValidationConstants";
+import {
+	isAllowedCompanyName,
+	normalizeCompanyName,
+} from "@/lib/company";
 
 export const OrderFormSchema = z
 	.object({
@@ -21,7 +24,7 @@ export const OrderFormSchema = z
 		requester: z.string().optional(),
 		sabNumber: z.string().optional(),
 		acceptedBy: z.string().optional(),
-		company: z.string().default(DEFAULT_COMPANY),
+		company: z.string().default(DEFAULT_COMPANY).transform(normalizeCompanyName),
 	})
 	.refine(
 		(data) => {
@@ -37,12 +40,10 @@ export const OrderFormSchema = z
 	)
 	.refine(
 		(data) => {
-			return ALLOWED_COMPANIES.includes(
-				data.company as (typeof ALLOWED_COMPANIES)[number],
-			);
+			return isAllowedCompanyName(data.company);
 		},
 		{
-			message: "Invalid company. Only Zeekr and Renalt are allowed",
+			message: "Invalid company. Only Zeekr and Renault are allowed",
 			path: ["company"],
 		},
 	);
@@ -63,7 +64,10 @@ export const BeastModeSchema = z
 		model: z.string().min(1, "Vehicle model is required"),
 		repairSystem: z.string().min(1, "Repair system is required"),
 		sabNumber: z.string().min(1, "SAB Number is required"),
-		company: z.string().min(1, "Company is required"),
+		company: z
+			.string()
+			.min(1, "Company is required")
+			.transform(normalizeCompanyName),
 		requester: z.string().min(1, "Branch/Requester is required"),
 		acceptedBy: z.string().min(1, "Agent name is required"),
 	})
@@ -81,12 +85,10 @@ export const BeastModeSchema = z
 	)
 	.refine(
 		(data) => {
-			return ALLOWED_COMPANIES.includes(
-				data.company as (typeof ALLOWED_COMPANIES)[number],
-			);
+			return isAllowedCompanyName(data.company);
 		},
 		{
-			message: "Invalid company. Only Zeekr and Renalt are allowed",
+			message: "Invalid company. Only Zeekr and Renault are allowed",
 			path: ["company"],
 		},
 	);

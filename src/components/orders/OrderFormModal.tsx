@@ -47,6 +47,7 @@ import {
 	normalizeVin,
 	shouldSkipDuplicateCheck,
 } from "@/lib/orderWorkflow";
+import { normalizeCompanyName } from "@/lib/company";
 import {
 	calculateEndWarranty,
 	calculateRemainingTime,
@@ -174,7 +175,7 @@ export const OrderFormModal = ({
 					requester: first.requester || "",
 					sabNumber: first.sabNumber || "",
 					acceptedBy: first.acceptedBy || "",
-					company: first.company || DEFAULT_COMPANY,
+					company: normalizeCompanyName(first.company) || DEFAULT_COMPANY,
 				};
 
 				const initialParts = selectedRows.map((row) => ({
@@ -652,7 +653,13 @@ export const OrderFormModal = ({
 			// Note: validateForm object-level schema is not enforced for Draft/Publish Mode.
 		}
 
-		onSubmit(formData, parts);
+		onSubmit(
+			{
+				...formData,
+				company: normalizeCompanyName(formData.company),
+			},
+			parts,
+		);
 		clearCurrentEditVin();
 	};
 

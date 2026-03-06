@@ -8,7 +8,7 @@ export enum ValidationMode {
 	BEAST = "beast",
 }
 
-export const ALLOWED_COMPANIES = ["Zeekr", "Renalt"] as const;
+export const ALLOWED_COMPANIES = ["Zeekr", "Renault"] as const;
 
 export type AllowedCompany = (typeof ALLOWED_COMPANIES)[number];
 

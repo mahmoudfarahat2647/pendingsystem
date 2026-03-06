@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeNullableCompanyName } from "@/lib/company";
 
 // Status Enum Schema
 export const StatusSchema = z.enum([
@@ -66,7 +67,7 @@ export const PendingRowSchema = z
 			},
 			z.string(),
 		),
-		company: z.string().nullish(), // Allow null
+		company: z.preprocess(normalizeNullableCompanyName, z.string().nullish()),
 		// Allow empty string — draft orders may have no VIN yet.
 		vin: z.string().default(""),
 		// Allow empty string — draft orders may have no mobile yet.

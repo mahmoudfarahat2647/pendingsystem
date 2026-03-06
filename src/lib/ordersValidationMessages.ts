@@ -18,13 +18,13 @@ export const VALIDATION_MESSAGES: Record<string, ValidationMessage> = {
 		type: "error",
 		key: "COMPANY_REQUIRED",
 		message: "Company is required",
-		suggestion: "Select either Zeekr or Renalt",
+		suggestion: "Select either Zeekr or Renault",
 	},
 	COMPANY_INVALID: {
 		type: "error",
 		key: "COMPANY_INVALID",
 		message: "Invalid company selection",
-		suggestion: "Only Zeekr and Renalt are allowed",
+		suggestion: "Only Zeekr and Renault are allowed",
 	},
 
 	// VIN messages

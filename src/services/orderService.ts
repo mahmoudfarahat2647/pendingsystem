@@ -1,5 +1,6 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { processBatch } from "@/lib/batchUtils";
+import { normalizeNullableCompanyName } from "@/lib/company";
 import { supabase } from "@/lib/supabase";
 import { PendingRowSchema } from "@/schemas/order.schema";
 import type {
@@ -133,7 +134,7 @@ export const orderService = {
 			customer_phone:
 				rest.mobile || (rest as Record<string, unknown>).customer_phone,
 			vin: rest.vin,
-			company: rest.company,
+			company: normalizeNullableCompanyName(rest.company),
 			stage: stage,
 			metadata: metadataToStore,
 		};
@@ -285,7 +286,7 @@ export const orderService = {
 			customerName: (row.customer_name as string) || metadata.customerName || "",
 			mobile: (row.customer_phone as string) || metadata.mobile || "",
 			vin: (row.vin as string) || metadata.vin || "",
-			company: row.company,
+			company: normalizeNullableCompanyName(row.company),
 			reminder: reminder,
 			stage: row.stage,
 		};
