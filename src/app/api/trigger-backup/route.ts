@@ -98,11 +98,7 @@ export async function POST() {
 			);
 		} else {
 			console.error("Backup trigger error:", error);
-			return errorResponse(
-				"SERVER_ERROR",
-				"An internal error occurred",
-				500,
-			);
+			return errorResponse("SERVER_ERROR", "An internal error occurred", 500);
 		}
 	}
 }

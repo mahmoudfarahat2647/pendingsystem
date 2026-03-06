@@ -45,7 +45,8 @@ export function CloudSync() {
 			toast.success(`Successfully migrated ${total} rows to Supabase!`);
 			setCompleted(true);
 		} catch (error: unknown) {
-			const errorMessage = error instanceof Error ? error.message : "Unknown error";
+			const errorMessage =
+				error instanceof Error ? error.message : "Unknown error";
 			toast.error(`Migration failed: ${errorMessage}`);
 		} finally {
 			setIsSyncing(false);
