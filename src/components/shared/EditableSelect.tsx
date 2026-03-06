@@ -62,7 +62,7 @@ export function EditableSelect({
 					className={cn(
 						"w-full justify-between font-normal",
 						!value && "text-slate-500",
-						className
+						className,
 					)}
 				>
 					{value ? value : placeholder}

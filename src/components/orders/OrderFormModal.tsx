@@ -35,6 +35,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { normalizeCompanyName } from "@/lib/company";
 import {
 	ALLOWED_COMPANIES,
 	DEFAULT_COMPANY,
@@ -47,7 +48,6 @@ import {
 	normalizeVin,
 	shouldSkipDuplicateCheck,
 } from "@/lib/orderWorkflow";
-import { normalizeCompanyName } from "@/lib/company";
 import {
 	calculateEndWarranty,
 	calculateRemainingTime,
@@ -152,7 +152,6 @@ export const OrderFormModal = ({
 	>({});
 	const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
 
-
 	const isMultiSelection = selectedRows.length > 1;
 
 	useEffect(() => {
@@ -249,7 +248,6 @@ export const OrderFormModal = ({
 				setAsyncDuplicateWarnings({});
 			}
 		} else {
-
 			clearCurrentEditVin();
 		}
 	}, [open, isEditMode, selectedRows]);
@@ -317,7 +315,6 @@ export const OrderFormModal = ({
 		}, 800);
 		return () => clearTimeout(timer);
 	}, [formData.vin]);
-
 
 	// Beast Mode Timer Logic
 	useEffect(() => {
@@ -502,7 +499,6 @@ export const OrderFormModal = ({
 		asyncDuplicateWarnings,
 	]);
 
-
 	const hasValidationErrors = Object.keys(partValidationWarnings).length > 0;
 
 	const getFieldError = (fieldName: keyof FormData) => {
@@ -640,7 +636,11 @@ export const OrderFormModal = ({
 			);
 			if (duplicateError) {
 				const offendingPart = parts.find(
-					(p) => p.id === Object.keys(partValidationWarnings).find(key => partValidationWarnings[key] === duplicateError)
+					(p) =>
+						p.id ===
+						Object.keys(partValidationWarnings).find(
+							(key) => partValidationWarnings[key] === duplicateError,
+						),
 				);
 				setDuplicateWarning({
 					location: duplicateError.location || "unknown",
@@ -727,7 +727,10 @@ export const OrderFormModal = ({
 														? "bg-amber-500/50"
 														: "bg-red-500/50",
 												)}
-												animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+												animate={{
+													scale: [1, 1.2, 1],
+													opacity: [0.5, 0.8, 0.5],
+												}}
 												transition={{
 													duration: 2,
 													repeat: Infinity,
@@ -842,7 +845,7 @@ export const OrderFormModal = ({
 														className={cn(
 															"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 															getFieldError("customerName") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+																"border-red-500/50 ring-1 ring-red-500/20",
 															isEditMode
 																? "premium-glow-amber"
 																: "premium-glow-indigo",
@@ -877,10 +880,10 @@ export const OrderFormModal = ({
 															{!ALLOWED_COMPANIES.includes(
 																formData.company as (typeof ALLOWED_COMPANIES)[number],
 															) && (
-																	<option value={formData.company}>
-																		{formData.company}
-																	</option>
-																)}
+																<option value={formData.company}>
+																	{formData.company}
+																</option>
+															)}
 															{ALLOWED_COMPANIES.map((company) => (
 																<option key={company} value={company}>
 																	{company}
@@ -908,7 +911,7 @@ export const OrderFormModal = ({
 														className={cn(
 															"bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
 															getFieldError("vin") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+																"border-red-500/50 ring-1 ring-red-500/20",
 															isEditMode
 																? "premium-glow-amber"
 																: "premium-glow-indigo",
@@ -937,7 +940,7 @@ export const OrderFormModal = ({
 														className={cn(
 															"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 															getFieldError("cntrRdg") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+																"border-red-500/50 ring-1 ring-red-500/20",
 															isEditMode
 																? "premium-glow-amber"
 																: "premium-glow-indigo",
@@ -959,12 +962,15 @@ export const OrderFormModal = ({
 														placeholder="0xxxxxxxxx"
 														value={formData.mobile}
 														onChange={(e) =>
-															setFormData({ ...formData, mobile: e.target.value })
+															setFormData({
+																...formData,
+																mobile: e.target.value,
+															})
 														}
 														className={cn(
 															"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 															getFieldError("mobile") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+																"border-red-500/50 ring-1 ring-red-500/20",
 															isEditMode
 																? "premium-glow-amber"
 																: "premium-glow-indigo",
@@ -987,7 +993,7 @@ export const OrderFormModal = ({
 														className={cn(
 															"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 															getFieldError("acceptedBy") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+																"border-red-500/50 ring-1 ring-red-500/20",
 															isEditMode
 																? "premium-glow-amber"
 																: "premium-glow-indigo",
@@ -1012,7 +1018,7 @@ export const OrderFormModal = ({
 														className={cn(
 															"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 															getFieldError("sabNumber") &&
-															"border-red-500/50 ring-1 ring-red-500/20",
+																"border-red-500/50 ring-1 ring-red-500/20",
 															isEditMode
 																? "premium-glow-amber"
 																: "premium-glow-indigo",
@@ -1027,7 +1033,7 @@ export const OrderFormModal = ({
 														className={cn(
 															"rounded-lg transition-all",
 															getFieldError("model") &&
-															"ring-2 ring-red-500/50",
+																"ring-2 ring-red-500/50",
 															isEditMode
 																? "premium-glow-amber"
 																: "premium-glow-indigo",
@@ -1074,7 +1080,7 @@ export const OrderFormModal = ({
 														className={cn(
 															"rounded-lg transition-all",
 															getFieldError("repairSystem") &&
-															"ring-2 ring-red-500/50",
+																"ring-2 ring-red-500/50",
 															isEditMode
 																? "premium-glow-amber"
 																: "premium-glow-indigo",
@@ -1093,7 +1099,8 @@ export const OrderFormModal = ({
 													</div>
 													{getFieldError("repairSystem") && (
 														<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
-															{errors.repairSystem ?? "Repair system is required"}
+															{errors.repairSystem ??
+																"Repair system is required"}
 														</p>
 													)}
 												</div>
@@ -1244,8 +1251,13 @@ export const OrderFormModal = ({
 																			placeholder="REF#"
 																			value={part.partNumber}
 																			onChange={(e) => {
-																				const val = e.target.value.toUpperCase();
-																				handlePartChange(part.id, "partNumber", val);
+																				const val =
+																					e.target.value.toUpperCase();
+																				handlePartChange(
+																					part.id,
+																					"partNumber",
+																					val,
+																				);
 																			}}
 																			onBlur={() =>
 																				checkDuplicateForPart(
@@ -1261,8 +1273,8 @@ export const OrderFormModal = ({
 																					? "focus:ring-amber-500/30"
 																					: "focus:ring-indigo-500/30",
 																				validationMode === "beast" &&
-																				!part.partNumber.trim() &&
-																				"border-red-500/50 ring-1 ring-red-500/30",
+																					!part.partNumber.trim() &&
+																					"border-red-500/50 ring-1 ring-red-500/30",
 																			)}
 																		/>
 																	</div>
@@ -1297,8 +1309,8 @@ export const OrderFormModal = ({
 																					? "focus:ring-amber-500/30"
 																					: "focus:ring-indigo-500/30",
 																				validationMode === "beast" &&
-																				!part.description.trim() &&
-																				"border-red-500/50 ring-1 ring-red-500/30",
+																					!part.description.trim() &&
+																					"border-red-500/50 ring-1 ring-red-500/30",
 																			)}
 																		/>
 																	</div>
@@ -1316,30 +1328,31 @@ export const OrderFormModal = ({
 																		<div className="flex items-center gap-1.5 text-red-400">
 																			<AlertCircle className="h-3 w-3" />
 																			<span className="text-[9px] font-bold uppercase tracking-tight">
-																				{partValidationWarnings[part.id].type ===
-																					"duplicate"
+																				{partValidationWarnings[part.id]
+																					.type === "duplicate"
 																					? `${partValidationWarnings[part.id].value} in ${partValidationWarnings[part.id].location}`
 																					: `Existing Name: "${partValidationWarnings[part.id].value}"`}
 																			</span>
 																		</div>
 																		{partValidationWarnings[part.id].type ===
 																			"mismatch" && (
-																				<Button
-																					variant="ghost"
-																					size="icon"
-																					className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
-																					onClick={() =>
-																						handlePartChange(
-																							part.id,
-																							"description",
-																							partValidationWarnings[part.id].value,
-																						)
-																					}
-																					title="Apply existing name"
-																				>
-																					<CheckCircle2 className="h-3 w-3" />
-																				</Button>
-																			)}
+																			<Button
+																				variant="ghost"
+																				size="icon"
+																				className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
+																				onClick={() =>
+																					handlePartChange(
+																						part.id,
+																						"description",
+																						partValidationWarnings[part.id]
+																							.value,
+																					)
+																				}
+																				title="Apply existing name"
+																			>
+																				<CheckCircle2 className="h-3 w-3" />
+																			</Button>
+																		)}
 																	</div>
 																)}
 															</div>

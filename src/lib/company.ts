@@ -2,10 +2,10 @@ import { ALLOWED_COMPANIES } from "./ordersValidationConstants";
 
 /**
  * Normalizes a given company name input into a canonical string format.
- * Trims whitespace, ignores casing, and maps known legacy aliases 
- * (e.g., "renalt", "pendingsystem") to their standard corresponding 
+ * Trims whitespace, ignores casing, and maps known legacy aliases
+ * (e.g., "renalt", "pendingsystem") to their standard corresponding
  * company name (e.g., "Renault").
- * 
+ *
  * @param value The raw company name to normalize.
  * @returns The normalized, canonical company name string, or an empty string.
  */

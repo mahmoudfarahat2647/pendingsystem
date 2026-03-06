@@ -1,6 +1,7 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { processBatch } from "@/lib/batchUtils";
 import { normalizeNullableCompanyName } from "@/lib/company";
+import { isUuid } from "@/lib/orderWorkflow";
 import { supabase } from "@/lib/supabase";
 import { PendingRowSchema } from "@/schemas/order.schema";
 import type {
@@ -8,7 +9,6 @@ import type {
 	DuplicateCheckResult,
 	PendingRow,
 } from "@/types";
-import { isUuid } from "@/lib/orderWorkflow";
 
 export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
 
@@ -29,7 +29,6 @@ function handleSupabaseError(error: PostgrestError): never {
 		details: error.details,
 	});
 }
-
 
 export const orderService = {
 	async getOrders(stage?: OrderStage) {
@@ -283,7 +282,8 @@ export const orderService = {
 			trackingId: row.order_number,
 			// Prefer the dedicated column value when non-empty; otherwise keep the
 			// value already present in the metadata JSON (set during save).
-			customerName: (row.customer_name as string) || metadata.customerName || "",
+			customerName:
+				(row.customer_name as string) || metadata.customerName || "",
 			mobile: (row.customer_phone as string) || metadata.mobile || "",
 			vin: (row.vin as string) || metadata.vin || "",
 			company: normalizeNullableCompanyName(row.company),
@@ -330,11 +330,7 @@ export const orderService = {
 
 		// Normalize to a Set for O(1) lookups
 		const excludeSet = new Set(
-			Array.isArray(excludeIds)
-				? excludeIds
-				: excludeIds
-					? [excludeIds]
-					: [],
+			Array.isArray(excludeIds) ? excludeIds : excludeIds ? [excludeIds] : [],
 		);
 
 		const { data, error } = await supabase

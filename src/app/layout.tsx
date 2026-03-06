@@ -14,8 +14,6 @@ const metadataBase = (() => {
 	}
 })();
 
-
-
 export const metadata: Metadata = {
 	metadataBase,
 	title: "Pending.Sys - pendingsystem Logistics Command Center",

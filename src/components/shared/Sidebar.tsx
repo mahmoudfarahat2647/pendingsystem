@@ -83,11 +83,15 @@ export const Sidebar = React.memo(function Sidebar() {
 
 	const getTargetTabVin = (targetHref: string): string | null => {
 		if (targetHref === "/orders") {
-			const targetRow = ordersRowData.find(r => r.vin?.toUpperCase() === currentEditVin?.toUpperCase());
+			const targetRow = ordersRowData.find(
+				(r) => r.vin?.toUpperCase() === currentEditVin?.toUpperCase(),
+			);
 			return targetRow ? currentEditVin : "different-context";
 		}
 		if (targetHref === "/main-sheet") {
-			const targetRow = rowData.find(r => r.vin?.toUpperCase() === currentEditVin?.toUpperCase());
+			const targetRow = rowData.find(
+				(r) => r.vin?.toUpperCase() === currentEditVin?.toUpperCase(),
+			);
 			return targetRow ? currentEditVin : "different-context";
 		}
 		return "different-context";

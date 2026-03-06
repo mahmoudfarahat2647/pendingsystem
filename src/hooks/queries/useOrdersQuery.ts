@@ -21,7 +21,7 @@ export function useOrdersQuery(
 	});
 }
 
+export { useBulkDeleteOrdersMutation } from "./useBulkDeleteOrdersMutation";
 // Re-export mutations for backwards compatibility with existing imports
 export { useBulkUpdateOrderStageMutation } from "./useBulkUpdateOrderStageMutation";
 export { useSaveOrderMutation } from "./useSaveOrderMutation";
-export { useBulkDeleteOrdersMutation } from "./useBulkDeleteOrdersMutation";

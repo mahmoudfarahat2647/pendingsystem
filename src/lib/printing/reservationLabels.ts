@@ -1,14 +1,14 @@
-import type { PendingRow } from "@/types";
 import { normalizeCompanyName } from "@/lib/company";
+import type { PendingRow } from "@/types";
 
 const escapeHtml = (value: unknown): string => {
-    const normalized = value == null ? "" : String(value);
-    return normalized
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
+	const normalized = value == null ? "" : String(value);
+	return normalized
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#39;");
 };
 
 /**
@@ -70,33 +70,37 @@ const ZEEKR_LOGO_SVG = `
  * ```
  */
 export const printReservationLabels = (selected: PendingRow[]): void => {
-    // Validation: Ensure at least one order is selected
-    if (selected.length === 0) {
-        alert("Please select items to print reservation labels.");
-        return;
-    }
+	// Validation: Ensure at least one order is selected
+	if (selected.length === 0) {
+		alert("Please select items to print reservation labels.");
+		return;
+	}
 
-    // Open new window for print-isolated context (prevents CSS bleeding)
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+	// Open new window for print-isolated context (prevents CSS bleeding)
+	const printWindow = window.open("", "_blank");
+	if (!printWindow) return;
 
-    // Generate HTML for each label
-    const labelsHtml = selected
-        .map((row) => {
-            const today = new Date().toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
-            const normalizedCompany = normalizeCompanyName(row.company);
-            const isZeekr = normalizedCompany === "Zeekr";
-            const isRenault = normalizedCompany === "Renault";
-            // Default to PENDINGSYSTEM logo if Renault (as no explicit asset exists yet) or unknown
-            const RENAULT_LOGO_SVG = PENDINGSYSTEM_LOGO_SVG;
-            const logoSvg = isZeekr ? ZEEKR_LOGO_SVG : isRenault ? RENAULT_LOGO_SVG : PENDINGSYSTEM_LOGO_SVG;
-            const brandName = isZeekr ? "" : isRenault ? "RENAULT" : "PENDINGSYSTEM";
-            const customerName = escapeHtml(row.customerName || "-");
-            const description = escapeHtml(row.description || "-");
-            const vin = escapeHtml(row.vin || "-");
-            const partNumber = escapeHtml(row.partNumber || "-");
+	// Generate HTML for each label
+	const labelsHtml = selected
+		.map((row) => {
+			const today = new Date().toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
+			const normalizedCompany = normalizeCompanyName(row.company);
+			const isZeekr = normalizedCompany === "Zeekr";
+			const isRenault = normalizedCompany === "Renault";
+			// Default to PENDINGSYSTEM logo if Renault (as no explicit asset exists yet) or unknown
+			const RENAULT_LOGO_SVG = PENDINGSYSTEM_LOGO_SVG;
+			const logoSvg = isZeekr
+				? ZEEKR_LOGO_SVG
+				: isRenault
+					? RENAULT_LOGO_SVG
+					: PENDINGSYSTEM_LOGO_SVG;
+			const brandName = isZeekr ? "" : isRenault ? "RENAULT" : "PENDINGSYSTEM";
+			const customerName = escapeHtml(row.customerName || "-");
+			const description = escapeHtml(row.description || "-");
+			const vin = escapeHtml(row.vin || "-");
+			const partNumber = escapeHtml(row.partNumber || "-");
 
-            return `
+			return `
             <div class="label-box">
                 <!-- Header: Brand on Left, Status Title on Right -->
                 <div class="header">
@@ -138,11 +142,11 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                 </div>
             </div>
         `;
-        })
-        .join("");
+		})
+		.join("");
 
-    // Complete HTML document with embedded styles
-    const htmlContent = `
+	// Complete HTML document with embedded styles
+	const htmlContent = `
         <!DOCTYPE html>
         <html dir="rtl">
         <head>
@@ -296,7 +300,7 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
         </html>
     `;
 
-    // Inject HTML and trigger print
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+	// Inject HTML and trigger print
+	printWindow.document.write(htmlContent);
+	printWindow.document.close();
 };

@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -33,7 +33,11 @@ async function getRecursiveBucketSize(
 			if (item.id === null) {
 				// Directory — recurse into it
 				const subPrefix = prefix ? `${prefix}/${item.name}` : item.name;
-				totalSize += await getRecursiveBucketSize(supabase, bucketId, subPrefix);
+				totalSize += await getRecursiveBucketSize(
+					supabase,
+					bucketId,
+					subPrefix,
+				);
 			} else {
 				totalSize += item.metadata?.size || 0;
 			}
@@ -111,10 +115,7 @@ export async function GET() {
 	} catch (error: unknown) {
 		if (error instanceof Error) {
 			console.error("Storage stats error:", error.message);
-			return NextResponse.json(
-				{ error: error.message },
-				{ status: 500 },
-			);
+			return NextResponse.json({ error: error.message }, { status: 500 });
 		} else {
 			console.error("Storage stats error:", error);
 			return NextResponse.json(
@@ -124,4 +125,3 @@ export async function GET() {
 		}
 	}
 }
-
