@@ -15,8 +15,10 @@ import {
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { cn } from "@/lib/utils";
+import { type OrderStage } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import type { CellValueChangedEvent } from "ag-grid-community";
 import { RowModals } from "./RowModals";
 import { SearchResultsGrid } from "./search/SearchResultsGrid";
 import { SearchResultsHeader } from "./search/SearchResultsHeader";
@@ -80,18 +82,18 @@ export const SearchResultsView = () => {
 
 	const allRows = useMemo(() => {
 		return [
-			...rowData.map((r: any) => ({ ...r, sourceType: "Main Sheet" })),
-			...ordersRowData.map((r: any) => ({ ...r, sourceType: "Orders" })),
-			...bookingRowData.map((r: any) => ({ ...r, sourceType: "Booking" })),
-			...callRowData.map((r: any) => ({ ...r, sourceType: "Call" })),
-			...archiveRowData.map((r: any) => ({ ...r, sourceType: "Archive" })),
+			...rowData.map((r) => ({ ...r, sourceType: "Main Sheet" })),
+			...ordersRowData.map((r) => ({ ...r, sourceType: "Orders" })),
+			...bookingRowData.map((r) => ({ ...r, sourceType: "Booking" })),
+			...callRowData.map((r) => ({ ...r, sourceType: "Call" })),
+			...archiveRowData.map((r) => ({ ...r, sourceType: "Archive" })),
 		];
 	}, [rowData, ordersRowData, bookingRowData, callRowData, archiveRowData]);
 
 	const _searchableRows = useMemo(() => {
 		return allRows.map((row) => {
 			const searchString = [
-				(row as any).sourceType,
+				row.sourceType,
 				row.vin,
 				row.customerName,
 				row.partNumber,
@@ -136,7 +138,7 @@ export const SearchResultsView = () => {
 			return saveOrderMutation.mutateAsync({
 				id,
 				updates,
-				stage: mappedStage as any,
+				stage: mappedStage as OrderStage,
 			});
 		},
 		[saveOrderMutation],
@@ -167,16 +169,16 @@ export const SearchResultsView = () => {
 		if (terms.length === 0) return [];
 
 		const allRows = [
-			...rowData.map((r: any) => ({ ...r, sourceType: "Main Sheet" })),
-			...ordersRowData.map((r: any) => ({ ...r, sourceType: "Orders" })),
-			...bookingRowData.map((r: any) => ({ ...r, sourceType: "Booking" })),
-			...callRowData.map((r: any) => ({ ...r, sourceType: "Call" })),
-			...archiveRowData.map((r: any) => ({ ...r, sourceType: "Archive" })),
+			...rowData.map((r) => ({ ...r, sourceType: "Main Sheet" })),
+			...ordersRowData.map((r) => ({ ...r, sourceType: "Orders" })),
+			...bookingRowData.map((r) => ({ ...r, sourceType: "Booking" })),
+			...callRowData.map((r) => ({ ...r, sourceType: "Call" })),
+			...archiveRowData.map((r) => ({ ...r, sourceType: "Archive" })),
 		];
 
 		const allFound = allRows.filter((row) => {
 			const searchString = [
-				(row as any).sourceType,
+				row.sourceType,
 				row.vin,
 				row.customerName,
 				row.partNumber,
@@ -206,7 +208,7 @@ export const SearchResultsView = () => {
 		// 2. Apply Source Filters
 		if (activeSources.length === 0) return allFound;
 		return allFound.filter((row) =>
-			activeSources.includes((row as any).sourceType),
+			activeSources.includes(row.sourceType as string),
 		);
 	}, [
 		searchTerm,
@@ -220,7 +222,7 @@ export const SearchResultsView = () => {
 
 	const columns = useMemo((): ColDef<PendingRow>[] => {
 		const baseCols = getBaseColumns(
-			(row) => handleNoteClick(row, (row as any).sourceType),
+			(row) => handleNoteClick(row, row.sourceType as string),
 			(row) => handleReminderClick(row),
 			(row) => handleAttachClick(row),
 		);
@@ -229,21 +231,21 @@ export const SearchResultsView = () => {
 		const actionsCol = baseCols.find((col) => col.colId === "actions");
 		const configuredActionsCol: ColDef<PendingRow> = actionsCol
 			? {
-					...actionsCol,
-					checkboxSelection: true,
-					headerCheckboxSelection: false, // User requested removal of header checkbox
-					pinned: "left", // User requested first position
-				}
+				...actionsCol,
+				checkboxSelection: true,
+				headerCheckboxSelection: false, // User requested removal of header checkbox
+				pinned: "left", // User requested first position
+			}
 			: {
-					// Fallback if not found (should typically be found)
-					headerName: "ACTIONS",
-					field: "id", // Fallback field
-					colId: "actions",
-					pinned: "left",
-					checkboxSelection: true,
-					headerCheckboxSelection: false,
-					width: 100,
-				};
+				// Fallback if not found (should typically be found)
+				headerName: "ACTIONS",
+				field: "id", // Fallback field
+				colId: "actions",
+				pinned: "left",
+				checkboxSelection: true,
+				headerCheckboxSelection: false,
+				width: 100,
+			};
 
 		// Filter out 'selection' and 'actions' from baseCols as we handle them differently
 		const remainingBaseCols = baseCols.filter(
@@ -288,8 +290,8 @@ export const SearchResultsView = () => {
 					values:
 						Array.isArray(partStatuses) && partStatuses.length > 0
 							? partStatuses
-									.filter((s) => s && typeof s.label === "string")
-									.map((s) => s.label)
+								.filter((s) => s && typeof s.label === "string")
+								.map((s) => s.label)
 							: [],
 				},
 				cellClass: "flex items-center justify-center",
@@ -299,11 +301,11 @@ export const SearchResultsView = () => {
 
 	const counts = useMemo(() => {
 		const allRows = [
-			...rowData.map((r: any) => ({ ...r, sourceType: "Main Sheet" })),
-			...ordersRowData.map((r: any) => ({ ...r, sourceType: "Orders" })),
-			...bookingRowData.map((r: any) => ({ ...r, sourceType: "Booking" })),
-			...callRowData.map((r: any) => ({ ...r, sourceType: "Call" })),
-			...archiveRowData.map((r: any) => ({ ...r, sourceType: "Archive" })),
+			...rowData.map((r) => ({ ...r, sourceType: "Main Sheet" })),
+			...ordersRowData.map((r) => ({ ...r, sourceType: "Orders" })),
+			...bookingRowData.map((r) => ({ ...r, sourceType: "Booking" })),
+			...callRowData.map((r) => ({ ...r, sourceType: "Call" })),
+			...archiveRowData.map((r) => ({ ...r, sourceType: "Archive" })),
 		];
 
 		const filteredBySearch = allRows.filter((row) => {
@@ -314,7 +316,7 @@ export const SearchResultsView = () => {
 				.filter((t) => t.length > 0);
 
 			const searchString = [
-				(row as any).sourceType,
+				row.sourceType,
 				row.vin,
 				row.customerName,
 				row.partNumber,
@@ -343,7 +345,7 @@ export const SearchResultsView = () => {
 
 		return filteredBySearch.reduce(
 			(acc, curr) => {
-				const source = (curr as any).sourceType || "Unknown";
+				const source = curr.sourceType || "Unknown";
 				acc[source] = (acc[source] || 0) + 1;
 				return acc;
 			},
@@ -359,7 +361,7 @@ export const SearchResultsView = () => {
 	]);
 
 	const onCellValueChanged = useCallback(
-		async (event: any) => {
+		async (event: CellValueChangedEvent<PendingRow>) => {
 			if (
 				event.colDef.field === "partStatus" &&
 				event.data?.id &&
@@ -382,9 +384,9 @@ export const SearchResultsView = () => {
 				if (isArrived && vin) {
 					let relevantParts: PendingRow[] = [];
 					if (sourceType === "Main Sheet") {
-						relevantParts = rowData.filter((r: any) => r.vin === vin);
+						relevantParts = rowData.filter((r) => r.vin === vin);
 					} else if (sourceType === "Orders") {
-						relevantParts = ordersRowData.filter((r: any) => r.vin === vin);
+						relevantParts = ordersRowData.filter((r) => r.vin === vin);
 					}
 
 					if (relevantParts.length > 0) {
