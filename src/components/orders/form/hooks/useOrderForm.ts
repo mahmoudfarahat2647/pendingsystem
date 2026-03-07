@@ -162,6 +162,11 @@ export const useOrderForm = ({
     // -----------------------------------------------------------------------
     // Effect: modal open/close initialisation
     // -----------------------------------------------------------------------
+    const beastModeTriggersRef = useRef(beastModeTriggers);
+    useEffect(() => {
+        beastModeTriggersRef.current = beastModeTriggers;
+    }, [beastModeTriggers]);
+
     useEffect(() => {
         if (open) {
             let initialFormData: FormData;
@@ -179,7 +184,7 @@ export const useOrderForm = ({
 
                 // CRITICAL: BEAST MODE SYNC - TIMER PERSISTENCE
                 // 1. Check for Active Global Timer (from Commit failure)
-                const triggerTime = beastModeTriggers[first.id];
+                const triggerTime = beastModeTriggersRef.current[first.id];
                 const now = Date.now();
                 let remainingGlobalTime = 0;
 
@@ -221,7 +226,7 @@ export const useOrderForm = ({
         } else {
             clearCurrentEditVin();
         }
-    }, [open, isEditMode, selectedRows, beastModeTriggers, setCurrentEditVin, clearCurrentEditVin]);
+    }, [open, isEditMode, selectedRows, setCurrentEditVin, clearCurrentEditVin]);
 
     // -----------------------------------------------------------------------
     // Effect: VIN → model auto-detection
