@@ -55,10 +55,10 @@ export default function DateTimePicker({ date, setDate }: DateTimePickerProps) {
 		}
 
 		const d = new Date(newDay);
-		let h = parseInt(timeParts.h);
+		let h = parseInt(timeParts.h, 10);
 		if (timeParts.ampm === "PM" && h < 12) h += 12;
 		if (timeParts.ampm === "AM" && h === 12) h = 0;
-		d.setHours(h, parseInt(timeParts.m), 0, 0);
+		d.setHours(h, parseInt(timeParts.m, 10), 0, 0);
 
 		// Only update if different
 		if (date?.getTime() !== d.getTime()) {

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { create } from "zustand";
 import { createInventorySlice } from "../store/slices/inventorySlice";
 import { createOrdersSlice } from "../store/slices/ordersSlice";

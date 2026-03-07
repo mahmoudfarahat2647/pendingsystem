@@ -1,8 +1,14 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { processBatch } from "@/lib/batchUtils";
+import { normalizeNullableCompanyName } from "@/lib/company";
+import { isUuid } from "@/lib/orderWorkflow";
 import { supabase } from "@/lib/supabase";
 import { PendingRowSchema } from "@/schemas/order.schema";
-import type { PendingRow } from "@/types";
+import type {
+	DescriptionConflictResult,
+	DuplicateCheckResult,
+	PendingRow,
+} from "@/types";
 
 export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
 
@@ -23,8 +29,6 @@ function handleSupabaseError(error: PostgrestError): never {
 		details: error.details,
 	});
 }
-
-const isUuid = (id: string): boolean => id.length === 36;
 
 export const orderService = {
 	async getOrders(stage?: OrderStage) {
@@ -129,7 +133,7 @@ export const orderService = {
 			customer_phone:
 				rest.mobile || (rest as Record<string, unknown>).customer_phone,
 			vin: rest.vin,
-			company: rest.company,
+			company: normalizeNullableCompanyName(rest.company),
 			stage: stage,
 			metadata: metadataToStore,
 		};
@@ -267,17 +271,24 @@ export const orderService = {
 			}
 		}
 
+		const metadata =
+			typeof row.metadata === "object" && row.metadata
+				? (row.metadata as Record<string, unknown>)
+				: {};
+
 		const resultObj = {
-			...(typeof row.metadata === "object" && row.metadata ? row.metadata : {}),
+			...metadata,
 			id: row.id,
 			trackingId: row.order_number,
-			customerName: row.customer_name,
-			mobile: row.customer_phone,
-			vin: row.vin,
-			company: row.company,
+			// Prefer the dedicated column value when non-empty; otherwise keep the
+			// value already present in the metadata JSON (set during save).
+			customerName:
+				(row.customer_name as string) || metadata.customerName || "",
+			mobile: (row.customer_phone as string) || metadata.mobile || "",
+			vin: (row.vin as string) || metadata.vin || "",
+			company: normalizeNullableCompanyName(row.company),
 			reminder: reminder,
 			stage: row.stage,
-			// stage logic is handled by the tab we are in
 		};
 
 		// [CRITICAL] Strict Data Validation Mapping
@@ -299,5 +310,118 @@ export const orderService = {
 		}
 
 		return parseResult.data;
+	},
+
+	async checkHistoricalVinPartDuplicate(
+		vin: string,
+		partNumber: string,
+		excludeIds?: string | string[],
+	): Promise<DuplicateCheckResult> {
+		if (!vin || !partNumber) {
+			return { isDuplicate: false };
+		}
+
+		const normalizedVin = vin.trim().toUpperCase();
+		const normalizedPart = partNumber.trim().toUpperCase();
+
+		if (normalizedVin.length < 6 || !normalizedPart) {
+			return { isDuplicate: false };
+		}
+
+		// Normalize to a Set for O(1) lookups
+		const excludeSet = new Set(
+			Array.isArray(excludeIds) ? excludeIds : excludeIds ? [excludeIds] : [],
+		);
+
+		const { data, error } = await supabase
+			.from("orders")
+			.select("id, vin, stage, metadata")
+			.ilike("vin", normalizedVin)
+			.limit(100);
+
+		if (error) {
+			console.warn(
+				"[orderService] checkHistoricalVinPartDuplicate error:",
+				error,
+			);
+			return { isDuplicate: false };
+		}
+
+		for (const row of data || []) {
+			if (excludeSet.has(row.id)) continue;
+
+			const rowPart = (row.metadata as Record<string, unknown>)?.partNumber as
+				| string
+				| undefined;
+			if (rowPart?.toUpperCase() === normalizedPart) {
+				return {
+					isDuplicate: true,
+					existingRow: {
+						id: row.id,
+						vin: row.vin || "",
+						stage: row.stage,
+					} as PendingRow,
+					location: row.stage || "history",
+				};
+			}
+		}
+
+		return { isDuplicate: false };
+	},
+
+	async checkHistoricalDescriptionConflict(
+		partNumber: string,
+		currentDescription: string,
+		currentRowId?: string,
+	): Promise<DescriptionConflictResult> {
+		if (!partNumber || !currentDescription) {
+			return { hasConflict: false };
+		}
+
+		const normalizedPart = partNumber.trim().toUpperCase();
+		const normalizedDesc = currentDescription.trim().toLowerCase();
+
+		// NOTE: Scans existing orders for part-description conflicts.
+		// A proper DB-level partNumber filter requires a dedicated column or GIN index.
+		const { data, error } = await supabase
+			.from("orders")
+			.select("id, vin, stage, metadata")
+			.limit(1000);
+
+		if (error) {
+			console.warn(
+				"[orderService] checkHistoricalDescriptionConflict error:",
+				error,
+			);
+			return { hasConflict: false };
+		}
+
+		for (const row of data || []) {
+			if (currentRowId && row.id === currentRowId) continue;
+
+			const rowPart = (row.metadata as Record<string, unknown>)?.partNumber as
+				| string
+				| undefined;
+			const rowDesc = (row.metadata as Record<string, unknown>)?.description as
+				| string
+				| undefined;
+
+			if (
+				rowPart?.toUpperCase() === normalizedPart &&
+				rowDesc?.trim().toLowerCase() !== normalizedDesc
+			) {
+				return {
+					hasConflict: true,
+					existingDescription: rowDesc,
+					existingRow: {
+						id: row.id,
+						vin: row.vin || "",
+						stage: row.stage,
+					} as PendingRow,
+				};
+			}
+		}
+
+		return { hasConflict: false };
 	},
 };

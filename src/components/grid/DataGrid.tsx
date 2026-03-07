@@ -11,7 +11,6 @@ import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
 
 import { gridTheme } from "@/lib/ag-grid-setup";
 import { useAppStore } from "@/store/useStore";
-import type { GridState } from "@/types";
 import { defaultColDef, defaultGridOptions } from "./config/defaultOptions";
 import { useGridCallbacks } from "./hooks/useGridCallbacks";
 import { useGridPerformance } from "./hooks/useGridPerformance";

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeNullableCompanyName } from "@/lib/company";
 
 // Status Enum Schema
 export const StatusSchema = z.enum([
@@ -52,32 +53,30 @@ export const PendingRowSchema = z
 			.transform((v) => v || ""),
 
 		// Customer Info
-		customerName: z.preprocess(
-			(val) => {
-				// Handle both string and string[] formats from database
-				if (Array.isArray(val)) {
-					return val.length > 0 ? String(val[0]) : "";
-				}
-				return typeof val === "string" || typeof val === "number"
-					? String(val)
-					: "";
-			},
-			z.string().min(1, "Customer name is required"),
-		),
-		company: z.string().nullish(), // Allow null
-		vin: z.string().min(1, "VIN is required"),
-		mobile: z.preprocess(
-			(val) => {
-				// Handle both string and string[] formats from database
-				if (Array.isArray(val)) {
-					return val.length > 0 ? String(val[0]) : "";
-				}
-				return typeof val === "string" || typeof val === "number"
-					? String(val)
-					: "";
-			},
-			z.string().min(1, "Mobile number is required"),
-		),
+		// Allow empty string — draft orders may have no customer name yet.
+		// Strict .min(1) validation is enforced by BeastModeSchema on Commit only.
+		customerName: z.preprocess((val) => {
+			// Handle both string and string[] formats from database
+			if (Array.isArray(val)) {
+				return val.length > 0 ? String(val[0]) : "";
+			}
+			return typeof val === "string" || typeof val === "number"
+				? String(val)
+				: "";
+		}, z.string()),
+		company: z.preprocess(normalizeNullableCompanyName, z.string().nullish()),
+		// Allow empty string — draft orders may have no VIN yet.
+		vin: z.string().default(""),
+		// Allow empty string — draft orders may have no mobile yet.
+		mobile: z.preprocess((val) => {
+			// Handle both string and string[] formats from database
+			if (Array.isArray(val)) {
+				return val.length > 0 ? String(val[0]) : "";
+			}
+			return typeof val === "string" || typeof val === "number"
+				? String(val)
+				: "";
+		}, z.string()),
 		cntrRdg: z.preprocess(
 			(val) => Number(val) || 0,
 			z.number().nonnegative().default(0),

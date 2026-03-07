@@ -5,10 +5,7 @@ import { format } from "date-fns";
 import { Search as SearchIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-	ActionCellRenderer,
-	PartStatusRenderer,
-} from "@/components/grid/renderers";
+import { PartStatusRenderer } from "@/components/grid/renderers";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,7 +60,7 @@ export const SearchResultsView = () => {
 	// Filter state
 	const [activeSources, setActiveSources] = useState<string[]>([]);
 
-	const handleToggleSource = useCallback((source: string) => {
+	const _handleToggleSource = useCallback((source: string) => {
 		setActiveSources((prev) =>
 			prev.includes(source)
 				? prev.filter((s) => s !== source)
@@ -91,7 +88,7 @@ export const SearchResultsView = () => {
 		];
 	}, [rowData, ordersRowData, bookingRowData, callRowData, archiveRowData]);
 
-	const searchableRows = useMemo(() => {
+	const _searchableRows = useMemo(() => {
 		return allRows.map((row) => {
 			const searchString = [
 				(row as any).sourceType,

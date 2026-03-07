@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+
 import "./globals.css";
 import { Toaster } from "sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
@@ -13,13 +13,6 @@ const metadataBase = (() => {
 		return new URL("http://localhost:3000");
 	}
 })();
-
-const inter = Inter({
-	subsets: ["latin"],
-	display: "swap",
-	preload: true,
-	adjustFontFallback: true,
-});
 
 export const metadata: Metadata = {
 	metadataBase,
@@ -51,7 +44,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" className="dark" suppressHydrationWarning>
-			<body className={inter.className} suppressHydrationWarning>
+			<body className="font-sans" suppressHydrationWarning>
 				<QueryProvider>
 					{children}
 					<Toaster position="top-right" richColors />

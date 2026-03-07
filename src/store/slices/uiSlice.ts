@@ -46,6 +46,8 @@ const initialState: UIState = {
 	bookingStatuses: defaultBookingStatuses,
 	isLocked: true,
 	beastModeTriggers: {},
+	currentEditVin: null,
+	currentEditId: null,
 };
 
 export const createUISlice: StateCreator<
@@ -259,5 +261,13 @@ export const createUISlice: StateCreator<
 			delete newTriggers[id];
 			return { beastModeTriggers: newTriggers };
 		});
+	},
+
+	setCurrentEditVin: (vin, editId) => {
+		set({ currentEditVin: vin, currentEditId: editId });
+	},
+
+	clearCurrentEditVin: () => {
+		set({ currentEditVin: null, currentEditId: null });
 	},
 });

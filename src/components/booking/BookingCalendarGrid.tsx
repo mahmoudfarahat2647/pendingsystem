@@ -12,7 +12,7 @@ import {
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { BookingStatus, PendingRow } from "@/types";
+import type { PendingRow } from "@/types";
 
 interface BookingCalendarGridProps {
 	currentMonth: Date;
@@ -88,7 +88,7 @@ export const BookingCalendarGrid = ({
 			<div className="grid grid-cols-7 gap-3">
 				{calendarDays.map((day) => {
 					const dateKey = format(day, "yyyy-MM-dd");
-					const hasBookings = !!bookingsByDateMap[dateKey];
+					const _hasBookings = !!bookingsByDateMap[dateKey];
 					const isSearchMatch = searchQuery && searchMatchDates.has(dateKey);
 					const isSelected = isSameDay(day, selectedDate);
 					const isCurrentMonth = isSameMonth(day, monthStart);

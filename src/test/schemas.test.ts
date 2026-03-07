@@ -17,31 +17,18 @@ describe("Zod Schemas", () => {
 			expect(result.success).toBe(true);
 		});
 
-		it("should fail on invalid VIN (empty string)", () => {
+		it("should fail on missing required fields (id)", () => {
 			const invalidRow = {
-				id: "123e4567-e89b-12d3-a456-426614174000",
+				// Missing id
 				customerName: "John Doe",
-				vin: "", // Invalid - empty
-				mobile: "01234567890",
+				vin: "VF112345678901234",
+				mobile: "01000000000",
 				model: "Megane",
 			};
 			const result = PendingRowSchema.safeParse(invalidRow);
 			expect(result.success).toBe(false);
 			if (!result.success) {
-				const fieldErrors = result.error.flatten().fieldErrors;
-				expect(fieldErrors.vin).toBeDefined();
-			}
-		});
-
-		it("should fail on missing required fields", () => {
-			const invalidRow = {
-				// Missing customerName, via, etc.
-				id: "123e4567-e89b-12d3-a456-426614174000",
-			};
-			const result = PendingRowSchema.safeParse(invalidRow);
-			expect(result.success).toBe(false);
-			if (!result.success) {
-				expect(result.error.flatten().fieldErrors.customerName).toBeDefined();
+				expect(result.error.flatten().fieldErrors.id).toBeDefined();
 			}
 		});
 	});
@@ -59,7 +46,7 @@ describe("Zod Schemas", () => {
 				requester: "Admin",
 				sabNumber: "SAB123",
 				acceptedBy: "Agent",
-				company: "pendingsystem",
+				company: "Zeekr",
 			};
 			const result = OrderFormSchema.safeParse(validForm);
 			expect(result.success).toBe(true);

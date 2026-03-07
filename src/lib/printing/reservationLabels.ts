@@ -1,3 +1,4 @@
+import { normalizeCompanyName } from "@/lib/company";
 import type { PendingRow } from "@/types";
 
 const escapeHtml = (value: unknown): string => {
@@ -83,9 +84,17 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
 	const labelsHtml = selected
 		.map((row) => {
 			const today = new Date().toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
-			const isZeekr = row.company?.toLowerCase() === "zeekr";
-			const logoSvg = isZeekr ? ZEEKR_LOGO_SVG : PENDINGSYSTEM_LOGO_SVG;
-			const brandName = isZeekr ? "" : "PENDINGSYSTEM";
+			const normalizedCompany = normalizeCompanyName(row.company);
+			const isZeekr = normalizedCompany === "Zeekr";
+			const isRenault = normalizedCompany === "Renault";
+			// Default to PENDINGSYSTEM logo if Renault (as no explicit asset exists yet) or unknown
+			const RENAULT_LOGO_SVG = PENDINGSYSTEM_LOGO_SVG;
+			const logoSvg = isZeekr
+				? ZEEKR_LOGO_SVG
+				: isRenault
+					? RENAULT_LOGO_SVG
+					: PENDINGSYSTEM_LOGO_SVG;
+			const brandName = isZeekr ? "" : isRenault ? "RENAULT" : "PENDINGSYSTEM";
 			const customerName = escapeHtml(row.customerName || "-");
 			const description = escapeHtml(row.description || "-");
 			const vin = escapeHtml(row.vin || "-");

@@ -8,7 +8,7 @@ const mockWindowPrint = vi.fn();
 const mockWindowClose = vi.fn();
 
 // Mock console methods to avoid noise in tests
-const mockConsoleError = vi
+const _mockConsoleError = vi
 	.spyOn(console, "error")
 	.mockImplementation(() => {});
 
@@ -57,19 +57,17 @@ describe("printReservationLabels", () => {
 		expect(mockWindowOpen).toHaveBeenCalled();
 	});
 
-	it("should generate correct branding for pendingsystem orders", () => {
-		const renaultRow = createMockRow("1", "pendingsystem");
+	it("should generate correct branding for Renault orders", () => {
+		const renaultRow = createMockRow("1", "Renault");
 		printReservationLabels([renaultRow]);
 
 		const mockDoc = mockWindowOpen.mock.results[0].value.document;
 		const writtenContent = mockDoc.write.mock.calls[0][0];
 
-		// Should contain pendingsystem logo
+		// Should contain default logo (no Renault asset yet)
 		expect(writtenContent).toContain('viewBox="0 0 136.45 178.6"');
-		// Should contain PENDINGSYSTEM text
-		expect(writtenContent).toContain(
-			'<span class="brand">PENDINGSYSTEM</span>',
-		);
+		// Should contain RENAULT text
+		expect(writtenContent).toContain('<span class="brand">RENAULT</span>');
 		// Should NOT contain Zeekr logo
 		expect(writtenContent).not.toContain('viewBox="0 0 115 29"');
 	});
@@ -97,6 +95,9 @@ describe("printReservationLabels", () => {
 			{ company: "ZEEKR", expectedLogo: "zeekr" },
 			{ company: "Zeekr", expectedLogo: "zeekr" },
 			{ company: "reNault", expectedLogo: "renault" },
+			{ company: "RENALT", expectedLogo: "renault" },
+			{ company: "renalt", expectedLogo: "renault" },
+			{ company: "Renault", expectedLogo: "renault" },
 			{ company: "PENDINGSYSTEM", expectedLogo: "renault" },
 			{ company: "pendingsystem", expectedLogo: "renault" },
 		];
@@ -114,6 +115,9 @@ describe("printReservationLabels", () => {
 				expect(writtenContent).not.toContain(
 					'<span class="brand">PENDINGSYSTEM</span>',
 				);
+			} else if (expectedLogo === "renault") {
+				expect(writtenContent).toContain('viewBox="0 0 136.45 178.6"');
+				expect(writtenContent).toContain('<span class="brand">RENAULT</span>');
 			} else {
 				expect(writtenContent).toContain('viewBox="0 0 136.45 178.6"');
 				expect(writtenContent).toContain(
@@ -147,10 +151,11 @@ describe("printReservationLabels", () => {
 
 	it("should handle mixed company types in single print job", () => {
 		const rows = [
-			createMockRow("1", "pendingsystem"),
+			createMockRow("1", "PENDINGSYSTEM"),
 			createMockRow("2", "Zeekr"),
 			createMockRow("3", "ZEEKR"),
-			createMockRow("4", "renault"),
+			createMockRow("4", "Renault"),
+			createMockRow("5", "Renalt"),
 		];
 
 		printReservationLabels(rows);
@@ -162,11 +167,17 @@ describe("printReservationLabels", () => {
 		expect(writtenContent).toContain('viewBox="0 0 136.45 178.6"'); // pendingsystem
 		expect(writtenContent).toContain('viewBox="0 0 115 29"'); // Zeekr
 
-		// Should have PENDINGSYSTEM text for pendingsystem orders
+		// Should have RENAULT text for Renault/Renalt orders
 		const renaultBrandCount = (
+			writtenContent.match(/<span class="brand">RENAULT<\/span>/g) || []
+		).length;
+		expect(renaultBrandCount).toBe(3); // PENDINGSYSTEM alias + Renault + Renalt
+
+		// Should have PENDINGSYSTEM text only for unknown fallback values
+		const fallbackBrandCount = (
 			writtenContent.match(/<span class="brand">PENDINGSYSTEM<\/span>/g) || []
 		).length;
-		expect(renaultBrandCount).toBe(2); // Two pendingsystem orders
+		expect(fallbackBrandCount).toBe(0);
 
 		// Should have empty brand spans for Zeekr orders
 		const emptyBrandCount = (

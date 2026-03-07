@@ -1,9 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import BackupReportsTab from "../components/reports/BackupReportsTab";
-import { ManualActionCard } from "../components/reports/ManualActionCard";
-import { RecipientsCard } from "../components/reports/RecipientsCard";
-import { SchedulingCard } from "../components/reports/SchedulingCard";
 
 // Mock the child components to isolate the parent component testing
 vi.mock("../components/reports/SchedulingCard", () => ({

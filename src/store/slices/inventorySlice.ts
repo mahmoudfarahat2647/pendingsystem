@@ -7,7 +7,7 @@ export const createInventorySlice: StateCreator<
 	[["zustand/persist", unknown]],
 	[],
 	InventoryState & InventoryActions
-> = (set, get) => ({
+> = (set, _get) => ({
 	rowData: [],
 	callRowData: [],
 	archiveRowData: [],

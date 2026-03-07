@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { create } from "zustand";
 import { createOrdersSlice } from "../store/slices/ordersSlice";
 import type { CombinedStore } from "../store/types";

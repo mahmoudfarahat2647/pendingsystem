@@ -54,7 +54,7 @@ export const EditReminderModal = ({
 				const timeStr = initialData.time || "12:00";
 				// Construct date safely
 				const d = new Date(`${dateStr}T${timeStr}`);
-				if (!isNaN(d.getTime())) {
+				if (!Number.isNaN(d.getTime())) {
 					setDateTime(d);
 				} else {
 					setDateTime(undefined);

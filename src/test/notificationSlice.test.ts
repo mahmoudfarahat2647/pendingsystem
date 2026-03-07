@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
 import { getOrdersQueryKey, queryClient } from "@/lib/queryClient";
-import { orderService } from "@/services/orderService";
 import { createNotificationSlice } from "../store/slices/notificationSlice";
 import type { CombinedStore } from "../store/types";
 import type { PendingRow } from "../types";

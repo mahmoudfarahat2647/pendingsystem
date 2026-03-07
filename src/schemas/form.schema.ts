@@ -1,22 +1,27 @@
 import { z } from "zod";
+import { isAllowedCompanyName, normalizeCompanyName } from "@/lib/company";
+import { DEFAULT_COMPANY } from "@/lib/ordersValidationConstants";
 
 export const OrderFormSchema = z
 	.object({
 		customerName: z.string().min(1, "Customer name is required"),
-		vin: z.string().min(1, "VIN is required"),
+		vin: z.string().min(1, "VIN is required").optional().or(z.literal("")),
 		mobile: z.string().min(1, "Mobile number is required"),
 		cntrRdg: z
 			.union([z.string(), z.number()])
 			.transform((val) =>
 				typeof val === "string" ? parseInt(val, 10) || 0 : val,
 			),
-		model: z.string().min(1, "Model is required"),
-		repairSystem: z.string().default("Mechanical"),
+		model: z.string().optional().or(z.literal("")),
+		repairSystem: z.string().default(""),
 		startWarranty: z.string().optional(),
 		requester: z.string().optional(),
 		sabNumber: z.string().optional(),
 		acceptedBy: z.string().optional(),
-		company: z.string().default("pendingsystem"),
+		company: z
+			.string()
+			.default(DEFAULT_COMPANY)
+			.transform(normalizeCompanyName),
 	})
 	.refine(
 		(data) => {
@@ -28,6 +33,15 @@ export const OrderFormSchema = z
 		{
 			message: "Ineligible for Warranty: Vehicle exceeds 100,000 KM",
 			path: ["cntrRdg"],
+		},
+	)
+	.refine(
+		(data) => {
+			return isAllowedCompanyName(data.company);
+		},
+		{
+			message: "Invalid company. Only Zeekr and Renault are allowed",
+			path: ["company"],
 		},
 	);
 
@@ -42,11 +56,15 @@ export const BeastModeSchema = z
 			.union([z.string(), z.number()])
 			.transform((val) =>
 				typeof val === "string" ? parseInt(val, 10) || 0 : val,
-			),
+			)
+			.pipe(z.number().min(1, "KM reading is required")),
 		model: z.string().min(1, "Vehicle model is required"),
 		repairSystem: z.string().min(1, "Repair system is required"),
 		sabNumber: z.string().min(1, "SAB Number is required"),
-		company: z.string().min(1, "Company is required"),
+		company: z
+			.string()
+			.min(1, "Company is required")
+			.transform(normalizeCompanyName),
 		requester: z.string().min(1, "Branch/Requester is required"),
 		acceptedBy: z.string().min(1, "Agent name is required"),
 	})
@@ -60,5 +78,14 @@ export const BeastModeSchema = z
 		{
 			message: "Ineligible for Warranty: Vehicle exceeds 100,000 KM",
 			path: ["cntrRdg"],
+		},
+	)
+	.refine(
+		(data) => {
+			return isAllowedCompanyName(data.company);
+		},
+		{
+			message: "Invalid company. Only Zeekr and Renault are allowed",
+			path: ["company"],
 		},
 	);

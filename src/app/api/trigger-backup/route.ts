@@ -88,12 +88,17 @@ export async function POST() {
 			undefined,
 			"Backup workflow triggered successfully on GitHub Actions",
 		);
-	} catch (error: any) {
-		console.error("Backup trigger error:", error);
-		return errorResponse(
-			"SERVER_ERROR",
-			error.message || "An internal error occurred",
-			500,
-		);
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			console.error("Backup trigger error:", error.message);
+			return errorResponse(
+				"SERVER_ERROR",
+				error.message || "An internal error occurred",
+				500,
+			);
+		} else {
+			console.error("Backup trigger error:", error);
+			return errorResponse("SERVER_ERROR", "An internal error occurred", 500);
+		}
 	}
 }
