@@ -16,7 +16,7 @@ import { hasMixedVinSelection } from "@/lib/orderWorkflow";
 
 const OrderFormModal = dynamic(
 	() =>
-		import("@/components/orders/OrderFormModal").then(
+		import("@/components/orders/form").then(
 			(mod) => mod.OrderFormModal,
 		),
 	{ ssr: false },

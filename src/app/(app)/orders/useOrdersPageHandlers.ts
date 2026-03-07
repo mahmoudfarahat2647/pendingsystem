@@ -3,7 +3,7 @@
 import type { GridApi } from "ag-grid-community";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { FormData } from "@/components/orders/OrderFormModal";
+import type { FormData } from "@/components/orders/form";
 import {
 	useBulkDeleteOrdersMutation,
 	useBulkUpdateOrderStageMutation,
