@@ -1,63 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-interface StorageStats {
-	dbUsedMB: number | null;
-	storageUsedMB: number;
-	loading: boolean;
-	error: string | null;
-}
+import { useQuery } from "@tanstack/react-query";
+import type { StorageStatsResponse } from "@/app/api/storage-stats/route";
 
 /**
- * Hook to fetch Supabase storage and database usage statistics.
+ * Fetches Supabase storage and database usage statistics via React Query.
  *
- * @returns {StorageStats} The current usage stats, loading state, and any error.
+ * Data is refetched every 5 minutes and kept in cache for 10 minutes,
+ * consistent with other query hooks in the codebase.
+ *
+ * @returns React Query result containing {@link StorageStatsResponse}.
  */
 export function useStorageStats() {
-	const [stats, setStats] = useState<StorageStats>({
-		dbUsedMB: null,
-		storageUsedMB: 0,
-		loading: true,
-		error: null,
-	});
-
-	useEffect(() => {
-		let isMounted = true;
-
-		async function fetchStats() {
-			try {
-				const response = await fetch("/api/storage-stats");
-				if (!response.ok) {
-					throw new Error("Failed to fetch storage stats");
-				}
-				const data = await response.json();
-
-				if (isMounted) {
-					setStats({
-						dbUsedMB: data.dbUsedMB ?? null,
-						storageUsedMB: data.storageUsedMB,
-						loading: false,
-						error: null,
-					});
-				}
-			} catch (err: any) {
-				if (isMounted) {
-					setStats((prev) => ({
-						...prev,
-						loading: false,
-						error: err.message || "An unexpected error occurred",
-					}));
-				}
+	return useQuery<StorageStatsResponse>({
+		queryKey: ["storage-stats"],
+		queryFn: async (): Promise<StorageStatsResponse> => {
+			const response = await fetch("/api/storage-stats");
+			if (!response.ok) {
+				throw new Error("Failed to fetch storage stats");
 			}
-		}
-
-		fetchStats();
-
-		return () => {
-			isMounted = false;
-		};
-	}, []);
-
-	return stats;
+			return response.json();
+		},
+		staleTime: 1000 * 60 * 5, // 5 minutes
+		gcTime: 1000 * 60 * 10, // 10 minutes
+	});
 }

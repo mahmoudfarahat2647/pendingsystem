@@ -1,6 +1,6 @@
-const { execSync } = require("child_process");
+const { execSync } = require("node:child_process");
 try {
-	const output = execSync("npx @biomejs/biome check src/ --reporter=json", {
+	const _output = execSync("npx @biomejs/biome check src/ --reporter=json", {
 		encoding: "utf8",
 		maxBuffer: 10 * 1024 * 1024,
 	});
