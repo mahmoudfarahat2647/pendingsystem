@@ -1,8 +1,26 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import {
+	COMBINED_LIMIT_BYTES,
+	DB_LIMIT_BYTES,
+	STORAGE_LIMIT_BYTES,
+} from "@/lib/storage-limits";
 
 export const runtime = "nodejs";
+
+/** Response shape returned by GET /api/storage-stats. */
+export interface StorageStatsResponse {
+	dbUsedBytes: number | null;
+	dbLimitBytes: number;
+	dbAvailable: boolean;
+	storageUsedBytes: number;
+	storageLimitBytes: number;
+	storageAvailable: boolean;
+	combinedUsedBytes: number | null;
+	combinedLimitBytes: number;
+	dataComplete: boolean;
+}
 
 /**
  * Recursively lists all files in a storage bucket, traversing subdirectories
@@ -56,7 +74,7 @@ async function getRecursiveBucketSize(
  * Fetches real-time database and file storage usage from Supabase.
  * Uses the service role key to perform administrative queries.
  *
- * @returns {Promise<NextResponse>} JSON containing dbUsedMB and storageUsedMB
+ * @returns JSON containing per-source usage in bytes, limits, and availability flags.
  */
 export async function GET() {
 	try {
@@ -80,48 +98,63 @@ export async function GET() {
 		});
 
 		// 1. Get Database Size via RPC
+		let dbUsedBytes: number | null = null;
+		let dbAvailable = false;
+
 		const { data: dbData, error: dbError } = await supabase.rpc(
 			"get_database_size_bytes",
 		);
 
-		let dbSizeBytes: number | null = null;
 		if (dbError) {
 			console.error("Error fetching DB size via RPC:", dbError);
 		} else {
-			dbSizeBytes = dbData;
+			dbUsedBytes = dbData;
+			dbAvailable = true;
 		}
 
 		// 2. Get File Storage Size (recursive + paginated)
+		let storageUsedBytes = 0;
+		let storageAvailable = false;
+
 		const { data: buckets, error: bucketError } =
 			await supabase.storage.listBuckets();
 
-		let storageSizeBytes = 0;
 		if (!bucketError && buckets) {
+			storageAvailable = true;
 			for (const bucket of buckets) {
-				storageSizeBytes += await getRecursiveBucketSize(supabase, bucket.id);
+				storageUsedBytes += await getRecursiveBucketSize(supabase, bucket.id);
 			}
+		} else if (bucketError) {
+			console.error("Error listing storage buckets:", bucketError);
 		}
 
-		const dbUsedMB =
-			dbSizeBytes !== null
-				? Number((dbSizeBytes / (1024 * 1024)).toFixed(2))
+		const combinedUsedBytes =
+			dbAvailable && storageAvailable
+				? (dbUsedBytes ?? 0) + storageUsedBytes
 				: null;
-		const storageUsedMB = Number((storageSizeBytes / (1024 * 1024)).toFixed(2));
 
-		return NextResponse.json({
-			dbUsedMB,
-			storageUsedMB,
-		});
+		const response: StorageStatsResponse = {
+			dbUsedBytes,
+			dbLimitBytes: DB_LIMIT_BYTES,
+			dbAvailable,
+			storageUsedBytes,
+			storageLimitBytes: STORAGE_LIMIT_BYTES,
+			storageAvailable,
+			combinedUsedBytes,
+			combinedLimitBytes: COMBINED_LIMIT_BYTES,
+			dataComplete: dbAvailable && storageAvailable,
+		};
+
+		return NextResponse.json(response);
 	} catch (error: unknown) {
 		if (error instanceof Error) {
 			console.error("Storage stats error:", error.message);
 			return NextResponse.json({ error: error.message }, { status: 500 });
-		} else {
-			console.error("Storage stats error:", error);
-			return NextResponse.json(
-				{ error: "Internal server error" },
-				{ status: 500 },
-			);
 		}
+		console.error("Storage stats error:", error);
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }

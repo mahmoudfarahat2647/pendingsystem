@@ -1,6 +1,10 @@
 "use client";
 
-import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import type {
+	CellValueChangedEvent,
+	ColDef,
+	ICellRendererParams,
+} from "ag-grid-community";
 import { format } from "date-fns";
 import { Search as SearchIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
@@ -15,10 +19,9 @@ import {
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { cn } from "@/lib/utils";
-import { type OrderStage } from "@/services/orderService";
+import type { OrderStage } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
-import type { CellValueChangedEvent } from "ag-grid-community";
 import { RowModals } from "./RowModals";
 import { SearchResultsGrid } from "./search/SearchResultsGrid";
 import { SearchResultsHeader } from "./search/SearchResultsHeader";
@@ -231,21 +234,21 @@ export const SearchResultsView = () => {
 		const actionsCol = baseCols.find((col) => col.colId === "actions");
 		const configuredActionsCol: ColDef<PendingRow> = actionsCol
 			? {
-				...actionsCol,
-				checkboxSelection: true,
-				headerCheckboxSelection: false, // User requested removal of header checkbox
-				pinned: "left", // User requested first position
-			}
+					...actionsCol,
+					checkboxSelection: true,
+					headerCheckboxSelection: false, // User requested removal of header checkbox
+					pinned: "left", // User requested first position
+				}
 			: {
-				// Fallback if not found (should typically be found)
-				headerName: "ACTIONS",
-				field: "id", // Fallback field
-				colId: "actions",
-				pinned: "left",
-				checkboxSelection: true,
-				headerCheckboxSelection: false,
-				width: 100,
-			};
+					// Fallback if not found (should typically be found)
+					headerName: "ACTIONS",
+					field: "id", // Fallback field
+					colId: "actions",
+					pinned: "left",
+					checkboxSelection: true,
+					headerCheckboxSelection: false,
+					width: 100,
+				};
 
 		// Filter out 'selection' and 'actions' from baseCols as we handle them differently
 		const remainingBaseCols = baseCols.filter(
@@ -290,8 +293,8 @@ export const SearchResultsView = () => {
 					values:
 						Array.isArray(partStatuses) && partStatuses.length > 0
 							? partStatuses
-								.filter((s) => s && typeof s.label === "string")
-								.map((s) => s.label)
+									.filter((s) => s && typeof s.label === "string")
+									.map((s) => s.label)
 							: [],
 				},
 				cellClass: "flex items-center justify-center",

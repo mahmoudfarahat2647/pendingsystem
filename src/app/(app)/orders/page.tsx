@@ -15,10 +15,7 @@ import { useRowModals } from "@/hooks/useRowModals";
 import { hasMixedVinSelection } from "@/lib/orderWorkflow";
 
 const OrderFormModal = dynamic(
-	() =>
-		import("@/components/orders/form").then(
-			(mod) => mod.OrderFormModal,
-		),
+	() => import("@/components/orders/form").then((mod) => mod.OrderFormModal),
 	{ ssr: false },
 );
 const BookingCalendarModal = dynamic(
