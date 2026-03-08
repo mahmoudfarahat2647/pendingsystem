@@ -61,6 +61,15 @@ export const orderService = {
 		return data;
 	},
 
+	async getDashboardStats() {
+		const { data, error } = await supabase
+			.from("orders")
+			.select("id, vin, stage");
+
+		if (error) handleSupabaseError(error);
+		return data;
+	},
+
 	async updateOrderStage(id: string, stage: OrderStage) {
 		const { data, error } = await supabase
 			.from("orders")

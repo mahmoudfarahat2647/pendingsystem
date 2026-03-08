@@ -30,7 +30,7 @@ export function detectModelFromVin(vin: string): string | null {
  * Generate a unique consistent badge color based on VIN hash
  * Uses a curated palette of visually distinct dark colors for white text
  */
-export interface VinBadgeStyle {
+interface VinBadgeStyle {
 	bg: string;
 	text: string;
 	border: string;

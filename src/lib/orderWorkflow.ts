@@ -46,13 +46,13 @@ export const appendTaggedActionNote = (
 export const getSelectedIds = (rows: PendingRow[]): string[] =>
 	rows.map((row) => row.id).filter(isUuid);
 
-export interface DuplicateCheckResult {
+interface DuplicateCheckResult {
 	isDuplicate: boolean;
 	existingRow?: PendingRow;
 	location?: string;
 }
 
-export interface DescriptionConflictResult {
+interface DescriptionConflictResult {
 	hasConflict: boolean;
 	existingDescription?: string;
 	existingRow?: PendingRow;
@@ -72,7 +72,7 @@ export function isVinLongEnoughForDuplicateCheck(vin: string): boolean {
 	return normalized.length >= DUPLICATE_CHECK_VIN_MIN_LENGTH;
 }
 
-export function isVinTooShortForDefaultMode(vin: string): boolean {
+function isVinTooShortForDefaultMode(vin: string): boolean {
 	const normalized = normalizeVin(vin);
 	return normalized.length > 0 && normalized.length < VIN_MIN_LENGTH;
 }
@@ -191,7 +191,7 @@ export function shouldSkipDuplicateCheck(
 	return false;
 }
 
-export function getValidationModeFromString(
+function getValidationModeFromString(
 	mode: "easy" | "beast",
 ): ValidationMode {
 	return mode === "beast" ? ValidationMode.BEAST : ValidationMode.DEFAULT;

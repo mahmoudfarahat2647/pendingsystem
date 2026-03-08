@@ -119,7 +119,7 @@ export const Header = React.memo(function Header() {
 						"relative flex items-center rounded-2xl transition-all duration-300",
 						"bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10",
 						isSearchFocused &&
-							"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
+						"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
 					)}
 				>
 					<Search className="absolute left-4 h-5 w-5 text-gray-500" />
@@ -225,17 +225,17 @@ export const Header = React.memo(function Header() {
 									}
 								}
 								exportAllSystemDataCSV(mappedData);
-								toast.success("Workbook exported successfully", {
+								toast.success("CSV exported successfully", {
 									id: toastId,
 								});
 							} catch (error) {
 								console.error("Export failed:", error);
-								toast.error("Failed to export workbook", { id: toastId });
+								toast.error("Failed to export CSV", { id: toastId });
 							}
 						}}
-						aria-label="Export workbook"
+						aria-label="Export CSV"
 						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
-						title="Extract All (Workbook)"
+						title="Export All Data (CSV)"
 					>
 						<Download className="h-5 w-5" />
 					</button>

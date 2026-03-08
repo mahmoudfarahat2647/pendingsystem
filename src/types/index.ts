@@ -1,7 +1,6 @@
-import type { GridState } from "ag-grid-community";
 import type { PartEntry, PendingRow } from "@/schemas/order.schema";
 
-export type { PartEntry, PendingRow, GridState };
+export type { PartEntry, PendingRow };
 
 export interface DuplicateCheckResult {
 	isDuplicate: boolean;
@@ -15,11 +14,7 @@ export interface DescriptionConflictResult {
 	existingRow?: PendingRow;
 }
 
-export interface ValidationResult {
-	isValid: boolean;
-	errors: Record<string, string>;
-	warnings: Record<string, string>;
-}
+
 
 export interface AppNotification {
 	id: string;

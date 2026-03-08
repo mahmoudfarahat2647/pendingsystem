@@ -2,7 +2,7 @@ import { z } from "zod";
 import { normalizeNullableCompanyName } from "@/lib/company";
 
 // Status Enum Schema
-export const StatusSchema = z.enum([
+const StatusSchema = z.enum([
 	"Pending",
 	"Ordered",
 	"Hold",
@@ -160,6 +160,6 @@ export const PendingRowSchema = z
 	});
 
 // Infer types from schemas
-export type Status = z.infer<typeof StatusSchema>;
+type Status = z.infer<typeof StatusSchema>;
 export type PartEntry = z.infer<typeof PartEntrySchema>;
 export type PendingRow = z.infer<typeof PendingRowSchema>;
