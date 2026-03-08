@@ -11,9 +11,27 @@ const CapacityChart = ({ data }: CapacityChartProps) => {
 		<ResponsiveContainer width="100%" height="100%">
 			<PieChart>
 				<defs>
-					<filter id="chartDropShadow" x="-20%" y="-20%" width="140%" height="140%">
-						<feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000000" floodOpacity="0.4" />
-						<feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.6" />
+					<filter
+						id="chartDropShadow"
+						x="-20%"
+						y="-20%"
+						width="140%"
+						height="140%"
+					>
+						<feDropShadow
+							dx="0"
+							dy="4"
+							stdDeviation="6"
+							floodColor="#000000"
+							floodOpacity="0.4"
+						/>
+						<feDropShadow
+							dx="0"
+							dy="2"
+							stdDeviation="2"
+							floodColor="#000000"
+							floodOpacity="0.6"
+						/>
 					</filter>
 				</defs>
 				<Pie

@@ -14,8 +14,6 @@ export interface DescriptionConflictResult {
 	existingRow?: PendingRow;
 }
 
-
-
 export interface AppNotification {
 	id: string;
 	type: "reminder" | "warranty";

@@ -2,9 +2,10 @@
 
 import { Download, Redo2, RefreshCw, Search, Undo2, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { exportAllSystemDataCSV } from "@/lib/exportUtils";
+import { ALLOWED_COMPANIES, type AllowedCompany } from "@/lib/ordersValidationConstants";
 import { cn } from "@/lib/utils";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
@@ -16,6 +17,9 @@ export const Header = React.memo(function Header() {
 	const _pathname = usePathname();
 	const _router = useRouter();
 	const [isSearchFocused, setIsSearchFocused] = useState(false);
+	const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+	const [isExporting, setIsExporting] = useState(false);
+	const exportDropdownRef = useRef<HTMLDivElement>(null);
 
 	const undoStack = useAppStore((state) => state.undoStack);
 	const redoStack = useAppStore((state) => state.redoStack);
@@ -106,6 +110,66 @@ export const Header = React.memo(function Header() {
 		}, 350);
 		return () => clearTimeout(timeoutId);
 	}, [searchInput, searchTerm, setSearchTerm]);
+
+	// Close export menu when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				exportDropdownRef.current &&
+				!exportDropdownRef.current.contains(event.target as Node)
+			) {
+				setIsExportMenuOpen(false);
+			}
+		};
+		if (isExportMenuOpen) {
+			document.addEventListener("mousedown", handleClickOutside);
+		}
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [isExportMenuOpen]);
+
+	const handleExport = async (company: AllowedCompany) => {
+		if (isExporting) return;
+
+		setIsExportMenuOpen(false);
+		setIsExporting(true);
+
+		const toastId = toast.loading(`Preparing full ${company} system export...`);
+		try {
+			const rawData = await orderService.getOrders();
+			const mappedData: PendingRow[] = [];
+			for (const row of rawData) {
+				const mapped = orderService.mapSupabaseOrder(
+					row as Record<string, unknown>,
+				);
+				if (mapped) {
+					mappedData.push(mapped);
+				}
+			}
+
+			if (mappedData.length === 0) {
+				toast.warning("No data available to export", { id: toastId });
+				return;
+			}
+
+			const exported = exportAllSystemDataCSV(mappedData, company);
+			if (!exported) {
+				toast.warning("No records found for this company", {
+					id: toastId,
+				});
+				return;
+			}
+			toast.success(`${company} CSV exported successfully`, {
+				id: toastId,
+			});
+		} catch (error) {
+			console.error("Export failed:", error);
+			toast.error(`Failed to export ${company} CSV`, { id: toastId });
+		} finally {
+			setIsExporting(false);
+		}
+	};
 
 	return (
 		<header className="flex items-center justify-between h-20 px-8 border-b border-white/5 bg-transparent shrink-0">
@@ -208,37 +272,43 @@ export const Header = React.memo(function Header() {
 
 					<CloudSync />
 
-					<button
-						type="button"
-						suppressHydrationWarning
-						onClick={async () => {
-							const toastId = toast.loading("Preparing full system export...");
-							try {
-								const rawData = await orderService.getOrders();
-								const mappedData: PendingRow[] = [];
-								for (const row of rawData) {
-									const mapped = orderService.mapSupabaseOrder(
-										row as Record<string, unknown>,
-									);
-									if (mapped) {
-										mappedData.push(mapped);
-									}
-								}
-								exportAllSystemDataCSV(mappedData);
-								toast.success("CSV exported successfully", {
-									id: toastId,
-								});
-							} catch (error) {
-								console.error("Export failed:", error);
-								toast.error("Failed to export CSV", { id: toastId });
-							}
-						}}
-						aria-label="Export CSV"
-						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
-						title="Export All Data (CSV)"
-					>
-						<Download className="h-5 w-5" />
-					</button>
+					<div ref={exportDropdownRef} className="relative">
+						<button
+							type="button"
+							suppressHydrationWarning
+							onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+							disabled={isExporting}
+							aria-label="Export CSV"
+							className={cn(
+								"p-2.5 rounded-xl transition-all border",
+								isExportMenuOpen
+									? "text-white bg-white/10 border-white/20"
+									: "text-gray-400 hover:text-white hover:bg-white/5 border-transparent hover:border-white/10",
+								isExporting && "opacity-50 cursor-not-allowed"
+							)}
+							title="Export System Data"
+						>
+							<Download className="h-5 w-5" />
+						</button>
+
+						{isExportMenuOpen && (
+							<div className="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-[#1A1A1A] p-1.5 shadow-xl shadow-black/50 z-50">
+								{ALLOWED_COMPANIES.map((company) => (
+									<button
+										key={company}
+										type="button"
+										onClick={() => handleExport(company)}
+										className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-left"
+									>
+										<span>Export {company} Data</span>
+										<span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/5 text-gray-400">
+											CSV
+										</span>
+									</button>
+								))}
+							</div>
+						)}
+					</div>
 
 					<div className="relative">
 						<NotificationsDropdown />
