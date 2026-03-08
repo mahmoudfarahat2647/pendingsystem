@@ -1,11 +1,12 @@
 import type { PendingRow } from "@/types";
+import type { AllowedCompany } from "./ordersValidationConstants";
 
 /**
  * Exports selected orders to a CSV format optimized for logistics.
  * Columns: Name, VIN, Model, Part Number, Description
  */
-export const exportToLogisticsCSV = (selected: PendingRow[]) => {
-	if (selected.length === 0) return;
+export const exportToLogisticsCSV = (selected: PendingRow[]): boolean => {
+	if (selected.length === 0) return false;
 
 	const headers = [
 		"Customer Name",
@@ -25,6 +26,7 @@ export const exportToLogisticsCSV = (selected: PendingRow[]) => {
 	}));
 
 	exportToCSV(data, `logistics_export_${timestamp}`, headers);
+	return true;
 };
 
 /**
@@ -62,13 +64,17 @@ const exportToCSV = (
 	document.body.removeChild(link);
 };
 
-
-
 /**
- * Enhanced export that fetches all data and exports to CSV.
+ * Enhanced export that fetches all data and exports to CSV, filtered by company.
  */
-export const exportAllSystemDataCSV = (allRows: PendingRow[]) => {
+export const exportAllSystemDataCSV = (
+	allRows: PendingRow[],
+	company: AllowedCompany,
+): boolean => {
 	const timestamp = new Date().toISOString().split("T")[0];
+
+	const filteredRows = allRows.filter((r) => r.company === company);
+	if (filteredRows.length === 0) return false;
 
 	const stageMap: Record<string, string> = {
 		orders: "Orders",
@@ -83,7 +89,7 @@ export const exportAllSystemDataCSV = (allRows: PendingRow[]) => {
 		return `[${reminder.date} ${reminder.time}] ${reminder.subject}`;
 	};
 
-	const allData = allRows.map((r) => ({
+	const allData = filteredRows.map((r) => ({
 		...r,
 		source: stageMap[r.stage as string] || r.stage || "Unknown",
 		reminderText: formatReminder(r.reminder),
@@ -93,6 +99,7 @@ export const exportAllSystemDataCSV = (allRows: PendingRow[]) => {
 		"source",
 		"trackingId",
 		"vin",
+		"company",
 		"customerName",
 		"mobile",
 		"model",
@@ -119,5 +126,7 @@ export const exportAllSystemDataCSV = (allRows: PendingRow[]) => {
 		"archivedAt",
 	];
 
-	exportToCSV(allData, `renault_system_all_data_${timestamp}`, headers);
+	const filenamePrefix = company.toLowerCase();
+	exportToCSV(allData, `${filenamePrefix}_system_all_data_${timestamp}`, headers);
+	return true;
 };

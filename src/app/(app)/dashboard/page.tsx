@@ -38,17 +38,22 @@ const DistributionChart = dynamic(
 );
 
 export default function DashboardPage() {
-	const { data: statsData = [], isLoading: isStageLoading } = useDashboardStatsQuery();
+	const { data: statsData = [], isLoading: isStageLoading } =
+		useDashboardStatsQuery();
 
 	const ordersCount = statsData.filter((row) => row.stage === "orders").length;
 	const mainCount = statsData.filter((row) => row.stage === "main").length;
-	const bookingCount = statsData.filter((row) => row.stage === "booking").length;
-	const archiveCount = statsData.filter((row) => row.stage === "archive").length;
+	const bookingCount = statsData.filter(
+		(row) => row.stage === "booking",
+	).length;
+	const archiveCount = statsData.filter(
+		(row) => row.stage === "archive",
+	).length;
 
 	const callQueueRows = statsData.filter((row) => row.stage === "call");
 	const callCount = callQueueRows.length;
 	const callUniqueVehicles = new Set(
-		callQueueRows.map((item) => item.vin).filter(Boolean)
+		callQueueRows.map((item) => item.vin).filter(Boolean),
 	).size;
 
 	// Memoize stats to prevent recalculation
@@ -260,11 +265,18 @@ export default function DashboardPage() {
 													<Database className="w-4 h-4 text-renault-yellow/70 group-hover/db:text-renault-yellow transition-colors duration-300" />
 												</div>
 												<div>
-													<p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-1">Database</p>
+													<p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-1">
+														Database
+													</p>
 													<p className="text-gray-300 font-light text-sm font-sans tabular-nums tracking-tight">
-														{storageStats.dbAvailable && storageStats.dbUsedBytes !== null
-															? `${formatBytesToMB(storageStats.dbUsedBytes)} / 500 MB`
-															: <span className="text-gray-500 font-sans tracking-normal">Unavailable</span>}
+														{storageStats.dbAvailable &&
+														storageStats.dbUsedBytes !== null ? (
+															`${formatBytesToMB(storageStats.dbUsedBytes)} / 500 MB`
+														) : (
+															<span className="text-gray-500 font-sans tracking-normal">
+																Unavailable
+															</span>
+														)}
 													</p>
 												</div>
 											</div>
@@ -274,11 +286,17 @@ export default function DashboardPage() {
 													<HardDrive className="w-4 h-4 text-renault-yellow/70 group-hover/files:text-renault-yellow transition-colors duration-300" />
 												</div>
 												<div>
-													<p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-1">Files</p>
+													<p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-1">
+														Files
+													</p>
 													<p className="text-gray-300 font-light text-sm font-sans tabular-nums tracking-tight">
-														{storageStats.storageAvailable
-															? `${formatBytesToMB(storageStats.storageUsedBytes)} / 1 GB`
-															: <span className="text-gray-500 font-sans tracking-normal">Unavailable</span>}
+														{storageStats.storageAvailable ? (
+															`${formatBytesToMB(storageStats.storageUsedBytes)} / 1 GB`
+														) : (
+															<span className="text-gray-500 font-sans tracking-normal">
+																Unavailable
+															</span>
+														)}
 													</p>
 												</div>
 											</div>
@@ -311,13 +329,15 @@ export default function DashboardPage() {
 												<span className="text-[22px] font-bold text-white font-mono leading-none tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
 													{storageStats
 														? usagePercent(
-															(storageStats.dbUsedBytes ?? 0) +
-															storageStats.storageUsedBytes,
-															storageStats.combinedLimitBytes,
-														).toFixed(0) + "%"
+																(storageStats.dbUsedBytes ?? 0) +
+																	storageStats.storageUsedBytes,
+																storageStats.combinedLimitBytes,
+															).toFixed(0) + "%"
 														: "—"}
 												</span>
-												<span className="text-[9px] text-gray-400 font-medium tracking-widest uppercase mt-0.5">Used</span>
+												<span className="text-[9px] text-gray-400 font-medium tracking-widest uppercase mt-0.5">
+													Used
+												</span>
 											</div>
 										</div>
 									)}

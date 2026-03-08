@@ -191,9 +191,7 @@ export function shouldSkipDuplicateCheck(
 	return false;
 }
 
-function getValidationModeFromString(
-	mode: "easy" | "beast",
-): ValidationMode {
+function getValidationModeFromString(mode: "easy" | "beast"): ValidationMode {
 	return mode === "beast" ? ValidationMode.BEAST : ValidationMode.DEFAULT;
 }
 

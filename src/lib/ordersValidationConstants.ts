@@ -10,7 +10,7 @@ export enum ValidationMode {
 
 export const ALLOWED_COMPANIES = ["Zeekr", "Renault"] as const;
 
-type AllowedCompany = (typeof ALLOWED_COMPANIES)[number];
+export type AllowedCompany = (typeof ALLOWED_COMPANIES)[number];
 
 export const DEFAULT_COMPANY: AllowedCompany = "Zeekr";
 
@@ -18,5 +18,3 @@ export const VIN_MIN_LENGTH = 5;
 export const VIN_STANDARD_LENGTH = 17;
 
 export const DUPLICATE_CHECK_VIN_MIN_LENGTH = 6;
-
-

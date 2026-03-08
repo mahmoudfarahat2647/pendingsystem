@@ -19,8 +19,14 @@ export const normalizeCompanyName = (value: unknown): string => {
 	if (
 		normalized === "renault" ||
 		normalized === "renalt" ||
+		normalized === "r" ||
 		normalized === "pendingsystem"
 	) {
+		if (normalized === "r") {
+			console.warn(
+				'Short company alias "r" was matched to "Renault". Monitor for unintended collisions.',
+			);
+		}
 		return "Renault";
 	}
 
