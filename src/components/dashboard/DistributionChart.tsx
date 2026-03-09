@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
 interface DistributionChartProps {
@@ -7,9 +8,36 @@ interface DistributionChartProps {
 }
 
 const DistributionChart = ({ data }: DistributionChartProps) => {
+	const uid = useId();
+	const filterId = `distributionChartDropShadow-${uid}`;
+
 	return (
 		<ResponsiveContainer width="100%" height="100%">
 			<BarChart data={data}>
+				<defs>
+					<filter
+						id={filterId}
+						x="-20%"
+						y="-20%"
+						width="140%"
+						height="140%"
+					>
+						<feDropShadow
+							dx="0"
+							dy="4"
+							stdDeviation="6"
+							floodColor="#000000"
+							floodOpacity="0.4"
+						/>
+						<feDropShadow
+							dx="0"
+							dy="2"
+							stdDeviation="2"
+							floodColor="#000000"
+							floodOpacity="0.6"
+						/>
+					</filter>
+				</defs>
 				<XAxis
 					dataKey="name"
 					axisLine={false}
@@ -30,6 +58,8 @@ const DistributionChart = ({ data }: DistributionChartProps) => {
 					fill="#FFCC00"
 					radius={[4, 4, 0, 0]}
 					barSize={20}
+					stroke="none"
+					filter={`url(#${filterId})`}
 				/>
 			</BarChart>
 		</ResponsiveContainer>

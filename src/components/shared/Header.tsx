@@ -5,7 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { exportAllSystemDataCSV } from "@/lib/exportUtils";
-import { ALLOWED_COMPANIES, type AllowedCompany } from "@/lib/ordersValidationConstants";
+import {
+	ALLOWED_COMPANIES,
+	type AllowedCompany,
+} from "@/lib/ordersValidationConstants";
 import { cn } from "@/lib/utils";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
@@ -183,7 +186,7 @@ export const Header = React.memo(function Header() {
 						"relative flex items-center rounded-2xl transition-all duration-300",
 						"bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10",
 						isSearchFocused &&
-						"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
+							"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
 					)}
 				>
 					<Search className="absolute left-4 h-5 w-5 text-gray-500" />
@@ -284,7 +287,7 @@ export const Header = React.memo(function Header() {
 								isExportMenuOpen
 									? "text-white bg-white/10 border-white/20"
 									: "text-gray-400 hover:text-white hover:bg-white/5 border-transparent hover:border-white/10",
-								isExporting && "opacity-50 cursor-not-allowed"
+								isExporting && "opacity-50 cursor-not-allowed",
 							)}
 							title="Export System Data"
 						>

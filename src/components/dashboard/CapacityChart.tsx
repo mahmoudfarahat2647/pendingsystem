@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 
 interface CapacityChartProps {
@@ -7,12 +8,15 @@ interface CapacityChartProps {
 }
 
 const CapacityChart = ({ data }: CapacityChartProps) => {
+	const uid = useId();
+	const filterId = `chartDropShadow-${uid}`;
+
 	return (
 		<ResponsiveContainer width="100%" height="100%">
 			<PieChart>
 				<defs>
 					<filter
-						id="chartDropShadow"
+						id={filterId}
 						x="-20%"
 						y="-20%"
 						width="140%"
@@ -42,7 +46,7 @@ const CapacityChart = ({ data }: CapacityChartProps) => {
 					cornerRadius={4}
 					dataKey="value"
 					stroke="none"
-					filter="url(#chartDropShadow)"
+					filter={`url(#${filterId})`}
 				>
 					{data.map((entry, index) => (
 						<Cell key={`cell-${index}`} fill={entry.color} />
