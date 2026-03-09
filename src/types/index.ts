@@ -26,6 +26,11 @@ export interface AppNotification {
 	trackingId: string;
 	tabName: string;
 	path: string;
+	/**
+	 * Unique identifier for managing automated notifications to prevent duplicates.
+	 * Format: `reminder:{id}:{date}:{time}:{subject}` or `warranty:{id}:{date}`
+	 */
+	managedKey?: string;
 }
 
 export interface TodoItem {

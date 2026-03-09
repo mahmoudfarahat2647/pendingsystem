@@ -53,6 +53,8 @@ export const useAppStore = create<CombinedStore>()(
 				notes: state.notes,
 				todos: state.todos,
 				gridStates: state.gridStates,
+				dismissedManagedNotificationKeys:
+					state.dismissedManagedNotificationKeys,
 			}),
 		},
 	),
