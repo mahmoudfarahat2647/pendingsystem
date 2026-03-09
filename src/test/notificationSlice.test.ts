@@ -134,4 +134,134 @@ describe("notificationSlice", () => {
 		// Should notify
 		expect(store.getState().notifications).toHaveLength(1);
 	});
+
+	describe("Reminder Dismissal Logic", () => {
+		it("should not respawn a dismissed notification on next sync", () => {
+			const now = new Date("2026-03-01T12:00:00Z");
+			vi.setSystemTime(now);
+
+			const dueReminderRow = createMockRow("1");
+			dueReminderRow.reminder = {
+				date: "2026-03-01",
+				time: "10:00",
+				subject: "Call customer",
+			};
+
+			const store = createTestStore([dueReminderRow]);
+
+			// 1. First sync - notification appears
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(1);
+			expect(Object.keys(store.getState().dismissedManagedNotificationKeys)).toHaveLength(0);
+
+			const notificationId = store.getState().notifications[0].id;
+			const managedKey = store.getState().notifications[0].managedKey;
+
+			// 2. User dismisses it via "X"
+			store.getState().removeNotification(notificationId);
+			expect(store.getState().notifications).toHaveLength(0);
+			expect(store.getState().dismissedManagedNotificationKeys[managedKey!]).toBe(true);
+
+			// 3. Second sync - should NOT respawn
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(0);
+		});
+
+		it("should clear all and record their managed keys to prevent respawn", () => {
+			const now = new Date("2026-03-01T12:00:00Z");
+			vi.setSystemTime(now);
+
+			const r1 = createMockRow("1");
+			r1.reminder = { date: "2026-03-01", time: "10:00", subject: "A" };
+			const r2 = createMockRow("2");
+			r2.reminder = { date: "2026-03-01", time: "11:00", subject: "B" };
+
+			const store = createTestStore([r1, r2]);
+
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(2);
+
+			// User clicks "Clear All"
+			store.getState().clearNotifications();
+			expect(store.getState().notifications).toHaveLength(0);
+			expect(Object.keys(store.getState().dismissedManagedNotificationKeys)).toHaveLength(2);
+
+			// Next sync should not resurrect them
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(0);
+		});
+
+		it("should respawn if the subject changes (different managed key)", () => {
+			const now = new Date("2026-03-01T12:00:00Z");
+			vi.setSystemTime(now);
+
+			const r1 = createMockRow("1");
+			r1.reminder = { date: "2026-03-01", time: "10:00", subject: "Initial" };
+
+			const store = createTestStore([r1]);
+
+			// First sync & dismiss
+			store.getState().checkNotifications();
+			store.getState().removeNotification(store.getState().notifications[0].id);
+			expect(store.getState().notifications).toHaveLength(0);
+
+			// Admin edits the reminder subject
+			r1.reminder.subject = "Updated";
+
+			// Next sync should spawn a NEW notification
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(1);
+			expect(store.getState().notifications[0].description).toContain("Updated");
+		});
+
+		it("should clean up dismissed keys strictly when items are no longer due", () => {
+			const now = new Date("2026-03-01T12:00:00Z");
+			vi.setSystemTime(now);
+
+			const r1 = createMockRow("1");
+			r1.reminder = { date: "2026-03-01", time: "10:00", subject: "A" };
+
+			const store = createTestStore([r1]);
+
+			// Sync and dismiss
+			store.getState().checkNotifications();
+			store.getState().removeNotification(store.getState().notifications[0].id);
+			expect(Object.keys(store.getState().dismissedManagedNotificationKeys)).toHaveLength(1);
+
+			// Simulating the user fulfilled the reminder by deleting it from the row
+			r1.reminder = null;
+
+			// Next sync
+			store.getState().checkNotifications();
+			// The dismissed keys should be pruned since "A" is no longer due globally
+			expect(Object.keys(store.getState().dismissedManagedNotificationKeys)).toHaveLength(0);
+		});
+
+		it("should NOT prune dismissed keys if any cache is unloaded", () => {
+			const now = new Date("2026-03-01T12:00:00Z");
+			vi.setSystemTime(now);
+
+			const r1 = createMockRow("1");
+			r1.reminder = { date: "2026-03-01", time: "10:00", subject: "A" };
+
+			const store = createTestStore([r1]);
+
+			// 1. Sync and dismiss
+			store.getState().checkNotifications();
+			store.getState().removeNotification(store.getState().notifications[0].id);
+			expect(Object.keys(store.getState().dismissedManagedNotificationKeys)).toHaveLength(1);
+
+			// 2. Simulate the user fulfilling or changing the reminder
+			r1.reminder = null;
+
+			// 3. Simulate one cache being unloaded (e.g., user hasn't visited "main" yet)
+			queryClient.removeQueries({ queryKey: getOrdersQueryKey("main") });
+
+			// 4. Next sync - caches are partially loaded
+			store.getState().checkNotifications();
+
+			// The dismissed keys should be PRESERVED, not pruned, since allCachesLoaded = false
+			expect(Object.keys(store.getState().dismissedManagedNotificationKeys)).toHaveLength(1);
+		});
+	});
 });

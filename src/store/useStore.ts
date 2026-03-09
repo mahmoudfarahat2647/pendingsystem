@@ -31,10 +31,10 @@ export const useAppStore = create<CombinedStore>()(
 				typeof window !== "undefined"
 					? localStorage
 					: {
-							getItem: () => null,
-							setItem: () => {},
-							removeItem: () => {},
-						},
+						getItem: () => null,
+						setItem: () => { },
+						removeItem: () => { },
+					},
 			),
 			// Optimize: Only persist critical UI preferences to reduce localStorage overhead
 			// Reference data (templates, statuses, models) load fresh from database via React Query
@@ -53,6 +53,7 @@ export const useAppStore = create<CombinedStore>()(
 				notes: state.notes,
 				todos: state.todos,
 				gridStates: state.gridStates,
+				dismissedManagedNotificationKeys: state.dismissedManagedNotificationKeys,
 			}),
 		},
 	),

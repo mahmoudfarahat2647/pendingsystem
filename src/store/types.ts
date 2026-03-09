@@ -54,6 +54,8 @@ export interface BookingActions {
 
 export interface NotificationState {
 	notifications: AppNotification[];
+	// Using Record<string, true> instead of Set<string> because it serializes cleanly to JSON for localStorage persistence via Zustand persist
+	dismissedManagedNotificationKeys: Record<string, true>;
 }
 
 export interface NotificationActions {
