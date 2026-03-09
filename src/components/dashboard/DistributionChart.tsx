@@ -15,13 +15,7 @@ const DistributionChart = ({ data }: DistributionChartProps) => {
 		<ResponsiveContainer width="100%" height="100%">
 			<BarChart data={data}>
 				<defs>
-					<filter
-						id={filterId}
-						x="-20%"
-						y="-20%"
-						width="140%"
-						height="140%"
-					>
+					<filter id={filterId} x="-20%" y="-20%" width="140%" height="140%">
 						<feDropShadow
 							dx="0"
 							dy="4"

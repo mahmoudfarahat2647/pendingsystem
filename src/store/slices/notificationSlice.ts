@@ -1,5 +1,8 @@
 import type { StateCreator } from "zustand";
-import { getOrdersByStageFromCache, isStageCacheLoaded } from "@/lib/queryClient";
+import {
+	getOrdersByStageFromCache,
+	isStageCacheLoaded,
+} from "@/lib/queryClient";
 import { generateId } from "@/lib/utils";
 import type { AppNotification } from "@/types";
 import type {
@@ -119,7 +122,7 @@ export const createNotificationSlice: StateCreator<
 			},
 		];
 
-		const allCachesLoaded = sources.every(s => s.isLoaded);
+		const allCachesLoaded = sources.every((s) => s.isLoaded);
 		const activeManagedKeys = new Set<string>();
 
 		for (const source of sources) {
@@ -196,7 +199,10 @@ export const createNotificationSlice: StateCreator<
 				type: "reminder" | "warranty",
 			) => {
 				for (const due of dueItems) {
-					if (due.managedKey && state.dismissedManagedNotificationKeys[due.managedKey]) {
+					if (
+						due.managedKey &&
+						state.dismissedManagedNotificationKeys[due.managedKey]
+					) {
 						continue; // User already dismissed this managed item
 					}
 
@@ -243,7 +249,9 @@ export const createNotificationSlice: StateCreator<
 				const nextDismissedKeys: Record<string, true> = {};
 				let keysChanged = false;
 
-				for (const dismissedKey of Object.keys(state.dismissedManagedNotificationKeys)) {
+				for (const dismissedKey of Object.keys(
+					state.dismissedManagedNotificationKeys,
+				)) {
 					if (activeManagedKeys.has(dismissedKey)) {
 						nextDismissedKeys[dismissedKey] = true;
 					} else {
@@ -269,7 +277,8 @@ export const createNotificationSlice: StateCreator<
 					0,
 					100,
 				),
-				dismissedManagedNotificationKeys: state.dismissedManagedNotificationKeys,
+				dismissedManagedNotificationKeys:
+					state.dismissedManagedNotificationKeys,
 			};
 		});
 		// 3. Auto-archive expired warranties

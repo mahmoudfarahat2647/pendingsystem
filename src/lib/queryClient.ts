@@ -19,7 +19,10 @@ export const getOrdersByStageFromCache = (stage: OrderStage): PendingRow[] => {
 };
 
 export const isStageCacheLoaded = (stage: OrderStage): boolean => {
-	return queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey(stage)) !== undefined;
+	return (
+		queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey(stage)) !==
+		undefined
+	);
 };
 
 export const queryClient = new QueryClient({
