@@ -127,6 +127,10 @@ export const exportAllSystemDataCSV = (
 	];
 
 	const filenamePrefix = company.toLowerCase();
-	exportToCSV(allData, `${filenamePrefix}_system_all_data_${timestamp}`, headers);
+	exportToCSV(
+		allData,
+		`${filenamePrefix}_system_all_data_${timestamp}`,
+		headers,
+	);
 	return true;
 };
