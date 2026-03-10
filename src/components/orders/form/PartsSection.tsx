@@ -15,6 +15,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn, generateId } from "@/lib/utils";
 import type { PartEntry } from "@/types";
@@ -321,21 +322,22 @@ export const PartsSection = ({
 				</div>
 
 				{/* Requester field */}
-				<div className="mt-4 pt-4 border-t border-white/5">
-					<div className="flex items-center gap-2 group">
-						<User className="h-3 w-3 text-slate-600" aria-label="Requester" />
+				<div className="mt-4 pt-4 border-t border-white/5 w-full">
+					<div className="space-y-1 group">
+						<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase flex items-center gap-1.5">
+							<User className="h-3 w-3" aria-label="Requester" />
+							Requester
+						</Label>
 						<Input
-							placeholder="Requester"
+							placeholder="Requester Name"
 							value={formData.requester}
 							onChange={(e) => onFieldChange({ requester: e.target.value })}
 							className={cn(
-								"h-8 text-xs px-0 transition-all text-slate-400 focus:text-slate-200",
-								isEditMode
-									? "focus:border-amber-500/20"
-									: "focus:border-indigo-500/20",
-								/* getFieldError is accessed via partValidationWarnings context —
-                                   requester field error is shown in easy mode only */
-								"bg-transparent border-transparent hover:bg-white/5 focus:bg-white/5 focus:border-white/5",
+								"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+								validationMode === "beast" &&
+									!formData.requester?.trim() &&
+									"border-red-500/50 ring-1 ring-red-500/20",
+								isEditMode ? "premium-glow-amber" : "premium-glow-indigo",
 							)}
 							aria-label="Requester name"
 						/>
