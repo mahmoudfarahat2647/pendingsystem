@@ -42,6 +42,7 @@ import {
 } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useRowModals } from "@/hooks/useRowModals";
+import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -51,8 +52,8 @@ export default function ArchivePage() {
 	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("archive");
 	const { data: archiveRowData = [] } = useOrdersQuery("archive");
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
-	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation();
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("archive");
+	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("archive");
 	const saveOrderMutation = useSaveOrderMutation();
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
@@ -97,6 +98,9 @@ export default function ArchivePage() {
 	const [reorderReason, setReorderReason] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+
+	// Sync selectedRows with the latest archiveRowData to prevent stale data
+	useSelectedRowsSync("archive", archiveRowData, selectedRows, setSelectedRows);
 
 	const {
 		activeModal,

@@ -32,6 +32,7 @@ import {
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
+import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
@@ -39,8 +40,8 @@ import type { PendingRow } from "@/types";
 
 export default function MainSheetPage() {
 	const { data: rowData = [] } = useOrdersQuery("main");
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
-	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation();
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("main");
+	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("main");
 	const saveOrderMutation = useSaveOrderMutation();
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
@@ -120,6 +121,10 @@ export default function MainSheetPage() {
 		if (!activeFilter) return rowData;
 		return rowData.filter((row: any) => row.partStatus === activeFilter);
 	}, [rowData, activeFilter]);
+
+	// Sync selectedRows with the latest filteredRowData to prevent stale data
+	// and automatically drop rows that no longer match the active filter
+	useSelectedRowsSync("main", filteredRowData, selectedRows, setSelectedRows);
 
 	const _handleSelectionChanged = useMemo(
 		() => (rows: PendingRow[]) => {

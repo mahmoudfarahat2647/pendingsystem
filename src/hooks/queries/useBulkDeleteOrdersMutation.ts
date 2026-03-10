@@ -16,10 +16,11 @@ import type { PendingRow } from "@/types";
  * from each, backing up pre-update state into OrdersCacheSnapshot. Rolls back via
  * restoreOrdersCache if an error occurs. Invalidates touched queried onSettled.
  */
-export function useBulkDeleteOrdersMutation() {
+export function useBulkDeleteOrdersMutation(sourceStage: OrderStage) {
 	const queryClient = useQueryClient();
 
 	return useMutation({
+		mutationKey: ["bulk-delete-orders", sourceStage],
 		mutationFn: (ids: string[]) => orderService.deleteOrders(ids),
 		onMutate: async (ids) => {
 			await queryClient.cancelQueries({ queryKey: ["orders"] });

@@ -81,7 +81,11 @@ export const SearchResultsView = () => {
 	const { data: archiveRowData = [] } = useOrdersQuery("archive");
 
 	const saveOrderMutation = useSaveOrderMutation();
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
+	const bulkUpdateStageMain = useBulkUpdateOrderStageMutation("main");
+	const bulkUpdateStageOrders = useBulkUpdateOrderStageMutation("orders");
+	const bulkUpdateStageBooking = useBulkUpdateOrderStageMutation("booking");
+	const bulkUpdateStageCall = useBulkUpdateOrderStageMutation("call");
+	const bulkUpdateStageArchive = useBulkUpdateOrderStageMutation("archive");
 
 	const allRows = useMemo(() => {
 		return [
@@ -400,7 +404,13 @@ export const SearchResultsView = () => {
 
 						if (allArrived) {
 							const ids = relevantParts.map((p) => p.id);
-							await bulkUpdateStageMutation.mutateAsync({ ids, stage: "call" });
+							let mutationHook = bulkUpdateStageMain;
+							if (sourceType === "Orders") mutationHook = bulkUpdateStageOrders;
+							else if (sourceType === "Booking") mutationHook = bulkUpdateStageBooking;
+							else if (sourceType === "Call") mutationHook = bulkUpdateStageCall;
+							else if (sourceType === "Archive") mutationHook = bulkUpdateStageArchive;
+
+							await mutationHook.mutateAsync({ ids, stage: "call" });
 							toast.success(
 								`All parts for VIN ${vin} arrived! Moved to Call List.`,
 								{ duration: 5000 },
@@ -412,7 +422,16 @@ export const SearchResultsView = () => {
 				}
 			}
 		},
-		[handleUpdateOrder, rowData, ordersRowData, bulkUpdateStageMutation],
+		[
+			handleUpdateOrder,
+			rowData,
+			ordersRowData,
+			bulkUpdateStageMain,
+			bulkUpdateStageOrders,
+			bulkUpdateStageBooking,
+			bulkUpdateStageCall,
+			bulkUpdateStageArchive,
+		],
 	);
 
 	if (!searchTerm) return null;

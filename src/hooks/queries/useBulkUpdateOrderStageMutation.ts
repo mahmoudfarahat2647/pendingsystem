@@ -18,10 +18,11 @@ import type { PendingRow } from "@/types";
  * caches to an OrdersCacheSnapshot to allow rollback via restoreOrdersCache in onError.
  * Dispatches cache invalidations for affected query keys onSettled.
  */
-export function useBulkUpdateOrderStageMutation() {
+export function useBulkUpdateOrderStageMutation(sourceStage: OrderStage) {
 	const queryClient = useQueryClient();
 
 	return useMutation({
+		mutationKey: ["bulk-update-stage", sourceStage],
 		mutationFn: ({ ids, stage }: { ids: string[]; stage: OrderStage }) =>
 			orderService.updateOrdersStage(ids, stage),
 		onMutate: async ({ ids, stage }) => {

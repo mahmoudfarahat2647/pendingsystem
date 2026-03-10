@@ -50,6 +50,7 @@ import {
 } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useRowModals } from "@/hooks/useRowModals";
+import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { cn } from "@/lib/utils";
@@ -60,8 +61,8 @@ export default function BookingPage() {
 	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("booking");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
-	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation();
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("booking");
+	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("booking");
 	const saveOrderMutation = useSaveOrderMutation();
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
@@ -102,6 +103,9 @@ export default function BookingPage() {
 	const [rebookingSearchTerm] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+
+	// Sync selectedRows with the latest bookingRowData to prevent stale data
+	useSelectedRowsSync("booking", bookingRowData, selectedRows, setSelectedRows);
 
 	const _handleSelectionChanged = useMemo(
 		() => (rows: PendingRow[]) => {

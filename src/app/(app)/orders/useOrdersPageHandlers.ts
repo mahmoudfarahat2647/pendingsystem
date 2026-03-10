@@ -10,6 +10,7 @@ import {
 	useOrdersQuery,
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
+import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { exportToLogisticsCSV } from "@/lib/exportUtils";
 import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
@@ -22,8 +23,8 @@ export const useOrdersPageHandlers = () => {
 	// 1. Data & Store
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
 	const saveOrderMutation = useSaveOrderMutation();
-	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation();
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
+	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("orders");
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("orders");
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
@@ -49,6 +50,10 @@ export const useOrdersPageHandlers = () => {
 			checkNotifications();
 		}
 	}, [ordersRowData, checkNotifications]);
+
+	// Sync selectedRows with the latest ordersRowData to prevent stale data
+	// after optimistic updates or refetches.
+	useSelectedRowsSync("orders", ordersRowData, selectedRows, setSelectedRows);
 
 	// 4. Core Handlers
 	const handleUpdateOrder = useCallback(
