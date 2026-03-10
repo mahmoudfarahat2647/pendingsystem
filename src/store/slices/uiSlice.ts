@@ -62,13 +62,6 @@ export const createUISlice: StateCreator<
 
 	setHighlightedRowId: (id) => {
 		set({ highlightedRowId: id });
-		if (id) {
-			setTimeout(() => {
-				if (get().highlightedRowId === id) {
-					set({ highlightedRowId: null });
-				}
-			}, 5000);
-		}
 	},
 
 	addModel: (model) => {

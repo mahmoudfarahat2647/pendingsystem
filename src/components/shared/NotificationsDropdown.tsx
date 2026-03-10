@@ -24,10 +24,13 @@ export const NotificationsDropdown = () => {
 
 	const handleNotificationClick = (n: AppNotification) => {
 		markNotificationAsRead(n.id);
-		setHighlightedRowId(n.referenceId);
+
 		if (n.path) {
+			// Navigate before setting highlight to preserve row intent across view transitions
 			router.push(n.path);
 		}
+		setHighlightedRowId(n.referenceId);
+
 		setShowNotifications(false);
 	};
 
@@ -49,9 +52,9 @@ export const NotificationsDropdown = () => {
 					animate={
 						unreadCount > 0
 							? {
-									scale: [1, 1.2, 1],
-									rotate: [0, -10, 10, -10, 10, 0],
-								}
+								scale: [1, 1.2, 1],
+								rotate: [0, -10, 10, -10, 10, 0],
+							}
 							: {}
 					}
 					transition={{

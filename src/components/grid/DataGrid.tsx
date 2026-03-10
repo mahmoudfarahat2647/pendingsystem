@@ -3,6 +3,7 @@
 import type {
 	CellValueChangedEvent,
 	ColDef,
+	FirstDataRenderedEvent,
 	GridApi,
 	GridReadyEvent,
 } from "ag-grid-community";
@@ -15,6 +16,7 @@ import { defaultColDef, defaultGridOptions } from "./config/defaultOptions";
 import { useGridCallbacks } from "./hooks/useGridCallbacks";
 import { useGridPerformance } from "./hooks/useGridPerformance";
 import * as cellRenderers from "./renderers";
+import { tryJumpToRow } from "@/lib/ag-grid-helpers";
 
 export interface DataGridProps<T extends { id?: string; vin?: string }> {
 	rowData: T[];
@@ -108,6 +110,48 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 		handleSaveState();
 	}, [gridStateKey, setLayoutDirty, handleSaveState]);
 
+	// Scroll to highlighted row
+	const highlightedRowId = useAppStore((state) => state.highlightedRowId);
+	const setHighlightedRowId = useAppStore((state) => state.setHighlightedRowId);
+	const pendingHighlightRef = useRef<string | null>(null);
+
+	const attemptJump = useCallback(() => {
+		const targetId = pendingHighlightRef.current;
+		if (!targetId) return;
+
+		const result = tryJumpToRow(gridApiRef.current, targetId);
+
+		if (result.success) {
+			pendingHighlightRef.current = null;
+			setHighlightedRowId(null);
+		}
+	}, [gridApiRef, setHighlightedRowId]);
+
+	// Register intent when highlight requests arrive, and trigger jump
+	useEffect(() => {
+		if (!highlightedRowId) return;
+
+		pendingHighlightRef.current = highlightedRowId;
+		attemptJump();
+	}, [highlightedRowId, attemptJump, rowData]);
+
+	// Guard against unresolvable requests (fallback timeout)
+	useEffect(() => {
+		if (!highlightedRowId) return;
+
+		const requestedId = highlightedRowId;
+
+		const timeout = setTimeout(() => {
+			if (pendingHighlightRef.current === requestedId) {
+				pendingHighlightRef.current = null;
+				setHighlightedRowId(null);
+				console.warn(`Jump to row ${requestedId} timed out`);
+			}
+		}, 8000);
+
+		return () => clearTimeout(timeout);
+	}, [highlightedRowId, setHighlightedRowId]);
+
 	// [CRITICAL] PERSISTENCE RESTORATION
 	// Restore saved state when grid is ready
 	const onGridReadyInternal = useCallback(
@@ -115,12 +159,25 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 			// Call external onGridReady if provided
 			handleGridReady(params);
 
+			// First opportunity to retry the jump
+			attemptJump();
+
 			// Mark grid as initialized after a short delay to ensure restoration is complete
 			setTimeout(() => {
 				gridInitializedRef.current = true;
 			}, 100);
 		},
-		[handleGridReady],
+		[handleGridReady, attemptJump],
+	);
+
+	const onFirstDataRenderedInternal = useCallback(
+		(params: FirstDataRenderedEvent) => {
+			handleFirstDataRendered(params);
+
+			// Second opportunity to retry the jump
+			attemptJump();
+		},
+		[handleFirstDataRendered, attemptJump],
 	);
 
 	// Cleanup timer on unmount
@@ -204,41 +261,6 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 
 	const style = useMemo(() => ({ height, width: "100%" }), [height]);
 
-	// Scroll to highlighted row
-	const highlightedRowId = useAppStore((state) => state.highlightedRowId);
-	const setHighlightedRowId = useAppStore((state) => state.setHighlightedRowId);
-
-	useEffect(() => {
-		if (highlightedRowId && gridApiRef.current) {
-			const api = gridApiRef.current;
-
-			// If rowData isn't loaded yet, getRowNode(id) will return undefined.
-			// We depend on rowData below so this effect runs again when data arrives.
-			const node = api.getRowNode(highlightedRowId);
-
-			if (node) {
-				// Ensure the node is visible in the viewport
-				api.ensureNodeVisible(node, "middle");
-
-				// Select the node for better visibility
-				node.setSelected(true);
-
-				// Flash the cells to draw attention
-				api.flashCells({
-					rowNodes: [node],
-					flashDelay: 500,
-					fadeDelay: 500,
-				});
-
-				// Clear the highlight from store so it doesn't persist
-				// but verify it's the same ID to avoid race conditions
-				setTimeout(() => {
-					setHighlightedRowId(null);
-				}, 1000);
-			}
-		}
-	}, [highlightedRowId, setHighlightedRowId, rowData, gridApiRef]);
-
 	return (
 		<div style={style}>
 			<AgGridReact<T>
@@ -250,7 +272,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				getRowId={getRowId}
 				// Event handlers
 				onGridReady={onGridReadyInternal}
-				onFirstDataRendered={handleFirstDataRendered}
+				onFirstDataRendered={onFirstDataRenderedInternal}
 				onCellValueChanged={handleCellValueChanged}
 				onSelectionChanged={handleSelectionChanged}
 				// State Change tracking for persistence
