@@ -39,9 +39,9 @@ export function useSelectedRowsSync<T extends { id: string }>(
 		prevRowDataRef.current = rowData;
 		prevIsMutatingRef.current = isMutating;
 
-		if (isEmpty) return;
-
 		setSelectedRows((prevSelected) => {
+			if (prevSelected.length === 0) return prevSelected;
+
 			const updatedSelection = prevSelected
 				.map((sel) => {
 					const found = rowData.find((r) => r.id === sel.id);
@@ -55,5 +55,5 @@ export function useSelectedRowsSync<T extends { id: string }>(
 
 			return hasChanges ? updatedSelection : prevSelected;
 		});
-	}, [rowData, isMutating, isEmpty, setSelectedRows]);
+	}, [rowData, isMutating, setSelectedRows]);
 }

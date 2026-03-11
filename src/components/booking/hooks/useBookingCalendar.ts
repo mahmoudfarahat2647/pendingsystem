@@ -23,7 +23,6 @@ function parseLocalDate(dateStr: string | undefined): Date {
 	return new Date(year, month - 1, day);
 }
 
-
 export function useBookingCalendar({
 	open,
 	initialSearchTerm,
@@ -103,7 +102,10 @@ export function useBookingCalendar({
 	const bookingsByDateMap = useMemo(() => {
 		const map: Record<string, PendingRow[]> = {};
 		allBookings.forEach((b) => {
-			if (b.bookingDate && isAfter(parseLocalDate(b.bookingDate), twoYearsAgo)) {
+			if (
+				b.bookingDate &&
+				isAfter(parseLocalDate(b.bookingDate), twoYearsAgo)
+			) {
 				if (!map[b.bookingDate]) map[b.bookingDate] = [];
 				// Only add if this VIN is not already in the list for this date
 				const vinExists = map[b.bookingDate].some(
