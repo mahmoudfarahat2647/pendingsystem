@@ -59,12 +59,13 @@ describe("useSelectedRowsSync", () => {
 
 		// Mock that a relevant mutation starts on "orders" stage
 		mockUseIsMutating.mockImplementation(
-			(options: { mutationKey: string[] }) => {
+			(options: { mutationKey: string[] }): number => {
 				if (
 					options.mutationKey[0] === "bulk-update-stage" &&
 					options.mutationKey[1] === "orders"
-				)
+				) {
 					return 1;
+				}
 				return 0;
 			},
 		);
@@ -100,12 +101,13 @@ describe("useSelectedRowsSync", () => {
 
 		let isUpdating = 1;
 		mockUseIsMutating.mockImplementation(
-			(options: { mutationKey: string[] }) => {
+			(options: { mutationKey: string[] }): number => {
 				if (
 					options.mutationKey[0] === "bulk-update-stage" &&
 					options.mutationKey[1] === "orders"
-				)
+				) {
 					return isUpdating;
+				}
 				return 0;
 			},
 		);
@@ -152,12 +154,13 @@ describe("useSelectedRowsSync", () => {
 
 		let isUpdating = 1;
 		mockUseIsMutating.mockImplementation(
-			(options: { mutationKey: string[] }) => {
+			(options: { mutationKey: string[] }): number => {
 				if (
 					options.mutationKey[0] === "bulk-update-stage" &&
 					options.mutationKey[1] === "orders"
-				)
+				) {
 					return isUpdating;
+				}
 				return 0;
 			},
 		);
@@ -208,12 +211,13 @@ describe("useSelectedRowsSync", () => {
 
 		// A mutation is running, but on the "main" stage rather than "orders".
 		mockUseIsMutating.mockImplementation(
-			(options: { mutationKey: string[] }) => {
+			(options: { mutationKey: string[] }): number => {
 				if (
 					options.mutationKey[0] === "bulk-update-stage" &&
 					options.mutationKey[1] === "main"
-				)
+				) {
 					return 1;
+				}
 				return 0; // The hook looking for ["bulk-update-stage", "orders"] will get 0
 			},
 		);

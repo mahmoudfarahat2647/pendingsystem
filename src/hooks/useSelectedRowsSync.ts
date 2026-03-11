@@ -26,6 +26,8 @@ export function useSelectedRowsSync<T extends { id: string }>(
 
 	const prevIsMutatingRef = useRef(isMutating);
 
+	const isEmpty = selectedRows.length === 0;
+
 	useEffect(() => {
 		if (
 			rowData === prevRowDataRef.current &&
@@ -37,7 +39,7 @@ export function useSelectedRowsSync<T extends { id: string }>(
 		prevRowDataRef.current = rowData;
 		prevIsMutatingRef.current = isMutating;
 
-		if (selectedRows.length === 0) return;
+		if (isEmpty) return;
 
 		setSelectedRows((prevSelected) => {
 			const updatedSelection = prevSelected
@@ -53,5 +55,5 @@ export function useSelectedRowsSync<T extends { id: string }>(
 
 			return hasChanges ? updatedSelection : prevSelected;
 		});
-	}, [rowData, selectedRows, isMutating, setSelectedRows]);
+	}, [rowData, isMutating, isEmpty, setSelectedRows]);
 }

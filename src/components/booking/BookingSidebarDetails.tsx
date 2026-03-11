@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import {
 	Car,
 	History as HistoryIcon,
@@ -12,13 +11,13 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
+import { parseDateLocal, safeFormatDate } from "@/utils/safeFormatDate";
 
 interface BookingSidebarDetailsProps {
 	activeBookingRep?: PendingRow;
 	selectedRows: PendingRow[];
 	activeCustomerBookings: PendingRow[];
 	consolidatedNotes: string[];
-	updateBookingStatus: (id: string, status: string) => void;
 	activeCustomerHistoryDates: string[];
 	onHistoryDateClick: (date: Date) => void;
 }
@@ -28,7 +27,6 @@ export const BookingSidebarDetails = ({
 	selectedRows,
 	activeCustomerBookings,
 	consolidatedNotes,
-	updateBookingStatus,
 	activeCustomerHistoryDates,
 	onHistoryDateClick,
 }: BookingSidebarDetailsProps) => {
@@ -151,10 +149,10 @@ export const BookingSidebarDetails = ({
 										<button
 											type="button"
 											key={date}
-											onClick={() => onHistoryDateClick(new Date(date))}
+											onClick={() => onHistoryDateClick(parseDateLocal(date))}
 											className="inline-flex items-center px-2 py-1 rounded-md bg-white/5 border border-white/5 text-[10px] font-mono text-gray-400 hover:text-white hover:border-white/20 hover:bg-white/10 transition-colors cursor-pointer"
 										>
-											{format(new Date(date), "MMM d, yyyy")}
+											{safeFormatDate(date, "MMM d, yyyy")}
 										</button>
 									))}
 								</div>

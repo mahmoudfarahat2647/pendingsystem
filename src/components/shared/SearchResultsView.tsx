@@ -404,14 +404,16 @@ export const SearchResultsView = () => {
 
 						if (allArrived) {
 							const ids = relevantParts.map((p) => p.id);
-							let mutationHook = bulkUpdateStageMain;
-							if (sourceType === "Orders") mutationHook = bulkUpdateStageOrders;
-							else if (sourceType === "Booking")
-								mutationHook = bulkUpdateStageBooking;
-							else if (sourceType === "Call")
-								mutationHook = bulkUpdateStageCall;
-							else if (sourceType === "Archive")
-								mutationHook = bulkUpdateStageArchive;
+							const mutationByType = {
+								Orders: bulkUpdateStageOrders,
+								Booking: bulkUpdateStageBooking,
+								Call: bulkUpdateStageCall,
+								Archive: bulkUpdateStageArchive,
+							} as const;
+
+							const mutationHook =
+								mutationByType[sourceType as keyof typeof mutationByType] ??
+								bulkUpdateStageMain;
 
 							await mutationHook.mutateAsync({ ids, stage: "call" });
 							toast.success(

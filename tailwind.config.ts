@@ -62,6 +62,9 @@ const config: Config = {
 				"hero-glow":
 					"radial-gradient(ellipse at 50% -20%, rgba(255, 204, 0, 0.15), rgba(0, 0, 0, 0))",
 			},
+			zIndex: {
+				dropdown: "100",
+			},
 		},
 	},
 	plugins: [],
