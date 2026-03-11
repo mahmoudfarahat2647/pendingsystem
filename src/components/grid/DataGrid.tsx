@@ -9,14 +9,13 @@ import type {
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
-
+import { tryJumpToRow } from "@/lib/ag-grid-helpers";
 import { gridTheme } from "@/lib/ag-grid-setup";
 import { useAppStore } from "@/store/useStore";
 import { defaultColDef, defaultGridOptions } from "./config/defaultOptions";
 import { useGridCallbacks } from "./hooks/useGridCallbacks";
 import { useGridPerformance } from "./hooks/useGridPerformance";
 import * as cellRenderers from "./renderers";
-import { tryJumpToRow } from "@/lib/ag-grid-helpers";
 
 export interface DataGridProps<T extends { id?: string; vin?: string }> {
 	rowData: T[];

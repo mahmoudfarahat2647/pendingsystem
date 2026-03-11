@@ -52,9 +52,9 @@ export const NotificationsDropdown = () => {
 					animate={
 						unreadCount > 0
 							? {
-								scale: [1, 1.2, 1],
-								rotate: [0, -10, 10, -10, 10, 0],
-							}
+									scale: [1, 1.2, 1],
+									rotate: [0, -10, 10, -10, 10, 0],
+								}
 							: {}
 					}
 					transition={{

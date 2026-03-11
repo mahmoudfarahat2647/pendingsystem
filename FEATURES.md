@@ -1,150 +1,155 @@
 # System Feature Registry
 
-## Product Requirements (Summary)
-### Product Vision
-Create an efficient logistics platform for pendingsystem service centers that reduces operational overhead, provides real-time inventory visibility, and supports premium, brand-aligned UX.
+## Product Summary
+`pendingsystem` is a Next.js logistics and workflow application for automotive service centers. The current implementation centers on five operational stages backed by Supabase data and surfaced through AG Grid-heavy desktop views:
 
-### Target Users
-- Service center managers
-- Service advisors and technicians
-- Customer service representatives
-- Parts department staff
-- Scheduling coordinators
+1. `orders`
+2. `main`
+3. `call`
+4. `booking`
+5. `archive`
 
-### Success Metrics
-- Reduce manual data entry by 75%
-- Improve inventory tracking accuracy to 99%
-- Decrease average time from order to delivery by 30%
-- Achieve 95% customer satisfaction for appointment scheduling
-- Maintain 99.9% uptime
+## Core Product Behavior
 
-### Core Objectives
-- Centralize pending parts tracking
-- Automate routine status updates and workflows
-- Provide cross-stage visibility and navigation
-- Enable efficient customer communication and scheduling
+### App Shell
+- Shared shell with persistent sidebar, top header, notifications, global search, and React Query provider.
+- Route map: `/dashboard`, `/orders`, `/main-sheet`, `/call-list`, `/booking`, `/archive`.
+- Root `/` resolves to the dashboard experience.
+- No active authentication gate is implemented in the current app shell.
 
-## Feature Registry
-> [!IMPORTANT]
-> This document serves as the single source of truth for all system features. **Update this file whenever a new feature is added or an existing one is modified.**
+### Dashboard
+- Displays live stage counts from Supabase-backed order data.
+- Shows total lines for Orders and Main Sheet.
+- Shows unique VIN count for the Call queue.
+- Includes storage monitoring cards fed by `/api/storage-stats`.
+- Uses dynamic chart loading for capacity and stage distribution visualizations.
 
-## Core Infrastructure
-- **Settings Modal**:
-  - Tabbed interface (Part Statuses, Appearance).
-  - Accessible via Sidebar User Profile.
-  - Centralized management for Part Status definitions.
-- **Access Control (Temporary Disabled)**:
-  - Legacy sign-in flows removed to unblock a future Clerk integration.
-  - App routes are currently accessible without a sign-in gate.
+### Orders
+- React Query-backed grid for the `orders` stage.
+- Create and edit flow uses `OrderFormModal` with split identity and parts sections.
+- Supports multi-part order creation and edit mode row splitting/removal.
+- Commit to Main Sheet is blocked until strict "Beast Mode" validation passes.
+- Commit also requires part number, description, and attachment path on every selected row.
+- Bulk actions include:
+  - reserve label printing
+  - logistics CSV export
+  - link/path assignment
+  - document printing
+  - archive
+  - booking
+  - send to Call List
+  - part status update
+- Mixed-VIN selection blocks edit mode for safety.
 
-## Order Management (Orders Page)
-- **Data Grid**:
-  - Dynamic editing of all order fields.
-  - **[PROTECTED] Instant Reactivity**: Action icons (Notes, Reminders) and Statuses update with 0ms perceived latency using optimized cache injection and composite valueGetters.
-  - Validation checks for duplicates and name mismatches.
-- **Order Form ([PROTECTED])**:
-  - **Premium Layout**: Side-by-side field grouping for (Customer/Company) and (VIN/Mileage) to eliminate scrolling on standard displays. [CRITICAL UX]
-  - **Dynamic Warranty Display**: Real-time calculation of remaining warranty time or "High Mileage" warning displayed in the modal footer when Repair System is "ضمان". [CRITICAL UX]
-- **Zod Data Validation ([PROTECTED])**:
-  - Centralized schema enforcement for all Supabase data.
-  - Runtime validation in service layer to prevent "water leak" regressions.
-  - Auto-sync for legacy fields via schema transformations.
-- **Bulk Operations**:
-  - **Bulk Link / Set Path**: Select multiple rows -> Toolbar Link Icon -> Apply path/URL to all.
-  - **Commit to Main Sheet**: Validates entries and moves them to the Main Sheet.
-- **Modals**:
-  - **Note Modal**: Add/Edit notes with color coding and templates.
-  - **Reminder Modal**: 
-    - Set reminders with templates and datetime.
-    - **Grid Indicator**: Immediate bell icon coloring (Yellow = Active, Gray = None) which updates in real-time.
-    - **Instant Alerts**: Setting a reminder for a past time triggers a notification immediately.
-  - **Attachment Modal**: Link files or URLs to specific orders.
-- **Visuals**:
-  - Status color coding.
-  - "Premium" glassmorphic UI design.
+### Main Sheet
+- React Query-backed grid for the `main` stage.
+- Lock state is controlled from Settings and disables editing-sensitive actions.
+- Booking action is limited to selections that belong to a single VIN.
+- Supports:
+  - reserve label printing
+  - archive
+  - send to Call List
+  - booking
+  - bulk part status changes
+  - CSV extract
+  - column layout save/reset
+- Reminder and warranty notifications are refreshed whenever data changes.
 
-## Inventory (Main Sheet)
-- **Sheet Locking**:
-  - "Lock/Unlock" toggle icon in toolbar.
-  - Prevents accidental edits when locked.
-  - Auto-locks after 5 minutes of inactivity.
-- **Workflow Actions**:
-  - **Send to Call List**: Moves selected ready items to the Call List.
-  - **Archive**: Moves completed items to Archive.
-  - **Auto-Move Automation**: 
-  - When a part status is updated to "Arrived" (in Main Sheet, Orders, or Global Search):
-  - System automatically checks all other parts for the same VIN across all active sheets.
-  - If **ALL** parts for that VIN are "Arrived" (or have an equivalent 'available' status), the entire group is automatically moved to the Call List.
-  - Protected feature: Critical to workflow efficiency.
-- **Enhanced Global Search**:
-  - Search across all data tabs simultaneously.
-  - **Searchable Fields**: VIN, Customer Name, Part Number, and **Company**.
-  - Direct navigation to source row upon selection.
+### Call List
+- React Query-backed grid for the `call` stage.
+- Supports booking from the call queue.
+- Supports reorder flow back to Orders with a mandatory reason.
+- Supports archive flow, reserve labels, extract, delete, part-status updates, and saved layouts.
 
-## Customer Communication (Call List)
-- **Booking Calendar**:
-  - **Premium Dark-Themed Interface**: Modern calendar with glassmorphic design and smooth animations.
-  - **Universal Booking**: Works from Orders, Main Sheet, and Call List tabs - rows automatically move to Booking tab.
-  - **Single VIN Restriction**: [CRITICAL] Booking actions are restricted to a single VIN at a time. The Booking button is disabled if multiple VINs are selected simultaneously to prevent scheduling conflicts.
-  - **Multi-Customer Visual Indicators**: Stacked, color-coded dots (max 3) for days with multiple customers, grouped by VIN.
-  - **Booking Status System**: Customizable status definitions (Add, Cancel, Done, Reschedule, etc.) with color coding.
-  - **Pre-Booking Edits**: Set initial note and status in sidebar *before* confirming booking.
-  - **Large Purple Action Button**: Premium pill-shaped "Book [Date]" button with hover elevations.
-  - **Smart Navigation**: Jumping to a customer highlights their booked dates and auto-selects the relevant month.
-  - **Search**: Filter bookings by customer name/VIN/part with visual fade effects for non-matches.
-  - **3-Section Sidebar Layout**: 
-    - Pre-booking setup (when creating new booking)
-    - Customer list with selection
-    - Details card with VIN, parts, and status dropdown
-  - **Workflow Optimization**: Modal stays open after booking for immediate status updates and note additions.
-- **Rebooking**: Dedicated button to reschedule, automatically opening the calendar with pre-filled search context.
-  - System logs "Rescheduled from X to Y" notes automatically.
+### Booking
+- React Query-backed grid for the `booking` stage.
+- Rebooking uses the booking calendar modal and appends reschedule history into notes.
+- Supports reorder back to Orders with a mandatory reason.
+- Supports archive, reserve labels, delete, extract, part-status updates, and saved layouts.
+- Includes `VINLineCounter` for quick line and VIN visibility.
 
-## Smart Notification System
-- **Responsive Alerts**:
-  - Numbered badge in header showing unread count (with "9+" support for high counts).
-  - 10-second background check interval for near-instant responsiveness.
-- **Direct Navigation & Highlighting**:
-  - Clicking a notification navigates directly to the source tab.
-  - **Auto-Scroll**: Automatically selects and scrolls the specific row into view for the user.
-- **Detailed Metadata**:
-  - Notifications display Due Date, Customer Name, VIN, Tracking ID, and Tab Source for context.
-- **Management**:
-  - Individual "X" delete icon per notification for quick cleanup.
-  - "Clear All" functionality to wipe all alerts at once.
+### Archive
+- React Query-backed grid for the `archive` stage.
+- Archived rows remain editable for notes, reminders, attachments, and part status.
+- Reorder sends selected rows back to Orders with a mandatory reason.
+- Supports permanent deletion and CSV export.
+- Shows booking date in the archive grid when available.
 
-## Archive
-- **Archive Page**: Operational archive view for completed items (not read-only).
-- **Reorder**: Move archived items back to Orders with required reason tagging (`#reorder`).
-- **Archive Actions**:
-  - Update part status in bulk.
-  - Edit notes/reminders/attachments via row action modals.
-  - Permanently delete selected archived records with confirmation.
+## Shared Workflow Systems
 
-## System Reports & Backup ([PROTECTED])
-- **Automated Email Reports**:
-  - Scheduled CSV backups sent via SMTP (Daily/Weekly/Monthly/Yearly).
-  - Supports user-defined day selection for Weekly reports.
-  - Emails sent at 10:00 AM Cairo Time (08:00 UTC).
-  - "Send Backup Now" manual trigger.
-- **Client Data Flow**:
-  - Report settings now use service + React Query boundaries (`src/services/reportSettingsService.ts`, `src/hooks/queries/useReportSettingsQuery.ts`).
-  - Report cards consume query/mutation hooks directly; Zustand report settings slice is retained as a legacy compatibility layer.
-- **Security & Integrity**:
-  - Run via GitHub Actions to ensure isolated environment.
-  - Requires Service Role Key for complete data access.
-  - **[CRITICAL]** Logic protected from alteration to ensure data safety.
+### Booking Calendar
+- Reusable booking modal shared by Orders, Main Sheet, Call List, and Booking.
+- Combines calendar, task list, customer history, and booking detail sidebar.
+- Supports pre-booking status and note entry.
+- Supports search-driven navigation through existing bookings and archive history.
+- Can run in full workflow mode or booking-only mode.
 
+### Global Search
+- Header search fans out across all five stages.
+- Searches customer, VIN, part data, requester metadata, notes, booking details, and archive reason text.
+- Results carry source-stage tagging and support inline modal actions.
 
-## UI/UX Standards
-- **Design System**:
-  - Dark mode default (`bg-[#0a0a0b]`).
-  - "pendingsystem Yellow" accents (toned down for minimalism).
-  - Framer Motion animations for modals and transitions.
-  - Lucide React icons for all actions.
-- **Accessibility**:
-  - Tooltips for all icon-only buttons.
-  - Keyboard navigation support in grids.
-- **Safety**:
-  - **Delete Confirmation**: Reusable high-fidelity dialog (ConfirmDialog) for all destructive actions.
-  - Required confirmation (Yes/No) for row deletions in all tabs.
+### Notifications
+- Notifications are managed in Zustand but computed from React Query stage caches.
+- Reminder notifications appear when reminder date/time is due.
+- Warranty notifications appear when warranty expiration is within 10 days.
+- Clicking a notification navigates to the source route and requests row highlighting.
+- Expired warranties trigger automatic archive behavior through store and background sync logic.
+
+### Grid UX and Layout Persistence
+- AG Grid is the primary work surface on every operational route.
+- Column layouts are persisted per grid key through Zustand.
+- Users can save current layout, save a default layout, or reset to default/original layout.
+- Action cells depend on a composite `valueGetter` so note/reminder/attachment icon state refreshes correctly.
+
+### Modals and Row Editing
+- Shared modal system handles note, reminder, attachment, and archive flows.
+- Attachment modal stores a single path or URL plus a `hasAttachment` flag.
+- Archive flows append tagged action notes for traceability.
+
+### Settings
+- Settings modal currently exposes:
+  - Part Statuses
+  - Theme Color
+  - Backup and Reports
+- Theme tab is a placeholder and does not yet provide configurable theming.
+- Main Sheet lock state is controlled from Settings.
+- Part status definitions are editable and propagate label changes through persisted local rows.
+
+### Backup and Reports
+- Report settings are stored in Supabase `report_settings`.
+- Users can:
+  - enable or disable scheduled reports
+  - choose frequency
+  - manage recipient emails
+  - manually trigger backup workflow
+- Manual backups call `/api/trigger-backup`, which dispatches the GitHub Actions workflow `backup-reports.yml`.
+- Scheduled backup generation logic lives in `scripts/generate-backup.mjs`.
+
+### Storage Monitoring
+- `/api/storage-stats` reports database usage and storage bucket usage using the Supabase service role.
+- Database size depends on the RPC added by `supabase/migrations/20260307_add_get_database_size_bytes.sql`.
+- Dashboard presents separate database and storage quotas plus combined usage.
+
+### Printing and Export
+- Logistics export generates a CSV for selected rows.
+- Full-system export from the header filters by allowed company.
+- Order document printing generates grouped printable order sheets by VIN.
+- Reservation label printing is available from all operational grids.
+
+### Legacy Local-to-Cloud Sync
+- `CloudSync` still exists to migrate legacy Zustand arrays into Supabase by replaying rows stage by stage.
+- This is a migration utility, not the primary live data path.
+
+## Data and Validation Rules Reflected in the UI
+- Operational data is normalized through `PendingRowSchema`.
+- Stage names are fixed to `orders`, `main`, `call`, `booking`, and `archive`.
+- Form-level validation uses `OrderFormSchema`.
+- Commit-time strict validation uses `BeastModeSchema`.
+- Company names are constrained by the app's allowed-company rules and normalization helpers.
+- Reminder data is stored in a dedicated `order_reminders` table and projected back into UI rows.
+
+## Current Known Constraints
+- Theme customization is not implemented beyond a placeholder settings tab.
+- Access control is not implemented.
+- Some Zustand stage arrays remain in the store for legacy flows and migration support, even though React Query is the active source for operational stage data.

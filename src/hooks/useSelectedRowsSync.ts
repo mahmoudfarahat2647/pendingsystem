@@ -14,10 +14,14 @@ export function useSelectedRowsSync<T extends { id: string }>(
 	const prevRowDataRef = useRef(rowData);
 
 	// We only pause selection pruning when order updates/deletions are pending.
-	// This prevents clearing the user's selection immediately during an optimistic update 
+	// This prevents clearing the user's selection immediately during an optimistic update
 	// that might roll back.
-	const isUpdating = useIsMutating({ mutationKey: ["bulk-update-stage", stage] });
-	const isDeleting = useIsMutating({ mutationKey: ["bulk-delete-orders", stage] });
+	const isUpdating = useIsMutating({
+		mutationKey: ["bulk-update-stage", stage],
+	});
+	const isDeleting = useIsMutating({
+		mutationKey: ["bulk-delete-orders", stage],
+	});
 	const isMutating = isUpdating + isDeleting > 0;
 
 	const prevIsMutatingRef = useRef(isMutating);
@@ -29,7 +33,7 @@ export function useSelectedRowsSync<T extends { id: string }>(
 		) {
 			return;
 		}
-		
+
 		prevRowDataRef.current = rowData;
 		prevIsMutatingRef.current = isMutating;
 

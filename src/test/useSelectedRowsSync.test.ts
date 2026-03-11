@@ -1,6 +1,6 @@
 import { useIsMutating } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
-import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { useSelectedRowsSync } from "../hooks/useSelectedRowsSync";
 
 vi.mock("@tanstack/react-query", () => ({
@@ -27,7 +27,12 @@ describe("useSelectedRowsSync", () => {
 
 		const { rerender } = renderHook(
 			(props) =>
-				useSelectedRowsSync("orders", props.rowData, props.selectedRows, setSelectedRows),
+				useSelectedRowsSync(
+					"orders",
+					props.rowData,
+					props.selectedRows,
+					setSelectedRows,
+				),
 			{
 				initialProps: { rowData, selectedRows },
 			},
@@ -55,14 +60,23 @@ describe("useSelectedRowsSync", () => {
 		// Mock that a relevant mutation starts on "orders" stage
 		mockUseIsMutating.mockImplementation(
 			(options: { mutationKey: string[] }) => {
-				if (options.mutationKey[0] === "bulk-update-stage" && options.mutationKey[1] === "orders") return 1;
+				if (
+					options.mutationKey[0] === "bulk-update-stage" &&
+					options.mutationKey[1] === "orders"
+				)
+					return 1;
 				return 0;
 			},
 		);
 
 		const { rerender } = renderHook(
 			(props) =>
-				useSelectedRowsSync("orders", props.rowData, props.selectedRows, setSelectedRows),
+				useSelectedRowsSync(
+					"orders",
+					props.rowData,
+					props.selectedRows,
+					setSelectedRows,
+				),
 			{
 				initialProps: { rowData, selectedRows },
 			},
@@ -87,14 +101,23 @@ describe("useSelectedRowsSync", () => {
 		let isUpdating = 1;
 		mockUseIsMutating.mockImplementation(
 			(options: { mutationKey: string[] }) => {
-				if (options.mutationKey[0] === "bulk-update-stage" && options.mutationKey[1] === "orders") return isUpdating;
+				if (
+					options.mutationKey[0] === "bulk-update-stage" &&
+					options.mutationKey[1] === "orders"
+				)
+					return isUpdating;
 				return 0;
 			},
 		);
 
 		const { rerender } = renderHook(
 			(props) =>
-				useSelectedRowsSync("orders", props.rowData, props.selectedRows, setSelectedRows),
+				useSelectedRowsSync(
+					"orders",
+					props.rowData,
+					props.selectedRows,
+					setSelectedRows,
+				),
 			{
 				initialProps: { rowData, selectedRows },
 			},
@@ -130,14 +153,23 @@ describe("useSelectedRowsSync", () => {
 		let isUpdating = 1;
 		mockUseIsMutating.mockImplementation(
 			(options: { mutationKey: string[] }) => {
-				if (options.mutationKey[0] === "bulk-update-stage" && options.mutationKey[1] === "orders") return isUpdating;
+				if (
+					options.mutationKey[0] === "bulk-update-stage" &&
+					options.mutationKey[1] === "orders"
+				)
+					return isUpdating;
 				return 0;
 			},
 		);
 
 		const { rerender } = renderHook(
 			(props) =>
-				useSelectedRowsSync("orders", props.rowData, props.selectedRows, setSelectedRows),
+				useSelectedRowsSync(
+					"orders",
+					props.rowData,
+					props.selectedRows,
+					setSelectedRows,
+				),
 			{
 				initialProps: { rowData, selectedRows },
 			},
@@ -177,14 +209,23 @@ describe("useSelectedRowsSync", () => {
 		// A mutation is running, but on the "main" stage rather than "orders".
 		mockUseIsMutating.mockImplementation(
 			(options: { mutationKey: string[] }) => {
-				if (options.mutationKey[0] === "bulk-update-stage" && options.mutationKey[1] === "main") return 1;
+				if (
+					options.mutationKey[0] === "bulk-update-stage" &&
+					options.mutationKey[1] === "main"
+				)
+					return 1;
 				return 0; // The hook looking for ["bulk-update-stage", "orders"] will get 0
 			},
 		);
 
 		const { rerender } = renderHook(
 			(props) =>
-				useSelectedRowsSync("orders", props.rowData, props.selectedRows, setSelectedRows),
+				useSelectedRowsSync(
+					"orders",
+					props.rowData,
+					props.selectedRows,
+					setSelectedRows,
+				),
 			{
 				initialProps: { rowData, selectedRows },
 			},
