@@ -35,7 +35,6 @@ export const BookingCalendarGrid = ({
 	searchQuery,
 	searchMatchDates,
 	activeCustomerDateSet,
-	activeBookingRep,
 }: BookingCalendarGridProps) => {
 	const monthStart = startOfMonth(currentMonth);
 	const monthEnd = endOfMonth(monthStart);
