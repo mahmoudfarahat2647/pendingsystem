@@ -120,8 +120,9 @@ export interface UndoRedoSnapshot {
 }
 
 export interface UndoRedoState {
-	undoStack: UndoRedoSnapshot[];
-	redoStack: UndoRedoSnapshot[];
+	undoStack: any[];
+	redoStack: any[];
+	lastSavedState?: UndoRedoSnapshot | null;
 }
 
 export interface UndoRedoActions {
