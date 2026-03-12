@@ -160,7 +160,7 @@ export function findSameOrderDuplicates(parts: PartEntry[]): PartEntry[] {
 
 export function findSameOrderDuplicateIndices(parts: PartEntry[]): number[] {
 	const seen = new Map<string, number>();
-	const duplicateIndices: number[] = [];
+	const duplicateIndices = new Set<number>();
 
 	for (let i = 0; i < parts.length; i++) {
 		const part = parts[i];
@@ -169,16 +169,14 @@ export function findSameOrderDuplicateIndices(parts: PartEntry[]): number[] {
 
 		if (seen.has(key)) {
 			const firstIndex = seen.get(key)!;
-			if (!duplicateIndices.includes(firstIndex)) {
-				duplicateIndices.push(firstIndex);
-			}
-			duplicateIndices.push(i);
+			duplicateIndices.add(firstIndex);
+			duplicateIndices.add(i);
 		} else {
 			seen.set(key, i);
 		}
 	}
 
-	return duplicateIndices;
+	return Array.from(duplicateIndices);
 }
 
 export function shouldSkipDuplicateCheck(
