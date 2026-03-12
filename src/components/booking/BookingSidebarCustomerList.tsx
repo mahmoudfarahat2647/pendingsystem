@@ -1,7 +1,7 @@
-import { format } from "date-fns";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
+import { safeFormatDate } from "@/utils/safeFormatDate";
 
 interface BookingSidebarCustomerListProps {
 	searchQuery: string;
@@ -42,7 +42,7 @@ export const BookingSidebarCustomerList = ({
 							</span>
 							{searchQuery && booking.bookingDate && (
 								<span className="text-[9px] font-mono text-gray-600">
-									{format(new Date(booking.bookingDate), "MMM d")}
+									{safeFormatDate(booking.bookingDate, "MMM d")}
 								</span>
 							)}
 							{!searchQuery && (

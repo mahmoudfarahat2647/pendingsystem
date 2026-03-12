@@ -1,5 +1,5 @@
 import { format, isAfter, subYears } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
@@ -10,6 +10,17 @@ interface UseBookingCalendarOptions {
 	bookingData?: PendingRow[];
 	/** Optional archive data from React Query - if not provided, falls back to Zustand store */
 	archiveData?: PendingRow[];
+}
+
+/**
+ * Safely parses a "yyyy-MM-dd" string into a local Data object at midnight local time,
+ * avoiding the JS default behavior of parsing it as UTC midnight.
+ */
+function parseLocalDate(dateStr: string | undefined): Date {
+	if (!dateStr || typeof dateStr !== "string") return new Date(NaN);
+	const [year, month, day] = dateStr.split("-").map(Number);
+	if (isNaN(year) || isNaN(month) || isNaN(day)) return new Date(NaN);
+	return new Date(year, month - 1, day);
 }
 
 export function useBookingCalendar({
@@ -45,12 +56,17 @@ export function useBookingCalendar({
 
 	const twoYearsAgo = useMemo(() => subYears(new Date(), 2), []);
 
+	const prevVinRef = useRef<string | undefined>(undefined);
+
 	useEffect(() => {
 		if (open) {
 			setSearchQuery(initialSearchTerm);
 			setBookingNote("");
 			setPreBookingStatus("");
 			setSelectedBookingId(null);
+			setSelectedDate(new Date());
+			setCurrentMonth(new Date());
+			prevVinRef.current = undefined;
 		}
 	}, [open, initialSearchTerm]);
 
@@ -61,7 +77,7 @@ export function useBookingCalendar({
 
 	const filteredBookings = useMemo(() => {
 		return allBookings.filter((b) => {
-			if (!isAfter(new Date(b.bookingDate || ""), twoYearsAgo)) return false;
+			if (!isAfter(parseLocalDate(b.bookingDate), twoYearsAgo)) return false;
 			if (!searchQuery) return true;
 			const query = searchQuery.toLowerCase();
 			return (
@@ -86,7 +102,10 @@ export function useBookingCalendar({
 	const bookingsByDateMap = useMemo(() => {
 		const map: Record<string, PendingRow[]> = {};
 		allBookings.forEach((b) => {
-			if (b.bookingDate && isAfter(new Date(b.bookingDate), twoYearsAgo)) {
+			if (
+				b.bookingDate &&
+				isAfter(parseLocalDate(b.bookingDate), twoYearsAgo)
+			) {
 				if (!map[b.bookingDate]) map[b.bookingDate] = [];
 				// Only add if this VIN is not already in the list for this date
 				const vinExists = map[b.bookingDate].some(
@@ -155,16 +174,29 @@ export function useBookingCalendar({
 					.filter((b) => b.vin === activeBookingRep.vin && b.bookingDate)
 					.map((b) => b.bookingDate as string),
 			),
-		).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+		).sort((a, b) => parseLocalDate(b).getTime() - parseLocalDate(a).getTime());
 	}, [allBookings, activeBookingRep]);
 
 	useEffect(() => {
-		if (activeCustomerHistoryDates.length > 0) {
-			const firstDate = new Date(activeCustomerHistoryDates[0]);
+		const currentVin = activeBookingRep?.vin;
+		// Guard: Only jump the calendar when a genuinely new VIN is selected.
+		// We only update prevVinRef when currentVin is defined, so transient undefined gaps
+		// (caused by a refetch or list-rebuild clearing activeBookingRep for one render)
+		// are ignored — the ref retains the last known VIN, and the guard fires only on a real change.
+		if (
+			currentVin &&
+			currentVin !== prevVinRef.current &&
+			activeCustomerHistoryDates.length > 0
+		) {
+			const firstDate = parseLocalDate(activeCustomerHistoryDates[0]);
 			setCurrentMonth(firstDate);
 			setSelectedDate(firstDate);
 		}
-	}, [activeCustomerHistoryDates]);
+		// Only persist to ref when we have a real VIN; ignore transient undefined.
+		if (currentVin) {
+			prevVinRef.current = currentVin;
+		}
+	}, [activeCustomerHistoryDates, activeBookingRep?.vin]);
 
 	const handleDateSelect = (day: Date) => {
 		setSelectedDate(day);

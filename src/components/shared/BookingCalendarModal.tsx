@@ -124,7 +124,6 @@ export const BookingCalendarModal = ({
 										selectedRows={selectedRows}
 										activeCustomerBookings={activeCustomerBookings}
 										consolidatedNotes={consolidatedNotes}
-										updateBookingStatus={() => {}}
 										activeCustomerHistoryDates={activeCustomerHistoryDates}
 										onHistoryDateClick={(date) => {
 											setCurrentMonth(date);
