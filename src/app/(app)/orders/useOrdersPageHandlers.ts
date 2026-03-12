@@ -65,20 +65,22 @@ export const useOrdersPageHandlers = () => {
 
 	const handleSendToArchive = useCallback(
 		async (ids: string[], reason: string) => {
-			for (const id of ids) {
-				const row = ordersRowData.find((r) => r.id === id);
-				const newActionNote = appendTaggedActionNote(
-					row?.actionNote,
-					reason,
-					"archive",
-				);
+			await Promise.all(
+				ids.map((id) => {
+					const row = ordersRowData.find((r) => r.id === id);
+					const newActionNote = appendTaggedActionNote(
+						row?.actionNote,
+						reason,
+						"archive",
+					);
 
-				await saveOrderMutation.mutateAsync({
-					id,
-					updates: { archiveReason: reason, actionNote: newActionNote },
-					stage: "orders",
-				});
-			}
+					return saveOrderMutation.mutateAsync({
+						id,
+						updates: { archiveReason: reason, actionNote: newActionNote },
+						stage: "orders",
+					});
+				}),
+			);
 
 			await bulkUpdateStageMutation.mutateAsync({ ids, stage: "archive" });
 		},
@@ -99,85 +101,88 @@ export const useOrdersPageHandlers = () => {
 					await bulkDeleteOrdersMutation.mutateAsync(removedRowIds);
 				}
 
-				for (const part of parts) {
-					const isWarranty = formData.repairSystem === "ضمان";
-					const endWarranty = isWarranty
-						? calculateEndWarranty(formData.startWarranty)
-						: "";
-					const remainTime = isWarranty
-						? calculateRemainingTime(endWarranty)
-						: "";
+				await Promise.all(
+					parts.map((part) => {
+						const isWarranty = formData.repairSystem === "ضمان";
+						const endWarranty = isWarranty
+							? calculateEndWarranty(formData.startWarranty)
+							: "";
+						const remainTime = isWarranty
+							? calculateRemainingTime(endWarranty)
+							: "";
 
-					const commonData = {
-						...formData,
-						cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
-						endWarranty,
-						remainTime,
-					};
+						const commonData = {
+							...formData,
+							cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
+							endWarranty,
+							remainTime,
+						};
 
-					if (part.rowId) {
-						await saveOrderMutation.mutateAsync({
-							id: part.rowId as string,
-							stage: "orders",
+						if (part.rowId) {
+							return saveOrderMutation.mutateAsync({
+								id: part.rowId as string,
+								stage: "orders",
+								updates: {
+									...commonData,
+									partNumber: part.partNumber,
+									description: part.description,
+									parts: [part],
+								},
+							});
+						} else {
+							const baseId =
+								selectedRows[0]?.baseId || Date.now().toString().slice(-6);
+							return saveOrderMutation.mutateAsync({
+								id: "", // orderService handles new row creation if id is missing/empty, but here we expect saveOrder to handle it. Actually orderService.saveOrder expects id if it's an update.
+								updates: {
+									baseId,
+									trackingId: `ORD-${baseId}`,
+									...commonData,
+									partNumber: part.partNumber,
+									description: part.description,
+									parts: [part],
+									status: "Pending",
+									rDate: new Date().toISOString().split("T")[0],
+									requester: formData.requester,
+								},
+								stage: "orders",
+							});
+						}
+					}),
+				);
+
+				toast.success("Grid entries updated successfully");
+			} else {
+				const baseId = Date.now().toString().slice(-6);
+				await Promise.all(
+					parts.map((part, index) => {
+						const isWarranty = formData.repairSystem === "ضمان";
+						const endWarranty = isWarranty
+							? calculateEndWarranty(formData.startWarranty)
+							: "";
+						const remainTime = isWarranty
+							? calculateRemainingTime(endWarranty)
+							: "";
+
+						return saveOrderMutation.mutateAsync({
+							id: "",
 							updates: {
-								...commonData,
-								partNumber: part.partNumber,
-								description: part.description,
-								parts: [part],
-							},
-						});
-					} else {
-						const baseId =
-							selectedRows[0]?.baseId || Date.now().toString().slice(-6);
-						await saveOrderMutation.mutateAsync({
-							id: "", // orderService handles new row creation if id is missing/empty, but here we expect saveOrder to handle it. Actually orderService.saveOrder expects id if it's an update.
-							updates: {
-								baseId,
-								trackingId: `ORD-${baseId}`,
-								...commonData,
+								baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
+								trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
+								...formData,
+								cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
 								partNumber: part.partNumber,
 								description: part.description,
 								parts: [part],
 								status: "Pending",
 								rDate: new Date().toISOString().split("T")[0],
-								requester: formData.requester,
+								endWarranty,
+								remainTime,
 							},
 							stage: "orders",
 						});
-					}
-				}
-
-				toast.success("Grid entries updated successfully");
-			} else {
-				const baseId = Date.now().toString().slice(-6);
-				for (let index = 0; index < parts.length; index++) {
-					const part = parts[index];
-					const isWarranty = formData.repairSystem === "ضمان";
-					const endWarranty = isWarranty
-						? calculateEndWarranty(formData.startWarranty)
-						: "";
-					const remainTime = isWarranty
-						? calculateRemainingTime(endWarranty)
-						: "";
-
-					await saveOrderMutation.mutateAsync({
-						id: "",
-						updates: {
-							baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
-							trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
-							...formData,
-							cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
-							partNumber: part.partNumber,
-							description: part.description,
-							parts: [part],
-							status: "Pending",
-							rDate: new Date().toISOString().split("T")[0],
-							endWarranty,
-							remainTime,
-						},
-						stage: "orders",
-					});
-				}
+					}),
+				);
 				toast.success(`${parts.length} order(s) created`);
 			}
 			setIsFormModalOpen(false);
@@ -274,24 +279,26 @@ export const useOrdersPageHandlers = () => {
 		}
 
 		// 1. Update details first (optimistic)
-		for (const row of selectedRows) {
-			const newActionNote = appendTaggedActionNote(
-				row.actionNote,
-				note,
-				"booking",
-			);
+		await Promise.all(
+			selectedRows.map((row) => {
+				const newActionNote = appendTaggedActionNote(
+					row.actionNote,
+					note,
+					"booking",
+				);
 
-			await saveOrderMutation.mutateAsync({
-				id: row.id,
-				updates: {
-					bookingDate: date,
-					bookingNote: note,
-					actionNote: newActionNote,
-					...(status ? { bookingStatus: status } : {}),
-				},
-				stage: "booking",
-			});
-		}
+				return saveOrderMutation.mutateAsync({
+					id: row.id,
+					updates: {
+						bookingDate: date,
+						bookingNote: note,
+						actionNote: newActionNote,
+						...(status ? { bookingStatus: status } : {}),
+					},
+					stage: "booking",
+				});
+			}),
+		);
 
 		// 2. Move stage (bulk)
 		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "booking" });
