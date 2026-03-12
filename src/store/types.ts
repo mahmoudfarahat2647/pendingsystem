@@ -4,7 +4,6 @@ import type {
 	PartStatusDef,
 	PendingRow,
 	StickyNote,
-	TodoItem,
 } from "@/types";
 
 export interface OrdersState {
@@ -77,7 +76,6 @@ export interface UIState {
 	reminderTemplates: string[];
 	bookingTemplates: string[];
 	reasonTemplates: string[];
-	todos: TodoItem[];
 	notes: StickyNote[];
 	partStatuses: PartStatusDef[];
 	bookingStatuses: PartStatusDef[];
@@ -94,9 +92,6 @@ export interface UIActions {
 	removeModel: (model: string) => void;
 	addRepairSystem: (system: string) => void;
 	removeRepairSystem: (system: string) => void;
-	addTodo: (text: string) => void;
-	toggleTodo: (id: string) => void;
-	deleteTodo: (id: string) => void;
 	addNote: (content: string, color: string) => void;
 	updateNote: (id: string, content: string) => void;
 	deleteNote: (id: string) => void;

@@ -33,13 +33,6 @@ export interface AppNotification {
 	managedKey?: string;
 }
 
-export interface TodoItem {
-	id: string;
-	text: string;
-	completed: boolean;
-	createdAt: string;
-}
-
 export interface StickyNote {
 	id: string;
 	content: string;
