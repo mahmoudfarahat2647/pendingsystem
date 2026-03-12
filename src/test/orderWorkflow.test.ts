@@ -11,6 +11,8 @@ import {
 	isVinComplete,
 	isVinLongEnoughForDuplicateCheck,
 	normalizeVin,
+	isUuid,
+	appendTaggedActionNote,
 } from "@/lib/orderWorkflow";
 import type { PartEntry, PendingRow } from "@/types";
 
@@ -383,5 +385,67 @@ describe("formatVinForDisplay", () => {
 
 	it("should handle whitespace-only input", () => {
 		expect(formatVinForDisplay("   ")).toBe("(blank VIN)");
+	});
+});
+
+describe("isUuid", () => {
+	it("should return true for a valid UUID v4", () => {
+		expect(isUuid("550e8400-e29b-41d4-a716-446655440000")).toBe(true);
+		expect(isUuid("f47ac10b-58cc-4372-a567-0e02b2c3d479")).toBe(true);
+	});
+
+	it("should return true for valid UUID v4 in uppercase", () => {
+		expect(isUuid("550E8400-E29B-41D4-A716-446655440000")).toBe(true);
+	});
+
+	it("should return false for an empty string", () => {
+		expect(isUuid("")).toBe(false);
+	});
+
+	it("should return false for invalid format (missing hyphens)", () => {
+		expect(isUuid("550e8400e29b41d4a716446655440000")).toBe(false);
+	});
+
+	it("should return false for incorrect length", () => {
+		expect(isUuid("550e8400-e29b-41d4-a716-44665544000")).toBe(false);
+		expect(isUuid("550e8400-e29b-41d4-a716-4466554400000")).toBe(false);
+	});
+
+	it("should return false for non-v4 UUID (v1)", () => {
+		expect(isUuid("123e4567-e89b-12d3-a456-426614174000")).toBe(false);
+	});
+
+	it("should return false for invalid characters outside [0-9a-f]", () => {
+		expect(isUuid("550e8400-g29b-41d4-a716-446655440000")).toBe(false);
+	});
+});
+
+describe("appendTaggedActionNote", () => {
+	it("should return the tagged note if existing string is undefined", () => {
+		expect(appendTaggedActionNote(undefined, "new note", "archive")).toBe("new note #archive");
+	});
+
+	it("should return the tagged note if existing string is empty", () => {
+		expect(appendTaggedActionNote("", "new note", "archive")).toBe("new note #archive");
+	});
+
+	it("should append the tagged note to existing string with a newline", () => {
+		expect(appendTaggedActionNote("old note", "new note", "archive")).toBe("old note\nnew note #archive");
+	});
+
+	it("should trim the new note before appending", () => {
+		expect(appendTaggedActionNote("old note", "  new note  ", "archive")).toBe("old note\nnew note #archive");
+	});
+
+	it("should return existing string if new note is empty", () => {
+		expect(appendTaggedActionNote("old note", "", "archive")).toBe("old note");
+	});
+
+	it("should return existing string if new note is only whitespace", () => {
+		expect(appendTaggedActionNote("old note", "   ", "archive")).toBe("old note");
+	});
+
+	it("should return empty string if existing is undefined and new note is empty", () => {
+		expect(appendTaggedActionNote(undefined, "", "archive")).toBe("");
 	});
 });
