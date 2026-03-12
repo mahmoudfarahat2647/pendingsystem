@@ -4,6 +4,7 @@ import type { PendingRow } from "@/types";
 
 export function useOrdersQuery(
 	stage?: OrderStage,
+	options?: { enabled?: boolean },
 ): UseQueryResult<PendingRow[], Error> {
 	return useQuery<PendingRow[]>({
 		queryKey: ["orders", stage],
@@ -18,6 +19,7 @@ export function useOrdersQuery(
 		},
 		staleTime: 1000 * 60 * 5, // 5 minutes
 		gcTime: 1000 * 60 * 10, // 10 minutes
+		...(options || {}),
 	});
 }
 

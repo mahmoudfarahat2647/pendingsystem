@@ -43,6 +43,8 @@ import { useOrdersPageHandlers } from "./useOrdersPageHandlers";
 export default function OrdersPage() {
 	const {
 		ordersRowData,
+		bookingRowData,
+		archiveRowData,
 		gridApi,
 		setGridApi,
 		selectedRows,
@@ -241,6 +243,8 @@ export default function OrdersPage() {
 						onOpenChange={setIsBookingModalOpen}
 						onConfirm={handleConfirmBooking}
 						selectedRows={selectedRows}
+						bookingData={bookingRowData}
+						archiveData={archiveRowData}
 					/>
 				)}
 

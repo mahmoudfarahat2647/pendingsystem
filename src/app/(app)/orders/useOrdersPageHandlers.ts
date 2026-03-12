@@ -21,7 +21,10 @@ import type { PartEntry, PendingRow } from "@/types";
 
 export const useOrdersPageHandlers = () => {
 	// 1. Data & Store
+	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
+	const { data: bookingRowData = [] } = useOrdersQuery("booking", { enabled: isBookingModalOpen });
+	const { data: archiveRowData = [] } = useOrdersQuery("archive", { enabled: isBookingModalOpen });
 	const saveOrderMutation = useSaveOrderMutation();
 	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("orders");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("orders");
@@ -34,7 +37,6 @@ export const useOrdersPageHandlers = () => {
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isFormModalOpen, setIsFormModalOpen] = useState(false);
 	const [isEditMode, setIsEditMode] = useState(false);
-	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [isBulkAttachmentModalOpen, setIsBulkAttachmentModalOpen] =
 		useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -65,19 +67,26 @@ export const useOrdersPageHandlers = () => {
 
 	const handleSendToArchive = useCallback(
 		async (ids: string[], reason: string) => {
-			for (const id of ids) {
-				const row = ordersRowData.find((r) => r.id === id);
-				const newActionNote = appendTaggedActionNote(
-					row?.actionNote,
-					reason,
-					"archive",
-				);
+			const results = await Promise.allSettled(
+				ids.map((id) => {
+					const row = ordersRowData.find((r) => r.id === id);
+					const newActionNote = appendTaggedActionNote(
+						row?.actionNote,
+						reason,
+						"archive",
+					);
 
-				await saveOrderMutation.mutateAsync({
-					id,
-					updates: { archiveReason: reason, actionNote: newActionNote },
-					stage: "orders",
-				});
+					return saveOrderMutation.mutateAsync({
+						id,
+						updates: { archiveReason: reason, actionNote: newActionNote },
+						stage: "orders",
+					});
+				}),
+			);
+
+			const failedCount = results.filter((r) => r.status === "rejected").length;
+			if (failedCount > 0) {
+				throw new Error(`${failedCount} of ${ids.length} items failed to save`);
 			}
 
 			await bulkUpdateStageMutation.mutateAsync({ ids, stage: "archive" });
@@ -367,6 +376,8 @@ export const useOrdersPageHandlers = () => {
 	return {
 		// Data
 		ordersRowData,
+		bookingRowData,
+		archiveRowData,
 
 		// State
 		gridApi,

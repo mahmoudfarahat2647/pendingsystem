@@ -8,10 +8,6 @@ import {
 	getOrdersColumns,
 } from "../components/shared/GridConfig";
 
-const getHeaderCheckboxSelectionFilteredOnly = (
-	column: { headerCheckboxSelectionFilteredOnly?: boolean } | undefined,
-) => column?.headerCheckboxSelectionFilteredOnly;
-
 // Mock the store
 vi.mock("@/store/useStore", () => ({
 	useAppStore: Object.assign((fn: any) => fn({ bookingStatuses: [] }), {
@@ -21,17 +17,17 @@ vi.mock("@/store/useStore", () => ({
 
 describe("Grid Column Configuration Selection Fix", () => {
 	describe("getBaseColumns", () => {
-		it("should have headerCheckboxSelectionFilteredOnly set to true in the selection column", () => {
+		it("should have a selection column", () => {
 			const columns = getBaseColumns();
 			const selectionCol = columns.find((col) => col.colId === "selection");
 			expect(selectionCol).toBeDefined();
-			expect(selectionCol?.headerCheckboxSelection).toBe(true);
-			expect(getHeaderCheckboxSelectionFilteredOnly(selectionCol)).toBe(true);
+			expect(selectionCol?.headerName).toBe("");
+			expect(selectionCol?.width).toBe(50);
 		});
 	});
 
 	describe("useColumnDefs hook", () => {
-		it("should include headerCheckboxSelectionFilteredOnly: true for all grid types", () => {
+		it("should include selection column for all grid types", () => {
 			const gridTypes: Array<
 				"main" | "orders" | "booking" | "archive" | "call"
 			> = ["main", "orders", "booking", "archive", "call"];
@@ -46,29 +42,28 @@ describe("Grid Column Configuration Selection Fix", () => {
 					selectionCol,
 					`Selection column missing for type ${type}`,
 				).toBeDefined();
-				expect(selectionCol?.headerCheckboxSelection).toBe(true);
-				expect(getHeaderCheckboxSelectionFilteredOnly(selectionCol)).toBe(true);
+				expect(selectionCol?.width).toBe(50);
 			}
 		});
 	});
 
 	describe("Other column getters", () => {
-		it("getOrdersColumns should include updated selection config", () => {
+		it("getOrdersColumns should include selection column", () => {
 			const columns = getOrdersColumns([]);
 			const selectionCol = columns.find((col) => col.colId === "selection");
-			expect(getHeaderCheckboxSelectionFilteredOnly(selectionCol)).toBe(true);
+			expect(selectionCol).toBeDefined();
 		});
 
-		it("getMainSheetColumns should include updated selection config", () => {
+		it("getMainSheetColumns should include selection column", () => {
 			const columns = getMainSheetColumns([]);
 			const selectionCol = columns.find((col) => col.colId === "selection");
-			expect(getHeaderCheckboxSelectionFilteredOnly(selectionCol)).toBe(true);
+			expect(selectionCol).toBeDefined();
 		});
 
-		it("getBookingColumns should include updated selection config", () => {
+		it("getBookingColumns should include selection column", () => {
 			const columns = getBookingColumns();
 			const selectionCol = columns.find((col) => col.colId === "selection");
-			expect(getHeaderCheckboxSelectionFilteredOnly(selectionCol)).toBe(true);
+			expect(selectionCol).toBeDefined();
 		});
 	});
 });

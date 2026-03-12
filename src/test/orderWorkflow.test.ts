@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	appendTaggedActionNote,
 	BLANK_VIN_BUCKET,
 	checkVinPartDuplicate,
 	findSameOrderDuplicateIndices,
@@ -8,11 +9,10 @@ import {
 	getNormalizedVinBuckets,
 	getVinBucket,
 	hasMixedVinSelection,
+	isUuid,
 	isVinComplete,
 	isVinLongEnoughForDuplicateCheck,
 	normalizeVin,
-	isUuid,
-	appendTaggedActionNote,
 } from "@/lib/orderWorkflow";
 import type { PartEntry, PendingRow } from "@/types";
 
@@ -422,19 +422,27 @@ describe("isUuid", () => {
 
 describe("appendTaggedActionNote", () => {
 	it("should return the tagged note if existing string is undefined", () => {
-		expect(appendTaggedActionNote(undefined, "new note", "archive")).toBe("new note #archive");
+		expect(appendTaggedActionNote(undefined, "new note", "archive")).toBe(
+			"new note #archive",
+		);
 	});
 
 	it("should return the tagged note if existing string is empty", () => {
-		expect(appendTaggedActionNote("", "new note", "archive")).toBe("new note #archive");
+		expect(appendTaggedActionNote("", "new note", "archive")).toBe(
+			"new note #archive",
+		);
 	});
 
 	it("should append the tagged note to existing string with a newline", () => {
-		expect(appendTaggedActionNote("old note", "new note", "archive")).toBe("old note\nnew note #archive");
+		expect(appendTaggedActionNote("old note", "new note", "archive")).toBe(
+			"old note\nnew note #archive",
+		);
 	});
 
 	it("should trim the new note before appending", () => {
-		expect(appendTaggedActionNote("old note", "  new note  ", "archive")).toBe("old note\nnew note #archive");
+		expect(appendTaggedActionNote("old note", "  new note  ", "archive")).toBe(
+			"old note\nnew note #archive",
+		);
 	});
 
 	it("should return existing string if new note is empty", () => {
@@ -442,7 +450,9 @@ describe("appendTaggedActionNote", () => {
 	});
 
 	it("should return existing string if new note is only whitespace", () => {
-		expect(appendTaggedActionNote("old note", "   ", "archive")).toBe("old note");
+		expect(appendTaggedActionNote("old note", "   ", "archive")).toBe(
+			"old note",
+		);
 	});
 
 	it("should return empty string if existing is undefined and new note is empty", () => {

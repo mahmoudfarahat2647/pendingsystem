@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -397,6 +398,9 @@ export default function BookingPage() {
 							<DialogTitle className="text-orange-500">
 								Reorder - Reason Required
 							</DialogTitle>
+							<DialogDescription className="sr-only">
+								Provide a reason why this order is being sent back for reordering.
+							</DialogDescription>
 						</DialogHeader>
 						<div className="space-y-4">
 							<div>

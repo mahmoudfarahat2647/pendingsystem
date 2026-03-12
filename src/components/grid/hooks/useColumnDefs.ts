@@ -37,9 +37,6 @@ export function useColumnDefs(
 			headerName: "",
 			colId: "selection",
 			field: "id",
-			checkboxSelection: true,
-			headerCheckboxSelection: true,
-			headerCheckboxSelectionFilteredOnly: true,
 			width: 50,
 			maxWidth: 50,
 			sortable: false,
@@ -54,8 +51,6 @@ export function useColumnDefs(
 			headerName: "ACTIONS",
 			colId: "actions",
 			field: "id",
-			checkboxSelection: false,
-			headerCheckboxSelection: false,
 			cellRenderer: ActionCellRenderer,
 			cellRendererParams: {
 				onNoteClick,

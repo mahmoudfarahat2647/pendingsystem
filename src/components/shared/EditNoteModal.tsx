@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -91,6 +92,9 @@ export const EditNoteModal = ({
 						</Button>
 					</div>
 					<DialogTitle className="text-lg font-medium">Notes</DialogTitle>
+					<DialogDescription className="sr-only">
+						Add, edit, or remove notes for this row.
+					</DialogDescription>
 					<div className="flex-1" />
 				</DialogHeader>
 
