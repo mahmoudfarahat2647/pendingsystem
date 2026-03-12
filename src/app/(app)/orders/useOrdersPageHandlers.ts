@@ -99,7 +99,7 @@ export const useOrdersPageHandlers = () => {
 					await bulkDeleteOrdersMutation.mutateAsync(removedRowIds);
 				}
 
-				for (const part of parts) {
+				const savePromises = parts.map((part) => {
 					const isWarranty = formData.repairSystem === "ضمان";
 					const endWarranty = isWarranty
 						? calculateEndWarranty(formData.startWarranty)
@@ -116,7 +116,7 @@ export const useOrdersPageHandlers = () => {
 					};
 
 					if (part.rowId) {
-						await saveOrderMutation.mutateAsync({
+						return saveOrderMutation.mutateAsync({
 							id: part.rowId as string,
 							stage: "orders",
 							updates: {
@@ -129,8 +129,8 @@ export const useOrdersPageHandlers = () => {
 					} else {
 						const baseId =
 							selectedRows[0]?.baseId || Date.now().toString().slice(-6);
-						await saveOrderMutation.mutateAsync({
-							id: "", // orderService handles new row creation if id is missing/empty, but here we expect saveOrder to handle it. Actually orderService.saveOrder expects id if it's an update.
+						return saveOrderMutation.mutateAsync({
+							id: "", // orderService handles new row creation if id is missing/empty
 							updates: {
 								baseId,
 								trackingId: `ORD-${baseId}`,
@@ -145,13 +145,14 @@ export const useOrdersPageHandlers = () => {
 							stage: "orders",
 						});
 					}
-				}
+				});
+
+				await Promise.all(savePromises);
 
 				toast.success("Grid entries updated successfully");
 			} else {
 				const baseId = Date.now().toString().slice(-6);
-				for (let index = 0; index < parts.length; index++) {
-					const part = parts[index];
+				const createPromises = parts.map((part, index) => {
 					const isWarranty = formData.repairSystem === "ضمان";
 					const endWarranty = isWarranty
 						? calculateEndWarranty(formData.startWarranty)
@@ -160,7 +161,7 @@ export const useOrdersPageHandlers = () => {
 						? calculateRemainingTime(endWarranty)
 						: "";
 
-					await saveOrderMutation.mutateAsync({
+					return saveOrderMutation.mutateAsync({
 						id: "",
 						updates: {
 							baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
@@ -177,7 +178,9 @@ export const useOrdersPageHandlers = () => {
 						},
 						stage: "orders",
 					});
-				}
+				});
+
+				await Promise.all(createPromises);
 				toast.success(`${parts.length} order(s) created`);
 			}
 			setIsFormModalOpen(false);
