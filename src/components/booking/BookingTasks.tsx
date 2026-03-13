@@ -1,7 +1,10 @@
 "use client";
 
 import { Clock, Gauge, ShieldCheck } from "lucide-react";
-import { PlayfulTodolist, PlayfulTodoItem } from "@/components/ui/playful-todolist";
+import {
+	type PlayfulTodoItem,
+	PlayfulTodolist,
+} from "@/components/ui/playful-todolist";
 
 export const BookingTasks = () => {
 	const tasks = [
@@ -26,10 +29,12 @@ export const BookingTasks = () => {
 	];
 
 	const playfulItems: PlayfulTodoItem[] = tasks.map((task) => {
-		const bgClass = 
-			task.id === "warranty" ? "data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500" :
-			task.id === "km" ? "data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500" :
-			"data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500";
+		const bgClass =
+			task.id === "warranty"
+				? "data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+				: task.id === "km"
+					? "data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+					: "data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500";
 
 		return {
 			id: task.id,
@@ -50,7 +55,7 @@ export const BookingTasks = () => {
 			<h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
 				Required Checks
 			</h4>
-			<PlayfulTodolist 
+			<PlayfulTodolist
 				items={playfulItems}
 				className="w-full space-y-3"
 				itemClassName="flex items-center space-x-3 group cursor-pointer hover:bg-white/[0.02] p-2 rounded-lg transition-colors relative"

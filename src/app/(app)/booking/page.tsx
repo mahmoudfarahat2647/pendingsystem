@@ -399,7 +399,8 @@ export default function BookingPage() {
 								Reorder - Reason Required
 							</DialogTitle>
 							<DialogDescription className="sr-only">
-								Provide a reason why this order is being sent back for reordering.
+								Provide a reason why this order is being sent back for
+								reordering.
 							</DialogDescription>
 						</DialogHeader>
 						<div className="space-y-4">

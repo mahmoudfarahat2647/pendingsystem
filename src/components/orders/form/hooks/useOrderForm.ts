@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { normalizeCompanyName } from "@/lib/company";
 import {
-	ALLOWED_COMPANIES,
 	DEFAULT_COMPANY,
 	ValidationMode,
 } from "@/lib/ordersValidationConstants";
@@ -14,13 +13,7 @@ import {
 	findSameOrderDuplicateIndices,
 	shouldSkipDuplicateCheck,
 } from "@/lib/orderWorkflow";
-import {
-	calculateEndWarranty,
-	calculateRemainingTime,
-	cn,
-	detectModelFromVin,
-	generateId,
-} from "@/lib/utils";
+import { detectModelFromVin, generateId } from "@/lib/utils";
 import { BeastModeSchema, OrderFormSchema } from "@/schemas/form.schema";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";

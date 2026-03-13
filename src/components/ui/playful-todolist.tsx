@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { motion, type Transition } from "motion/react";
-import { Label } from "@/components/ui/label";
+import * as React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export interface PlayfulTodoItem {
@@ -35,9 +35,16 @@ const getPathTransition = (isChecked: boolean): Transition => ({
 	},
 });
 
-export const PlayfulTodolist = ({ items, className, itemClassName, checkedState, onCheckedChange, hideDivider }: PlayfulTodolistProps) => {
+export const PlayfulTodolist = ({
+	items,
+	className,
+	itemClassName,
+	checkedState,
+	onCheckedChange,
+	hideDivider,
+}: PlayfulTodolistProps) => {
 	const [internalChecked, setInternalChecked] = React.useState(
-		items.map((i) => !!i.defaultChecked)
+		items.map((i) => !!i.defaultChecked),
 	);
 
 	const isControlled = checkedState !== undefined;
@@ -55,12 +62,20 @@ export const PlayfulTodolist = ({ items, className, itemClassName, checkedState,
 	};
 
 	return (
-		<div className={className || "bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 space-y-6"}>
+		<div
+			className={
+				className ||
+				"bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 space-y-6"
+			}
+		>
 			{items.map((item, idx) => (
 				<div key={item.id} className={itemClassName || "space-y-6"}>
 					<div className="flex items-center space-x-2">
 						<Checkbox
-							className={cn("transition-colors duration-300", item.checkboxClassName)}
+							className={cn(
+								"transition-colors duration-300",
+								item.checkboxClassName,
+							)}
 							checked={checked[idx]}
 							onCheckedChange={(val) => handleCheckedChange(idx, val === true)}
 							id={`checkbox-${item.id}`}
@@ -73,6 +88,7 @@ export const PlayfulTodolist = ({ items, className, itemClassName, checkedState,
 								width="340"
 								height="32"
 								viewBox="0 0 340 32"
+								aria-hidden="true"
 								className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none z-20 w-full h-10"
 							>
 								<motion.path

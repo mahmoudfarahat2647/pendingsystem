@@ -1,7 +1,7 @@
 import { format, isAfter, subYears } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { PendingRow } from "@/types";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
+import type { PendingRow } from "@/types";
 
 interface UseBookingCalendarOptions {
 	open: boolean;
@@ -15,7 +15,8 @@ interface UseBookingCalendarOptions {
 function parseLocalDate(dateStr: string | undefined): Date {
 	if (!dateStr || typeof dateStr !== "string") return new Date(NaN);
 	const [year, month, day] = dateStr.split("-").map(Number);
-	if (isNaN(year) || isNaN(month) || isNaN(day)) return new Date(NaN);
+	if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day))
+		return new Date(NaN);
 	return new Date(year, month - 1, day);
 }
 

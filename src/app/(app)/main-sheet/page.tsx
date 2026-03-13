@@ -41,8 +41,6 @@ import type { PendingRow } from "@/types";
 export default function MainSheetPage() {
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: rowData = [] } = useOrdersQuery("main");
-	const { data: bookingRowData = [] } = useOrdersQuery("booking", { enabled: isBookingModalOpen });
-	const { data: archiveRowData = [] } = useOrdersQuery("archive", { enabled: isBookingModalOpen });
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("main");
 	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("main");
 	const saveOrderMutation = useSaveOrderMutation();
@@ -344,8 +342,6 @@ export default function MainSheetPage() {
 					onOpenChange={setIsBookingModalOpen}
 					onConfirm={handleConfirmBooking}
 					selectedRows={selectedRows}
-					bookingData={bookingRowData}
-					archiveData={archiveRowData}
 				/>
 			)}
 

@@ -23,8 +23,6 @@ export const useOrdersPageHandlers = () => {
 	// 1. Data & Store
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
-	const { data: bookingRowData = [] } = useOrdersQuery("booking", { enabled: isBookingModalOpen });
-	const { data: archiveRowData = [] } = useOrdersQuery("archive", { enabled: isBookingModalOpen });
 	const saveOrderMutation = useSaveOrderMutation();
 	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("orders");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("orders");
@@ -376,8 +374,6 @@ export const useOrdersPageHandlers = () => {
 	return {
 		// Data
 		ordersRowData,
-		bookingRowData,
-		archiveRowData,
 
 		// State
 		gridApi,
