@@ -163,7 +163,7 @@ export default function ArchivePage() {
 			handleAttachClick,
 		);
 		return [
-			...baseColumns.slice(0, 3),
+			...baseColumns.slice(0, 2),
 			{
 				headerName: "BOOKING",
 				field: "bookingDate",
@@ -177,7 +177,7 @@ export default function ArchivePage() {
 					}
 				},
 			},
-			...baseColumns.slice(3),
+			...baseColumns.slice(2),
 		];
 	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
 

@@ -34,20 +34,6 @@ export function useColumnDefs(
 	// Common column definitions
 	const baseColumns: ColDef[] = [
 		{
-			headerName: "",
-			colId: "selection",
-			field: "id",
-			width: 50,
-			maxWidth: 50,
-			sortable: false,
-			filter: false,
-			resizable: false,
-			pinned: "left",
-			suppressHeaderMenuButton: true,
-			valueFormatter: () => "",
-			cellClass: "flex items-center justify-center",
-		},
-		{
 			headerName: "ACTIONS",
 			colId: "actions",
 			field: "id",

@@ -17,53 +17,51 @@ vi.mock("@/store/useStore", () => ({
 
 describe("Grid Column Configuration Selection Fix", () => {
 	describe("getBaseColumns", () => {
-		it("should have a selection column", () => {
+		it("should have actions as the first column, selection is now handled natively", () => {
 			const columns = getBaseColumns();
-			const selectionCol = columns.find((col) => col.colId === "selection");
-			expect(selectionCol).toBeDefined();
-			expect(selectionCol?.headerName).toBe("");
-			expect(selectionCol?.width).toBe(50);
+			const firstCol = columns[0];
+			expect(firstCol).toBeDefined();
+			expect(firstCol?.headerName).toBe("ACTIONS");
+			expect(firstCol?.colId).toBe("actions");
 		});
 	});
 
 	describe("useColumnDefs hook", () => {
-		it("should include selection column for all grid types", () => {
+		it("should have actions as the first column for all grid types", () => {
 			const gridTypes: Array<
 				"main" | "orders" | "booking" | "archive" | "call"
 			> = ["main", "orders", "booking", "archive", "call"];
 
 			for (const type of gridTypes) {
 				const { result } = renderHook(() => useColumnDefs(type));
-				const selectionCol = result.current.find(
-					(col) => col.colId === "selection",
-				);
+				const firstCol = result.current[0];
 
 				expect(
-					selectionCol,
-					`Selection column missing for type ${type}`,
+					firstCol,
+					`Actions column missing as first column for type ${type}`,
 				).toBeDefined();
-				expect(selectionCol?.width).toBe(50);
+				expect(firstCol?.colId).toBe("actions");
 			}
 		});
 	});
 
 	describe("Other column getters", () => {
-		it("getOrdersColumns should include selection column", () => {
+		it("getOrdersColumns should include actions column as first", () => {
 			const columns = getOrdersColumns([]);
-			const selectionCol = columns.find((col) => col.colId === "selection");
-			expect(selectionCol).toBeDefined();
+			const firstCol = columns[0];
+			expect(firstCol?.colId).toBe("actions");
 		});
 
-		it("getMainSheetColumns should include selection column", () => {
+		it("getMainSheetColumns should include actions column as first", () => {
 			const columns = getMainSheetColumns([]);
-			const selectionCol = columns.find((col) => col.colId === "selection");
-			expect(selectionCol).toBeDefined();
+			const firstCol = columns[0];
+			expect(firstCol?.colId).toBe("actions");
 		});
 
-		it("getBookingColumns should include selection column", () => {
+		it("getBookingColumns should include actions column as first", () => {
 			const columns = getBookingColumns();
-			const selectionCol = columns.find((col) => col.colId === "selection");
-			expect(selectionCol).toBeDefined();
+			const firstCol = columns[0];
+			expect(firstCol?.colId).toBe("actions");
 		});
 	});
 });

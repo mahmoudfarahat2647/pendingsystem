@@ -250,8 +250,8 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	const rowSelectionConfig = useMemo(
 		() => ({
 			mode: "multiRow" as const,
-			checkboxes: false,
-			headerCheckbox: false,
+			checkboxes: true,
+			headerCheckbox: true,
 			enableClickSelection: true,
 			selectAll: "filtered" as const,
 		}),

@@ -19,20 +19,6 @@ export const getBaseColumns = (
 	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
 	{
-		headerName: "",
-		colId: "selection",
-		field: "id",
-		width: 50,
-		maxWidth: 50,
-		sortable: false,
-		filter: false,
-		resizable: false,
-		pinned: "left",
-		suppressHeaderMenuButton: true,
-		valueFormatter: () => "", // Hide the ID number
-		cellClass: "flex items-center justify-center",
-	},
-	{
 		headerName: "ACTIONS",
 		colId: "actions",
 		// field: "id", // REMOVED: Using ID suppresses updates if ID doesn't change

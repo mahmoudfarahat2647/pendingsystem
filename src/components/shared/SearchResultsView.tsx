@@ -250,9 +250,9 @@ export const SearchResultsView = () => {
 					width: 100,
 				};
 
-		// Filter out 'selection' and 'actions' from baseCols as we handle them differently
+		// Filter out 'actions' from baseCols as we handle them differently
 		const remainingBaseCols = baseCols.filter(
-			(col) => col.colId !== "selection" && col.colId !== "actions",
+			(col) => col.colId !== "actions",
 		);
 
 		return [

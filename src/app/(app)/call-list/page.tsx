@@ -126,9 +126,9 @@ export default function CallListPage() {
 			handleAttachClick,
 		);
 		return [
-			...baseColumns.slice(0, 3),
+			...baseColumns.slice(0, 2),
 			{ headerName: "BOOKING", field: "bookingDate", width: 120 },
-			...baseColumns.slice(3),
+			...baseColumns.slice(2),
 		];
 	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
 
