@@ -24,10 +24,6 @@ interface BookingCalendarModalProps {
 	selectedRows: PendingRow[];
 	initialSearchTerm?: string;
 	bookingOnly?: boolean;
-	/** Booking data from React Query - if not provided, falls back to Zustand store */
-	bookingData?: PendingRow[];
-	/** Archive data from React Query - if not provided, falls back to Zustand store */
-	archiveData?: PendingRow[];
 }
 
 export const BookingCalendarModal = ({
@@ -37,8 +33,6 @@ export const BookingCalendarModal = ({
 	selectedRows,
 	initialSearchTerm = "",
 	bookingOnly = false,
-	bookingData,
-	archiveData,
 }: BookingCalendarModalProps) => {
 	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
 	const {
@@ -62,7 +56,7 @@ export const BookingCalendarModal = ({
 		activeCustomerHistoryDates,
 		handleDateSelect,
 		isDateInPast,
-	} = useBookingCalendar({ open, initialSearchTerm, bookingData, archiveData });
+	} = useBookingCalendar({ open, initialSearchTerm });
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>

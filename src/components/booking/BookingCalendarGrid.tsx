@@ -23,7 +23,6 @@ interface BookingCalendarGridProps {
 	searchQuery: string;
 	searchMatchDates: Set<string>;
 	activeCustomerDateSet: Set<string>;
-	activeBookingRep?: PendingRow;
 }
 
 export const BookingCalendarGrid = ({
@@ -35,7 +34,6 @@ export const BookingCalendarGrid = ({
 	searchQuery,
 	searchMatchDates,
 	activeCustomerDateSet,
-	activeBookingRep,
 }: BookingCalendarGridProps) => {
 	const monthStart = startOfMonth(currentMonth);
 	const monthEnd = endOfMonth(monthStart);

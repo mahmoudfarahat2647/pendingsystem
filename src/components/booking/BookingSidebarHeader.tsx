@@ -70,13 +70,18 @@ export const BookingSidebarHeader = ({
 					/>
 				</div>
 
-				<Select value={preBookingStatus} onValueChange={setPreBookingStatus}>
+				<Select
+					value={preBookingStatus === "" ? "__none__" : preBookingStatus}
+					onValueChange={(val) =>
+						setPreBookingStatus(val === "__none__" ? "" : val)
+					}
+				>
 					<SelectTrigger className="h-9 w-full bg-white/[0.02] border-indigo-500/20 text-gray-300 hover:bg-white/5 focus:ring-indigo-500/30 dropdown-trigger">
 						<SelectValue placeholder="Initial Status (Optional)" />
 					</SelectTrigger>
 					<SelectContent className="bg-[#0f0f11] border-white/10 text-gray-300 fixed-dropdown-content z-dropdown">
 						<SelectItem
-							value=""
+							value="__none__"
 							className="focus:bg-white/5 focus:text-white cursor-pointer"
 						>
 							<div className="flex items-center gap-2">

@@ -1,15 +1,11 @@
 import { format, isAfter, subYears } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 
 interface UseBookingCalendarOptions {
 	open: boolean;
 	initialSearchTerm: string;
-	/** Optional booking data from React Query - if not provided, falls back to Zustand store */
-	bookingData?: PendingRow[];
-	/** Optional archive data from React Query - if not provided, falls back to Zustand store */
-	archiveData?: PendingRow[];
 }
 
 /**
@@ -27,18 +23,10 @@ function parseLocalDate(dateStr: string | undefined): Date {
 export function useBookingCalendar({
 	open,
 	initialSearchTerm,
-	bookingData,
-	archiveData,
 }: UseBookingCalendarOptions) {
-	const storeBookingRowData = useAppStore((state) => state.bookingRowData);
-	const storeArchiveRowData = useAppStore((state) => state.archiveRowData);
-	const _updateBookingStatus = useAppStore(
-		(state) => state.updateBookingStatus,
-	);
-
-	// Use provided data if available, otherwise fall back to store data
-	const bookingRowData = bookingData ?? storeBookingRowData;
-	const archiveRowData = archiveData ?? storeArchiveRowData;
+	// Directly fetch the required data inside the hook to prevent prop-drilling
+	const { data: bookingRowData = [] } = useOrdersQuery("booking");
+	const { data: archiveRowData = [] } = useOrdersQuery("archive");
 
 	const [currentMonth, setCurrentMonth] = useState(new Date());
 	const [selectedDate, setSelectedDate] = useState(new Date());
@@ -103,7 +91,10 @@ export function useBookingCalendar({
 	const bookingsByDateMap = useMemo(() => {
 		const map: Record<string, PendingRow[]> = {};
 		allBookings.forEach((b) => {
-			if (b.bookingDate && isAfter(parseLocalDate(b.bookingDate), twoYearsAgo)) {
+			if (
+				b.bookingDate &&
+				isAfter(parseLocalDate(b.bookingDate), twoYearsAgo)
+			) {
 				if (!map[b.bookingDate]) map[b.bookingDate] = [];
 				// Only add if this VIN is not already in the list for this date
 				const vinExists = map[b.bookingDate].some(
