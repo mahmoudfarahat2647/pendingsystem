@@ -239,8 +239,6 @@ export const SearchResultsView = () => {
 		const configuredActionsCol: ColDef<PendingRow> = actionsCol
 			? {
 					...actionsCol,
-					checkboxSelection: true,
-					headerCheckboxSelection: false, // User requested removal of header checkbox
 					pinned: "left", // User requested first position
 				}
 			: {
@@ -249,8 +247,6 @@ export const SearchResultsView = () => {
 					field: "id", // Fallback field
 					colId: "actions",
 					pinned: "left",
-					checkboxSelection: true,
-					headerCheckboxSelection: false,
 					width: 100,
 				};
 

@@ -19,7 +19,6 @@ function parseLocalDate(dateStr: string | undefined): Date {
 	return new Date(year, month - 1, day);
 }
 
-
 export function useBookingCalendar({
 	open,
 	initialSearchTerm,

@@ -59,7 +59,9 @@ import type { PendingRow } from "@/types";
 export default function CallListPage() {
 	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("call-list");
+	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: callRowData = [] } = useOrdersQuery("call");
+
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("call");
 	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("call");
 	const saveOrderMutation = useSaveOrderMutation();
@@ -78,7 +80,6 @@ export default function CallListPage() {
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
-	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 

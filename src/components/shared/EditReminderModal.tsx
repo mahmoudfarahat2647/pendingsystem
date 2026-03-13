@@ -8,6 +8,7 @@ import DateTimePicker from "@/components/ui/date-time-picker";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -116,6 +117,9 @@ export const EditReminderModal = ({
 						<Bell className="h-5 w-5 text-renault-yellow" />
 						Set Reminder
 					</DialogTitle>
+					<DialogDescription className="sr-only">
+						Set or update a reminder date and subject.
+					</DialogDescription>
 					<div className="flex-1" />
 				</DialogHeader>
 

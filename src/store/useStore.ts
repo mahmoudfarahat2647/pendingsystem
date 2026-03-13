@@ -51,7 +51,6 @@ export const useAppStore = create<CombinedStore>()(
 				repairSystems: state.repairSystems,
 				isLocked: state.isLocked,
 				notes: state.notes,
-				todos: state.todos,
 				gridStates: state.gridStates,
 				dismissedManagedNotificationKeys:
 					state.dismissedManagedNotificationKeys,

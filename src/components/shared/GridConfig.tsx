@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { ColDef, ValueFormatterParams } from "ag-grid-community";
 import { format } from "date-fns";
@@ -22,9 +22,6 @@ export const getBaseColumns = (
 		headerName: "",
 		colId: "selection",
 		field: "id",
-		checkboxSelection: true,
-		headerCheckboxSelection: true,
-		headerCheckboxSelectionFilteredOnly: true,
 		width: 50,
 		maxWidth: 50,
 		sortable: false,
@@ -49,8 +46,6 @@ export const getBaseColumns = (
 			// to optimize away the re-render. DO NOT revert to field: "id".
 			return `${data.id}_${data.actionNote ? "note" : ""}_${data.reminder ? "rem" : ""}_${data.hasAttachment ? "att" : ""}`;
 		},
-		checkboxSelection: false,
-		headerCheckboxSelection: false,
 		cellRenderer: ActionCellRenderer,
 		cellRendererParams: {
 			onNoteClick,

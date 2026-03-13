@@ -40,7 +40,6 @@ const initialState: UIState = {
 	reminderTemplates: ["Follow up call", "Check part status", "Confirm booking"],
 	bookingTemplates: ["Morning slot", "Afternoon slot", "Next available"],
 	reasonTemplates: ["Wrong part", "Customer cancelled", "Part damaged"],
-	todos: [],
 	notes: [],
 	partStatuses: defaultPartStatuses,
 	bookingStatuses: defaultBookingStatuses,
@@ -89,37 +88,6 @@ export const createUISlice: StateCreator<
 	removeRepairSystem: (system) => {
 		set((state) => ({
 			repairSystems: state.repairSystems.filter((s) => s !== system),
-		}));
-	},
-
-	addTodo: (text) => {
-		get().pushUndo();
-		set((state) => ({
-			todos: [
-				...state.todos,
-				{
-					id: generateId(),
-					text,
-					completed: false,
-					createdAt: new Date().toISOString(),
-				},
-			],
-		}));
-	},
-
-	toggleTodo: (id) => {
-		get().pushUndo();
-		set((state) => ({
-			todos: state.todos.map((todo) =>
-				todo.id === id ? { ...todo, completed: !todo.completed } : todo,
-			),
-		}));
-	},
-
-	deleteTodo: (id) => {
-		get().pushUndo();
-		set((state) => ({
-			todos: state.todos.filter((todo) => todo.id !== id),
 		}));
 	},
 
