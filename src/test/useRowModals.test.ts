@@ -25,7 +25,7 @@ describe("useRowModals Stage Routing", () => {
 		actionNote: "initial note",
 		vin: "VIN123456789",
 		customerName: "Test Customer",
-	} as any;
+	} as unknown as import("@/types").PendingRow;
 
 	const mockOnUpdate = vi.fn();
 	const mockOnArchive = vi.fn();

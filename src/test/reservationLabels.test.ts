@@ -32,7 +32,7 @@ describe("printReservationLabels", () => {
 			onload: null,
 		};
 
-		mockWindowOpen.mockReturnValue(mockPrintWindow as any);
+		mockWindowOpen.mockReturnValue(mockPrintWindow as unknown as Window);
 	});
 
 	it("should show alert when no items are selected", () => {
@@ -129,8 +129,8 @@ describe("printReservationLabels", () => {
 
 	it("should default to pendingsystem branding when company is null/undefined", () => {
 		const testCases = [
-			createMockRow("null-company", null as any),
-			createMockRow("undefined-company", undefined as any),
+			createMockRow("null-company", null as unknown as string),
+			createMockRow("undefined-company", undefined as unknown as string),
 			createMockRow("empty-company", ""),
 		];
 

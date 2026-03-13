@@ -10,9 +10,12 @@ import {
 
 // Mock the store
 vi.mock("@/store/useStore", () => ({
-	useAppStore: Object.assign((fn: any) => fn({ bookingStatuses: [] }), {
-		getState: () => ({ bookingStatuses: [] }),
-	}),
+	useAppStore: Object.assign(
+		(fn: (state: unknown) => unknown) => fn({ bookingStatuses: [] }),
+		{
+			getState: () => ({ bookingStatuses: [] }),
+		},
+	),
 }));
 
 describe("Grid Column Configuration Selection Fix", () => {

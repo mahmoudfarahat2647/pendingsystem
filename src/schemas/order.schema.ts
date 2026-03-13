@@ -160,6 +160,5 @@ export const PendingRowSchema = z
 	});
 
 // Infer types from schemas
-type Status = z.infer<typeof StatusSchema>;
 export type PartEntry = z.infer<typeof PartEntrySchema>;
 export type PendingRow = z.infer<typeof PendingRowSchema>;

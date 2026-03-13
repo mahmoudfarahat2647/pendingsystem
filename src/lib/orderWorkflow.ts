@@ -148,7 +148,9 @@ export function findSameOrderDuplicates(parts: PartEntry[]): PartEntry[] {
 		if (!key) continue;
 
 		if (seen.has(key)) {
-			duplicates.add(seen.get(key)!);
+			duplicates.add(
+				seen.get(key) as import("@/schemas/order.schema").PartEntry,
+			);
 			duplicates.add(part);
 		} else {
 			seen.set(key, part);
@@ -168,7 +170,7 @@ export function findSameOrderDuplicateIndices(parts: PartEntry[]): number[] {
 		if (!key) continue;
 
 		if (seen.has(key)) {
-			const firstIndex = seen.get(key)!;
+			const firstIndex = seen.get(key) as number;
 			duplicateIndices.add(firstIndex);
 			duplicateIndices.add(i);
 		} else {

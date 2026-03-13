@@ -14,7 +14,6 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 		customerName = "-",
 		vin = "-",
 		mobile = "-",
-		cntrRdg = "-",
 		model = "-",
 		partNumber = "-",
 		description = "-",

@@ -169,15 +169,15 @@ export default function OrdersPage() {
 										// [CRITICAL] AUTO-MOVE FEATURE - DO NOT REMOVE
 										if (newStatus === "Arrived" && vin) {
 											const vinParts = ordersRowData.filter(
-												(r: any) => r.vin === vin,
+												(r) => r.vin === vin,
 											);
-											const allArrived = vinParts.every((r: any) => {
+											const allArrived = vinParts.every((r) => {
 												if (r.id === params.data.id) return true;
 												return r.partStatus === "Arrived";
 											});
 
 											if (allArrived && vinParts.length > 0) {
-												const ids = vinParts.map((p: any) => p.id);
+												const ids = vinParts.map((p) => p.id);
 												await bulkUpdateStageMutation.mutateAsync({
 													ids,
 													stage: "call",

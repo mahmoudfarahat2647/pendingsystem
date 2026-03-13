@@ -122,7 +122,11 @@ describe("exportUtils", () => {
 	it("should export only Renault rows when Renault is selected", () => {
 		exportAllSystemDataCSV(mockData, "Renault");
 
-		const mockLink = (document.createElement as any).mock.results[0].value;
+		const mockLink = (
+			document.createElement as unknown as {
+				mock: { results: { value: HTMLElement }[] };
+			}
+		).mock.results[0].value;
 		expect(mockLink.setAttribute).toHaveBeenCalledWith(
 			"download",
 			expect.stringMatching(/^renault_system_all_data_.*\.csv$/),
@@ -137,7 +141,11 @@ describe("exportUtils", () => {
 	it("should export only Zeekr rows when Zeekr is selected", () => {
 		exportAllSystemDataCSV(mockData, "Zeekr");
 
-		const mockLink = (document.createElement as any).mock.results[0].value;
+		const mockLink = (
+			document.createElement as unknown as {
+				mock: { results: { value: HTMLElement }[] };
+			}
+		).mock.results[0].value;
 		expect(mockLink.setAttribute).toHaveBeenCalledWith(
 			"download",
 			expect.stringMatching(/^zeekr_system_all_data_.*\.csv$/),

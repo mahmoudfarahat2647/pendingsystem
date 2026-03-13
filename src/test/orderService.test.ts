@@ -25,14 +25,13 @@ describe("orderService", () => {
 
 	it("should fetch orders for a specific stage", async () => {
 		const mockData = [{ id: "1", stage: "main" }];
-		// biome-ignore lint/suspicious/noExplicitAny: Mocking Supabase client
-		(supabase.from as unknown as { mockReturnValue: Function }).mockReturnValue(
-			{
-				select: vi.fn().mockReturnThis(),
-				order: vi.fn().mockReturnThis(),
-				eq: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-			},
-		);
+		(
+			supabase.from as unknown as { mockReturnValue: (arg: unknown) => unknown }
+		).mockReturnValue({
+			select: vi.fn().mockReturnThis(),
+			order: vi.fn().mockReturnThis(),
+			eq: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+		});
 
 		const result = await orderService.getOrders("main");
 
@@ -42,15 +41,14 @@ describe("orderService", () => {
 
 	it("should update order stage", async () => {
 		const mockData = { id: "1", stage: "archive" };
-		// biome-ignore lint/suspicious/noExplicitAny: Mocking Supabase client
-		(supabase.from as unknown as { mockReturnValue: Function }).mockReturnValue(
-			{
-				update: vi.fn().mockReturnThis(),
-				eq: vi.fn().mockReturnThis(),
-				select: vi.fn().mockReturnThis(),
-				single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-			},
-		);
+		(
+			supabase.from as unknown as { mockReturnValue: (arg: unknown) => unknown }
+		).mockReturnValue({
+			update: vi.fn().mockReturnThis(),
+			eq: vi.fn().mockReturnThis(),
+			select: vi.fn().mockReturnThis(),
+			single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+		});
 
 		const result = await orderService.updateOrderStage("1", "archive");
 
@@ -59,15 +57,14 @@ describe("orderService", () => {
 
 	it("should delete an order with valid UUID", async () => {
 		const mockId = "123e4567-e89b-42d3-a456-426614174000"; // Valid v4 UUID
-		// biome-ignore lint/suspicious/noExplicitAny: Mocking Supabase client
 		const mockDelete = vi.fn().mockReturnThis();
 		const mockEq = vi.fn().mockResolvedValue({ error: null });
-		(supabase.from as unknown as { mockReturnValue: Function }).mockReturnValue(
-			{
-				delete: mockDelete,
-				eq: mockEq,
-			},
-		);
+		(
+			supabase.from as unknown as { mockReturnValue: (arg: unknown) => unknown }
+		).mockReturnValue({
+			delete: mockDelete,
+			eq: mockEq,
+		});
 
 		await orderService.deleteOrder(mockId);
 

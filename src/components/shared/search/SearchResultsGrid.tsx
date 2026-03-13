@@ -5,9 +5,11 @@ import { AgGridReact } from "ag-grid-react";
 import { gridTheme } from "@/lib/ag-grid-setup";
 
 interface SearchResultsGridProps {
-	rowData: any[];
+	rowData: import("@/types").PendingRow[];
 	columnDefs: ColDef[];
-	onCellValueChanged: (event: any) => void;
+	onCellValueChanged: (
+		event: import("ag-grid-community").CellValueChangedEvent,
+	) => void;
 }
 
 export const SearchResultsGrid = ({

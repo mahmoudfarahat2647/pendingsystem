@@ -35,7 +35,6 @@ export const IdentityFields = ({
 	errors,
 	getFieldError,
 	isEditMode,
-	validationMode,
 }: IdentityFieldsProps) => {
 	// Store: models and repair systems (local concern for EditableSelect)
 	const models = useAppStore((state) => state.models);

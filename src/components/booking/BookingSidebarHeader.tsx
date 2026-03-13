@@ -71,7 +71,7 @@ export const BookingSidebarHeader = ({
 				</div>
 
 				<Select
-					value={preBookingStatus === "" ? "__none__" : preBookingStatus}
+					value={preBookingStatus || undefined}
 					onValueChange={(val) =>
 						setPreBookingStatus(val === "__none__" ? "" : val)
 					}

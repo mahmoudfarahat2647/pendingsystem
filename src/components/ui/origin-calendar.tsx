@@ -48,20 +48,22 @@ function Calendar({
 	const mergedClassNames: typeof defaultClassNames = Object.keys(
 		defaultClassNames,
 	).reduce(
-		(acc, key) => ({
-			...acc,
-			[key]: classNames?.[key as keyof typeof classNames]
+		(acc, key) => {
+			acc[key as keyof typeof defaultClassNames] = classNames?.[
+				key as keyof typeof classNames
+			]
 				? cn(
 						defaultClassNames[key as keyof typeof defaultClassNames],
 						classNames[key as keyof typeof classNames],
 					)
-				: defaultClassNames[key as keyof typeof defaultClassNames],
-		}),
-		{} as typeof defaultClassNames,
-	);
+				: defaultClassNames[key as keyof typeof defaultClassNames];
+			return acc;
+		},
+		{} as Record<string, string>,
+	) as typeof defaultClassNames;
 
 	const defaultComponents = {
-		Chevron: (props: any) => {
+		Chevron: (props: import("react-day-picker").ChevronProps) => {
 			if (props.orientation === "left") {
 				return (
 					<ChevronLeft
