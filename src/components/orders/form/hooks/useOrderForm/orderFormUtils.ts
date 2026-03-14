@@ -1,0 +1,53 @@
+import { normalizeCompanyName } from "@/lib/company";
+import { DEFAULT_COMPANY } from "@/lib/ordersValidationConstants";
+import { generateId } from "@/lib/utils";
+import type { PartEntry, PendingRow } from "@/types";
+import type { FormData } from "../../types";
+
+/** Builds the initial FormData from the first selected row (edit mode) or returns defaults. */
+export function buildInitialFormData(first: PendingRow): FormData {
+	return {
+		customerName: first.customerName || "",
+		vin: first.vin || "",
+		mobile: first.mobile || "",
+		cntrRdg:
+			first.cntrRdg !== null && first.cntrRdg !== undefined
+				? String(first.cntrRdg)
+				: "",
+		model: first.model || "",
+		repairSystem: first.repairSystem || "",
+		startWarranty:
+			first.startWarranty || new Date().toISOString().split("T")[0],
+		requester: first.requester || "",
+		sabNumber: first.sabNumber || "",
+		acceptedBy: first.acceptedBy || "",
+		company: normalizeCompanyName(first.company) || DEFAULT_COMPANY,
+	};
+}
+
+/** Builds the default empty FormData. */
+export function buildEmptyFormData(): FormData {
+	return {
+		customerName: "",
+		vin: "",
+		mobile: "",
+		cntrRdg: "",
+		model: "",
+		repairSystem: "",
+		startWarranty: new Date().toISOString().split("T")[0],
+		requester: "",
+		sabNumber: "",
+		acceptedBy: "",
+		company: DEFAULT_COMPANY,
+	};
+}
+
+/** Builds the initial parts list from all selected rows (edit mode). */
+export function buildInitialParts(selectedRows: PendingRow[]): PartEntry[] {
+	return selectedRows.map((row) => ({
+		id: generateId(),
+		partNumber: row.partNumber || "",
+		description: row.description || "",
+		rowId: row.id,
+	}));
+}

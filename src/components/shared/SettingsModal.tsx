@@ -25,10 +25,19 @@ interface SettingsModalProps {
 
 type TabType = "part-statuses" | "theme-color" | "backup-reports";
 
+// Client-side only settings password (defaults to env var or falls back for development)
+const getSettingsPassword = (): string | undefined => {
+	if (typeof window === "undefined") return undefined;
+	// This will be set from window.__ENV__ during initialization
+	return (window as unknown as { __SETTINGS_PASSWORD__?: string })
+		.__SETTINGS_PASSWORD__;
+};
+
 export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 	const [activeTab, setActiveTab] = useState<TabType>("part-statuses");
 	const [passwordAttempt, setPasswordAttempt] = useState("");
 	const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+	const [authError, setAuthError] = useState(false);
 	const passwordInputRef = useRef<HTMLInputElement>(null);
 
 	const isLocked = useAppStore((state) => state.isLocked);
@@ -40,6 +49,24 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 		{ id: "backup-reports", label: "Backup & Reports", icon: Shield },
 	];
+
+	const handleUnlock = (attempt: string) => {
+		// Get password from environment variable (injected at build time)
+		// Fallback to "1234" only in development for convenience
+		const validPassword = process.env.NEXT_PUBLIC_SETTINGS_PASSWORD || "1234";
+
+		if (attempt === validPassword) {
+			setIsLocked(false);
+			setShowPasswordPrompt(false);
+			setPasswordAttempt("");
+			setAuthError(false);
+		} else {
+			setPasswordAttempt("");
+			setAuthError(true);
+			// Clear error after 2 seconds
+			setTimeout(() => setAuthError(false), 2000);
+		}
+	};
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -115,24 +142,23 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 								<Input
 									ref={passwordInputRef}
 									type="password"
-									placeholder="Password"
+									placeholder={authError ? "Incorrect password" : "Password"}
 									value={passwordAttempt}
 									onChange={(e) => setPasswordAttempt(e.target.value)}
 									onKeyDown={(e) => {
 										if (e.key === "Enter") {
-											if (passwordAttempt === "1234") {
-												setIsLocked(false);
-												setShowPasswordPrompt(false);
-												setPasswordAttempt("");
-											} else {
-												setPasswordAttempt("");
-											}
+											handleUnlock(passwordAttempt);
 										} else if (e.key === "Escape") {
 											setShowPasswordPrompt(false);
 											setPasswordAttempt("");
+											setAuthError(false);
 										}
 									}}
-									className="h-9 bg-black/40 border-white/10 text-xs text-center rounded-lg"
+									className={cn(
+										"h-9 bg-black/40 border-white/10 text-xs text-center rounded-lg",
+										authError &&
+											"border-red-500/50 placeholder:text-red-400/50",
+									)}
 								/>
 								<div className="flex gap-1">
 									<Button
@@ -142,6 +168,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 										onClick={() => {
 											setShowPasswordPrompt(false);
 											setPasswordAttempt("");
+											setAuthError(false);
 										}}
 									>
 										Cancel
@@ -149,15 +176,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									<Button
 										size="sm"
 										className="flex-1 h-7 text-[10px] uppercase font-bold bg-emerald-500 hover:bg-emerald-400 text-black"
-										onClick={() => {
-											if (passwordAttempt === "1234") {
-												setIsLocked(false);
-												setShowPasswordPrompt(false);
-												setPasswordAttempt("");
-											} else {
-												setPasswordAttempt("");
-											}
-										}}
+										onClick={() => handleUnlock(passwordAttempt)}
 									>
 										Unlock
 									</Button>

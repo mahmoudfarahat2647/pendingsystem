@@ -246,18 +246,6 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 		};
 	}, [enablePagination, rowData.length, pageSize]);
 
-	// Row selection configuration for v32.2+
-	const rowSelectionConfig = useMemo(
-		() => ({
-			mode: "multiRow" as const,
-			checkboxes: true,
-			headerCheckbox: true,
-			enableClickSelection: true,
-			selectAll: "filtered" as const,
-		}),
-		[],
-	);
-
 	const style = useMemo(() => ({ height, width: "100%" }), [height]);
 
 	return (
@@ -284,8 +272,6 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				onColumnGroupOpened={handleSaveState}
 				// Default options spread
 				{...defaultGridOptions}
-				// Row Selection
-				rowSelection={rowSelectionConfig}
 				// Pagination
 				{...paginationSettings}
 				// Custom components

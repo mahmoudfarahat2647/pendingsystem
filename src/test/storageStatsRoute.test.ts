@@ -6,6 +6,7 @@ vi.mock("next/server", () => ({
 		json: (body: unknown, init?: { status?: number }) => ({
 			body,
 			status: init?.status ?? 200,
+			headers: new Map(),
 		}),
 	},
 }));
@@ -25,6 +26,17 @@ vi.mock("@supabase/supabase-js", () => ({
 	}),
 }));
 
+// Mock rate limiter
+vi.mock("@/lib/rateLimit", () => ({
+	rateLimit: () => ({
+		success: true,
+		limit: 100,
+		remaining: 99,
+		reset: Date.now() + 60000,
+	}),
+	addRateLimitHeaders: (response: Response) => response,
+}));
+
 describe("GET /api/storage-stats", () => {
 	const originalEnv = process.env;
 
@@ -42,7 +54,11 @@ describe("GET /api/storage-stats", () => {
 
 	async function callGET() {
 		const { GET } = await import("../app/api/storage-stats/route");
-		return GET();
+		// Create a mock Request object
+		const mockRequest = new Request("http://localhost/api/storage-stats", {
+			method: "GET",
+		});
+		return GET(mockRequest);
 	}
 
 	it("should return 500 when env vars are missing", async () => {

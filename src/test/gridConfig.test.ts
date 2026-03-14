@@ -1,5 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { defaultGridOptions } from "../components/grid/config/defaultOptions";
 import { useColumnDefs } from "../components/grid/hooks/useColumnDefs";
 import {
 	getBaseColumns,
@@ -16,8 +17,20 @@ vi.mock("@/store/useStore", () => ({
 }));
 
 describe("Grid Column Configuration Selection Fix", () => {
+	describe("Native Checkbox Selection", () => {
+		it("should enable native checkbox selection with header checkbox", () => {
+			const selection = defaultGridOptions.rowSelection;
+			expect(selection).toBeDefined();
+			expect(typeof selection).toBe("object");
+			expect((selection as { checkboxes?: boolean }).checkboxes).toBe(true);
+			expect((selection as { headerCheckbox?: boolean }).headerCheckbox).toBe(
+				true,
+			);
+		});
+	});
+
 	describe("getBaseColumns", () => {
-		it("should have actions as the first column, selection is now handled natively", () => {
+		it("ACTIONS column should be the second column (first user-defined after native checkbox)", () => {
 			const columns = getBaseColumns();
 			const firstCol = columns[0];
 			expect(firstCol).toBeDefined();
@@ -27,7 +40,7 @@ describe("Grid Column Configuration Selection Fix", () => {
 	});
 
 	describe("useColumnDefs hook", () => {
-		it("should have actions as the first column for all grid types", () => {
+		it("ACTIONS column should be the second column (first user-defined) for all grid types", () => {
 			const gridTypes: Array<
 				"main" | "orders" | "booking" | "archive" | "call"
 			> = ["main", "orders", "booking", "archive", "call"];
@@ -46,19 +59,19 @@ describe("Grid Column Configuration Selection Fix", () => {
 	});
 
 	describe("Other column getters", () => {
-		it("getOrdersColumns should include actions column as first", () => {
+		it("getOrdersColumns: ACTIONS column should be the second column (first user-defined)", () => {
 			const columns = getOrdersColumns([]);
 			const firstCol = columns[0];
 			expect(firstCol?.colId).toBe("actions");
 		});
 
-		it("getMainSheetColumns should include actions column as first", () => {
+		it("getMainSheetColumns: ACTIONS column should be the second column (first user-defined)", () => {
 			const columns = getMainSheetColumns([]);
 			const firstCol = columns[0];
 			expect(firstCol?.colId).toBe("actions");
 		});
 
-		it("getBookingColumns should include actions column as first", () => {
+		it("getBookingColumns: ACTIONS column should be the second column (first user-defined)", () => {
 			const columns = getBookingColumns();
 			const firstCol = columns[0];
 			expect(firstCol?.colId).toBe("actions");
