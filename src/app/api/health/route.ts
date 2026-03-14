@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { env } from "@/lib/env";
+
 export const runtime = "nodejs";
 
 /**
@@ -19,14 +21,13 @@ export async function GET() {
 		checks: {
 			api: "ok",
 			database: "pending",
-			storage: "pending",
 		},
 	};
 
 	try {
 		// Check Supabase connectivity
-		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-		const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+		const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+		const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 		if (!supabaseUrl || !supabaseAnonKey) {
 			health.checks.database = "missing_config";
@@ -35,12 +36,6 @@ export async function GET() {
 			// Simple connectivity check - just verify env vars are present
 			// Full DB check would require a service role client which we don't want to expose
 			health.checks.database = "ok";
-		}
-
-		// Check storage
-		const storageBucket = process.env.NEXT_PUBLIC_SUPABASE_URL;
-		if (storageBucket) {
-			health.checks.storage = "ok";
 		}
 
 		// Determine overall status

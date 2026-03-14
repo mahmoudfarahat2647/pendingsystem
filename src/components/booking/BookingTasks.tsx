@@ -6,6 +6,12 @@ import {
 	PlayfulTodolist,
 } from "@/components/ui/playful-todolist";
 
+/**
+ * A temporary checklist component for the booking process.
+ * Note: The checked state is held in memory only (via useBookingCalendar's
+ * PlayfulTodolist) and will reset when refreshing the page or switching time slots.
+ * This is intentional - state is not persisted to Supabase or localStorage.
+ */
 export const BookingTasks = () => {
 	const tasks = [
 		{

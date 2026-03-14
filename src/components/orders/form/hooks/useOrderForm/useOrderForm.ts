@@ -5,20 +5,19 @@ import { generateId } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 import type { FormData } from "../../types";
+import { useOrderFormState } from "../useOrderFormState";
 import {
 	buildEmptyFormData,
 	buildInitialFormData,
 	buildInitialParts,
 } from "./orderFormUtils";
 import { useOrderParts } from "./useOrderParts";
-import { useOrderValidation } from "./useOrderValidation";
 import { useOrderSubmit } from "./useOrderSubmit";
-import { useOrderFormState } from "../useOrderFormState";
+import { useOrderValidation } from "./useOrderValidation";
 
 // ---------------------------------------------------------------------------
 // Inline helpers — not exported, only used by this hook
 // ---------------------------------------------------------------------------
-
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -52,8 +51,8 @@ export const useOrderForm = ({
 	const clearCurrentEditVin = useAppStore((state) => state.clearCurrentEditVin);
 
 	// Core form state
-	const { formData, setFormData, isMultiSelection, isHighMileage } = useOrderFormState(selectedRows);
-
+	const { formData, setFormData, isMultiSelection, isHighMileage } =
+		useOrderFormState(selectedRows);
 
 	// Parts state
 	const {
@@ -132,8 +131,6 @@ export const useOrderForm = ({
 			clearCurrentEditVin();
 		}
 	}, [open, isEditMode, selectedRows, setCurrentEditVin, clearCurrentEditVin]);
-
-
 
 	return {
 		// Form state

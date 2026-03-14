@@ -20,6 +20,13 @@ function parseLocalDate(dateStr: string | undefined): Date {
 	return new Date(year, month - 1, day);
 }
 
+/**
+ * Manages the booking calendar state including date selection, search, and booking details.
+ *
+ * Note: Any UI state managed by this hook (e.g., PlayfulTodolist checkedState) is held in memory only
+ * and will reset when refreshing the page or switching time slots. This is intentional -
+ * the checklist is meant to be a temporary guide during the booking process only.
+ */
 export function useBookingCalendar({
 	open,
 	initialSearchTerm,

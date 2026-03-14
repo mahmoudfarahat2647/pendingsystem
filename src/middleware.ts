@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
  * - X-XSS-Protection
  * - Referrer-Policy
  * - Permissions-Policy
- * - Content-Security-Policy (development-friendly)
+ * - Content-Security-Policy (development-friendly: 'unsafe-eval' removed in production)
  */
 export function middleware(request: NextRequest) {
 	const response = NextResponse.next();
@@ -25,10 +25,18 @@ export function middleware(request: NextRequest) {
 		"camera=(), microphone=(), geolocation=(), payment=()",
 	);
 
-	// Content Security Policy - strict but allows necessary sources
+	const isProduction = process.env.NODE_ENV === "production";
+
+	// Content Security Policy
+	// In development, 'unsafe-eval' is required for Next.js hot module replacement (HMR)
+	// and eval-based source maps. In production, we strip it for stronger XSS protection.
+	const scriptSrcBase = isProduction
+		? "script-src 'self' 'unsafe-inline' https://*.supabase.co"
+		: "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co";
+
 	const csp = [
 		"default-src 'self'",
-		"script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co",
+		scriptSrcBase,
 		"style-src 'self' 'unsafe-inline'",
 		"img-src 'self' data: https: blob:",
 		"font-src 'self' data:",

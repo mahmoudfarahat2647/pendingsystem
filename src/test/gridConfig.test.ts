@@ -30,51 +30,76 @@ describe("Grid Column Configuration Selection Fix", () => {
 	});
 
 	describe("getBaseColumns", () => {
-		it("ACTIONS column should be the second column (first user-defined after native checkbox)", () => {
+		it("Checkbox should be at index 0, ACTIONS column should be at index 1 (second column)", () => {
 			const columns = getBaseColumns();
-			const firstCol = columns[0];
-			expect(firstCol).toBeDefined();
-			expect(firstCol?.headerName).toBe("ACTIONS");
-			expect(firstCol?.colId).toBe("actions");
+			// Checkbox column at index 0
+			const checkboxCol = columns[0];
+			expect(checkboxCol).toBeDefined();
+			expect(checkboxCol?.colId).toBe("ag-Grid-AutoColumn");
+			// ACTIONS column at index 1
+			const actionsCol = columns[1];
+			expect(actionsCol).toBeDefined();
+			expect(actionsCol?.headerName).toBe("ACTIONS");
+			expect(actionsCol?.colId).toBe("actions");
 		});
 	});
 
 	describe("useColumnDefs hook", () => {
-		it("ACTIONS column should be the second column (first user-defined) for all grid types", () => {
+		it("Checkbox should be at index 0, ACTIONS column should be at index 1 (second column) for all grid types", () => {
 			const gridTypes: Array<
 				"main" | "orders" | "booking" | "archive" | "call"
 			> = ["main", "orders", "booking", "archive", "call"];
 
 			for (const type of gridTypes) {
 				const { result } = renderHook(() => useColumnDefs(type));
-				const firstCol = result.current[0];
 
+				// Checkbox column at index 0
+				const checkboxCol = result.current[0];
 				expect(
-					firstCol,
-					`Actions column missing as first column for type ${type}`,
+					checkboxCol,
+					`Checkbox column missing at index 0 for type ${type}`,
 				).toBeDefined();
-				expect(firstCol?.colId).toBe("actions");
+
+				// ACTIONS column at index 1
+				const actionsCol = result.current[1];
+				expect(
+					actionsCol,
+					`Actions column missing at index 1 for type ${type}`,
+				).toBeDefined();
+				expect(actionsCol?.colId).toBe("actions");
 			}
 		});
 	});
 
 	describe("Other column getters", () => {
-		it("getOrdersColumns: ACTIONS column should be the second column (first user-defined)", () => {
+		it("getOrdersColumns: Checkbox at index 0, ACTIONS at index 1 (second column)", () => {
 			const columns = getOrdersColumns([]);
-			const firstCol = columns[0];
-			expect(firstCol?.colId).toBe("actions");
+			// Checkbox column at index 0
+			const checkboxCol = columns[0];
+			expect(checkboxCol).toBeDefined();
+			// ACTIONS column at index 1
+			const actionsCol = columns[1];
+			expect(actionsCol?.colId).toBe("actions");
 		});
 
-		it("getMainSheetColumns: ACTIONS column should be the second column (first user-defined)", () => {
+		it("getMainSheetColumns: Checkbox at index 0, ACTIONS at index 1 (second column)", () => {
 			const columns = getMainSheetColumns([]);
-			const firstCol = columns[0];
-			expect(firstCol?.colId).toBe("actions");
+			// Checkbox column at index 0
+			const checkboxCol = columns[0];
+			expect(checkboxCol).toBeDefined();
+			// ACTIONS column at index 1
+			const actionsCol = columns[1];
+			expect(actionsCol?.colId).toBe("actions");
 		});
 
-		it("getBookingColumns: ACTIONS column should be the second column (first user-defined)", () => {
+		it("getBookingColumns: Checkbox at index 0, ACTIONS at index 1 (second column)", () => {
 			const columns = getBookingColumns();
-			const firstCol = columns[0];
-			expect(firstCol?.colId).toBe("actions");
+			// Checkbox column at index 0
+			const checkboxCol = columns[0];
+			expect(checkboxCol).toBeDefined();
+			// ACTIONS column at index 1
+			const actionsCol = columns[1];
+			expect(actionsCol?.colId).toBe("actions");
 		});
 	});
 });

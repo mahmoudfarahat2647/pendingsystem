@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { getBaseColumns } from "@/components/shared/GridConfig";
+import { getCallColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { RowModals } from "@/components/shared/RowModals";
@@ -120,17 +120,13 @@ export default function CallListPage() {
 	} = useRowModals(handleUpdateOrder, handleSendToArchive);
 
 	const columns = useMemo(() => {
-		const baseColumns = getBaseColumns(
+		return getCallColumns(
+			partStatuses,
 			handleNoteClick,
 			handleReminderClick,
 			handleAttachClick,
 		);
-		return [
-			...baseColumns.slice(0, 2),
-			{ headerName: "BOOKING", field: "bookingDate", width: 120 },
-			...baseColumns.slice(2),
-		];
-	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
+	}, [partStatuses, handleNoteClick, handleReminderClick, handleAttachClick]);
 
 	const handleConfirmBooking = async (
 		date: string,

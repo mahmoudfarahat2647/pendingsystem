@@ -1,7 +1,7 @@
 import { toast } from "sonner";
+import { normalizeCompanyName } from "@/lib/company";
 import { BeastModeSchema } from "@/schemas/form.schema";
 import { orderService } from "@/services/orderService";
-import { normalizeCompanyName } from "@/lib/company";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 import type { FormData } from "../../types";
@@ -18,7 +18,9 @@ interface UseOrderSubmitProps {
 		{ type: string; value: string; location?: string }
 	>;
 	setValidationMode: (mode: "easy" | "beast") => void;
-	setBeastModeTimer: (timer: number | null | ((prev: number | null) => number | null)) => void;
+	setBeastModeTimer: (
+		timer: number | null | ((prev: number | null) => number | null),
+	) => void;
 	setBeastModeErrors: (errors: Set<string>) => void;
 	setIsCheckingDuplicates: (isChecking: boolean) => void;
 	setDuplicateWarning: (
@@ -54,9 +56,9 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 			}
 
 			if (props.hasValidationErrors) {
-				const hasSameOrderDup = Object.values(props.partValidationWarnings).some(
-					(w) => w.type === "same-order-duplicate",
-				);
+				const hasSameOrderDup = Object.values(
+					props.partValidationWarnings,
+				).some((w) => w.type === "same-order-duplicate");
 				if (hasSameOrderDup) {
 					toast.error(
 						"Duplicate part numbers in this order. Please remove duplicates.",
@@ -84,7 +86,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 					return;
 				}
 			}
-			
+
 			// Beast mode: require at least one part with both partNumber AND description
 			const hasValidPart = props.parts.some(
 				(p) => p.partNumber.trim() !== "" && p.description.trim() !== "",
@@ -118,7 +120,9 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 						const result = await orderService.checkHistoricalVinPartDuplicate(
 							props.formData.vin,
 							part.partNumber,
-							props.isEditMode ? props.selectedRows.map((r) => r.id) : undefined,
+							props.isEditMode
+								? props.selectedRows.map((r) => r.id)
+								: undefined,
 						);
 
 						if (result.isDuplicate) {

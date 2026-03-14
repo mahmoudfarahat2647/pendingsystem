@@ -132,11 +132,12 @@ export default function BookingPage() {
 	const columns = useMemo(
 		() =>
 			getBookingColumns(
+				partStatuses,
 				(row) => handleNoteClick(row, "booking"),
 				handleReminderClick,
 				handleAttachClick,
 			),
-		[handleNoteClick, handleReminderClick, handleAttachClick],
+		[partStatuses, handleNoteClick, handleReminderClick, handleAttachClick],
 	);
 
 	const handleConfirmReorder = async () => {

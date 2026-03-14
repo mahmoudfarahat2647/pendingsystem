@@ -5,7 +5,7 @@ import type { PartEntry } from "@/types";
 export function useOrderParts(initialParts?: PartEntry[]) {
 	// Parts state
 	const [parts, setParts] = useState<PartEntry[]>(
-		initialParts || [{ id: generateId(), partNumber: "", description: "" }]
+		initialParts || [{ id: generateId(), partNumber: "", description: "" }],
 	);
 	const descriptionRefs = useRef<(HTMLInputElement | null)[]>([]);
 

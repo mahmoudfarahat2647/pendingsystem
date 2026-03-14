@@ -118,32 +118,3 @@ export const logger = {
 		}
 	},
 };
-
-/**
- * Performance timing utility
- */
-export function measure<T>(fn: () => T, label: string): T {
-	const start = performance.now();
-	try {
-		return fn();
-	} finally {
-		const duration = performance.now() - start;
-		logger.debug(`${label} took ${duration.toFixed(2)}ms`);
-	}
-}
-
-/**
- * Async performance timing utility
- */
-export async function measureAsync<T>(
-	fn: () => Promise<T>,
-	label: string,
-): Promise<T> {
-	const start = performance.now();
-	try {
-		return await fn();
-	} finally {
-		const duration = performance.now() - start;
-		logger.debug(`${label} took ${duration.toFixed(2)}ms`);
-	}
-}

@@ -6,6 +6,7 @@ import { CheckCircle, Download, Filter, RotateCcw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
+import { PartStatusRenderer } from "@/components/grid/renderers";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -178,8 +179,20 @@ export default function ArchivePage() {
 				},
 			},
 			...baseColumns.slice(2),
+			{
+				headerName: "PART STATUS",
+				field: "partStatus",
+				width: 100,
+				minWidth: 100,
+				editable: false,
+				cellRenderer: PartStatusRenderer,
+				cellRendererParams: {
+					partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+				},
+				cellClass: "flex items-center justify-center",
+			},
 		];
-	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
+	}, [partStatuses, handleNoteClick, handleReminderClick, handleAttachClick]);
 
 	return (
 		<TooltipProvider>

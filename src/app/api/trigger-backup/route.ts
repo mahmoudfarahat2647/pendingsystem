@@ -1,22 +1,9 @@
 import { errorResponse, successResponse } from "@/lib/apiResponse";
-import { addRateLimitHeaders, rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
 // Manual backup trigger coordinating with GitHub Actions.
-export async function POST(request: Request) {
-	// Apply rate limiting
-	const rateLimitResult = rateLimit(request);
-
-	if (!rateLimitResult.success) {
-		const response = errorResponse(
-			"RATE_LIMITED",
-			"Too many requests. Please try again later.",
-			429,
-		);
-		return addRateLimitHeaders(response, rateLimitResult);
-	}
-
+export async function POST() {
 	try {
 		const githubToken = process.env.GITHUB_PAT;
 
@@ -40,12 +27,11 @@ export async function POST(request: Request) {
 			console.error(
 				`Missing required environment variables: ${missingVars.join(", ")}`,
 			);
-			const response = errorResponse(
+			return errorResponse(
 				"SERVER_ERROR",
 				`Server configuration error: Missing ${missingVars.join(", ")}`,
 				500,
 			);
-			return addRateLimitHeaders(response, rateLimitResult);
 		}
 
 		// Trigger the GitHub Actions workflow via dispatch
@@ -70,53 +56,43 @@ export async function POST(request: Request) {
 
 			// Helpful error for common issues
 			if (response.status === 404) {
-				const errorRes = errorResponse(
+				return errorResponse(
 					"NOT_FOUND",
 					"Workflow not found. Ensure backup-reports.yml is committed to the main branch.",
 					404,
 				);
-				return addRateLimitHeaders(errorRes, rateLimitResult);
 			}
 
 			if (response.status === 403) {
-				const errorRes = errorResponse(
+				return errorResponse(
 					"FORBIDDEN",
 					"GitHub token lacks permissions. Ensure PAT has 'workflows' scope.",
 					403,
 				);
-				return addRateLimitHeaders(errorRes, rateLimitResult);
 			}
 
-			const errorRes = errorResponse(
+			return errorResponse(
 				"EXTERNAL_SERVICE_ERROR",
 				`GitHub trigger failed: ${response.statusText}`,
 				response.status,
 			);
-			return addRateLimitHeaders(errorRes, rateLimitResult);
 		}
 
-		const successRes = successResponse(
+		return successResponse(
 			undefined,
 			"Backup workflow triggered successfully on GitHub Actions",
 		);
-		return addRateLimitHeaders(successRes, rateLimitResult);
 	} catch (error: unknown) {
 		if (error instanceof Error) {
 			console.error("Backup trigger error:", error.message);
-			const response = errorResponse(
+			return errorResponse(
 				"SERVER_ERROR",
 				error.message || "An internal error occurred",
 				500,
 			);
-			return addRateLimitHeaders(response, rateLimitResult);
 		} else {
 			console.error("Backup trigger error:", error);
-			const response = errorResponse(
-				"SERVER_ERROR",
-				"An internal error occurred",
-				500,
-			);
-			return addRateLimitHeaders(response, rateLimitResult);
+			return errorResponse("SERVER_ERROR", "An internal error occurred", 500);
 		}
 	}
 }
