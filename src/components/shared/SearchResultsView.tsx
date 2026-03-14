@@ -250,9 +250,11 @@ export const SearchResultsView = () => {
 					width: 100,
 				};
 
-		// Filter out 'selection' and 'actions' from baseCols as we handle them differently
+		// Columns manually added to the grid (not from baseCols)
+		// When adding new manual columns (e.g., drag-handle), add them here
+		const manualColumnIds = ["actions"];
 		const remainingBaseCols = baseCols.filter(
-			(col) => col.colId !== "selection" && col.colId !== "actions",
+			(col) => col.colId !== undefined && !manualColumnIds.includes(col.colId),
 		);
 
 		return [

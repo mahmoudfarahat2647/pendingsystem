@@ -26,7 +26,7 @@ export function useSelectedRowsSync<T extends { id: string }>(
 
 	const prevIsMutatingRef = useRef(isMutating);
 
-	const isEmpty = selectedRows.length === 0;
+	const _isEmpty = selectedRows.length === 0;
 
 	useEffect(() => {
 		if (

@@ -72,7 +72,7 @@ export function isVinLongEnoughForDuplicateCheck(vin: string): boolean {
 	return normalized.length >= DUPLICATE_CHECK_VIN_MIN_LENGTH;
 }
 
-function isVinTooShortForDefaultMode(vin: string): boolean {
+function _isVinTooShortForDefaultMode(vin: string): boolean {
 	const normalized = normalizeVin(vin);
 	return normalized.length > 0 && normalized.length < VIN_MIN_LENGTH;
 }
@@ -189,7 +189,7 @@ export function shouldSkipDuplicateCheck(
 	return false;
 }
 
-function getValidationModeFromString(mode: "easy" | "beast"): ValidationMode {
+function _getValidationModeFromString(mode: "easy" | "beast"): ValidationMode {
 	return mode === "beast" ? ValidationMode.BEAST : ValidationMode.DEFAULT;
 }
 

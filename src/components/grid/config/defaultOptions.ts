@@ -22,8 +22,8 @@ export const defaultGridOptions: GridOptions = {
 	// Selection
 	rowSelection: {
 		mode: "multiRow",
-		checkboxes: false,
-		headerCheckbox: false,
+		checkboxes: true,
+		headerCheckbox: true,
 		enableClickSelection: true,
 		selectAll: "filtered",
 	},

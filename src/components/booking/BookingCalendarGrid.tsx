@@ -23,7 +23,6 @@ interface BookingCalendarGridProps {
 	searchQuery: string;
 	searchMatchDates: Set<string>;
 	activeCustomerDateSet: Set<string>;
-	activeBookingRep?: PendingRow;
 }
 
 export const BookingCalendarGrid = ({

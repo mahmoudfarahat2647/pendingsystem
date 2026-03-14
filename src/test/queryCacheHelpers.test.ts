@@ -49,7 +49,7 @@ describe("getErrorMessage", () => {
 
 		expect(result.length).toBe(200);
 		expect(result.endsWith("...")).toBe(true);
-		expect(result).toBe("a".repeat(197) + "...");
+		expect(result).toBe(`${"a".repeat(197)}...`);
 	});
 
 	it("does not truncate messages exactly 200 characters", () => {

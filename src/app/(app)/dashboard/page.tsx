@@ -16,7 +16,6 @@ import { useDashboardStatsQuery } from "@/hooks/queries/useDashboardStatsQuery";
 import { useStorageStats } from "@/hooks/useStorageStats";
 import { formatBytesToMB, usagePercent } from "@/lib/storage-limits";
 import { cn } from "@/lib/utils";
-import type { PendingRow } from "@/types";
 
 const CapacityChart = dynamic(
 	() => import("@/components/dashboard/CapacityChart"),
@@ -329,11 +328,11 @@ export default function DashboardPage() {
 												<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
 													<span className="text-[22px] font-bold text-white font-mono leading-none tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
 														{storageStats
-															? usagePercent(
+															? `${usagePercent(
 																	(storageStats.dbUsedBytes ?? 0) +
 																		storageStats.storageUsedBytes,
 																	storageStats.combinedLimitBytes,
-																).toFixed(0) + "%"
+																).toFixed(0)}%`
 															: "—"}
 													</span>
 													<span className="text-[9px] text-gray-400 font-medium tracking-widest uppercase mt-0.5">

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { addRateLimitHeaders, rateLimit } from "@/lib/rateLimit";
 import {
 	COMBINED_LIMIT_BYTES,
 	DB_LIMIT_BYTES,
@@ -73,20 +74,33 @@ async function getRecursiveBucketSize(
  *
  * Fetches real-time database and file storage usage from Supabase.
  * Uses the service role key to perform administrative queries.
+ * Rate limited to prevent abuse.
  *
  * @returns JSON containing per-source usage in bytes, limits, and availability flags.
  */
-export async function GET() {
+export async function GET(request: Request) {
+	// Apply rate limiting
+	const rateLimitResult = rateLimit(request);
+
+	if (!rateLimitResult.success) {
+		const response = NextResponse.json(
+			{ error: "Too many requests. Please try again later." },
+			{ status: 429 },
+		);
+		return addRateLimitHeaders(response, rateLimitResult);
+	}
+
 	try {
 		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 		const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 		if (!supabaseUrl || !serviceRoleKey) {
 			console.error("Missing Supabase configuration for storage-stats API");
-			return NextResponse.json(
+			const response = NextResponse.json(
 				{ error: "Server configuration error" },
 				{ status: 500 },
 			);
+			return addRateLimitHeaders(response, rateLimitResult);
 		}
 
 		// Create a service-role client to bypass RLS and access internal schemas
@@ -133,7 +147,7 @@ export async function GET() {
 				? (dbUsedBytes ?? 0) + storageUsedBytes
 				: null;
 
-		const response: StorageStatsResponse = {
+		const responseData: StorageStatsResponse = {
 			dbUsedBytes,
 			dbLimitBytes: DB_LIMIT_BYTES,
 			dbAvailable,
@@ -145,16 +159,22 @@ export async function GET() {
 			dataComplete: dbAvailable && storageAvailable,
 		};
 
-		return NextResponse.json(response);
+		const response = NextResponse.json(responseData);
+		return addRateLimitHeaders(response, rateLimitResult);
 	} catch (error: unknown) {
 		if (error instanceof Error) {
 			console.error("Storage stats error:", error.message);
-			return NextResponse.json({ error: error.message }, { status: 500 });
+			const response = NextResponse.json(
+				{ error: error.message },
+				{ status: 500 },
+			);
+			return addRateLimitHeaders(response, rateLimitResult);
 		}
 		console.error("Storage stats error:", error);
-		return NextResponse.json(
+		const response = NextResponse.json(
 			{ error: "Internal server error" },
 			{ status: 500 },
 		);
+		return addRateLimitHeaders(response, rateLimitResult);
 	}
 }

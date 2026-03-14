@@ -1,8 +1,10 @@
 "use client";
 
 import { Clock, Gauge, ShieldCheck } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import {
+	type PlayfulTodoItem,
+	PlayfulTodolist,
+} from "@/components/ui/playful-todolist";
 
 export const BookingTasks = () => {
 	const tasks = [
@@ -26,33 +28,39 @@ export const BookingTasks = () => {
 		},
 	];
 
+	const playfulItems: PlayfulTodoItem[] = tasks.map((task) => {
+		const bgClass =
+			task.id === "warranty"
+				? "data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+				: task.id === "km"
+					? "data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+					: "data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500";
+
+		return {
+			id: task.id,
+			checkboxClassName: `rounded-full border-white/20 ${bgClass}`,
+			label: (
+				<div className="flex items-center gap-3 w-full pl-1">
+					<task.icon className={`h-4 w-4 ${task.color} opacity-70`} />
+					<span className="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">
+						{task.label}
+					</span>
+				</div>
+			),
+		};
+	});
+
 	return (
 		<div className="mt-8 space-y-4 p-6 bg-white/[0.02] rounded-2xl border border-white/5 max-w-lg mx-auto w-full">
 			<h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
 				Required Checks
 			</h4>
-			<div className="space-y-3">
-				{tasks.map((task) => (
-					<div
-						key={task.id}
-						className="flex items-center space-x-3 group cursor-pointer hover:bg-white-[0.02] p-2 rounded-lg transition-colors"
-					>
-						<Checkbox
-							id={task.id}
-							className="border-white/20 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-						/>
-						<div className="flex items-center gap-3">
-							<task.icon className={`h-4 w-4 ${task.color} opacity-70`} />
-							<Label
-								htmlFor={task.id}
-								className="text-sm text-gray-400 group-hover:text-gray-200 cursor-pointer transition-colors"
-							>
-								{task.label}
-							</Label>
-						</div>
-					</div>
-				))}
-			</div>
+			<PlayfulTodolist
+				items={playfulItems}
+				className="w-full space-y-3"
+				itemClassName="flex items-center space-x-3 group cursor-pointer hover:bg-white/[0.02] p-2 rounded-lg transition-colors relative"
+				hideDivider
+			/>
 		</div>
 	);
 };

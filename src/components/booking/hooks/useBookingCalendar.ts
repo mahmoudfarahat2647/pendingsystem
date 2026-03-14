@@ -1,15 +1,11 @@
 import { format, isAfter, subYears } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAppStore } from "@/store/useStore";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import type { PendingRow } from "@/types";
 
 interface UseBookingCalendarOptions {
 	open: boolean;
 	initialSearchTerm: string;
-	/** Optional booking data from React Query - if not provided, falls back to Zustand store */
-	bookingData?: PendingRow[];
-	/** Optional archive data from React Query - if not provided, falls back to Zustand store */
-	archiveData?: PendingRow[];
 }
 
 /**
@@ -19,25 +15,18 @@ interface UseBookingCalendarOptions {
 function parseLocalDate(dateStr: string | undefined): Date {
 	if (!dateStr || typeof dateStr !== "string") return new Date(NaN);
 	const [year, month, day] = dateStr.split("-").map(Number);
-	if (isNaN(year) || isNaN(month) || isNaN(day)) return new Date(NaN);
+	if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day))
+		return new Date(NaN);
 	return new Date(year, month - 1, day);
 }
 
 export function useBookingCalendar({
 	open,
 	initialSearchTerm,
-	bookingData,
-	archiveData,
 }: UseBookingCalendarOptions) {
-	const storeBookingRowData = useAppStore((state) => state.bookingRowData);
-	const storeArchiveRowData = useAppStore((state) => state.archiveRowData);
-	const _updateBookingStatus = useAppStore(
-		(state) => state.updateBookingStatus,
-	);
-
-	// Use provided data if available, otherwise fall back to store data
-	const bookingRowData = bookingData ?? storeBookingRowData;
-	const archiveRowData = archiveData ?? storeArchiveRowData;
+	// Directly fetch the required data inside the hook to prevent prop-drilling
+	const { data: bookingRowData = [] } = useOrdersQuery("booking");
+	const { data: archiveRowData = [] } = useOrdersQuery("archive");
 
 	const [currentMonth, setCurrentMonth] = useState(new Date());
 	const [selectedDate, setSelectedDate] = useState(new Date());

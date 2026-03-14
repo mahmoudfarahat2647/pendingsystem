@@ -61,8 +61,7 @@ export default function CallListPage() {
 		useColumnLayoutTracker("call-list");
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: callRowData = [] } = useOrdersQuery("call");
-	const { data: bookingRowData = [] } = useOrdersQuery("booking", { enabled: isBookingModalOpen });
-	const { data: archiveRowData = [] } = useOrdersQuery("archive", { enabled: isBookingModalOpen });
+
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("call");
 	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("call");
 	const saveOrderMutation = useSaveOrderMutation();
@@ -127,9 +126,9 @@ export default function CallListPage() {
 			handleAttachClick,
 		);
 		return [
-			...baseColumns.slice(0, 3),
+			...baseColumns.slice(0, 2),
 			{ headerName: "BOOKING", field: "bookingDate", width: 120 },
-			...baseColumns.slice(3),
+			...baseColumns.slice(2),
 		];
 	}, [handleNoteClick, handleReminderClick, handleAttachClick]);
 
@@ -421,8 +420,6 @@ export default function CallListPage() {
 					onOpenChange={setIsBookingModalOpen}
 					onConfirm={handleConfirmBooking}
 					selectedRows={selectedRows}
-					bookingData={bookingRowData}
-					archiveData={archiveRowData}
 				/>
 
 				<RowModals
