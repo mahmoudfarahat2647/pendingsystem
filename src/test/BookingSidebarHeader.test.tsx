@@ -34,10 +34,10 @@ describe("BookingSidebarHeader", () => {
 		expect(screen.getByText(/John Doe/)).toBeInTheDocument();
 	});
 
-	it("renders the status dropdown with placeholder when no status is selected", () => {
+	it("renders the status dropdown with 'None' when no status is selected", () => {
 		render(<BookingSidebarHeader {...defaultProps} />);
-		// The SelectValue placeholder
-		expect(screen.getByText("Initial Status (Optional)")).toBeInTheDocument();
+		// When preBookingStatus is "", the Select is set to "__none__" which renders "None"
+		expect(screen.getByText("None")).toBeInTheDocument();
 	});
 
 	it("does not throw when preBookingStatus is an empty string", () => {
