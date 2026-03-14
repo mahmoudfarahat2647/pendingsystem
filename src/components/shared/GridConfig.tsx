@@ -18,6 +18,21 @@ export const getBaseColumns = (
 	onAttachClick?: (row: PendingRow) => void,
 	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
+	// Index 0: Checkbox column placeholder (reserved for AG Grid native checkbox selection)
+	// AG Grid's rowSelection with checkboxes: true automatically populates this position
+	{
+		headerName: "",
+		colId: "ag-Grid-AutoColumn",
+		width: 50,
+		maxWidth: 50,
+		sortable: false,
+		filter: false,
+		resizable: false,
+		suppressHeaderMenuButton: true,
+		suppressMovable: true,
+		lockPosition: "left",
+	},
+	// Index 1: ACTIONS column (second column, after checkbox)
 	{
 		headerName: "ACTIONS",
 		colId: "actions",
@@ -196,6 +211,7 @@ export const getMainSheetColumns = (
 ];
 
 export const getBookingColumns = (
+	partStatuses: PartStatusDef[] = [],
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
@@ -225,4 +241,46 @@ export const getBookingColumns = (
 		},
 		cellClass: "flex items-center justify-center",
 	},
+	{
+		headerName: "PART STATUS",
+		field: "partStatus",
+		width: 100,
+		minWidth: 100,
+		editable: false,
+		cellRenderer: PartStatusRenderer,
+		cellRendererParams: {
+			partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+		},
+		cellClass: "flex items-center justify-center",
+	},
 ];
+
+export const getCallColumns = (
+	partStatuses: PartStatusDef[] = [],
+	onNoteClick?: (row: PendingRow) => void,
+	onReminderClick?: (row: PendingRow) => void,
+	onAttachClick?: (row: PendingRow) => void,
+): ColDef<PendingRow>[] => {
+	const baseColumns = getBaseColumns(
+		onNoteClick,
+		onReminderClick,
+		onAttachClick,
+	);
+	return [
+		...baseColumns.slice(0, 3), // Include checkbox, actions, stats
+		{ headerName: "BOOKING", field: "bookingDate", width: 120 },
+		...baseColumns.slice(3), // Continue from R/DATE onwards
+		{
+			headerName: "PART STATUS",
+			field: "partStatus",
+			width: 100,
+			minWidth: 100,
+			editable: false,
+			cellRenderer: PartStatusRenderer,
+			cellRendererParams: {
+				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+			},
+			cellClass: "flex items-center justify-center",
+		},
+	];
+};

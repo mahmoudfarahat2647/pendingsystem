@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { OrderFormSchema, BeastModeSchema } from "@/schemas/form.schema";
-import { useAppStore } from "@/store/useStore";
-import { orderService } from "@/services/orderService";
+import { ValidationMode } from "@/lib/ordersValidationConstants";
 import {
 	checkDescriptionConflict,
 	checkVinPartDuplicate,
 	findSameOrderDuplicateIndices,
 	shouldSkipDuplicateCheck,
 } from "@/lib/orderWorkflow";
-import { ValidationMode } from "@/lib/ordersValidationConstants";
+import { BeastModeSchema, OrderFormSchema } from "@/schemas/form.schema";
+import { orderService } from "@/services/orderService";
+import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 import type { FormData } from "../../types";
 
