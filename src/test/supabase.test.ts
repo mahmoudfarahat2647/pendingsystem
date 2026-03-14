@@ -13,7 +13,7 @@ describe("Supabase Client Initialization", () => {
 		process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "dummy-key";
 
 		await expect(import("../lib/supabase")).rejects.toThrow(
-			"Missing Supabase environment variables",
+			"Invalid environment variables",
 		);
 	});
 
@@ -22,7 +22,7 @@ describe("Supabase Client Initialization", () => {
 		delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 		await expect(import("../lib/supabase")).rejects.toThrow(
-			"Missing Supabase environment variables",
+			"Invalid environment variables",
 		);
 	});
 
