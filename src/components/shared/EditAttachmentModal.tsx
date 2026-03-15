@@ -6,6 +6,8 @@ import {
 	Folder,
 	Paperclip,
 	Trash2,
+	Copy,
+	Check,
 } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -34,14 +36,35 @@ export const EditAttachmentModal = ({
 }: EditAttachmentModalProps) => {
 	const [path, setPath] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [hasCopied, setHasCopied] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const copyTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+	const handleCopy = async () => {
+		if (!path) return;
+		try {
+			await navigator.clipboard.writeText(path);
+			setHasCopied(true);
+			if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+			copyTimeoutRef.current = setTimeout(() => setHasCopied(false), 2000);
+		} catch (err) {
+			console.error("Failed to copy text: ", err);
+		}
+	};
 
 	useEffect(() => {
 		if (open) {
 			setPath(initialPath || "");
 			setShowDeleteConfirm(false);
+			setHasCopied(false);
 		}
 	}, [open, initialPath]);
+
+	useEffect(() => {
+		return () => {
+			if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+		};
+	}, []);
 
 	const handleSave = () => {
 		onSave(path.trim() || undefined);
@@ -181,10 +204,29 @@ export const EditAttachmentModal = ({
 							<div className="relative">
 								<Input
 									value={path}
-									onChange={(e) => setPath(e.target.value)}
+									onChange={(e) => {
+										setPath(e.target.value);
+										setHasCopied(false);
+									}}
 									placeholder="C:\Users\Documents\Order_123"
-									className="h-12 bg-[#2c2c2e] border-white/5 text-gray-200 px-4 rounded-xl focus-visible:ring-1 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-0 placeholder:text-slate-600"
+									className="h-12 bg-[#2c2c2e] border-white/5 text-gray-200 px-4 pr-12 rounded-xl focus-visible:ring-1 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-0 placeholder:text-slate-600"
 								/>
+								{path && (
+									<Button
+										size="icon"
+										variant="ghost"
+										onClick={handleCopy}
+										className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+										title="Copy Link"
+										aria-label="Copy link"
+									>
+										{hasCopied ? (
+											<Check className="h-4 w-4 text-green-500" />
+										) : (
+											<Copy className="h-4 w-4" />
+										)}
+									</Button>
+								)}
 							</div>
 
 							{path && (
