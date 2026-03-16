@@ -194,7 +194,8 @@ describe("PendingRowSchema - Array Field Handling", () => {
 			bookingNote: "Morning appointment",
 			bookingStatus: "Confirmed",
 			hasAttachment: true,
-			attachmentPath: "/uploads/attachment.pdf",
+			attachmentLink: "C:\\uploads\\attachment.pdf",
+			attachmentFilePath: "orders/test-id/attachment.pdf",
 			reminder: {
 				date: "2024-01-20",
 				time: "10:00",
@@ -213,6 +214,10 @@ describe("PendingRowSchema - Array Field Handling", () => {
 			expect(result.data.model).toBe("2023 Toyota Camry LE");
 			expect(result.data.parts).toHaveLength(1);
 			expect(result.data.parts[0].partNumber).toBe("12345");
+			expect(result.data.attachmentLink).toBe("C:\\uploads\\attachment.pdf");
+			expect(result.data.attachmentFilePath).toBe(
+				"orders/test-id/attachment.pdf",
+			);
 		}
 	});
 });

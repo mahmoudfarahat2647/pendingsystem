@@ -58,8 +58,26 @@ export function useSaveOrderMutation() {
 				queryKey: getOrdersQueryKey(variables.stage),
 			});
 		},
-		onSuccess: (_, variables) => {
-			void variables;
+		onSuccess: (data, variables) => {
+			const mappedRow = orderService.mapSupabaseOrder(
+				data as Record<string, unknown>,
+			);
+			if (!mappedRow) return;
+
+			const cacheKey = getOrdersQueryKey(variables.stage);
+			queryClient.setQueryData<PendingRow[]>(cacheKey, (oldOrders = []) => {
+				const existingIndex = oldOrders.findIndex(
+					(order) => order.id === mappedRow.id,
+				);
+
+				if (existingIndex === -1) {
+					return [mappedRow, ...oldOrders];
+				}
+
+				return oldOrders.map((order) =>
+					order.id === mappedRow.id ? { ...order, ...mappedRow } : order,
+				);
+			});
 		},
 	});
 }

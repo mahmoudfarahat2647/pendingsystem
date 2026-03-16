@@ -1,4 +1,5 @@
 import type { PostgrestError } from "@supabase/supabase-js";
+import { hasAttachment } from "@/lib/attachment";
 import { processBatch } from "@/lib/batchUtils";
 import { normalizeNullableCompanyName } from "@/lib/company";
 import { isUuid } from "@/lib/orderWorkflow";
@@ -23,6 +24,52 @@ class ServiceError extends Error {
 	}
 }
 
+const ORDERS_SELECT_BASE = `
+	id,
+	stage,
+	order_number,
+	customer_name,
+	customer_email,
+	customer_phone,
+	vin,
+	company,
+	status,
+	metadata,
+	created_at,
+	updated_at,
+	order_reminders (*)
+`;
+
+const ORDERS_SELECT_WITH_ATTACHMENTS = `
+	id,
+	stage,
+	order_number,
+	customer_name,
+	customer_email,
+	customer_phone,
+	vin,
+	company,
+	attachment_link,
+	attachment_file_path,
+	status,
+	metadata,
+	created_at,
+	updated_at,
+	order_reminders (*)
+`;
+
+function isMissingAttachmentColumnError(
+	error: PostgrestError | null | undefined,
+): boolean {
+	if (!error) return false;
+
+	return (
+		error.message.includes("schema cache") &&
+		(error.message.includes("attachment_link") ||
+			error.message.includes("attachment_file_path"))
+	);
+}
+
 function handleSupabaseError(error: PostgrestError): never {
 	throw new ServiceError(error.code || "DATABASE_ERROR", error.message, {
 		hint: error.hint,
@@ -36,27 +83,27 @@ export const orderService = {
 		// and use a clear alias for the related reminders table
 		let query = supabase
 			.from("orders")
-			.select(`
-				id,
-				stage,
-				order_number,
-				customer_name,
-				customer_email,
-				customer_phone,
-				vin,
-				company,
-				status,
-				metadata,
-				created_at,
-				updated_at,
-				order_reminders (*)
-			`)
+			.select(ORDERS_SELECT_WITH_ATTACHMENTS)
 			.order("created_at", { ascending: false });
 
 		if (stage) {
 			query = query.eq("stage", stage);
 		}
 		const { data, error } = await query;
+		if (error && isMissingAttachmentColumnError(error)) {
+			let fallbackQuery = supabase
+				.from("orders")
+				.select(ORDERS_SELECT_BASE)
+				.order("created_at", { ascending: false });
+
+			if (stage) {
+				fallbackQuery = fallbackQuery.eq("stage", stage);
+			}
+
+			const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+			if (fallbackError) handleSupabaseError(fallbackError);
+			return fallbackData;
+		}
 		if (error) handleSupabaseError(error);
 		return data;
 	},
@@ -126,13 +173,20 @@ export const orderService = {
 
 		// Ensure we don't store id, stage, or reminder in the metadata JSON itself
 		// to avoid confusion, though it wouldn't cause a schema error.
-		const metadataToStore = { ...currentMetadata, ...rest };
-		delete (metadataToStore as Record<string, unknown>).id;
-		delete (metadataToStore as Record<string, unknown>).stage;
-		delete (metadataToStore as Record<string, unknown>).reminder;
+		const metadataBase = { ...currentMetadata, ...rest };
+		delete (metadataBase as Record<string, unknown>).id;
+		delete (metadataBase as Record<string, unknown>).stage;
+		delete (metadataBase as Record<string, unknown>).reminder;
+		delete (metadataBase as Record<string, unknown>).hasAttachment;
+
+		const metadataToStore = { ...metadataBase };
+		delete (metadataToStore as Record<string, unknown>).attachmentLink;
+		delete (metadataToStore as Record<string, unknown>).attachmentFilePath;
+
+		const fallbackMetadataToStore = { ...metadataBase };
 
 		// 2. Map strictly to table columns to avoid "column not found" errors
-		const supabaseOrder = {
+		const baseSupabaseOrder = {
 			order_number:
 				rest.trackingId ||
 				(rest as Record<string, unknown>).order_number ||
@@ -144,7 +198,18 @@ export const orderService = {
 			vin: rest.vin,
 			company: normalizeNullableCompanyName(rest.company),
 			stage: stage,
+		};
+
+		const supabaseOrder = {
+			...baseSupabaseOrder,
+			attachment_link: rest.attachmentLink || null,
+			attachment_file_path: rest.attachmentFilePath || null,
 			metadata: metadataToStore,
+		};
+
+		const fallbackSupabaseOrder = {
+			...baseSupabaseOrder,
+			metadata: fallbackMetadataToStore,
 		};
 
 		let orderId = id;
@@ -158,17 +223,39 @@ export const orderService = {
 				.eq("id", id)
 				.select()
 				.single();
-			if (error) handleSupabaseError(error);
-			resultData = data;
+			if (error && isMissingAttachmentColumnError(error)) {
+				const { data: fallbackData, error: fallbackError } = await supabase
+					.from("orders")
+					.update(fallbackSupabaseOrder)
+					.eq("id", id)
+					.select()
+					.single();
+				if (fallbackError) handleSupabaseError(fallbackError);
+				resultData = fallbackData;
+			} else {
+				if (error) handleSupabaseError(error);
+				resultData = data;
+			}
 		} else {
 			const { data, error } = await supabase
 				.from("orders")
 				.insert([supabaseOrder])
 				.select()
 				.single();
-			if (error) handleSupabaseError(error);
-			orderId = data.id;
-			resultData = data;
+			if (error && isMissingAttachmentColumnError(error)) {
+				const { data: fallbackData, error: fallbackError } = await supabase
+					.from("orders")
+					.insert([fallbackSupabaseOrder])
+					.select()
+					.single();
+				if (fallbackError) handleSupabaseError(fallbackError);
+				orderId = fallbackData.id;
+				resultData = fallbackData;
+			} else {
+				if (error) handleSupabaseError(error);
+				orderId = data.id;
+				resultData = data;
+			}
 		}
 
 		// 3. Handle Reminder in separate table
@@ -284,6 +371,12 @@ export const orderService = {
 			typeof row.metadata === "object" && row.metadata
 				? (row.metadata as Record<string, unknown>)
 				: {};
+		const metadataAttachmentLink =
+			typeof metadata.attachmentLink === "string" ? metadata.attachmentLink : "";
+		const metadataAttachmentFilePath =
+			typeof metadata.attachmentFilePath === "string"
+				? metadata.attachmentFilePath
+				: "";
 
 		const resultObj = {
 			...metadata,
@@ -296,6 +389,15 @@ export const orderService = {
 			mobile: (row.customer_phone as string) || metadata.mobile || "",
 			vin: (row.vin as string) || metadata.vin || "",
 			company: normalizeNullableCompanyName(row.company),
+			attachmentLink: (row.attachment_link as string) || metadataAttachmentLink,
+			attachmentFilePath:
+				(row.attachment_file_path as string) || metadataAttachmentFilePath,
+			hasAttachment: hasAttachment({
+				attachmentLink:
+					(row.attachment_link as string) || metadataAttachmentLink,
+				attachmentFilePath:
+					(row.attachment_file_path as string) || metadataAttachmentFilePath,
+			}),
 			reminder: reminder,
 			stage: row.stage,
 		};

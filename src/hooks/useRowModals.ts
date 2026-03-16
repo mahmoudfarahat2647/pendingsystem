@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { hasAttachment, type AttachmentValue } from "@/lib/attachment";
 import type { PendingRow } from "@/types";
 
 export type RowModalType =
@@ -97,17 +98,26 @@ export const useRowModals = (
 	);
 
 	const saveAttachment = useCallback(
-		(path: string | undefined) => {
+		async (value: AttachmentValue) => {
 			if (currentRow) {
-				onUpdate(
-					currentRow.id,
-					{
-						attachmentPath: path,
-						hasAttachment: !!path,
-					},
-					sourceTag || undefined,
-				);
-				closeModal();
+				try {
+					await onUpdate(
+						currentRow.id,
+						{
+							attachmentLink: value.attachmentLink || undefined,
+							attachmentFilePath: value.attachmentFilePath || undefined,
+							hasAttachment: hasAttachment(value),
+						},
+						sourceTag || undefined,
+					);
+					const { toast } = await import("sonner");
+					toast.success("Attachment saved successfully");
+					closeModal();
+				} catch (error) {
+					console.error("Failed to save attachment:", error);
+					const { toast } = await import("sonner");
+					toast.error("Failed to save attachment");
+				}
 			}
 		},
 		[currentRow, onUpdate, closeModal, sourceTag],

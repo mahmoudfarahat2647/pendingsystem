@@ -97,14 +97,17 @@ describe("useRowModals Stage Routing", () => {
 			result.current.handleAttachClick(mockRow);
 		});
 
-		act(() => {
-			result.current.saveAttachment("/path/to/file.pdf");
+		await act(async () => {
+			await result.current.saveAttachment({
+				attachmentFilePath: "orders/test-row-123/file.pdf",
+			});
 		});
 
 		expect(mockOnUpdate).toHaveBeenCalledWith(
 			"test-row-123",
 			{
-				attachmentPath: "/path/to/file.pdf",
+				attachmentLink: undefined,
+				attachmentFilePath: "orders/test-row-123/file.pdf",
 				hasAttachment: true,
 			},
 			"Call List",

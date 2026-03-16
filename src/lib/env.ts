@@ -7,6 +7,7 @@ export const env = createEnv({
 		NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 		NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
 		NEXT_PUBLIC_SETTINGS_PASSWORD: z.string().optional(),
+		NEXT_PUBLIC_SUPABASE_ATTACHMENTS_BUCKET: z.string().default("attachments"),
 	},
 	server: {
 		SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
@@ -19,6 +20,8 @@ export const env = createEnv({
 		NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 		NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
 		NEXT_PUBLIC_SETTINGS_PASSWORD: process.env.NEXT_PUBLIC_SETTINGS_PASSWORD,
+		NEXT_PUBLIC_SUPABASE_ATTACHMENTS_BUCKET:
+			process.env.NEXT_PUBLIC_SUPABASE_ATTACHMENTS_BUCKET,
 		SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
 		GITHUB_PAT: process.env.GITHUB_PAT,
 		GITHUB_OWNER: process.env.GITHUB_OWNER,
