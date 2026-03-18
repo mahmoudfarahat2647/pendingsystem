@@ -231,7 +231,7 @@ export const SearchResultsView = () => {
 		const baseCols = getBaseColumns(
 			(row) => handleNoteClick(row, row.sourceType as string),
 			(row) => handleReminderClick(row),
-			(row) => handleAttachClick(row),
+			(row) => handleAttachClick(row, row.sourceType as string),
 		);
 
 		// Find and configure the actions column

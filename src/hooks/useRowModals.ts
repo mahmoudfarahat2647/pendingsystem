@@ -35,8 +35,9 @@ export const useRowModals = (
 		setActiveModal("reminder");
 	}, []);
 
-	const handleAttachClick = useCallback((row: PendingRow) => {
+	const handleAttachClick = useCallback((row: PendingRow, tag?: string) => {
 		setCurrentRow(row);
+		setSourceTag(tag || "");
 		setActiveModal("attachment");
 	}, []);
 
@@ -50,6 +51,7 @@ export const useRowModals = (
 		setActiveModal(null);
 		setCurrentRow(null);
 		setTargetIds([]);
+		setSourceTag("");
 	}, []);
 
 	const saveNote = useCallback(

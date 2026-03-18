@@ -87,14 +87,13 @@ describe("useRowModals Stage Routing", () => {
 		);
 	});
 
-	it("should pass sourceTag as stage when saveAttachment is called", async () => {
+	it("should use the tag passed directly to handleAttachClick", async () => {
 		const { result } = renderHook(() =>
 			useRowModals(mockOnUpdate, mockOnArchive),
 		);
 
 		act(() => {
-			result.current.handleNoteClick(mockRow, "Call List");
-			result.current.handleAttachClick(mockRow);
+			result.current.handleAttachClick(mockRow, "Call");
 		});
 
 		await act(async () => {
@@ -110,7 +109,38 @@ describe("useRowModals Stage Routing", () => {
 				attachmentFilePath: "orders/test-row-123/file.pdf",
 				hasAttachment: true,
 			},
-			"Call List",
+			"Call",
+		);
+	});
+
+	it("should NOT carry over stale sourceTag from a prior modal when handleAttachClick sets its own tag", async () => {
+		const { result } = renderHook(() =>
+			useRowModals(mockOnUpdate, mockOnArchive),
+		);
+
+		// First, open a note modal with "Orders" tag and close it
+		act(() => {
+			result.current.handleNoteClick(mockRow, "Orders");
+		});
+		act(() => {
+			result.current.closeModal();
+		});
+
+		// Then open attachment modal for an "Archive" row — must NOT use "Orders"
+		act(() => {
+			result.current.handleAttachClick(mockRow, "Archive");
+		});
+
+		await act(async () => {
+			await result.current.saveAttachment({
+				attachmentFilePath: "x/y.pdf",
+			});
+		});
+
+		expect(mockOnUpdate).toHaveBeenCalledWith(
+			"test-row-123",
+			expect.objectContaining({ attachmentFilePath: "x/y.pdf" }),
+			"Archive", // must be Archive, not Orders
 		);
 	});
 
