@@ -120,9 +120,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 						const result = await orderService.checkHistoricalVinPartDuplicate(
 							props.formData.vin,
 							part.partNumber,
-							props.isEditMode
-								? props.selectedRows.map((r) => r.id)
-								: undefined,
+							props.isEditMode ? part.rowId : undefined,
 						);
 
 						if (result.isDuplicate) {

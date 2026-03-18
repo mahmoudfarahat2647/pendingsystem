@@ -140,7 +140,9 @@ describe("orderService", () => {
 				}),
 			}),
 		]);
-		expect(secondInsert.mock.calls[0][0][0]).not.toHaveProperty("attachment_link");
+		expect(secondInsert.mock.calls[0][0][0]).not.toHaveProperty(
+			"attachment_link",
+		);
 		expect(secondInsert.mock.calls[0][0][0]).not.toHaveProperty(
 			"attachment_file_path",
 		);
@@ -226,5 +228,117 @@ describe("orderService", () => {
 		);
 
 		warnSpy.mockRestore();
+	});
+
+	describe("checkHistoricalVinPartDuplicate", () => {
+		it("should detect duplicate VIN + part combination", async () => {
+			const mockData = [
+				{
+					id: "row-1",
+					vin: "VIN123456789",
+					stage: "Orders",
+					metadata: { partNumber: "PART-A" },
+				},
+			];
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+			});
+
+			const result = await orderService.checkHistoricalVinPartDuplicate(
+				"VIN123456789",
+				"PART-A",
+			);
+
+			expect(result.isDuplicate).toBe(true);
+			expect(result.existingRow?.id).toBe("row-1");
+		});
+
+		it("should exclude only specific rowId in multi-edit mode", async () => {
+			const mockData = [
+				{
+					id: "row-1",
+					vin: "VIN123456789",
+					stage: "Orders",
+					metadata: { partNumber: "PART-A" },
+				},
+				{
+					id: "row-2",
+					vin: "VIN123456789",
+					stage: "Main Sheet",
+					metadata: { partNumber: "PART-B" },
+				},
+			];
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+			});
+
+			const result = await orderService.checkHistoricalVinPartDuplicate(
+				"VIN123456789",
+				"PART-A",
+				"row-2",
+			);
+
+			expect(result.isDuplicate).toBe(true);
+			expect(result.existingRow?.id).toBe("row-1");
+		});
+
+		it("should not flag current row as duplicate when excluded", async () => {
+			const mockData = [
+				{
+					id: "row-1",
+					vin: "VIN123456789",
+					stage: "Orders",
+					metadata: { partNumber: "PART-A" },
+				},
+			];
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+			});
+
+			const result = await orderService.checkHistoricalVinPartDuplicate(
+				"VIN123456789",
+				"PART-A",
+				"row-1",
+			);
+
+			expect(result.isDuplicate).toBe(false);
+		});
+
+		it("should return no duplicate for unique VIN + part combination", async () => {
+			const mockData = [
+				{
+					id: "row-1",
+					vin: "VIN123456789",
+					stage: "Orders",
+					metadata: { partNumber: "PART-A" },
+				},
+			];
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+			});
+
+			const result = await orderService.checkHistoricalVinPartDuplicate(
+				"VIN999999999",
+				"PART-Z",
+			);
+
+			expect(result.isDuplicate).toBe(false);
+		});
 	});
 });
