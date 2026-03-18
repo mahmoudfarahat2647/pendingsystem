@@ -109,7 +109,12 @@ export function useOrderValidation({
 	// Debounce refs exactly matching orchestrator pattern
 	const partsRef = useRef<PartEntry[]>([]);
 	const checkDuplicateForPartRef = useRef<
-		(partId: string, vin: string, partNumber: string) => Promise<void>
+		(
+			partId: string,
+			vin: string,
+			partNumber: string,
+			rowId?: string,
+		) => Promise<void>
 	>(async () => undefined);
 
 	// Async duplicate check
@@ -117,6 +122,7 @@ export function useOrderValidation({
 		partId: string,
 		vin: string,
 		partNumber: string,
+		rowId?: string,
 	) => {
 		if (!vin || !partNumber || vin.length < 6) {
 			setAsyncDuplicateWarnings((prev) => ({ ...prev, [partId]: null }));
@@ -128,7 +134,7 @@ export function useOrderValidation({
 			const result = await orderService.checkHistoricalVinPartDuplicate(
 				vin,
 				partNumber,
-				isEditMode ? selectedRows.map((r) => r.id) : undefined,
+				isEditMode ? rowId : undefined,
 			);
 
 			if (result.isDuplicate) {
@@ -168,6 +174,7 @@ export function useOrderValidation({
 							part.id,
 							formData.vin,
 							part.partNumber,
+							part.rowId,
 						);
 					}
 				}

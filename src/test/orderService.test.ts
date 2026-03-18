@@ -40,6 +40,38 @@ describe("orderService", () => {
 		expect(result).toEqual(mockData);
 	});
 
+	it("should fallback to legacy select when attachment columns are missing", async () => {
+		const missingColumnError = {
+			code: "PGRST204",
+			message:
+				"Could not find the 'attachment_file_path' column of 'orders' in the schema cache",
+			details: null,
+			hint: null,
+		};
+		const mockData = [{ id: "1", stage: "orders", metadata: {} }];
+		const initialOrder = vi
+			.fn()
+			.mockResolvedValue({ data: null, error: missingColumnError });
+		const fallbackOrder = vi
+			.fn()
+			.mockResolvedValue({ data: mockData, error: null });
+
+		(supabase.from as unknown as { mockReturnValueOnce: Function })
+			.mockReturnValueOnce({
+				select: vi.fn().mockReturnThis(),
+				order: initialOrder,
+			})
+			.mockReturnValueOnce({
+				select: vi.fn().mockReturnThis(),
+				order: fallbackOrder,
+			});
+
+		const result = await orderService.getOrders();
+
+		expect(result).toEqual(mockData);
+		expect(supabase.from).toHaveBeenCalledTimes(2);
+	});
+
 	it("should update order stage", async () => {
 		const mockData = { id: "1", stage: "archive" };
 		// biome-ignore lint/suspicious/noExplicitAny: Mocking Supabase client
@@ -55,6 +87,65 @@ describe("orderService", () => {
 		const result = await orderService.updateOrderStage("1", "archive");
 
 		expect(result).toEqual(mockData);
+	});
+
+	it("should fallback to metadata save when attachment columns are missing", async () => {
+		const missingColumnError = {
+			code: "PGRST204",
+			message:
+				"Could not find the 'attachment_file_path' column of 'orders' in the schema cache",
+			details: null,
+			hint: null,
+		};
+		const firstInsert = vi.fn().mockReturnThis();
+		const secondInsert = vi.fn().mockReturnThis();
+
+		(supabase.from as unknown as { mockReturnValueOnce: Function })
+			.mockReturnValueOnce({
+				insert: firstInsert,
+				select: vi.fn().mockReturnThis(),
+				single: vi
+					.fn()
+					.mockResolvedValue({ data: null, error: missingColumnError }),
+			})
+			.mockReturnValueOnce({
+				insert: secondInsert,
+				select: vi.fn().mockReturnThis(),
+				single: vi.fn().mockResolvedValue({
+					data: { id: "new-order-id", metadata: {} },
+					error: null,
+				}),
+			});
+
+		const result = await orderService.saveOrder({
+			id: "",
+			stage: "orders",
+			attachmentLink: "C:\\files\\quote.pdf",
+			attachmentFilePath: "orders/new-order-id/quote.pdf",
+			customerName: "John",
+		});
+
+		expect(result).toEqual({ id: "new-order-id", metadata: {} });
+		expect(firstInsert).toHaveBeenCalledWith([
+			expect.objectContaining({
+				attachment_link: "C:\\files\\quote.pdf",
+				attachment_file_path: "orders/new-order-id/quote.pdf",
+			}),
+		]);
+		expect(secondInsert).toHaveBeenCalledWith([
+			expect.objectContaining({
+				metadata: expect.objectContaining({
+					attachmentLink: "C:\\files\\quote.pdf",
+					attachmentFilePath: "orders/new-order-id/quote.pdf",
+				}),
+			}),
+		]);
+		expect(secondInsert.mock.calls[0][0][0]).not.toHaveProperty(
+			"attachment_link",
+		);
+		expect(secondInsert.mock.calls[0][0][0]).not.toHaveProperty(
+			"attachment_file_path",
+		);
 	});
 
 	it("should delete an order with valid UUID", async () => {
@@ -83,6 +174,8 @@ describe("orderService", () => {
 			customer_phone: "123",
 			vin: "VF1AB000123456789", // 17 characters
 			company: "R",
+			attachment_link: "C:\\files\\quote.pdf",
+			attachment_file_path: "orders/1/quote.pdf",
 			metadata: {
 				partNumber: "P1",
 				description: "D1",
@@ -109,6 +202,9 @@ describe("orderService", () => {
 		expect(result.customerName).toBe("John");
 		expect(result.partNumber).toBe("P1");
 		expect(result.reminder?.subject).toBe("Call");
+		expect(result.attachmentLink).toBe("C:\\files\\quote.pdf");
+		expect(result.attachmentFilePath).toBe("orders/1/quote.pdf");
+		expect(result.hasAttachment).toBe(true);
 	});
 
 	it("should return null for invalid mapped row", () => {
@@ -132,5 +228,117 @@ describe("orderService", () => {
 		);
 
 		warnSpy.mockRestore();
+	});
+
+	describe("checkHistoricalVinPartDuplicate", () => {
+		it("should detect duplicate VIN + part combination", async () => {
+			const mockData = [
+				{
+					id: "row-1",
+					vin: "VIN123456789",
+					stage: "Orders",
+					metadata: { partNumber: "PART-A" },
+				},
+			];
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+			});
+
+			const result = await orderService.checkHistoricalVinPartDuplicate(
+				"VIN123456789",
+				"PART-A",
+			);
+
+			expect(result.isDuplicate).toBe(true);
+			expect(result.existingRow?.id).toBe("row-1");
+		});
+
+		it("should exclude only specific rowId in multi-edit mode", async () => {
+			const mockData = [
+				{
+					id: "row-1",
+					vin: "VIN123456789",
+					stage: "Orders",
+					metadata: { partNumber: "PART-A" },
+				},
+				{
+					id: "row-2",
+					vin: "VIN123456789",
+					stage: "Main Sheet",
+					metadata: { partNumber: "PART-B" },
+				},
+			];
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+			});
+
+			const result = await orderService.checkHistoricalVinPartDuplicate(
+				"VIN123456789",
+				"PART-A",
+				"row-2",
+			);
+
+			expect(result.isDuplicate).toBe(true);
+			expect(result.existingRow?.id).toBe("row-1");
+		});
+
+		it("should not flag current row as duplicate when excluded", async () => {
+			const mockData = [
+				{
+					id: "row-1",
+					vin: "VIN123456789",
+					stage: "Orders",
+					metadata: { partNumber: "PART-A" },
+				},
+			];
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+			});
+
+			const result = await orderService.checkHistoricalVinPartDuplicate(
+				"VIN123456789",
+				"PART-A",
+				"row-1",
+			);
+
+			expect(result.isDuplicate).toBe(false);
+		});
+
+		it("should return no duplicate for unique VIN + part combination", async () => {
+			const mockData = [
+				{
+					id: "row-1",
+					vin: "VIN123456789",
+					stage: "Orders",
+					metadata: { partNumber: "PART-A" },
+				},
+			];
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+			});
+
+			const result = await orderService.checkHistoricalVinPartDuplicate(
+				"VIN999999999",
+				"PART-Z",
+			);
+
+			expect(result.isDuplicate).toBe(false);
+		});
 	});
 });

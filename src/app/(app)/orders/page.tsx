@@ -230,7 +230,9 @@ export default function OrdersPage() {
 					<EditAttachmentModal
 						open={isBulkAttachmentModalOpen}
 						onOpenChange={setIsBulkAttachmentModalOpen}
-						initialPath=""
+						initialLink=""
+						initialFilePath=""
+						allowUpload={false}
 						onSave={handleSaveBulkAttachment}
 					/>
 				)}

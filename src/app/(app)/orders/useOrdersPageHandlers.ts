@@ -4,6 +4,7 @@ import type { GridApi } from "ag-grid-community";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { FormData } from "@/components/orders/form";
+import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
 import {
 	useBulkDeleteOrdersMutation,
 	useBulkUpdateOrderStageMutation,
@@ -249,14 +250,10 @@ export const useOrdersPageHandlers = () => {
 		}
 
 		// 2. Attachment Check
-		const rowsWithoutPaths = selectedRows.filter(
-			(row) => !row.attachmentPath?.trim(),
-		);
+		const rowsWithoutPaths = selectedRows.filter((row) => !hasAttachment(row));
 
 		if (rowsWithoutPaths.length > 0) {
-			toast.error(
-				`${rowsWithoutPaths.length} order(s) missing attachment paths.`,
-			);
+			toast.error(`${rowsWithoutPaths.length} order(s) missing attachments.`);
 			return;
 		}
 		const ids = selectedRows.map((r) => r.id);
@@ -317,15 +314,33 @@ export const useOrdersPageHandlers = () => {
 		toast.success(`Part status updated to "${status}"`);
 	};
 
-	const handleSaveBulkAttachment = (path: string | undefined) => {
+	const handleSaveBulkAttachment = async ({
+		attachmentLink,
+	}: {
+		attachmentLink?: string;
+	}) => {
 		if (selectedRows.length === 0) return;
-		for (const row of selectedRows) {
-			handleUpdateOrder(row.id, {
-				attachmentPath: path,
-				hasAttachment: !!path,
-			});
+		const sanitizedLink = attachmentLink
+			? sanitizeAttachmentLink(attachmentLink)
+			: undefined;
+
+		await Promise.all(
+			selectedRows.map((row) =>
+				handleUpdateOrder(row.id, {
+					attachmentLink: sanitizedLink,
+					hasAttachment: hasAttachment({
+						attachmentLink: sanitizedLink,
+						attachmentFilePath: row.attachmentFilePath,
+					}),
+				}),
+			),
+		);
+
+		if (sanitizedLink) {
+			toast.success("Bulk attachment link updated");
+		} else {
+			toast.success("Bulk attachment link cleared");
 		}
-		toast.success(path ? "Bulk link updated" : "Bulk link cleared");
 		setIsBulkAttachmentModalOpen(false);
 	};
 
