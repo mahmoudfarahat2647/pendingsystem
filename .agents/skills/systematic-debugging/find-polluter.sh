@@ -19,14 +19,32 @@ echo "Test pattern: $TEST_PATTERN"
 echo ""
 
 # Get list of test files
-TEST_FILES=$(find . -path "$TEST_PATTERN" | sort)
-TOTAL=$(echo "$TEST_FILES" | wc -l | tr -d ' ')
+TEST_FILES=()
+while IFS= read -r -d '' file; do
+  TEST_FILES+=("$file")
+done < <(find . -path "./${TEST_PATTERN#./}" -print0 | sort -z)
+
+TOTAL=${#TEST_FILES[@]}
+
+if [ "$TOTAL" -eq 0 ]; then
+  echo "🚨 Error: Found 0 test files matching pattern '$TEST_PATTERN'"
+  echo "Please check your test pattern. Remember to use quotes around the pattern to prevent shell expansion."
+  exit 1
+fi
 
 echo "Found $TOTAL test files"
 echo ""
 
+# Fail fast: check for pre-existing pollution
+if [ -e "$POLLUTION_CHECK" ]; then
+  echo "🚨 Error: Pre-existing pollution detected!"
+  echo "Target '$POLLUTION_CHECK' already exists before running any tests."
+  echo "Please clean up the environment and try again."
+  exit 1
+fi
+
 COUNT=0
-for TEST_FILE in $TEST_FILES; do
+for TEST_FILE in "${TEST_FILES[@]}"; do
   COUNT=$((COUNT + 1))
 
   # Skip if pollution already exists

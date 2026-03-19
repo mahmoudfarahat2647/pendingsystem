@@ -21,7 +21,6 @@ interface IdentityFieldsProps {
 	errors: Partial<Record<keyof FormData, string>>;
 	getFieldError: (field: keyof FormData) => boolean;
 	isEditMode: boolean;
-	validationMode: "easy" | "beast";
 }
 
 /**
@@ -35,7 +34,6 @@ export const IdentityFields = ({
 	errors,
 	getFieldError,
 	isEditMode,
-	validationMode,
 }: IdentityFieldsProps) => {
 	// Store: models and repair systems (local concern for EditableSelect)
 	const models = useAppStore((state) => state.models);
@@ -84,6 +82,7 @@ export const IdentityFields = ({
 						type="button"
 						variant="ghost"
 						size="icon"
+						aria-label="Bulk Import"
 						className={cn(
 							"h-6 w-6 rounded-lg transition-all",
 							isPersonalBulkMode
@@ -369,7 +368,18 @@ export const IdentityFields = ({
 										<EditableSelect
 											options={repairSystems}
 											value={formData.repairSystem}
-											onChange={(val) => onFieldChange({ repairSystem: val })}
+											onChange={(val) => {
+												if (val === "ضمان") {
+													onFieldChange({
+														repairSystem: val,
+														startWarranty:
+															formData.startWarranty ||
+															new Date().toISOString().split("T")[0],
+													});
+												} else {
+													onFieldChange({ repairSystem: val, startWarranty: "" });
+												}
+											}}
 											onAdd={addRepairSystem}
 											onRemove={removeRepairSystem}
 											placeholder="Select repair system"

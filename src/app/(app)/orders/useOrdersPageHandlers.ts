@@ -119,10 +119,12 @@ export const useOrdersPageHandlers = () => {
 					const remainTime = isWarranty
 						? calculateRemainingTime(endWarranty)
 						: "";
+					const startWarranty = isWarranty ? formData.startWarranty : "";
 
 					const commonData = {
 						...formData,
 						cntrRdg: normalizeMileageAsNumber(formData.cntrRdg),
+						startWarranty,
 						endWarranty,
 						remainTime,
 					};
@@ -172,6 +174,7 @@ export const useOrdersPageHandlers = () => {
 					const remainTime = isWarranty
 						? calculateRemainingTime(endWarranty)
 						: "";
+					const startWarranty = isWarranty ? formData.startWarranty : "";
 
 					return saveOrderMutation.mutateAsync({
 						id: "",
@@ -179,6 +182,7 @@ export const useOrdersPageHandlers = () => {
 							baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
 							trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
 							...formData,
+							startWarranty,
 							cntrRdg: normalizeMileageAsNumber(formData.cntrRdg),
 							partNumber: part.partNumber,
 							description: part.description,

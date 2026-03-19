@@ -67,7 +67,6 @@ export const OrderFormModal = ({
 							errors={errors}
 							getFieldError={getFieldError}
 							isEditMode={isEditMode}
-							validationMode={validationMode}
 						/>
 
 						<PartsSection
