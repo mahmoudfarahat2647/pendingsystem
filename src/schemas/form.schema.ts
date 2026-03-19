@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { isAllowedCompanyName, normalizeCompanyName } from "@/lib/company";
 import { DEFAULT_COMPANY } from "@/lib/ordersValidationConstants";
+import { normalizeMileageAsNumber } from "@/lib/utils";
 
 export const OrderFormSchema = z
 	.object({
@@ -9,9 +10,17 @@ export const OrderFormSchema = z
 		mobile: z.string().min(1, "Mobile number is required"),
 		cntrRdg: z
 			.union([z.string(), z.number()])
-			.transform((val) =>
-				typeof val === "string" ? parseInt(val, 10) || 0 : val,
-			),
+			.transform((val, ctx) => {
+				const num = normalizeMileageAsNumber(val);
+				if (Number.isNaN(num)) {
+					ctx.addIssue({
+						code: z.ZodIssueCode.custom,
+						message: "Invalid mileage format",
+					});
+					return z.NEVER;
+				}
+				return num;
+			}),
 		model: z.string().optional().or(z.literal("")),
 		repairSystem: z.string().default(""),
 		startWarranty: z.string().optional(),
@@ -54,9 +63,17 @@ export const BeastModeSchema = z
 		mobile: z.string().min(1, "Mobile number is required"),
 		cntrRdg: z
 			.union([z.string(), z.number()])
-			.transform((val) =>
-				typeof val === "string" ? parseInt(val, 10) || 0 : val,
-			)
+			.transform((val, ctx) => {
+				const num = normalizeMileageAsNumber(val);
+				if (Number.isNaN(num)) {
+					ctx.addIssue({
+						code: z.ZodIssueCode.custom,
+						message: "Invalid mileage format",
+					});
+					return z.NEVER;
+				}
+				return num;
+			})
 			.pipe(z.number().min(1, "KM reading is required")),
 		model: z.string().min(1, "Vehicle model is required"),
 		repairSystem: z.string().min(1, "Repair system is required"),

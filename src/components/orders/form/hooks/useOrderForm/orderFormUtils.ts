@@ -17,7 +17,10 @@ export function buildInitialFormData(first: PendingRow): FormData {
 		model: first.model || "",
 		repairSystem: first.repairSystem || "",
 		startWarranty:
-			first.startWarranty || new Date().toISOString().split("T")[0],
+			first.startWarranty ||
+			(first.repairSystem === "ضمان"
+				? new Date().toISOString().split("T")[0]
+				: ""),
 		requester: first.requester || "",
 		sabNumber: first.sabNumber || "",
 		acceptedBy: first.acceptedBy || "",
@@ -34,7 +37,7 @@ export function buildEmptyFormData(): FormData {
 		cntrRdg: "",
 		model: "",
 		repairSystem: "",
-		startWarranty: new Date().toISOString().split("T")[0],
+		startWarranty: "",
 		requester: "",
 		sabNumber: "",
 		acceptedBy: "",

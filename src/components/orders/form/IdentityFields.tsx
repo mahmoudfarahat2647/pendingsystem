@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { SimpleDatePicker } from "@/components/ui/simple-date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { ALLOWED_COMPANIES } from "@/lib/ordersValidationConstants";
-import { cn } from "@/lib/utils";
+import { cn, normalizeMileage } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { FormData } from "./types";
 
@@ -21,7 +21,6 @@ interface IdentityFieldsProps {
 	errors: Partial<Record<keyof FormData, string>>;
 	getFieldError: (field: keyof FormData) => boolean;
 	isEditMode: boolean;
-	validationMode: "easy" | "beast";
 }
 
 /**
@@ -35,7 +34,6 @@ export const IdentityFields = ({
 	errors,
 	getFieldError,
 	isEditMode,
-	validationMode,
 }: IdentityFieldsProps) => {
 	// Store: models and repair systems (local concern for EditableSelect)
 	const models = useAppStore((state) => state.models);
@@ -57,7 +55,7 @@ export const IdentityFields = ({
 				customerName: rowParts[0]?.trim() || formData.customerName,
 				vin: (rowParts[1]?.trim() || formData.vin).toUpperCase(),
 				mobile: rowParts[2]?.trim() || formData.mobile,
-				cntrRdg: rowParts[3]?.trim() || formData.cntrRdg,
+				cntrRdg: normalizeMileage(rowParts[3]) || formData.cntrRdg,
 				sabNumber: rowParts[4]?.trim() || formData.sabNumber,
 				acceptedBy: rowParts[5]?.trim() || formData.acceptedBy,
 			});
@@ -84,6 +82,7 @@ export const IdentityFields = ({
 						type="button"
 						variant="ghost"
 						size="icon"
+						aria-label="Bulk Import"
 						className={cn(
 							"h-6 w-6 rounded-lg transition-all",
 							isPersonalBulkMode
@@ -232,10 +231,15 @@ export const IdentityFields = ({
 										Odo (KM)
 									</Label>
 									<Input
-										type="number"
+										type="text"
+										inputMode="numeric"
 										placeholder="0"
 										value={formData.cntrRdg}
-										onChange={(e) => onFieldChange({ cntrRdg: e.target.value })}
+										onChange={(e) =>
+											onFieldChange({
+												cntrRdg: normalizeMileage(e.target.value),
+											})
+										}
 										className={cn(
 											"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 											getFieldError("cntrRdg") &&
@@ -364,7 +368,18 @@ export const IdentityFields = ({
 										<EditableSelect
 											options={repairSystems}
 											value={formData.repairSystem}
-											onChange={(val) => onFieldChange({ repairSystem: val })}
+											onChange={(val) => {
+												if (val === "ضمان") {
+													onFieldChange({
+														repairSystem: val,
+														startWarranty:
+															formData.startWarranty ||
+															new Date().toISOString().split("T")[0],
+													});
+												} else {
+													onFieldChange({ repairSystem: val, startWarranty: "" });
+												}
+											}}
 											onAdd={addRepairSystem}
 											onRemove={removeRepairSystem}
 											placeholder="Select repair system"

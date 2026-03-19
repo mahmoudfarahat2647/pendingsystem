@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizeNullableCompanyName } from "@/lib/company";
+import { normalizeMileageAsNumber } from "@/lib/utils";
 
 // Status Enum Schema
 const StatusSchema = z.enum([
@@ -78,7 +79,8 @@ export const PendingRowSchema = z
 				: "";
 		}, z.string()),
 		cntrRdg: z.preprocess(
-			(val) => Number(val) || 0,
+			(val) =>
+				normalizeMileageAsNumber(val as string | number | null | undefined),
 			z.number().nonnegative().default(0),
 		),
 		model: z.preprocess((val) => {

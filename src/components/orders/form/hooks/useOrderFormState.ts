@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { detectModelFromVin } from "@/lib/utils";
+import { detectModelFromVin, normalizeMileageAsNumber } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 import type { FormData } from "../types";
 import { buildEmptyFormData } from "./useOrderForm/orderFormUtils";
@@ -10,7 +10,7 @@ export function useOrderFormState(selectedRows: PendingRow[]) {
 
 	// Derived
 	const isMultiSelection = selectedRows.length > 1;
-	const isHighMileage = (parseInt(formData.cntrRdg, 10) || 0) >= 100000;
+	const isHighMileage = normalizeMileageAsNumber(formData.cntrRdg) >= 100000;
 
 	// Effect: VIN → model auto-detection
 	useEffect(() => {
