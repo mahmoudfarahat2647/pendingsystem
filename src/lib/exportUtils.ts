@@ -1,6 +1,6 @@
 import type { PendingRow } from "@/types";
-import { getEffectiveNoteHistory } from "./orderWorkflow";
 import type { AllowedCompany } from "./ordersValidationConstants";
+import { getEffectiveNoteHistory } from "./orderWorkflow";
 
 /**
  * Exports selected orders to a CSV format optimized for logistics.

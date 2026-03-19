@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Next.js server module
 vi.mock("next/server", () => ({
@@ -39,6 +39,10 @@ describe("GET /api/storage-stats", () => {
 		mockRpc.mockReset();
 		mockListBuckets.mockReset();
 		mockStorageFrom.mockReset();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
 	});
 
 	async function callGET() {
@@ -110,6 +114,55 @@ describe("GET /api/storage-stats", () => {
 
 		const body = response.body as unknown as Record<string, unknown>;
 		expect(body.dbAvailable).toBe(true);
+		expect(body.storageAvailable).toBe(false);
+		expect(body.dataComplete).toBe(false);
+		expect(body.combinedUsedBytes).toBeNull();
+	});
+
+	it("should return degraded data when Supabase calls exceed the timeout", async () => {
+		vi.useFakeTimers();
+		mockRpc.mockImplementation(
+			() => new Promise(() => undefined) as Promise<unknown>,
+		);
+		mockListBuckets.mockImplementation(
+			() => new Promise(() => undefined) as Promise<unknown>,
+		);
+
+		const routePromise = callGET();
+
+		await vi.advanceTimersByTimeAsync(5_000);
+
+		const response = await routePromise;
+		expect(response.status).toBe(200);
+
+		const body = response.body as unknown as Record<string, unknown>;
+		expect(body.dbUsedBytes).toBeNull();
+		expect(body.dbAvailable).toBe(false);
+		expect(body.storageUsedBytes).toBe(0);
+		expect(body.storageAvailable).toBe(false);
+		expect(body.dataComplete).toBe(false);
+		expect(body.combinedUsedBytes).toBeNull();
+	});
+
+	it("should mark storage unavailable when recursive bucket listing fails", async () => {
+		mockRpc.mockResolvedValue({ data: 10_000_000, error: null });
+		mockListBuckets.mockResolvedValue({
+			data: [{ id: "uploads" }],
+			error: null,
+		});
+		mockStorageFrom.mockReturnValue({
+			list: vi.fn().mockResolvedValue({
+				data: null,
+				error: { message: "timeout" },
+			}),
+		});
+
+		const response = await callGET();
+		expect(response.status).toBe(200);
+
+		const body = response.body as unknown as Record<string, unknown>;
+		expect(body.dbAvailable).toBe(true);
+		expect(body.storageUsedBytes).toBe(0);
 		expect(body.storageAvailable).toBe(false);
 		expect(body.dataComplete).toBe(false);
 		expect(body.combinedUsedBytes).toBeNull();

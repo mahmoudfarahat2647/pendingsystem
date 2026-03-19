@@ -60,7 +60,7 @@ export const EditNoteModal = ({
 	}, [open, initialContent]);
 
 	const handleSave = () => {
-		let finalContent = isHistoryLocked ? (initialContent || "") : content;
+		let finalContent = isHistoryLocked ? initialContent || "" : content;
 		if (newNote.trim()) {
 			finalContent = appendTaggedUserNote(
 				finalContent,
@@ -98,7 +98,6 @@ export const EditNoteModal = ({
 				</DialogHeader>
 
 				<div className="relative">
-
 					<div className="p-6 space-y-6">
 						{/* Existing Notes Section */}
 						<div className="space-y-2">
@@ -120,9 +119,12 @@ export const EditNoteModal = ({
 										</AlertDialogTrigger>
 										<AlertDialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-sm">
 											<AlertDialogHeader>
-												<AlertDialogTitle className="text-sm">Edit existing notes?</AlertDialogTitle>
+												<AlertDialogTitle className="text-sm">
+													Edit existing notes?
+												</AlertDialogTitle>
 												<AlertDialogDescription className="text-xs text-gray-400">
-													History should normally be append-only. Are you sure you want to directly edit the past notes?
+													History should normally be append-only. Are you sure
+													you want to directly edit the past notes?
 												</AlertDialogDescription>
 											</AlertDialogHeader>
 											<AlertDialogFooter>

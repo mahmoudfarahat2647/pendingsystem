@@ -208,10 +208,10 @@ export function normalizeMileageAsNumber(
 	if (normalized === "") {
 		return 0;
 	}
-	
+
 	if (!/^\d+$/.test(normalized)) {
 		return NaN;
 	}
-	
+
 	return parseInt(normalized, 10);
 }

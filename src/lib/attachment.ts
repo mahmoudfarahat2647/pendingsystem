@@ -6,11 +6,7 @@ export interface AttachmentValue {
 	attachmentFilePath?: string;
 }
 
-const SUPPORTED_MIME_TYPES = [
-	"image/jpeg",
-	"image/png",
-	"application/pdf",
-];
+const SUPPORTED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -66,7 +62,9 @@ export function getAttachmentsBucket(): string {
 	return env.NEXT_PUBLIC_SUPABASE_ATTACHMENTS_BUCKET;
 }
 
-export function hasAttachment(value: AttachmentValue | null | undefined): boolean {
+export function hasAttachment(
+	value: AttachmentValue | null | undefined,
+): boolean {
 	return Boolean(
 		value?.attachmentLink?.trim() || value?.attachmentFilePath?.trim(),
 	);

@@ -76,8 +76,10 @@ export function useSaveOrderMutation() {
 			// Handle multi-stage cache reconciliation
 			if (variables.sourceStage && variables.sourceStage !== variables.stage) {
 				const sourceCacheKey = getOrdersQueryKey(variables.sourceStage);
-				queryClient.setQueryData<PendingRow[]>(sourceCacheKey, (oldOrders = []) =>
-					oldOrders.filter((order) => order.id !== mappedRow.id),
+				queryClient.setQueryData<PendingRow[]>(
+					sourceCacheKey,
+					(oldOrders = []) =>
+						oldOrders.filter((order) => order.id !== mappedRow.id),
 				);
 			}
 

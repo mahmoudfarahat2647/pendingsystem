@@ -26,12 +26,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+	type AttachmentValue,
 	buildStorageObjectPath,
 	getAttachmentsBucket,
 	isSupportedAttachmentFile,
 	isValidFileSize,
 	sanitizeAttachmentLink,
-	type AttachmentValue,
 } from "@/lib/attachment";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { cn } from "@/lib/utils";
@@ -61,7 +61,9 @@ export const EditAttachmentModal = ({
 	const [isUploading, setIsUploading] = useState(false);
 	const [hasCopied, setHasCopied] = useState(false);
 	const [fileMarkedForRemoval, setFileMarkedForRemoval] = useState(false);
-	const [confirmTarget, setConfirmTarget] = useState<"file" | "link" | null>(null);
+	const [confirmTarget, setConfirmTarget] = useState<"file" | "link" | null>(
+		null,
+	);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -161,7 +163,7 @@ export const EditAttachmentModal = ({
 
 	const handleLinkChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = event.target.value;
-		
+
 		// Prevent clearing the external link manually via keyboard (e.g. backspace/delete).
 		// Must use the trash icon to delete the link.
 		if (linkValue && !newValue.trim()) {
@@ -226,8 +228,6 @@ export const EditAttachmentModal = ({
 		return objectPath;
 	};
 
-
-
 	const handleOpenExistingFile = () => {
 		if (!currentFileUrl) return;
 		window.open(currentFileUrl, "_blank", "noopener,noreferrer");
@@ -267,13 +267,20 @@ export const EditAttachmentModal = ({
 					try {
 						await deleteStoredFile(newlyUploadedFilePath);
 					} catch (cleanupError) {
-						console.error("Failed to delete orphaned file after save error", cleanupError);
+						console.error(
+							"Failed to delete orphaned file after save error",
+							cleanupError,
+						);
 					}
 				}
 				throw saveError;
 			}
 
-			if (initialFilePath && (selectedFile || shouldDeleteExistingFile) && initialFilePath !== nextFilePath) {
+			if (
+				initialFilePath &&
+				(selectedFile || shouldDeleteExistingFile) &&
+				initialFilePath !== nextFilePath
+			) {
 				try {
 					await deleteStoredFile(initialFilePath);
 				} catch (deleteError) {
@@ -289,8 +296,6 @@ export const EditAttachmentModal = ({
 			setIsUploading(false);
 		}
 	};
-
-
 
 	return (
 		<>
@@ -352,7 +357,9 @@ export const EditAttachmentModal = ({
 							disabled={dropzoneDisabled}
 						>
 							<div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none rounded-xl" />
-							<Label htmlFor="file-upload" className="sr-only">Upload file</Label>
+							<Label htmlFor="file-upload" className="sr-only">
+								Upload file
+							</Label>
 							<input
 								id="file-upload"
 								ref={fileInputRef}
@@ -456,7 +463,10 @@ export const EditAttachmentModal = ({
 
 						<div className="space-y-2">
 							<div className="flex items-center justify-between">
-								<Label htmlFor="external-link" className="text-xs font-medium text-slate-400">
+								<Label
+									htmlFor="external-link"
+									className="text-xs font-medium text-slate-400"
+								>
 									External Link
 								</Label>
 							</div>
