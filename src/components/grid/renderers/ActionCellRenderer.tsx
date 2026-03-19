@@ -32,7 +32,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 			</button>
 			<button
 				type="button"
-				className={`transition-colors ${data.actionNote ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+				className={`transition-colors ${(data.noteHistory || data.actionNote) ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
 				title="Note"
 				disabled={isLocked}
 				onClick={() => {

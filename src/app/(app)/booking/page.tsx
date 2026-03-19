@@ -52,7 +52,11 @@ import {
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
-import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
+import {
+	appendTaggedUserNote,
+	getEffectiveNoteHistory,
+	getSelectedIds,
+} from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -86,11 +90,20 @@ export default function BookingPage() {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				saveOrderMutation.mutate({
-					id,
-					updates: { archiveReason: reason },
-					stage: "archive",
-				});
+				const row = bookingRowData.find((r: PendingRow) => r.id === id);
+				if (row) {
+					const newNoteHistory = appendTaggedUserNote(
+						getEffectiveNoteHistory(row),
+						reason,
+						"archive",
+					);
+
+					saveOrderMutation.mutate({
+						id,
+						updates: { archiveReason: reason, noteHistory: newNoteHistory },
+						stage: "archive",
+					});
+				}
 			}
 		},
 		[saveOrderMutation],
@@ -148,8 +161,8 @@ export default function BookingPage() {
 		const ids = getSelectedIds(selectedRows);
 		// 1. Update status/note (sequential but optimistic)
 		for (const row of selectedRows) {
-			const newActionNote = appendTaggedActionNote(
-				row.actionNote,
+			const newNoteHistory = appendTaggedUserNote(
+				getEffectiveNoteHistory(row),
 				`Reorder Reason: ${reorderReason}`,
 				"reorder",
 			);
@@ -157,14 +170,12 @@ export default function BookingPage() {
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
-					actionNote: newActionNote,
+					noteHistory: newNoteHistory,
 					status: "Reorder",
 				},
-				stage: "booking",
+				stage: "orders",
 			});
 		}
-		// 2. Move stage (bulk)
-		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "orders" });
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");
@@ -188,9 +199,9 @@ export default function BookingPage() {
 				? `${row.bookingNote}\n[System]: ${fullNote}`
 				: `[System]: ${fullNote}`;
 
-			// Append to actionNote for history
-			const newActionNote = appendTaggedActionNote(
-				row.actionNote,
+			// Append to noteHistory
+			const newNoteHistory = appendTaggedUserNote(
+				getEffectiveNoteHistory(row),
 				fullNote,
 				"rebooking",
 			);
@@ -200,7 +211,7 @@ export default function BookingPage() {
 				updates: {
 					bookingDate: newDate,
 					bookingNote: updatedBookingNote,
-					actionNote: newActionNote,
+					noteHistory: newNoteHistory,
 					...(status ? { bookingStatus: status } : {}),
 				},
 				stage: "booking",

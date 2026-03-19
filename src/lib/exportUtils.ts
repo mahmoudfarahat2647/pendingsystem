@@ -1,4 +1,5 @@
 import type { PendingRow } from "@/types";
+import { getEffectiveNoteHistory } from "./orderWorkflow";
 import type { AllowedCompany } from "./ordersValidationConstants";
 
 /**
@@ -93,6 +94,7 @@ export const exportAllSystemDataCSV = (
 		...r,
 		source: stageMap[r.stage as string] || r.stage || "Unknown",
 		reminderText: formatReminder(r.reminder),
+		noteHistory: getEffectiveNoteHistory(r),
 	}));
 
 	const headers = [
@@ -118,9 +120,7 @@ export const exportAllSystemDataCSV = (
 		"bookingDate",
 		"bookingStatus",
 		"partStatus",
-		"noteContent",
-		"actionNote",
-		"bookingNote",
+		"noteHistory",
 		"reminderText",
 		"archiveReason",
 		"archivedAt",

@@ -2,6 +2,7 @@
 
 import type { RowModalType } from "@/hooks/useRowModals";
 import type { AttachmentValue } from "@/lib/attachment";
+import { getEffectiveNoteHistory } from "@/lib/orderWorkflow";
 import type { PendingRow } from "@/types";
 import { ArchiveReasonModal } from "./ArchiveReasonModal";
 import { EditAttachmentModal } from "./EditAttachmentModal";
@@ -41,7 +42,7 @@ export const RowModals = ({
 			<EditNoteModal
 				open={activeModal === "note"}
 				onOpenChange={(open) => !open && onClose()}
-				initialContent={currentRow.actionNote || ""}
+				initialContent={getEffectiveNoteHistory(currentRow)}
 				onSave={onSaveNote}
 				sourceTag={sourceTag}
 			/>

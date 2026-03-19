@@ -13,7 +13,11 @@ import {
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
 import { exportToLogisticsCSV } from "@/lib/exportUtils";
-import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
+import {
+	appendTaggedUserNote,
+	getEffectiveNoteHistory,
+	getSelectedIds,
+} from "@/lib/orderWorkflow";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
 import {
 	calculateEndWarranty,
@@ -73,15 +77,17 @@ export const useOrdersPageHandlers = () => {
 			const results = await Promise.allSettled(
 				ids.map((id) => {
 					const row = ordersRowData.find((r) => r.id === id);
-					const newActionNote = appendTaggedActionNote(
-						row?.actionNote,
+					if (!row) return Promise.resolve();
+
+					const newNoteHistory = appendTaggedUserNote(
+						getEffectiveNoteHistory(row),
 						reason,
 						"archive",
 					);
 
 					return saveOrderMutation.mutateAsync({
 						id,
-						updates: { archiveReason: reason, actionNote: newActionNote },
+						updates: { archiveReason: reason, noteHistory: newNoteHistory },
 						stage: "orders",
 					});
 				}),
@@ -290,8 +296,8 @@ export const useOrdersPageHandlers = () => {
 
 		// 1. Update details first (optimistic)
 		for (const row of selectedRows) {
-			const newActionNote = appendTaggedActionNote(
-				row.actionNote,
+			const newNoteHistory = appendTaggedUserNote(
+				getEffectiveNoteHistory(row),
 				note,
 				"booking",
 			);
@@ -301,7 +307,7 @@ export const useOrdersPageHandlers = () => {
 				updates: {
 					bookingDate: date,
 					bookingNote: note,
-					actionNote: newActionNote,
+					noteHistory: newNoteHistory,
 					...(status ? { bookingStatus: status } : {}),
 				},
 				stage: "booking",

@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { hasAttachment, type AttachmentValue } from "@/lib/attachment";
+import { appendTaggedUserNote, getEffectiveNoteHistory } from "@/lib/orderWorkflow";
 import type { PendingRow } from "@/types";
 
 export type RowModalType =
@@ -60,7 +61,7 @@ export const useRowModals = (
 				try {
 					await onUpdate(
 						currentRow.id,
-						{ actionNote: content },
+						{ noteHistory: content },
 						sourceTag || undefined,
 					);
 					const { toast } = await import("sonner");
@@ -131,14 +132,11 @@ export const useRowModals = (
 				onArchive(targetIds, archiveReason);
 				closeModal();
 			} else if (currentRow) {
-				const tag = "#archive";
-				const reasonText = archiveReason.trim();
-				const newNote = reasonText ? `${reasonText} ${tag}` : "";
-				const combinedNote = currentRow.actionNote
-					? reasonText
-						? `${currentRow.actionNote}\n${newNote}`
-						: currentRow.actionNote
-					: newNote;
+				const combinedNote = appendTaggedUserNote(
+					getEffectiveNoteHistory(currentRow),
+					archiveReason,
+					"archive",
+				);
 
 				onUpdate(
 					currentRow.id,
@@ -146,7 +144,7 @@ export const useRowModals = (
 						status: "Archived",
 						archiveReason: archiveReason,
 						archivedAt: new Date().toISOString(),
-						actionNote: combinedNote,
+						noteHistory: combinedNote,
 					},
 					sourceTag || undefined,
 				);

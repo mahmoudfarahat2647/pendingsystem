@@ -45,7 +45,7 @@ export const getBaseColumns = (
 			// This getter returns a string that explicitly changes when metadata (note/reminder) updates.
 			// This is REQUIRED because the 'id' field stays static, which would otherwise cause AG Grid
 			// to optimize away the re-render. DO NOT revert to field: "id".
-			return `${data.id}_${data.actionNote ? "note" : ""}_${data.reminder ? "rem" : ""}_${data.hasAttachment ? "att" : ""}`;
+			return `${data.id}_${(data.noteHistory || data.actionNote) ? "note" : ""}_${data.reminder ? "rem" : ""}_${data.hasAttachment ? "att" : ""}`;
 		},
 		cellRenderer: ActionCellRenderer,
 		cellRendererParams: {
