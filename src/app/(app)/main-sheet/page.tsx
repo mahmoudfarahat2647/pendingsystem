@@ -82,6 +82,7 @@ export default function MainSheetPage() {
 						id,
 						updates: { archiveReason: reason, noteHistory: newNoteHistory },
 						stage: "archive",
+						sourceStage: "main",
 					});
 				}
 			}
@@ -200,6 +201,7 @@ export default function MainSheetPage() {
 					...(status ? { bookingStatus: status } : {}),
 				},
 				stage: "booking",
+				sourceStage: "main",
 			});
 		}
 		setSelectedRows([]);

@@ -525,4 +525,17 @@ describe("getEffectiveNoteHistory", () => {
 		});
 		expect(getEffectiveNoteHistory(row)).toBe("Old reason #archive\nNew reason #archive");
 	});
+
+	it("should treat noteHistory: '' as authoritative and not fall back to actionNote", () => {
+		// Regression: noteHistory:"" must mean "intentionally cleared", not "absent"
+		const row = createMockRow({ noteHistory: "", actionNote: "stale note" });
+		expect(getEffectiveNoteHistory(row)).toBe("");
+	});
+
+	it("should fall back to legacy fields when noteHistory is absent (undefined)", () => {
+		// Regression: the migration path must still work for pre-migration rows
+		const row = createMockRow({ actionNote: "legacy note" });
+		// noteHistory is not set by createMockRow, so it is undefined → should fall back
+		expect(getEffectiveNoteHistory(row)).toBe("legacy note");
+	});
 });

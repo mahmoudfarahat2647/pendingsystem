@@ -88,7 +88,8 @@ export const useOrdersPageHandlers = () => {
 					return saveOrderMutation.mutateAsync({
 						id,
 						updates: { archiveReason: reason, noteHistory: newNoteHistory },
-						stage: "orders",
+						stage: "archive",
+						sourceStage: "orders",
 					});
 				}),
 			);
@@ -97,10 +98,8 @@ export const useOrdersPageHandlers = () => {
 			if (failedCount > 0) {
 				throw new Error(`${failedCount} of ${ids.length} items failed to save`);
 			}
-
-			await bulkUpdateStageMutation.mutateAsync({ ids, stage: "archive" });
 		},
-		[saveOrderMutation, bulkUpdateStageMutation, ordersRowData],
+		[saveOrderMutation, ordersRowData],
 	);
 
 	const handleSaveOrder = async (formData: FormData, parts: PartEntry[]) => {
@@ -311,11 +310,10 @@ export const useOrdersPageHandlers = () => {
 					...(status ? { bookingStatus: status } : {}),
 				},
 				stage: "booking",
+				sourceStage: "orders",
 			});
 		}
 
-		// 2. Move stage (bulk)
-		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "booking" });
 		setSelectedRows([]);
 		toast.success(`${selectedRows.length} order(s) sent to Booking`);
 	};

@@ -37,7 +37,6 @@ import {
 } from "@/components/ui/tooltip";
 import {
 	useBulkDeleteOrdersMutation,
-	useBulkUpdateOrderStageMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
@@ -57,7 +56,6 @@ export default function ArchivePage() {
 	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("archive");
 	const { data: archiveRowData = [] } = useOrdersQuery("archive");
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("archive");
 	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("archive");
 	const saveOrderMutation = useSaveOrderMutation();
 
@@ -126,11 +124,7 @@ export default function ArchivePage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = getSelectedIds(selectedRows);
-		// 1. Move stage (bulk)
-		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "orders" });
-
-		// 2. Update status/note (sequential but optimistic)
+		// Update status/note and stage via saveOrderMutation (atomic)
 		for (const row of selectedRows) {
 			const newNoteHistory = appendTaggedUserNote(
 				getEffectiveNoteHistory(row),
@@ -145,6 +139,7 @@ export default function ArchivePage() {
 					status: "Reorder",
 				},
 				stage: "orders",
+				sourceStage: "archive",
 			});
 		}
 		setSelectedRows([]);

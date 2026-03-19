@@ -112,6 +112,7 @@ export default function CallListPage() {
 						id,
 						updates: { archiveReason: reason, noteHistory: newNoteHistory },
 						stage: "archive",
+						sourceStage: "call",
 					});
 				}
 			}
@@ -162,6 +163,7 @@ export default function CallListPage() {
 					...(status ? { bookingStatus: status } : {}),
 				},
 				stage: "booking",
+				sourceStage: "call",
 			});
 		}
 		setSelectedRows([]);
@@ -190,6 +192,7 @@ export default function CallListPage() {
 					status: "Reorder",
 				},
 				stage: "orders",
+				sourceStage: "call",
 			});
 		}
 		// 2. Move stage (bulk opportunistic)

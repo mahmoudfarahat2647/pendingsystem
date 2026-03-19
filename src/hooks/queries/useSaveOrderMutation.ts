@@ -27,6 +27,7 @@ export function useSaveOrderMutation() {
 			id: string;
 			updates: Partial<PendingRow>;
 			stage: OrderStage;
+			sourceStage?: OrderStage;
 		}) => orderService.saveOrder({ id, ...updates, stage }),
 		onMutate: async ({ id, updates, stage }) => {
 			await queryClient.cancelQueries({ queryKey: ["orders"] });
@@ -54,15 +55,31 @@ export function useSaveOrderMutation() {
 			toast.error(`Error saving order: ${getErrorMessage(error)}`);
 		},
 		onSettled: (_data, _error, variables) => {
+			// Invalidate destination
 			queryClient.invalidateQueries({
 				queryKey: getOrdersQueryKey(variables.stage),
 			});
+
+			// If source differs, invalidate it too
+			if (variables.sourceStage && variables.sourceStage !== variables.stage) {
+				queryClient.invalidateQueries({
+					queryKey: getOrdersQueryKey(variables.sourceStage),
+				});
+			}
 		},
 		onSuccess: (data, variables) => {
 			const mappedRow = orderService.mapSupabaseOrder(
 				data as Record<string, unknown>,
 			);
 			if (!mappedRow) return;
+
+			// Handle multi-stage cache reconciliation
+			if (variables.sourceStage && variables.sourceStage !== variables.stage) {
+				const sourceCacheKey = getOrdersQueryKey(variables.sourceStage);
+				queryClient.setQueryData<PendingRow[]>(sourceCacheKey, (oldOrders = []) =>
+					oldOrders.filter((order) => order.id !== mappedRow.id),
+				);
+			}
 
 			const cacheKey = getOrdersQueryKey(variables.stage);
 			queryClient.setQueryData<PendingRow[]>(cacheKey, (oldOrders = []) => {

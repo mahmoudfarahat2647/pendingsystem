@@ -44,7 +44,7 @@ export const appendTaggedUserNote = (
  * Otherwise, it backfills from existing human note fields.
  */
 export const getEffectiveNoteHistory = (row: PendingRow): string => {
-	if (row.noteHistory) {
+	if ("noteHistory" in row && row.noteHistory !== undefined) {
 		return row.noteHistory;
 	}
 

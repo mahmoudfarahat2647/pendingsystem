@@ -1,5 +1,6 @@
 import type { ICellRendererParams } from "ag-grid-community";
 import { Bell, Paperclip, StickyNote } from "lucide-react";
+import { getEffectiveNoteHistory } from "@/lib/orderWorkflow";
 import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 
@@ -32,7 +33,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 			</button>
 			<button
 				type="button"
-				className={`transition-colors ${(data.noteHistory || data.actionNote) ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+				className={`transition-colors ${getEffectiveNoteHistory(data) ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
 				title="Note"
 				disabled={isLocked}
 				onClick={() => {

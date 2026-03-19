@@ -102,6 +102,7 @@ export default function BookingPage() {
 						id,
 						updates: { archiveReason: reason, noteHistory: newNoteHistory },
 						stage: "archive",
+						sourceStage: "booking",
 					});
 				}
 			}
@@ -174,6 +175,7 @@ export default function BookingPage() {
 					status: "Reorder",
 				},
 				stage: "orders",
+				sourceStage: "booking",
 			});
 		}
 		setSelectedRows([]);
