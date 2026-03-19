@@ -8,6 +8,7 @@ import {
 } from "@/lib/storage-limits";
 
 export const runtime = "nodejs";
+const SUPABASE_REQUEST_TIMEOUT_MS = 5000;
 
 /** Response shape returned by GET /api/storage-stats. */
 export interface StorageStatsResponse {
@@ -45,7 +46,11 @@ async function getRecursiveBucketSize(
 			.from(bucketId)
 			.list(prefix, { limit: PAGE_SIZE, offset });
 
-		if (error || !items || items.length === 0) break;
+		if (error) {
+			throw error;
+		}
+
+		if (!items || items.length === 0) break;
 
 		for (const item of items) {
 			if (item.id === null) {
@@ -66,6 +71,44 @@ async function getRecursiveBucketSize(
 	}
 
 	return totalSize;
+}
+
+function createTimeoutFetch(timeoutMs: number): typeof fetch {
+	return (input, init) => {
+		const timeoutSignal = AbortSignal.timeout(timeoutMs);
+		const signal =
+			init?.signal == null
+				? timeoutSignal
+				: AbortSignal.any([init.signal, timeoutSignal]);
+
+		return fetch(input, {
+			...init,
+			signal,
+		});
+	};
+}
+
+function withTimeout<T>(promise: PromiseLike<T>, label: string): Promise<T> {
+	return new Promise<T>((resolve, reject) => {
+		const timer = setTimeout(() => {
+			reject(
+				new Error(
+					`${label} timed out after ${SUPABASE_REQUEST_TIMEOUT_MS}ms`,
+				),
+			);
+		}, SUPABASE_REQUEST_TIMEOUT_MS);
+
+		Promise.resolve(promise).then(
+			(value) => {
+				clearTimeout(timer);
+				resolve(value);
+			},
+			(error) => {
+				clearTimeout(timer);
+				reject(error);
+			},
+		);
+	});
 }
 
 /**
@@ -95,37 +138,75 @@ export async function GET() {
 				persistSession: false,
 				autoRefreshToken: false,
 			},
+			global: {
+				fetch: createTimeoutFetch(SUPABASE_REQUEST_TIMEOUT_MS),
+			},
 		});
 
 		// 1. Get Database Size via RPC
 		let dbUsedBytes: number | null = null;
 		let dbAvailable = false;
 
-		const { data: dbData, error: dbError } = await supabase.rpc(
-			"get_database_size_bytes",
-		);
-
-		if (dbError) {
-			console.error("Error fetching DB size via RPC:", dbError);
-		} else {
-			dbUsedBytes = dbData;
-			dbAvailable = true;
-		}
-
 		// 2. Get File Storage Size (recursive + paginated)
 		let storageUsedBytes = 0;
 		let storageAvailable = false;
 
-		const { data: buckets, error: bucketError } =
-			await supabase.storage.listBuckets();
+		const [dbResult, bucketsResult] = await Promise.allSettled([
+			withTimeout(
+				supabase.rpc("get_database_size_bytes"),
+				"Database size RPC",
+			),
+			withTimeout(supabase.storage.listBuckets(), "Storage bucket listing"),
+		]);
 
-		if (!bucketError && buckets) {
-			storageAvailable = true;
-			for (const bucket of buckets) {
-				storageUsedBytes += await getRecursiveBucketSize(supabase, bucket.id);
+		if (dbResult.status === "fulfilled") {
+			const { data: dbData, error: dbError } = dbResult.value;
+			if (dbError) {
+				console.error("Error fetching DB size via RPC:", dbError);
+			} else {
+				dbUsedBytes = dbData;
+				dbAvailable = true;
 			}
-		} else if (bucketError) {
-			console.error("Error listing storage buckets:", bucketError);
+		} else {
+			console.error("Error fetching DB size via RPC:", dbResult.reason);
+		}
+
+		if (bucketsResult.status === "fulfilled") {
+			const { data: buckets, error: bucketError } = bucketsResult.value;
+			if (!bucketError && buckets) {
+				const bucketSizeResults = await Promise.allSettled(
+					buckets.map((bucket) =>
+						withTimeout(
+							getRecursiveBucketSize(supabase, bucket.id),
+							`Storage usage for bucket "${bucket.id}"`,
+						),
+					),
+				);
+
+				const hasBucketFailures = bucketSizeResults.some(
+					(result) => result.status === "rejected",
+				);
+
+				if (hasBucketFailures) {
+					for (const result of bucketSizeResults) {
+						if (result.status === "rejected") {
+							console.error("Error computing storage usage:", result.reason);
+						}
+					}
+				} else {
+					storageUsedBytes = bucketSizeResults.reduce(
+						(total, result) =>
+							total +
+							(result.status === "fulfilled" ? result.value : 0),
+						0,
+					);
+					storageAvailable = true;
+				}
+			} else if (bucketError) {
+				console.error("Error listing storage buckets:", bucketError);
+			}
+		} else {
+			console.error("Error listing storage buckets:", bucketsResult.reason);
 		}
 
 		const combinedUsedBytes =

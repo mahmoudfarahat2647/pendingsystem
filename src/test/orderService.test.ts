@@ -353,14 +353,21 @@ describe("orderService", () => {
 			savedData: Record<string, unknown>;
 		}) {
 			const mockUpdate = vi.fn().mockReturnThis();
-			const mockSingle = vi.fn().mockResolvedValue({ data: savedData, error: null });
+			const mockSingle = vi
+				.fn()
+				.mockResolvedValue({ data: savedData, error: null });
 			const mockEq = vi.fn().mockReturnThis();
 			const mockSelect = vi.fn().mockReturnThis();
 			const mockMaybeSingle = vi
 				.fn()
-				.mockResolvedValue({ data: { metadata: existingMetadata }, error: null });
+				.mockResolvedValue({
+					data: { metadata: existingMetadata },
+					error: null,
+				});
 
-			(supabase.from as unknown as { mockReturnValue: Function }).mockReturnValue({
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
 				select: mockSelect,
 				eq: mockEq,
 				maybeSingle: mockMaybeSingle,
@@ -418,6 +425,24 @@ describe("orderService", () => {
 
 			const writtenMetadata = mockUpdate.mock.calls[0][0].metadata;
 			expect(writtenMetadata).toHaveProperty("actionNote", "old note");
+		});
+
+		it("should NOT overwrite attachment_link when attachmentLink is absent from updates", async () => {
+			const { mockUpdate } = makeSupabaseMock({
+				existingMetadata: { attachmentLink: "C:\\files\\existing.pdf" },
+				savedData: { id: VALID_UUID },
+			});
+			
+			await orderService.saveOrder({
+				id: VALID_UUID,
+				stage: "booking",
+				noteHistory: "moved to booking",
+				// attachmentLink intentionally absent
+			});
+			
+			const writtenPayload = mockUpdate.mock.calls[0][0];
+			expect(writtenPayload).not.toHaveProperty("attachment_link");
+			expect(writtenPayload).not.toHaveProperty("attachment_file_path");
 		});
 	});
 });

@@ -17,24 +17,20 @@ vi.mock("@/store/useStore", () => ({
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
-	Dialog: ({
-		open,
-		children,
-	}: {
-		open: boolean;
-		children: ReactNode;
-	}) => (open ? <div data-testid="dialog-root">{children}</div> : null),
-	DialogContent: ({
-		children,
-		...props
-	}: {
-		children: ReactNode;
-	}) => <div {...props}>{children}</div>,
+	Dialog: ({ open, children }: { open: boolean; children: ReactNode }) =>
+		open ? <div data-testid="dialog-root">{children}</div> : null,
+	DialogContent: ({ children, ...props }: { children: ReactNode }) => (
+		<div {...props}>{children}</div>
+	),
 	DialogDescription: ({ children }: { children: ReactNode }) => (
 		<div>{children}</div>
 	),
-	DialogFooter: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-	DialogHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	DialogFooter: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
+	DialogHeader: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
 	DialogTitle: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
@@ -65,7 +61,9 @@ vi.mock("@/components/ui/alert-dialog", () => ({
 	AlertDialogTitle: ({ children }: { children: ReactNode }) => (
 		<div>{children}</div>
 	),
-	AlertDialogTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	AlertDialogTrigger: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
 }));
 
 vi.mock("@/components/ui/button", () => ({
@@ -121,7 +119,9 @@ describe("EditNoteModal", () => {
 
 		await user.click(screen.getByRole("button", { name: "Template A" }));
 
-		const newNoteField = screen.getByPlaceholderText("Type a note for #booking...");
+		const newNoteField = screen.getByPlaceholderText(
+			"Type a note for #booking...",
+		);
 		expect(newNoteField).toHaveValue("Template A");
 
 		await user.click(screen.getByRole("button", { name: "Template B" }));
@@ -148,7 +148,10 @@ describe("EditNoteModal", () => {
 			/>,
 		);
 
-		await user.type(screen.getByPlaceholderText("Type a note for #undefined..."), "Call customer");
+		await user.type(
+			screen.getByPlaceholderText("Type a note for #undefined..."),
+			"Call customer",
+		);
 		await user.click(screen.getByRole("button", { name: "SAVE NOTES" }));
 
 		expect(onSave).toHaveBeenCalledWith("Call customer #note");

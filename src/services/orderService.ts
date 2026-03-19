@@ -209,8 +209,12 @@ export const orderService = {
 
 		const supabaseOrder = {
 			...baseSupabaseOrder,
-			attachment_link: rest.attachmentLink || null,
-			attachment_file_path: rest.attachmentFilePath || null,
+			...("attachmentLink" in rest && {
+				attachment_link: rest.attachmentLink ?? null,
+			}),
+			...("attachmentFilePath" in rest && {
+				attachment_file_path: rest.attachmentFilePath ?? null,
+			}),
 			metadata: metadataToStore,
 		};
 
@@ -379,7 +383,9 @@ export const orderService = {
 				? (row.metadata as Record<string, unknown>)
 				: {};
 		const metadataAttachmentLink =
-			typeof metadata.attachmentLink === "string" ? metadata.attachmentLink : "";
+			typeof metadata.attachmentLink === "string"
+				? metadata.attachmentLink
+				: "";
 		const metadataAttachmentFilePath =
 			typeof metadata.attachmentFilePath === "string"
 				? metadata.attachmentFilePath

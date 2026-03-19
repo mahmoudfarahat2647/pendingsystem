@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
 	appendTaggedUserNote,
-	getEffectiveNoteHistory,
 	BLANK_VIN_BUCKET,
 	checkVinPartDuplicate,
 	findSameOrderDuplicateIndices,
 	findSameOrderDuplicates,
 	formatVinForDisplay,
+	getEffectiveNoteHistory,
 	getNormalizedVinBuckets,
 	getVinBucket,
 	hasMixedVinSelection,
@@ -451,9 +451,7 @@ describe("appendTaggedUserNote", () => {
 	});
 
 	it("should return existing string if new note is only whitespace", () => {
-		expect(appendTaggedUserNote("old note", "   ", "archive")).toBe(
-			"old note",
-		);
+		expect(appendTaggedUserNote("old note", "   ", "archive")).toBe("old note");
 	});
 
 	it("should return empty string if existing is undefined and new note is empty", () => {
@@ -463,7 +461,10 @@ describe("appendTaggedUserNote", () => {
 
 describe("getEffectiveNoteHistory", () => {
 	it("should return noteHistory if it exists and is non-empty", () => {
-		const row = createMockRow({ noteHistory: "existing history", actionNote: "ignored" });
+		const row = createMockRow({
+			noteHistory: "existing history",
+			actionNote: "ignored",
+		});
 		expect(getEffectiveNoteHistory(row)).toBe("existing history");
 	});
 
@@ -478,13 +479,15 @@ describe("getEffectiveNoteHistory", () => {
 	});
 
 	it("should combine multiple legacy fields", () => {
-		const row = createMockRow({ 
-			noteContent: "content", 
-			actionNote: "action", 
+		const row = createMockRow({
+			noteContent: "content",
+			actionNote: "action",
 			bookingNote: "booking",
-			archiveReason: "reason"
+			archiveReason: "reason",
 		});
-		expect(getEffectiveNoteHistory(row)).toBe("content\naction\nbooking\nreason #archive");
+		expect(getEffectiveNoteHistory(row)).toBe(
+			"content\naction\nbooking\nreason #archive",
+		);
 	});
 
 	it("should return empty string when all legacy fields are absent", () => {
@@ -495,7 +498,7 @@ describe("getEffectiveNoteHistory", () => {
 	it("should deduplicate archiveReason if it matches actionNote exactly with tag", () => {
 		const row = createMockRow({
 			actionNote: "Damaged screen #archive",
-			archiveReason: "Damaged screen"
+			archiveReason: "Damaged screen",
 		});
 		// Should NOT append "Damaged screen #archive" again
 		expect(getEffectiveNoteHistory(row)).toBe("Damaged screen #archive");
@@ -504,16 +507,18 @@ describe("getEffectiveNoteHistory", () => {
 	it("should deduplicate bookingNote if it matches actionNote exactly with tag", () => {
 		const row = createMockRow({
 			actionNote: "Customer requested Monday #booking",
-			bookingNote: "Customer requested Monday"
+			bookingNote: "Customer requested Monday",
 		});
 		// Should NOT append "Customer requested Monday" again
-		expect(getEffectiveNoteHistory(row)).toBe("Customer requested Monday #booking");
+		expect(getEffectiveNoteHistory(row)).toBe(
+			"Customer requested Monday #booking",
+		);
 	});
 
 	it("should be case-insensitive and trim-tolerant for deduplication", () => {
 		const row = createMockRow({
 			actionNote: " DAMAGED SCREEN #archive ",
-			archiveReason: "damaged screen"
+			archiveReason: "damaged screen",
 		});
 		expect(getEffectiveNoteHistory(row)).toBe("DAMAGED SCREEN #archive");
 	});
@@ -521,9 +526,11 @@ describe("getEffectiveNoteHistory", () => {
 	it("should NOT deduplicate if meanings differ", () => {
 		const row = createMockRow({
 			actionNote: "Old reason #archive",
-			archiveReason: "New reason"
+			archiveReason: "New reason",
 		});
-		expect(getEffectiveNoteHistory(row)).toBe("Old reason #archive\nNew reason #archive");
+		expect(getEffectiveNoteHistory(row)).toBe(
+			"Old reason #archive\nNew reason #archive",
+		);
 	});
 
 	it("should treat noteHistory: '' as authoritative and not fall back to actionNote", () => {
