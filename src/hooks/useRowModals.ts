@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { hasAttachment, type AttachmentValue } from "@/lib/attachment";
+import { type AttachmentValue, hasAttachment } from "@/lib/attachment";
 import type { PendingRow } from "@/types";
 
 export type RowModalType =

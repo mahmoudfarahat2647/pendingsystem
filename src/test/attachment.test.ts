@@ -143,7 +143,9 @@ describe("attachment helpers", () => {
 
 	describe("hasAttachment", () => {
 		it("should return true when a link exists", () => {
-			expect(hasAttachment({ attachmentLink: "C:\\Test\\file.pdf" })).toBe(true);
+			expect(hasAttachment({ attachmentLink: "C:\\Test\\file.pdf" })).toBe(
+				true,
+			);
 		});
 
 		it("should return true when a file path exists", () => {

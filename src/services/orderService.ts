@@ -372,7 +372,9 @@ export const orderService = {
 				? (row.metadata as Record<string, unknown>)
 				: {};
 		const metadataAttachmentLink =
-			typeof metadata.attachmentLink === "string" ? metadata.attachmentLink : "";
+			typeof metadata.attachmentLink === "string"
+				? metadata.attachmentLink
+				: "";
 		const metadataAttachmentFilePath =
 			typeof metadata.attachmentFilePath === "string"
 				? metadata.attachmentFilePath

@@ -377,7 +377,10 @@ export const IdentityFields = ({
 															new Date().toISOString().split("T")[0],
 													});
 												} else {
-													onFieldChange({ repairSystem: val, startWarranty: "" });
+													onFieldChange({
+														repairSystem: val,
+														startWarranty: "",
+													});
 												}
 											}}
 											onAdd={addRepairSystem}

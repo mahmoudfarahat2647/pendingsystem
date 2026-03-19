@@ -8,19 +8,17 @@ export const OrderFormSchema = z
 		customerName: z.string().min(1, "Customer name is required"),
 		vin: z.string().min(1, "VIN is required").optional().or(z.literal("")),
 		mobile: z.string().min(1, "Mobile number is required"),
-		cntrRdg: z
-			.union([z.string(), z.number()])
-			.transform((val, ctx) => {
-				const num = normalizeMileageAsNumber(val);
-				if (Number.isNaN(num)) {
-					ctx.addIssue({
-						code: z.ZodIssueCode.custom,
-						message: "Invalid mileage format",
-					});
-					return z.NEVER;
-				}
-				return num;
-			}),
+		cntrRdg: z.union([z.string(), z.number()]).transform((val, ctx) => {
+			const num = normalizeMileageAsNumber(val);
+			if (Number.isNaN(num)) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					message: "Invalid mileage format",
+				});
+				return z.NEVER;
+			}
+			return num;
+		}),
 		model: z.string().optional().or(z.literal("")),
 		repairSystem: z.string().default(""),
 		startWarranty: z.string().optional(),
