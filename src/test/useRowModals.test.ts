@@ -53,7 +53,7 @@ describe("useRowModals Stage Routing", () => {
 		// Verify onUpdate was called with the correct arguments including the stage
 		expect(mockOnUpdate).toHaveBeenCalledWith(
 			"test-row-123",
-			{ actionNote: "Updated test note" },
+			{ noteHistory: "Updated test note" },
 			"Orders",
 		);
 	});
@@ -162,7 +162,7 @@ describe("useRowModals Stage Routing", () => {
 			expect.objectContaining({
 				status: "Archived",
 				archiveReason: "Completed repair",
-				actionNote: expect.stringContaining("Completed repair"),
+				noteHistory: expect.stringContaining("Completed repair"),
 			}),
 			"Main Sheet",
 		);
@@ -183,7 +183,7 @@ describe("useRowModals Stage Routing", () => {
 
 		expect(mockOnUpdate).toHaveBeenCalledWith(
 			"test-row-123",
-			{ actionNote: "No tag note" },
+			{ noteHistory: "No tag note" },
 			undefined,
 		);
 	});

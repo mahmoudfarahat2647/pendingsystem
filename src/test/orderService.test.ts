@@ -341,4 +341,83 @@ describe("orderService", () => {
 			expect(result.isDuplicate).toBe(false);
 		});
 	});
+
+	describe("saveOrder – noteHistory key purges legacy fields", () => {
+		const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
+
+		function makeSupabaseMock({
+			existingMetadata,
+			savedData,
+		}: {
+			existingMetadata: Record<string, unknown>;
+			savedData: Record<string, unknown>;
+		}) {
+			const mockUpdate = vi.fn().mockReturnThis();
+			const mockSingle = vi.fn().mockResolvedValue({ data: savedData, error: null });
+			const mockEq = vi.fn().mockReturnThis();
+			const mockSelect = vi.fn().mockReturnThis();
+			const mockMaybeSingle = vi
+				.fn()
+				.mockResolvedValue({ data: { metadata: existingMetadata }, error: null });
+
+			(supabase.from as unknown as { mockReturnValue: Function }).mockReturnValue({
+				select: mockSelect,
+				eq: mockEq,
+				maybeSingle: mockMaybeSingle,
+				update: mockUpdate,
+				single: mockSingle,
+			});
+
+			return { mockUpdate };
+		}
+
+		it("should strip actionNote from metadata when noteHistory is explicitly saved as ''", async () => {
+			const { mockUpdate } = makeSupabaseMock({
+				existingMetadata: { actionNote: "old note" },
+				savedData: { id: VALID_UUID },
+			});
+
+			await orderService.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				noteHistory: "",
+			});
+
+			const writtenMetadata = mockUpdate.mock.calls[0][0].metadata;
+			expect(writtenMetadata).not.toHaveProperty("actionNote");
+		});
+
+		it("should strip noteContent from metadata when noteHistory is explicitly saved as ''", async () => {
+			const { mockUpdate } = makeSupabaseMock({
+				existingMetadata: { noteContent: "old content" },
+				savedData: { id: VALID_UUID },
+			});
+
+			await orderService.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				noteHistory: "",
+			});
+
+			const writtenMetadata = mockUpdate.mock.calls[0][0].metadata;
+			expect(writtenMetadata).not.toHaveProperty("noteContent");
+		});
+
+		it("should preserve existing actionNote when payload does NOT include noteHistory", async () => {
+			const { mockUpdate } = makeSupabaseMock({
+				existingMetadata: { actionNote: "old note" },
+				savedData: { id: VALID_UUID },
+			});
+
+			await orderService.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				customerName: "Jane",
+				// noteHistory intentionally absent
+			});
+
+			const writtenMetadata = mockUpdate.mock.calls[0][0].metadata;
+			expect(writtenMetadata).toHaveProperty("actionNote", "old note");
+		});
+	});
 });

@@ -37,14 +37,17 @@ import {
 } from "@/components/ui/tooltip";
 import {
 	useBulkDeleteOrdersMutation,
-	useBulkUpdateOrderStageMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
-import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
+import {
+	appendTaggedUserNote,
+	getEffectiveNoteHistory,
+	getSelectedIds,
+} from "@/lib/orderWorkflow";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -53,7 +56,6 @@ export default function ArchivePage() {
 	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("archive");
 	const { data: archiveRowData = [] } = useOrdersQuery("archive");
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("archive");
 	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("archive");
 	const saveOrderMutation = useSaveOrderMutation();
 
@@ -78,17 +80,19 @@ export default function ArchivePage() {
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
 				const row = archiveRowData.find((r) => r.id === id);
-				const newActionNote = appendTaggedActionNote(
-					row?.actionNote,
-					reason,
-					"archive",
-				);
+				if (row) {
+					const newNoteHistory = appendTaggedUserNote(
+						getEffectiveNoteHistory(row),
+						reason,
+						"archive",
+					);
 
-				saveOrderMutation.mutate({
-					id,
-					updates: { archiveReason: reason, actionNote: newActionNote },
-					stage: "archive",
-				});
+					saveOrderMutation.mutate({
+						id,
+						updates: { archiveReason: reason, noteHistory: newNoteHistory },
+						stage: "archive",
+					});
+				}
 			}
 		},
 		[saveOrderMutation, archiveRowData],
@@ -120,14 +124,10 @@ export default function ArchivePage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = getSelectedIds(selectedRows);
-		// 1. Move stage (bulk)
-		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "orders" });
-
-		// 2. Update status/note (sequential but optimistic)
+		// Update status/note and stage via saveOrderMutation (atomic)
 		for (const row of selectedRows) {
-			const newActionNote = appendTaggedActionNote(
-				row.actionNote,
+			const newNoteHistory = appendTaggedUserNote(
+				getEffectiveNoteHistory(row),
 				`Reorder Reason: ${reorderReason}`,
 				"reorder",
 			);
@@ -135,10 +135,11 @@ export default function ArchivePage() {
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
-					actionNote: newActionNote,
+					noteHistory: newNoteHistory,
 					status: "Reorder",
 				},
 				stage: "orders",
+				sourceStage: "archive",
 			});
 		}
 		setSelectedRows([]);

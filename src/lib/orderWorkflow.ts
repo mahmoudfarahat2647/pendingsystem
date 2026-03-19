@@ -24,7 +24,7 @@ export const isUuid = (id: string): boolean =>
  * @returns The new combined note string
  */
 
-export const appendTaggedActionNote = (
+export const appendTaggedUserNote = (
 	existing: string | undefined,
 	note: string,
 	tag: string,
@@ -36,6 +36,55 @@ export const appendTaggedActionNote = (
 
 	const taggedNote = `${trimmedNote} #${tag}`;
 	return existing ? `${existing}\n${taggedNote}` : taggedNote;
+};
+
+/**
+ * Returns the effective note history for a row.
+ * If noteHistory exists, it returns it.
+ * Otherwise, it backfills from existing human note fields.
+ */
+export const getEffectiveNoteHistory = (row: PendingRow): string => {
+	if ("noteHistory" in row && row.noteHistory !== undefined) {
+		return row.noteHistory;
+	}
+
+	// Backfill legacy fields
+	const parts: string[] = [];
+	if (row.noteContent && row.noteContent.trim()) {
+		parts.push(row.noteContent.trim());
+	}
+
+	const normalizedActionNoteLines = (row.actionNote || "")
+		.split(/\r?\n/)
+		.map((line) => line.trim().toLowerCase());
+
+	if (row.actionNote && row.actionNote.trim()) {
+		parts.push(row.actionNote.trim());
+	}
+
+	// Deduplicate bookingNote against actionNote
+	if (row.bookingNote && row.bookingNote.trim()) {
+		const taggedBooking = `${row.bookingNote.trim().toLowerCase()} #booking`;
+		const alreadyInAction = normalizedActionNoteLines.some(
+			(line) => line === taggedBooking,
+		);
+		if (!alreadyInAction) {
+			parts.push(row.bookingNote.trim());
+		}
+	}
+
+	// Deduplicate archiveReason against actionNote
+	if (row.archiveReason && row.archiveReason.trim()) {
+		const taggedArchive = `${row.archiveReason.trim().toLowerCase()} #archive`;
+		const alreadyInAction = normalizedActionNoteLines.some(
+			(line) => line === taggedArchive,
+		);
+		if (!alreadyInAction) {
+			parts.push(`${row.archiveReason.trim()} #archive`);
+		}
+	}
+
+	return parts.join("\n").trim();
 };
 
 /**

@@ -179,6 +179,13 @@ export const orderService = {
 		delete (metadataBase as Record<string, unknown>).reminder;
 		delete (metadataBase as Record<string, unknown>).hasAttachment;
 
+		// When the payload explicitly includes `noteHistory`, clear legacy note keys
+		// so a deliberate save of noteHistory: "" cannot be revived by stale fields.
+		if ("noteHistory" in rest) {
+			delete (metadataBase as Record<string, unknown>).actionNote;
+			delete (metadataBase as Record<string, unknown>).noteContent;
+		}
+
 		const metadataToStore = { ...metadataBase };
 		delete (metadataToStore as Record<string, unknown>).attachmentLink;
 		delete (metadataToStore as Record<string, unknown>).attachmentFilePath;

@@ -33,7 +33,11 @@ import {
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
-import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
+import {
+	appendTaggedUserNote,
+	getEffectiveNoteHistory,
+	getSelectedIds,
+} from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -67,17 +71,20 @@ export default function MainSheetPage() {
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
 				const row = rowData.find((r) => r.id === id);
-				const newActionNote = appendTaggedActionNote(
-					row?.actionNote,
-					reason,
-					"archive",
-				);
+				if (row) {
+					const newNoteHistory = appendTaggedUserNote(
+						getEffectiveNoteHistory(row),
+						reason,
+						"archive",
+					);
 
-				saveOrderMutation.mutate({
-					id,
-					updates: { archiveReason: reason, actionNote: newActionNote },
-					stage: "archive",
-				});
+					saveOrderMutation.mutate({
+						id,
+						updates: { archiveReason: reason, noteHistory: newNoteHistory },
+						stage: "archive",
+						sourceStage: "main",
+					});
+				}
 			}
 		},
 		[saveOrderMutation, rowData],
@@ -179,8 +186,8 @@ export default function MainSheetPage() {
 		status?: string,
 	) => {
 		for (const row of selectedRows) {
-			const newActionNote = appendTaggedActionNote(
-				row.actionNote,
+			const newNoteHistory = appendTaggedUserNote(
+				getEffectiveNoteHistory(row),
 				note,
 				"booking",
 			);
@@ -190,10 +197,11 @@ export default function MainSheetPage() {
 				updates: {
 					bookingDate: date,
 					bookingNote: note,
-					actionNote: newActionNote,
+					noteHistory: newNoteHistory,
 					...(status ? { bookingStatus: status } : {}),
 				},
 				stage: "booking",
+				sourceStage: "main",
 			});
 		}
 		setSelectedRows([]);

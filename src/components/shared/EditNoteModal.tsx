@@ -1,7 +1,18 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -13,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { appendTaggedUserNote } from "@/lib/orderWorkflow";
 import { useAppStore } from "@/store/useStore";
 
 interface EditNoteModalProps {
@@ -37,35 +49,32 @@ export const EditNoteModal = ({
 	const [newNote, setNewNote] = useState("");
 	const [isAdding, setIsAdding] = useState(false);
 	const [newTemplate, setNewTemplate] = useState("");
-	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-	const maxChars = 500; // Increased to accommodate multiple notes
+	const [isHistoryLocked, setIsHistoryLocked] = useState(true);
 
 	useEffect(() => {
 		if (open) {
 			setContent(initialContent || "");
 			setNewNote("");
-			setShowDeleteConfirm(false);
+			setIsHistoryLocked(true);
 		}
 	}, [open, initialContent]);
 
 	const handleSave = () => {
-		let finalContent = content;
+		let finalContent = isHistoryLocked ? (initialContent || "") : content;
 		if (newNote.trim()) {
-			const taggedNote = `${newNote.trim()} #${sourceTag || "note"}`;
-			finalContent = finalContent
-				? `${finalContent}\n${taggedNote}`
-				: taggedNote;
+			finalContent = appendTaggedUserNote(
+				finalContent,
+				newNote,
+				sourceTag || "note",
+			);
 		}
 		onSave(finalContent);
 		onOpenChange(false);
 	};
 
 	const handleTemplateClick = (text: string) => {
-		const taggedText = `${text} #${sourceTag || "note"}`;
-		const newContent = content ? `${content}\n${taggedText}` : taggedText;
-		if (newContent.length <= maxChars) {
-			setContent(newContent);
-		}
+		const updatedNote = newNote ? `${newNote}\n${text}` : text;
+		setNewNote(updatedNote);
 	};
 
 	const handleAddTemplate = () => {
@@ -80,17 +89,7 @@ export const EditNoteModal = ({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden">
 				<DialogHeader className="px-6 py-4 flex flex-row items-center justify-between border-b border-white/5 space-y-0 relative">
-					<div className="flex-1 flex justify-start">
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => setShowDeleteConfirm(true)}
-							className="h-8 w-8 text-gray-500 hover:text-red-400 hover:bg-red-400/10"
-							title="Clear All Notes"
-						>
-							<Trash2 className="h-4 w-4" />
-						</Button>
-					</div>
+					<div className="flex-1 flex justify-start"></div>
 					<DialogTitle className="text-lg font-medium">Notes</DialogTitle>
 					<DialogDescription className="sr-only">
 						Add, edit, or remove notes for this row.
@@ -99,60 +98,55 @@ export const EditNoteModal = ({
 				</DialogHeader>
 
 				<div className="relative">
-					{/* Confirmation Overlay */}
-					{showDeleteConfirm && (
-						<div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-[#1c1c1e]/80 backdrop-blur-sm animate-in fade-in duration-200">
-							<div className="bg-[#2c2c2e] border border-white/10 rounded-xl p-6 shadow-2xl w-full max-w-[280px] text-center space-y-4 animate-in zoom-in-95 duration-200 border-red-500/20">
-								<div className="flex justify-center">
-									<div className="bg-red-500/10 p-3 rounded-full">
-										<Trash2 className="h-6 w-6 text-red-500" />
-									</div>
-								</div>
-								<div>
-									<h3 className="text-sm font-semibold text-white">
-										Clear All Notes?
-									</h3>
-									<p className="text-xs text-gray-400 mt-1">
-										This will permanently remove all notes from this row.
-									</p>
-								</div>
-								<div className="flex gap-3">
-									<Button
-										variant="ghost"
-										size="sm"
-										className="flex-1 h-9 text-xs bg-[#3c3c3e] hover:bg-[#4c4c4e] text-gray-300"
-										onClick={() => setShowDeleteConfirm(false)}
-									>
-										No
-									</Button>
-									<Button
-										size="sm"
-										className="flex-1 h-9 text-xs bg-red-500 hover:bg-red-600 text-white font-medium border-none shadow-lg shadow-red-500/20"
-										onClick={() => {
-											onSave("");
-											onOpenChange(false);
-											setShowDeleteConfirm(false);
-										}}
-									>
-										Yes, Clear
-									</Button>
-								</div>
-							</div>
-						</div>
-					)}
 
 					<div className="p-6 space-y-6">
 						{/* Existing Notes Section */}
 						<div className="space-y-2">
-							<h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
-								EXISTING NOTES
-							</h4>
+							<div className="flex items-center justify-between">
+								<h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
+									EXISTING NOTES
+								</h4>
+								{isHistoryLocked && content && (
+									<AlertDialog>
+										<AlertDialogTrigger asChild>
+											<Button
+												variant="ghost"
+												size="icon"
+												className="h-6 w-6 text-gray-500 hover:text-renault-yellow hover:bg-renault-yellow/10"
+												title="Edit History"
+											>
+												<Pencil className="h-3 w-3" />
+											</Button>
+										</AlertDialogTrigger>
+										<AlertDialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-sm">
+											<AlertDialogHeader>
+												<AlertDialogTitle className="text-sm">Edit existing notes?</AlertDialogTitle>
+												<AlertDialogDescription className="text-xs text-gray-400">
+													History should normally be append-only. Are you sure you want to directly edit the past notes?
+												</AlertDialogDescription>
+											</AlertDialogHeader>
+											<AlertDialogFooter>
+												<AlertDialogCancel className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border-none text-xs">
+													No
+												</AlertDialogCancel>
+												<AlertDialogAction
+													onClick={() => setIsHistoryLocked(false)}
+													className="bg-renault-yellow text-black hover:bg-renault-yellow/90 text-xs font-bold"
+												>
+													Yes, Unlock
+												</AlertDialogAction>
+											</AlertDialogFooter>
+										</AlertDialogContent>
+									</AlertDialog>
+								)}
+							</div>
 							<div className="relative">
 								<Textarea
 									value={content}
 									onChange={(e) => setContent(e.target.value)}
+									readOnly={isHistoryLocked}
 									placeholder="No notes yet..."
-									className="min-h-[100px] bg-transparent border-white/5 text-gray-400 text-xs resize-none focus-visible:ring-0 focus-visible:ring-offset-0 scrollbar-thin"
+									className={`min-h-[100px] border-white/5 text-xs resize-none focus-visible:ring-0 focus-visible:ring-offset-0 scrollbar-thin ${isHistoryLocked ? "bg-transparent text-gray-400 focus-visible:ring-0" : "bg-[#2c2c2e] text-gray-100 focus-visible:ring-1 focus-visible:ring-renault-yellow"}`}
 								/>
 							</div>
 						</div>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-	appendTaggedActionNote,
+	appendTaggedUserNote,
+	getEffectiveNoteHistory,
 	BLANK_VIN_BUCKET,
 	checkVinPartDuplicate,
 	findSameOrderDuplicateIndices,
@@ -420,42 +421,121 @@ describe("isUuid", () => {
 	});
 });
 
-describe("appendTaggedActionNote", () => {
+describe("appendTaggedUserNote", () => {
 	it("should return the tagged note if existing string is undefined", () => {
-		expect(appendTaggedActionNote(undefined, "new note", "archive")).toBe(
+		expect(appendTaggedUserNote(undefined, "new note", "archive")).toBe(
 			"new note #archive",
 		);
 	});
 
 	it("should return the tagged note if existing string is empty", () => {
-		expect(appendTaggedActionNote("", "new note", "archive")).toBe(
+		expect(appendTaggedUserNote("", "new note", "archive")).toBe(
 			"new note #archive",
 		);
 	});
 
 	it("should append the tagged note to existing string with a newline", () => {
-		expect(appendTaggedActionNote("old note", "new note", "archive")).toBe(
+		expect(appendTaggedUserNote("old note", "new note", "archive")).toBe(
 			"old note\nnew note #archive",
 		);
 	});
 
 	it("should trim the new note before appending", () => {
-		expect(appendTaggedActionNote("old note", "  new note  ", "archive")).toBe(
+		expect(appendTaggedUserNote("old note", "  new note  ", "archive")).toBe(
 			"old note\nnew note #archive",
 		);
 	});
 
 	it("should return existing string if new note is empty", () => {
-		expect(appendTaggedActionNote("old note", "", "archive")).toBe("old note");
+		expect(appendTaggedUserNote("old note", "", "archive")).toBe("old note");
 	});
 
 	it("should return existing string if new note is only whitespace", () => {
-		expect(appendTaggedActionNote("old note", "   ", "archive")).toBe(
+		expect(appendTaggedUserNote("old note", "   ", "archive")).toBe(
 			"old note",
 		);
 	});
 
 	it("should return empty string if existing is undefined and new note is empty", () => {
-		expect(appendTaggedActionNote(undefined, "", "archive")).toBe("");
+		expect(appendTaggedUserNote(undefined, "", "archive")).toBe("");
+	});
+});
+
+describe("getEffectiveNoteHistory", () => {
+	it("should return noteHistory if it exists and is non-empty", () => {
+		const row = createMockRow({ noteHistory: "existing history", actionNote: "ignored" });
+		expect(getEffectiveNoteHistory(row)).toBe("existing history");
+	});
+
+	it("should fall back to actionNote if noteHistory is absent", () => {
+		const row = createMockRow({ actionNote: "legacy action note" });
+		expect(getEffectiveNoteHistory(row)).toBe("legacy action note");
+	});
+
+	it("should fall back to noteContent if noteHistory and actionNote are absent", () => {
+		const row = createMockRow({ noteContent: "legacy note content" });
+		expect(getEffectiveNoteHistory(row)).toBe("legacy note content");
+	});
+
+	it("should combine multiple legacy fields", () => {
+		const row = createMockRow({ 
+			noteContent: "content", 
+			actionNote: "action", 
+			bookingNote: "booking",
+			archiveReason: "reason"
+		});
+		expect(getEffectiveNoteHistory(row)).toBe("content\naction\nbooking\nreason #archive");
+	});
+
+	it("should return empty string when all legacy fields are absent", () => {
+		const row = createMockRow();
+		expect(getEffectiveNoteHistory(row)).toBe("");
+	});
+
+	it("should deduplicate archiveReason if it matches actionNote exactly with tag", () => {
+		const row = createMockRow({
+			actionNote: "Damaged screen #archive",
+			archiveReason: "Damaged screen"
+		});
+		// Should NOT append "Damaged screen #archive" again
+		expect(getEffectiveNoteHistory(row)).toBe("Damaged screen #archive");
+	});
+
+	it("should deduplicate bookingNote if it matches actionNote exactly with tag", () => {
+		const row = createMockRow({
+			actionNote: "Customer requested Monday #booking",
+			bookingNote: "Customer requested Monday"
+		});
+		// Should NOT append "Customer requested Monday" again
+		expect(getEffectiveNoteHistory(row)).toBe("Customer requested Monday #booking");
+	});
+
+	it("should be case-insensitive and trim-tolerant for deduplication", () => {
+		const row = createMockRow({
+			actionNote: " DAMAGED SCREEN #archive ",
+			archiveReason: "damaged screen"
+		});
+		expect(getEffectiveNoteHistory(row)).toBe("DAMAGED SCREEN #archive");
+	});
+
+	it("should NOT deduplicate if meanings differ", () => {
+		const row = createMockRow({
+			actionNote: "Old reason #archive",
+			archiveReason: "New reason"
+		});
+		expect(getEffectiveNoteHistory(row)).toBe("Old reason #archive\nNew reason #archive");
+	});
+
+	it("should treat noteHistory: '' as authoritative and not fall back to actionNote", () => {
+		// Regression: noteHistory:"" must mean "intentionally cleared", not "absent"
+		const row = createMockRow({ noteHistory: "", actionNote: "stale note" });
+		expect(getEffectiveNoteHistory(row)).toBe("");
+	});
+
+	it("should fall back to legacy fields when noteHistory is absent (undefined)", () => {
+		// Regression: the migration path must still work for pre-migration rows
+		const row = createMockRow({ actionNote: "legacy note" });
+		// noteHistory is not set by createMockRow, so it is undefined → should fall back
+		expect(getEffectiveNoteHistory(row)).toBe("legacy note");
 	});
 });

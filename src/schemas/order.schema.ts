@@ -137,6 +137,7 @@ export const PendingRowSchema = z
 			.transform((v) => v || ""),
 
 		// Meta
+		noteHistory: z.string().optional(),
 		noteContent: z.string().optional(),
 		actionNote: z.string().optional(),
 		bookingDate: z.string().optional(),

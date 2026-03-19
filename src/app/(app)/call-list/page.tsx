@@ -50,7 +50,11 @@ import {
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
-import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
+import {
+	appendTaggedUserNote,
+	getEffectiveNoteHistory,
+	getSelectedIds,
+} from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -96,11 +100,21 @@ export default function CallListPage() {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				saveOrderMutation.mutate({
-					id,
-					updates: { archiveReason: reason },
-					stage: "archive",
-				});
+				const row = callRowData.find((r: PendingRow) => r.id === id);
+				if (row) {
+					const newNoteHistory = appendTaggedUserNote(
+						getEffectiveNoteHistory(row),
+						reason,
+						"archive",
+					);
+
+					saveOrderMutation.mutate({
+						id,
+						updates: { archiveReason: reason, noteHistory: newNoteHistory },
+						stage: "archive",
+						sourceStage: "call",
+					});
+				}
 			}
 		},
 		[saveOrderMutation],
@@ -134,8 +148,8 @@ export default function CallListPage() {
 		status?: string,
 	) => {
 		for (const row of selectedRows) {
-			const newActionNote = appendTaggedActionNote(
-				row.actionNote,
+			const newNoteHistory = appendTaggedUserNote(
+				getEffectiveNoteHistory(row),
 				note,
 				"booking",
 			);
@@ -145,10 +159,11 @@ export default function CallListPage() {
 				updates: {
 					bookingDate: date,
 					bookingNote: note,
-					actionNote: newActionNote,
+					noteHistory: newNoteHistory,
 					...(status ? { bookingStatus: status } : {}),
 				},
 				stage: "booking",
+				sourceStage: "call",
 			});
 		}
 		setSelectedRows([]);
@@ -164,8 +179,8 @@ export default function CallListPage() {
 		// Send to Orders stage with status and note
 		// 1. Update status/note first (optimistic)
 		for (const row of selectedRows) {
-			const newActionNote = appendTaggedActionNote(
-				row.actionNote,
+			const newNoteHistory = appendTaggedUserNote(
+				getEffectiveNoteHistory(row),
 				`Reorder Reason: ${reorderReason}`,
 				"reorder",
 			);
@@ -173,14 +188,14 @@ export default function CallListPage() {
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
-					actionNote: newActionNote,
+					noteHistory: newNoteHistory,
 					status: "Reorder",
 				},
-				stage: "call",
+				stage: "orders",
+				sourceStage: "call",
 			});
 		}
 		// 2. Move stage (bulk opportunistic)
-		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "orders" });
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");
