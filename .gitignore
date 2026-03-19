@@ -52,6 +52,9 @@ yarn-error.log*
 mcp.json
 .vscode/mcp.json
 
+# agent
+.agent/
+
 # vercel
 .vercel
 
