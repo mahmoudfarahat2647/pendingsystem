@@ -4,7 +4,6 @@ import type { GridApi } from "ag-grid-community";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { FormData } from "@/components/orders/form";
-import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
 import {
 	useBulkDeleteOrdersMutation,
 	useBulkUpdateOrderStageMutation,
@@ -12,10 +11,15 @@ import {
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
+import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
 import { exportToLogisticsCSV } from "@/lib/exportUtils";
 import { appendTaggedActionNote, getSelectedIds } from "@/lib/orderWorkflow";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
-import { calculateEndWarranty, calculateRemainingTime } from "@/lib/utils";
+import {
+	calculateEndWarranty,
+	calculateRemainingTime,
+	normalizeMileageAsNumber,
+} from "@/lib/utils";
 import { BeastModeSchema } from "@/schemas/form.schema";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
@@ -118,7 +122,7 @@ export const useOrdersPageHandlers = () => {
 
 					const commonData = {
 						...formData,
-						cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
+						cntrRdg: normalizeMileageAsNumber(formData.cntrRdg),
 						endWarranty,
 						remainTime,
 					};
@@ -175,7 +179,7 @@ export const useOrdersPageHandlers = () => {
 							baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
 							trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
 							...formData,
-							cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
+							cntrRdg: normalizeMileageAsNumber(formData.cntrRdg),
 							partNumber: part.partNumber,
 							description: part.description,
 							parts: [part],

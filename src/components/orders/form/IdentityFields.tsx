@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { SimpleDatePicker } from "@/components/ui/simple-date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { ALLOWED_COMPANIES } from "@/lib/ordersValidationConstants";
-import { cn } from "@/lib/utils";
+import { cn, normalizeMileage } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { FormData } from "./types";
 
@@ -57,7 +57,7 @@ export const IdentityFields = ({
 				customerName: rowParts[0]?.trim() || formData.customerName,
 				vin: (rowParts[1]?.trim() || formData.vin).toUpperCase(),
 				mobile: rowParts[2]?.trim() || formData.mobile,
-				cntrRdg: rowParts[3]?.trim() || formData.cntrRdg,
+				cntrRdg: normalizeMileage(rowParts[3]) || formData.cntrRdg,
 				sabNumber: rowParts[4]?.trim() || formData.sabNumber,
 				acceptedBy: rowParts[5]?.trim() || formData.acceptedBy,
 			});
@@ -232,10 +232,15 @@ export const IdentityFields = ({
 										Odo (KM)
 									</Label>
 									<Input
-										type="number"
+										type="text"
+										inputMode="numeric"
 										placeholder="0"
 										value={formData.cntrRdg}
-										onChange={(e) => onFieldChange({ cntrRdg: e.target.value })}
+										onChange={(e) =>
+											onFieldChange({
+												cntrRdg: normalizeMileage(e.target.value),
+											})
+										}
 										className={cn(
 											"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 											getFieldError("cntrRdg") &&
