@@ -11,6 +11,12 @@ import { getOrdersQueryKey, ORDER_STAGES } from "@/lib/queryClient";
 import { type OrderStage, orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 
+type BulkUpdateStageVariables = {
+	ids: string[];
+	stage: OrderStage;
+	silentErrorToast?: boolean;
+};
+
 /**
  * Hook to bulk update order stages.
  * Performs optimistic updates across stages during onMutate by extracting rows from their
@@ -23,7 +29,7 @@ export function useBulkUpdateOrderStageMutation(sourceStage: OrderStage) {
 
 	return useMutation({
 		mutationKey: ["bulk-update-stage", sourceStage],
-		mutationFn: ({ ids, stage }: { ids: string[]; stage: OrderStage }) =>
+		mutationFn: ({ ids, stage }: BulkUpdateStageVariables) =>
 			orderService.updateOrdersStage(ids, stage),
 		onMutate: async ({ ids, stage }) => {
 			await queryClient.cancelQueries({ queryKey: ["orders"] });
@@ -80,11 +86,13 @@ export function useBulkUpdateOrderStageMutation(sourceStage: OrderStage) {
 				destinationStage: stage,
 			} as BulkStageContext;
 		},
-		onError: (error, _variables, context) => {
+		onError: (error, variables, context) => {
 			if (context?.previousOrdersCache) {
 				restoreOrdersCache(queryClient, context.previousOrdersCache);
 			}
-			toast.error(`Failed to move orders: ${getErrorMessage(error)}`);
+			if (!variables.silentErrorToast) {
+				toast.error(`Failed to move orders: ${getErrorMessage(error)}`);
+			}
 		},
 		onSettled: async (_data, _error, variables, context) => {
 			const stagesToRefresh = new Set<OrderStage>(

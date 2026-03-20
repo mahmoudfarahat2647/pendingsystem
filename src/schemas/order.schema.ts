@@ -149,6 +149,8 @@ export const PendingRowSchema = z
 		reminder: ReminderSchema.optional(),
 		archiveReason: z.string().optional(),
 		archivedAt: z.string().optional(),
+		reserved: z.boolean().optional(),
+		reservedAt: z.string().optional(),
 		sourceType: z.string().optional(),
 		stage: z.string().optional(),
 	})

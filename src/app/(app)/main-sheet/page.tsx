@@ -37,6 +37,7 @@ import {
 	appendTaggedUserNote,
 	getEffectiveNoteHistory,
 	getSelectedIds,
+	getVinAutoMoveIds,
 } from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
@@ -288,33 +289,36 @@ export default function MainSheetPage() {
 										});
 
 										// 2. Check for auto-move to Call List
-										// [CRITICAL] AUTO-MOVE FEATURE - DO NOT REMOVE
-										// Implementation: If "Arrived", check all parts for VIN. If all Arrived, move to Call List.
-										if (newStatus === "Arrived" && vin) {
-											// Find all parts for this same VIN in the current dataset
-											const vinParts = rowData.filter(
-												(r: any) => r.vin === vin,
-											);
+										const vinIds = getVinAutoMoveIds({
+											stage: "main",
+											stageRows: rowData,
+											editedRowId: params.data.id,
+											editedVin: vin,
+											nextPartStatus: newStatus,
+										});
 
-											// Check if every part for this VIN is now "Arrived"
-											// (the current row just became "Arrived", so we check the persistent state for others)
-											const allArrived = vinParts.every((r: any) => {
-												if (r.id === params.data.id) return true; // Just updated this one
-												return r.partStatus === "Arrived";
-											});
-
-											if (allArrived && vinParts.length > 0) {
-												// Move all parts for this VIN to the "call" stage
-												const vinIds = vinParts.map((p: any) => p.id);
+										if (vinIds.length > 0) {
+											try {
 												await bulkUpdateStageMutation.mutateAsync({
 													ids: vinIds,
 													stage: "call",
+													silentErrorToast: true,
 												});
 												toast.success(
 													`All parts for VIN ${vin} arrived! Moved to Call List.`,
 													{
 														duration: 5000,
 													},
+												);
+											} catch (error) {
+												console.error("[MainSheetPage] vin_auto_move_failed", {
+													error,
+													vin,
+													stage: "main",
+													ids: vinIds,
+												});
+												toast.error(
+													"Part saved, but VIN group move failed - refresh and try again.",
 												);
 											}
 										}

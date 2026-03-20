@@ -38,7 +38,7 @@ export function useColumnDefs(
 		// Index 0: Checkbox column placeholder (reserved for AG Grid native checkbox selection)
 		{
 			headerName: "",
-			colId: "ag-Grid-AutoColumn",
+			colId: "checkbox-placeholder",
 			width: 50,
 			maxWidth: 50,
 			sortable: false,
@@ -51,7 +51,7 @@ export function useColumnDefs(
 		// Index 1: ACTIONS column (second column, after checkbox)
 		{
 			headerName: "ACTIONS",
-			colId: "actions",
+			colId: "row-actions",
 			field: "id",
 			cellRenderer: ActionCellRenderer,
 			cellRendererParams: {

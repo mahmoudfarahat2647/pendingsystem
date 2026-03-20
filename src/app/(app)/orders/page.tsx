@@ -12,7 +12,7 @@ import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
-import { hasMixedVinSelection } from "@/lib/orderWorkflow";
+import { getVinAutoMoveIds, hasMixedVinSelection } from "@/lib/orderWorkflow";
 
 const OrderFormModal = dynamic(
 	() => import("@/components/orders/form").then((mod) => mod.OrderFormModal),
@@ -166,25 +166,34 @@ export default function OrdersPage() {
 										});
 
 										// 2. Check for auto-move to Call List
-										// [CRITICAL] AUTO-MOVE FEATURE - DO NOT REMOVE
-										if (newStatus === "Arrived" && vin) {
-											const vinParts = ordersRowData.filter(
-												(r: any) => r.vin === vin,
-											);
-											const allArrived = vinParts.every((r: any) => {
-												if (r.id === params.data.id) return true;
-												return r.partStatus === "Arrived";
-											});
+										const vinIds = getVinAutoMoveIds({
+											stage: "orders",
+											stageRows: ordersRowData,
+											editedRowId: params.data.id,
+											editedVin: vin,
+											nextPartStatus: newStatus,
+										});
 
-											if (allArrived && vinParts.length > 0) {
-												const ids = vinParts.map((p: any) => p.id);
+										if (vinIds.length > 0) {
+											try {
 												await bulkUpdateStageMutation.mutateAsync({
-													ids,
+													ids: vinIds,
 													stage: "call",
+													silentErrorToast: true,
 												});
 												toast.success(
 													`All parts for VIN ${vin} arrived! Moved to Call List.`,
 													{ duration: 5000 },
+												);
+											} catch (error) {
+												console.error("[OrdersPage] vin_auto_move_failed", {
+													error,
+													vin,
+													stage: "orders",
+													ids: vinIds,
+												});
+												toast.error(
+													"Part saved, but VIN group move failed - refresh and try again.",
 												);
 											}
 										}
