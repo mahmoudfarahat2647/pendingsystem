@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { type AttachmentValue, hasAttachment } from "@/lib/attachment";
+import { normalizeOrderStage } from "@/lib/orderStage";
 import {
 	appendTaggedUserNote,
 	getEffectiveNoteHistory,
@@ -14,6 +15,9 @@ export type RowModalType =
 	| "attachment"
 	| "archive"
 	| null;
+
+const resolveRowStage = (row: PendingRow | null) =>
+	normalizeOrderStage(row?.stage) ?? "main";
 
 export const useRowModals = (
 	onUpdate: (
@@ -65,7 +69,7 @@ export const useRowModals = (
 					await onUpdate(
 						currentRow.id,
 						{ noteHistory: content },
-						sourceTag || undefined,
+						resolveRowStage(currentRow),
 					);
 					const { toast } = await import("sonner");
 					toast.success("Note saved successfully");
@@ -77,7 +81,7 @@ export const useRowModals = (
 				}
 			}
 		},
-		[currentRow, onUpdate, closeModal, sourceTag],
+		[currentRow, onUpdate, closeModal],
 	);
 
 	const saveReminder = useCallback(
@@ -88,7 +92,7 @@ export const useRowModals = (
 				| undefined,
 		) => {
 			if (currentRow) {
-				onUpdate(currentRow.id, { reminder }, sourceTag || undefined);
+				onUpdate(currentRow.id, { reminder }, resolveRowStage(currentRow));
 				closeModal();
 				// Check for notifications immediately after setting a reminder
 				// This ensures the notification appears if the reminder is already due
@@ -100,7 +104,7 @@ export const useRowModals = (
 				}, 100);
 			}
 		},
-		[currentRow, onUpdate, closeModal, sourceTag],
+		[currentRow, onUpdate, closeModal],
 	);
 
 	const saveAttachment = useCallback(
@@ -114,7 +118,7 @@ export const useRowModals = (
 							attachmentFilePath: value.attachmentFilePath || undefined,
 							hasAttachment: hasAttachment(value),
 						},
-						sourceTag || undefined,
+						resolveRowStage(currentRow),
 					);
 					const { toast } = await import("sonner");
 					toast.success("Attachment saved successfully");
@@ -126,7 +130,7 @@ export const useRowModals = (
 				}
 			}
 		},
-		[currentRow, onUpdate, closeModal, sourceTag],
+		[currentRow, onUpdate, closeModal],
 	);
 
 	const saveArchive = useCallback(
@@ -149,12 +153,12 @@ export const useRowModals = (
 						archivedAt: new Date().toISOString(),
 						noteHistory: combinedNote,
 					},
-					sourceTag || undefined,
+					resolveRowStage(currentRow),
 				);
 				closeModal();
 			}
 		},
-		[currentRow, targetIds, onArchive, onUpdate, closeModal, sourceTag],
+		[currentRow, targetIds, onArchive, onUpdate, closeModal],
 	);
 
 	return {

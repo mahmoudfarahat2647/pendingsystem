@@ -111,6 +111,17 @@ export function normalizeVin(vin: string): string {
 	return vin.trim().toUpperCase();
 }
 
+function normalizeStageKey(stage?: string | null): string {
+	const normalized = (stage || "").trim().toLowerCase();
+	if (normalized === "main sheet") return "main";
+	if (normalized === "call list") return "call";
+	return normalized;
+}
+
+function normalizePartStatus(partStatus?: string | null): string {
+	return (partStatus || "").trim().toLowerCase();
+}
+
 export function isVinComplete(vin: string): boolean {
 	const normalized = normalizeVin(vin);
 	return normalized.length >= VIN_STANDARD_LENGTH;
@@ -119,6 +130,52 @@ export function isVinComplete(vin: string): boolean {
 export function isVinLongEnoughForDuplicateCheck(vin: string): boolean {
 	const normalized = normalizeVin(vin);
 	return normalized.length >= DUPLICATE_CHECK_VIN_MIN_LENGTH;
+}
+
+export function getVinAutoMoveIds({
+	stage,
+	stageRows,
+	editedRowId,
+	editedVin,
+	nextPartStatus,
+}: {
+	stage?: string | null;
+	stageRows: PendingRow[];
+	editedRowId: string;
+	editedVin?: string | null;
+	nextPartStatus?: string | null;
+}): string[] {
+	const normalizedStage = normalizeStageKey(stage);
+	if (normalizedStage !== "main" && normalizedStage !== "orders") {
+		return [];
+	}
+
+	const normalizedVin = normalizeVin(editedVin || "");
+	if (!normalizedVin) {
+		return [];
+	}
+
+	if (normalizePartStatus(nextPartStatus) !== "arrived") {
+		return [];
+	}
+
+	const vinRows = stageRows.filter(
+		(row) =>
+			normalizeStageKey(row.stage) === normalizedStage &&
+			normalizeVin(row.vin || "") === normalizedVin,
+	);
+
+	if (!vinRows.some((row) => row.id === editedRowId)) {
+		return [];
+	}
+
+	const allArrived = vinRows.every(
+		(row) =>
+			row.id === editedRowId ||
+			normalizePartStatus(row.partStatus) === "arrived",
+	);
+
+	return allArrived ? vinRows.map((row) => row.id) : [];
 }
 
 function _isVinTooShortForDefaultMode(vin: string): boolean {
@@ -197,7 +254,10 @@ export function findSameOrderDuplicates(parts: PartEntry[]): PartEntry[] {
 		if (!key) continue;
 
 		if (seen.has(key)) {
-			duplicates.add(seen.get(key)!);
+			const existingPart = seen.get(key);
+			if (existingPart) {
+				duplicates.add(existingPart);
+			}
 			duplicates.add(part);
 		} else {
 			seen.set(key, part);
@@ -217,8 +277,10 @@ export function findSameOrderDuplicateIndices(parts: PartEntry[]): number[] {
 		if (!key) continue;
 
 		if (seen.has(key)) {
-			const firstIndex = seen.get(key)!;
-			duplicateIndices.add(firstIndex);
+			const firstIndex = seen.get(key);
+			if (firstIndex !== undefined) {
+				duplicateIndices.add(firstIndex);
+			}
 			duplicateIndices.add(i);
 		} else {
 			seen.set(key, i);

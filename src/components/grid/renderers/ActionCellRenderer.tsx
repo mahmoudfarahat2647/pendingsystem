@@ -23,7 +23,8 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 				className={`transition-colors ${data.hasAttachment ? "text-indigo-400" : "text-gray-600 hover:text-gray-400"}`}
 				title="Attachment"
 				disabled={isLocked}
-				onClick={() => {
+				onClick={(e) => {
+					e.stopPropagation();
 					if (params.colDef?.cellRendererParams?.onAttachClick) {
 						params.colDef.cellRendererParams.onAttachClick(data);
 					}
@@ -36,7 +37,8 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 				className={`transition-colors ${getEffectiveNoteHistory(data) ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
 				title="Note"
 				disabled={isLocked}
-				onClick={() => {
+				onClick={(e) => {
+					e.stopPropagation();
 					if (params.colDef?.cellRendererParams?.onNoteClick) {
 						params.colDef.cellRendererParams.onNoteClick(data);
 					}
@@ -49,7 +51,8 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 				className={`transition-colors ${data.reminder ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
 				title="Reminder"
 				disabled={isLocked}
-				onClick={() => {
+				onClick={(e) => {
+					e.stopPropagation();
 					if (params.colDef?.cellRendererParams?.onReminderClick) {
 						params.colDef.cellRendererParams.onReminderClick(data);
 					}

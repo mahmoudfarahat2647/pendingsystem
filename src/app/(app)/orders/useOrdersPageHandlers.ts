@@ -17,6 +17,7 @@ import {
 	appendTaggedUserNote,
 	getEffectiveNoteHistory,
 	getSelectedIds,
+	getVinAutoMoveIds,
 } from "@/lib/orderWorkflow";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
 import {
@@ -37,7 +38,6 @@ export const useOrdersPageHandlers = () => {
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("orders");
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
-	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
 
 	// 2. Local State
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -318,11 +318,58 @@ export const useOrdersPageHandlers = () => {
 		toast.success(`${selectedRows.length} order(s) sent to Booking`);
 	};
 
-	const handleUpdatePartStatus = (status: string) => {
+	const handleUpdatePartStatus = async (status: string) => {
 		if (selectedRows.length === 0) return;
-		selectedRows.forEach((row) => {
-			updatePartStatus(row.id, status);
-		});
+
+		// 1. Persist all status changes to DB
+		await Promise.all(
+			selectedRows.map((row) =>
+				handleUpdateOrder(row.id, { partStatus: status }),
+			),
+		);
+
+		// 2. Check each unique VIN for auto-move to Call List
+		const uniqueVins = [
+			...new Set(selectedRows.map((r) => r.vin).filter(Boolean)),
+		];
+
+		for (const vin of uniqueVins) {
+			const editedRow = selectedRows.find((r) => r.vin === vin);
+			if (!editedRow) continue;
+
+			const vinIds = getVinAutoMoveIds({
+				stage: "orders",
+				stageRows: ordersRowData,
+				editedRowId: editedRow.id,
+				editedVin: vin,
+				nextPartStatus: status,
+			});
+
+			if (vinIds.length > 0) {
+				try {
+					await bulkUpdateStageMutation.mutateAsync({
+						ids: vinIds,
+						stage: "call",
+						silentErrorToast: true,
+					});
+					toast.success(
+						`All parts for VIN ${vin} arrived! Moved to Call List.`,
+						{ duration: 5000 },
+					);
+				} catch (error) {
+					console.error("[OrdersPage] vin_auto_move_failed", {
+						error,
+						vin,
+						stage: "orders",
+						ids: vinIds,
+					});
+					toast.error(
+						"Part status saved, but VIN group move failed - refresh and try again.",
+					);
+				}
+			}
+		}
+
 		toast.success(`Part status updated to "${status}"`);
 	};
 

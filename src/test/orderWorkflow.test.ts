@@ -8,6 +8,7 @@ import {
 	formatVinForDisplay,
 	getEffectiveNoteHistory,
 	getNormalizedVinBuckets,
+	getVinAutoMoveIds,
 	getVinBucket,
 	hasMixedVinSelection,
 	isUuid,
@@ -363,6 +364,185 @@ describe("hasMixedVinSelection", () => {
 			createMockRow({ id: "2", vin: "VIN111" }),
 		];
 		expect(hasMixedVinSelection(rows)).toBe(false);
+	});
+});
+
+describe("getVinAutoMoveIds", () => {
+	it("returns all VIN ids when the last outstanding part becomes Arrived", () => {
+		const rows = [
+			createMockRow({
+				id: "1",
+				stage: "main",
+				vin: "VIN111",
+				partStatus: "Not Arrived",
+			}),
+			createMockRow({
+				id: "2",
+				stage: "main",
+				vin: "VIN111",
+				partStatus: "Arrived",
+			}),
+		];
+
+		expect(
+			getVinAutoMoveIds({
+				stage: "main",
+				stageRows: rows,
+				editedRowId: "1",
+				editedVin: "VIN111",
+				nextPartStatus: "Arrived",
+			}),
+		).toEqual(["1", "2"]);
+	});
+
+	it("returns an empty array when another part for the VIN is still not arrived", () => {
+		const rows = [
+			createMockRow({
+				id: "1",
+				stage: "orders",
+				vin: "VIN111",
+				partStatus: "Not Arrived",
+			}),
+			createMockRow({
+				id: "2",
+				stage: "orders",
+				vin: "VIN111",
+				partStatus: "Backordered",
+			}),
+		];
+
+		expect(
+			getVinAutoMoveIds({
+				stage: "orders",
+				stageRows: rows,
+				editedRowId: "1",
+				editedVin: "VIN111",
+				nextPartStatus: "Arrived",
+			}),
+		).toEqual([]);
+	});
+
+	it("normalizes stage, VIN, and status before evaluating auto-move eligibility", () => {
+		const rows = [
+			createMockRow({
+				id: "1",
+				stage: " main ",
+				vin: " vin111 ",
+				partStatus: "not arrived",
+			}),
+			createMockRow({
+				id: "2",
+				stage: "MAIN",
+				vin: "VIN111",
+				partStatus: " arrived ",
+			}),
+		];
+
+		expect(
+			getVinAutoMoveIds({
+				stage: " Main Sheet ",
+				stageRows: rows,
+				editedRowId: "1",
+				editedVin: " vin111 ",
+				nextPartStatus: " arrived ",
+			}),
+		).toEqual(["1", "2"]);
+	});
+
+	it("returns an empty array for blank VINs", () => {
+		const rows = [
+			createMockRow({
+				id: "1",
+				stage: "main",
+				vin: "",
+				partStatus: "Arrived",
+			}),
+		];
+
+		expect(
+			getVinAutoMoveIds({
+				stage: "main",
+				stageRows: rows,
+				editedRowId: "1",
+				editedVin: "   ",
+				nextPartStatus: "Arrived",
+			}),
+		).toEqual([]);
+	});
+
+	it("returns an empty array when the new status is not Arrived", () => {
+		const rows = [
+			createMockRow({
+				id: "1",
+				stage: "main",
+				vin: "VIN111",
+				partStatus: "Not Arrived",
+			}),
+		];
+
+		expect(
+			getVinAutoMoveIds({
+				stage: "main",
+				stageRows: rows,
+				editedRowId: "1",
+				editedVin: "VIN111",
+				nextPartStatus: "Backordered",
+			}),
+		).toEqual([]);
+	});
+
+	it("returns an empty array for non-eligible stages", () => {
+		const rows = [
+			createMockRow({
+				id: "1",
+				stage: "booking",
+				vin: "VIN111",
+				partStatus: "Arrived",
+			}),
+		];
+
+		expect(
+			getVinAutoMoveIds({
+				stage: "booking",
+				stageRows: rows,
+				editedRowId: "1",
+				editedVin: "VIN111",
+				nextPartStatus: "Arrived",
+			}),
+		).toEqual([]);
+	});
+
+	it("ignores rows from other stages even if they share the VIN", () => {
+		const rows = [
+			createMockRow({
+				id: "1",
+				stage: "orders",
+				vin: "VIN111",
+				partStatus: "Not Arrived",
+			}),
+			createMockRow({
+				id: "2",
+				stage: "orders",
+				vin: "VIN111",
+				partStatus: "Arrived",
+			}),
+			createMockRow({
+				id: "3",
+				stage: "call",
+				vin: "VIN111",
+				partStatus: "Not Arrived",
+			}),
+		];
+
+		expect(
+			getVinAutoMoveIds({
+				stage: "orders",
+				stageRows: rows,
+				editedRowId: "1",
+				editedVin: "VIN111",
+				nextPartStatus: "Arrived",
+			}),
+		).toEqual(["1", "2"]);
 	});
 });
 

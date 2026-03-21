@@ -27,12 +27,13 @@ export const BookingSidebarFooter = ({
 	isDateInPast,
 }: BookingSidebarFooterProps) => {
 	const selectedDateKey = format(selectedDate, "yyyy-MM-dd");
+	const resolvedStatus = preBookingStatus.trim() ? preBookingStatus : undefined;
 
 	return (
 		<div className="p-6 bg-[#0a0a0b] border-t border-white/5">
 			<Button
 				onClick={() => {
-					onConfirm(selectedDateKey, bookingNote, preBookingStatus);
+					onConfirm(selectedDateKey, bookingNote, resolvedStatus);
 					onNoteReset();
 					onStatusReset();
 				}}
