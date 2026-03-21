@@ -2,10 +2,11 @@
 
 import type {
 	ColDef,
+	ICellRendererParams,
 	ValueFormatterParams,
 } from "ag-grid-community";
 import { format } from "date-fns";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getEffectiveNoteHistory } from "@/lib/orderWorkflow";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
@@ -321,13 +322,40 @@ const SearchHeaderCheckbox = ({
 	);
 };
 
+const SearchCheckboxRenderer = (params: ICellRendererParams<PendingRow>) => {
+	const [selected, setSelected] = useState(params.node.isSelected() ?? false);
+
+	useEffect(() => {
+		const handler = () => setSelected(params.node.isSelected() ?? false);
+		params.node.addEventListener("rowSelected", handler);
+		return () => params.node.removeEventListener("rowSelected", handler);
+	}, [params.node]);
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		e.stopPropagation();
+		e.target.checked = !selected;
+		params.node.setSelected(!selected);
+	};
+
+	return (
+		<div className="flex items-center justify-center h-full w-full">
+			<input
+				type="checkbox"
+				checked={selected}
+				onChange={handleChange}
+				className="w-4 h-4 rounded border-white/20 bg-white/5 checked:bg-indigo-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+			/>
+		</div>
+	);
+};
+
 // INVARIANT: DO NOT RESTRICT SEARCH COLUMNS OR REMOVE CHECKBOX. THIS IS A COMMAND CENTER.
 export const getGlobalSearchWorkspaceColumns = (
 	partStatuses: PartStatusDef[] = [],
 	onNoteClick?: (row: PendingRow, source?: string) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow, source?: string) => void,
-	masterCheckboxState: SearchHeaderCheckboxState = false,
+	masterCheckboxStateRef?: React.RefObject<SearchHeaderCheckboxState>,
 	onSelectAllFiltered?: (selected: boolean) => void,
 ): ColDef<PendingRow>[] => {
 	const baseCols = getBaseColumns(onNoteClick, onReminderClick, onAttachClick);
@@ -375,7 +403,9 @@ export const getGlobalSearchWorkspaceColumns = (
 
 				return (
 					<div className="flex items-center h-full w-full">
-						<span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border ${colorClass}`}>
+						<span
+							className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border ${colorClass}`}
+						>
 							{source}
 						</span>
 					</div>
@@ -395,24 +425,11 @@ export const getGlobalSearchWorkspaceColumns = (
 			filter: false,
 			headerComponent: () => (
 				<SearchHeaderCheckbox
-					state={masterCheckboxState}
+					state={masterCheckboxStateRef?.current ?? false}
 					onChange={onSelectAllFiltered}
 				/>
 			),
-			cellRenderer: (params: any) => {
-				return (
-					<div className="flex items-center justify-center h-full w-full">
-						<input
-							type="checkbox"
-							checked={params.node.isSelected()}
-							onChange={(e) => {
-								params.node.setSelected(e.target.checked);
-							}}
-							className="w-4 h-4 rounded border-white/20 bg-white/5 checked:bg-indigo-500 focus:ring-0 focus:ring-offset-0"
-						/>
-					</div>
-				);
-			},
+			cellRenderer: SearchCheckboxRenderer,
 		},
 		// 3. ACTIONS
 		{
@@ -470,5 +487,11 @@ export const getGlobalSearchWorkspaceColumns = (
 			},
 			cellClass: "flex items-center justify-center",
 		},
-	].filter((col) => col && (Object.prototype.hasOwnProperty.call(col, 'field') || Object.prototype.hasOwnProperty.call(col, 'colId') || col.headerName)) as ColDef<PendingRow>[];
+	].filter(
+		(col) =>
+			col &&
+			(Object.hasOwn(col, "field") ||
+				Object.hasOwn(col, "colId") ||
+				col.headerName),
+	) as ColDef<PendingRow>[];
 };

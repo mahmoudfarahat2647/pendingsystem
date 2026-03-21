@@ -27,6 +27,13 @@ interface SearchResultsGridProps {
 	showFilters?: boolean;
 }
 
+const ROW_SELECTION_CONFIG = {
+	mode: "multiRow" as const,
+	enableClickSelection: false,
+	checkboxes: false,
+	headerCheckbox: false,
+};
+
 export const SearchResultsGrid = ({
 	rowData,
 	columnDefs,
@@ -45,12 +52,6 @@ export const SearchResultsGrid = ({
 
 	const handleSelectionChanged = useCallback(
 		(event: SelectionChangedEvent<PendingRow>) => {
-			// Refresh the custom checkbox column so it reflects the updated selection state.
-			// The cell renderer reads params.node.isSelected() at render time and has no
-			// built-in reactivity, so we must force a refresh here.
-			if (!event.api.isDestroyed()) {
-				event.api.refreshCells({ columns: ["search-checkbox"], force: true });
-			}
 			onSelectionChanged(event);
 		},
 		[onSelectionChanged],
@@ -89,13 +90,7 @@ export const SearchResultsGrid = ({
 					rowHeight={32}
 					headerHeight={36}
 					animateRows={true}
-					rowSelection={{
-						mode: "multiRow",
-						enableClickSelection: false,
-						checkboxes: false,
-						headerCheckbox: false,
-					}}
-					suppressCellFocus={true}
+					rowSelection={ROW_SELECTION_CONFIG}
 					onCellValueChanged={onCellValueChanged}
 					onSelectionChanged={handleSelectionChanged}
 					onGridReady={onGridReady}

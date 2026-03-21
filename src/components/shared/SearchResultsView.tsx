@@ -80,6 +80,7 @@ export const SearchResultsView = () => {
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [masterCheckboxState, setMasterCheckboxState] =
 		useState<SearchHeaderCheckboxState>(false);
+	const masterCheckboxStateRef = useRef<SearchHeaderCheckboxState>(false);
 	const [showFilters, setShowFilters] = useState(false);
 	const [activeSources, _setActiveSources] = useState<string[]>([]);
 	const gridApiRef = useRef<GridApi<PendingRow> | null>(null);
@@ -112,13 +113,24 @@ export const SearchResultsView = () => {
 	);
 
 	// Bulk stage update mutations
-	const bulkStageMutations = {
+	const bulkStageMutationsRaw = {
 		main: useBulkUpdateOrderStageMutation("main"),
 		orders: useBulkUpdateOrderStageMutation("orders"),
 		booking: useBulkUpdateOrderStageMutation("booking"),
 		call: useBulkUpdateOrderStageMutation("call"),
 		archive: useBulkUpdateOrderStageMutation("archive"),
 	};
+
+	const bulkStageMutations = useMemo(
+		() => bulkStageMutationsRaw,
+		[
+			bulkStageMutationsRaw.main,
+			bulkStageMutationsRaw.orders,
+			bulkStageMutationsRaw.booking,
+			bulkStageMutationsRaw.call,
+			bulkStageMutationsRaw.archive,
+		],
+	);
 
 	// Combine all rows with sourceType
 	const searchResults = useMemo(() => {
@@ -195,16 +207,28 @@ export const SearchResultsView = () => {
 		});
 
 		if (selectableCount === 0 || selectedCount === 0) {
-			setMasterCheckboxState(false);
+			if (masterCheckboxStateRef.current !== false) {
+				masterCheckboxStateRef.current = false;
+				setMasterCheckboxState(false);
+				api.refreshHeader();
+			}
 			return;
 		}
 
 		if (selectedCount === selectableCount) {
-			setMasterCheckboxState(true);
+			if (masterCheckboxStateRef.current !== true) {
+				masterCheckboxStateRef.current = true;
+				setMasterCheckboxState(true);
+				api.refreshHeader();
+			}
 			return;
 		}
 
-		setMasterCheckboxState("indeterminate");
+		if (masterCheckboxStateRef.current !== "indeterminate") {
+			masterCheckboxStateRef.current = "indeterminate";
+			setMasterCheckboxState("indeterminate");
+			api.refreshHeader();
+		}
 	}, []);
 
 	const handleSelectionChanged = useCallback(
@@ -240,6 +264,7 @@ export const SearchResultsView = () => {
 
 	const handleGridPreDestroyed = useCallback(() => {
 		gridApiRef.current = null;
+		masterCheckboxStateRef.current = false;
 		setMasterCheckboxState(false);
 		setSelectedRows([]);
 	}, []);
@@ -294,22 +319,30 @@ export const SearchResultsView = () => {
 		sourceTag,
 	} = useRowModals(handleUpdateOrder);
 
+	const stableOnNoteClick = useCallback(
+		(row: PendingRow) => handleNoteClick(row, row.sourceType as string),
+		[handleNoteClick],
+	);
+	const stableOnAttachClick = useCallback(
+		(row: PendingRow) => handleAttachClick(row, row.sourceType as string),
+		[handleAttachClick],
+	);
+
 	const columns = useMemo(() => {
 		return getGlobalSearchWorkspaceColumns(
 			partStatuses,
-			(row) => handleNoteClick(row, row.sourceType as string),
-			(row) => handleReminderClick(row),
-			(row) => handleAttachClick(row, row.sourceType as string),
-			masterCheckboxState,
+			stableOnNoteClick,
+			handleReminderClick,
+			stableOnAttachClick,
+			masterCheckboxStateRef,
 			handleSelectAllFiltered,
 		);
 	}, [
 		partStatuses,
-		handleNoteClick,
+		stableOnNoteClick,
 		handleReminderClick,
-		handleAttachClick,
+		stableOnAttachClick,
 		handleSelectAllFiltered,
-		masterCheckboxState,
 	]);
 
 	// Toolbar Actions

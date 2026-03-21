@@ -14,6 +14,7 @@ export type MockGridApi = Pick<
 	| "forEachNodeAfterFilter"
 	| "forEachNode"
 	| "getSelectedRows"
+	| "refreshHeader"
 >;
 
 export const createMockGridNode = ({
@@ -53,6 +54,7 @@ export const createMockGridApi = ({
 	return {
 		selectAllFiltered: vi.fn(),
 		deselectAllFiltered: vi.fn(),
+		refreshHeader: vi.fn(),
 		getSelectedRows: vi.fn(() => {
 			// If we provided stateful nodes (with _selected), derive selectedRows from them
 			// Otherwise fallback to the static selectedRows

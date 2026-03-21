@@ -334,7 +334,7 @@ const renderView = () => render(<SearchResultsView />);
 
 const getRenderedRowIds = () => (mocks.gridRowData ?? []).map((row) => row.id);
 
-const getMasterCheckboxState = () => mocks.gridColumnsArgs?.[4];
+const getMasterCheckboxState = () => (mocks.gridColumnsArgs?.[4] as any)?.current;
 
 const getOnSelectAllFiltered = () =>
 	mocks.gridColumnsArgs?.[5] as ((selected: boolean) => void) | undefined;
