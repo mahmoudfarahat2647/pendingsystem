@@ -370,19 +370,20 @@ export const SearchResultsView = () => {
 
 		try {
 			await Promise.all(
-				selectedRows.map((row) =>
-					saveOrderMutation.mutateAsync({
+				selectedRows.map((row) => {
+					const freshRow = searchResults.find((r) => r.id === row.id) ?? row;
+					return saveOrderMutation.mutateAsync({
 						id: row.id,
 						updates: {
 							bookingDate: date,
 							bookingNote: note,
-							noteHistory: appendTaggedUserNote(getEffectiveNoteHistory(row), note, "booking"),
+							noteHistory: appendTaggedUserNote(getEffectiveNoteHistory(freshRow), note, "booking"),
 							...(status ? { bookingStatus: status } : {}),
 						},
 						stage: "booking",
 						sourceStage: row.stage as OrderStage,
-					}),
-				),
+					});
+				}),
 			);
 			toast.success(`Booked ${selectedRows.length} rows for ${date}`);
 			setShowBookingModal(false);
@@ -396,8 +397,9 @@ export const SearchResultsView = () => {
 		try {
 			await Promise.all(
 				selectedRows.map((row) => {
+					const freshRow = searchResults.find((r) => r.id === row.id) ?? row;
 					const updatedHistory = appendTaggedUserNote(
-						getEffectiveNoteHistory(row),
+						getEffectiveNoteHistory(freshRow),
 						reason,
 						"archive",
 					);
