@@ -89,10 +89,9 @@ export const getBaseColumns = (
       valueA: string | null | undefined,
       valueB: string | null | undefined,
     ) => {
-      const keyA = valueA || "pendingsystem";
-      const keyB = valueB || "pendingsystem";
-      if (keyA === keyB) return 0;
-      return keyA > keyB ? 1 : -1;
+      const keyA = (valueA || "pendingsystem").toLowerCase();
+      const keyB = (valueB || "pendingsystem").toLowerCase();
+      return keyA.localeCompare(keyB);
     },
   },
   {

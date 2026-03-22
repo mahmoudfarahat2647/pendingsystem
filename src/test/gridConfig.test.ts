@@ -57,18 +57,21 @@ describe("Grid Column Configuration Selection Fix", () => {
       expect(compare("", "")).toBe(0);
       expect(compare(null, undefined)).toBe(0);
 
-      // 2. Transitive positive behaviour ("pendingsystem" > "Toyota")
-      // "p" > "T", so "pendingsystem" > "Toyota"
-      expect(compare("", "Toyota")).toBeGreaterThan(0);
-      expect(compare(undefined, "Toyota")).toBeGreaterThan(0);
-      expect(compare(null, "Toyota")).toBeGreaterThan(0);
+      // 2. Empty/null/undefined fall back to "pendingsystem" (lowercase),
+      // which sorts before "Toyota" after case normalization ("p" < "t")
+      expect(compare("", "Toyota")).toBeLessThan(0);
+      expect(compare(undefined, "Toyota")).toBeLessThan(0);
+      expect(compare(null, "Toyota")).toBeLessThan(0);
 
-      // 3. Transitive negative behaviour ("Toyota" < "pendingsystem")
-      expect(compare("Toyota", "")).toBeLessThan(0);
+      // 3. Transitive negative behaviour ("Toyota" > "pendingsystem" after normalization)
+      expect(compare("Toyota", "")).toBeGreaterThan(0);
 
-      // 4. Normal string comparison for non-empty values
+      // 4. Normal string comparison for non-empty values (case-insensitive)
       expect(compare("Abc", "Xyz")).toBeLessThan(0);
       expect(compare("BMW", "Audi")).toBeGreaterThan(0);
+
+      // 5. Case-insensitive equivalence (mixed case treated as equal)
+      expect(compare("renault", "Renault")).toBe(0);
     });
   });
 
