@@ -72,14 +72,16 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	// Grid State Persistence logic
 	const saveGridState = useAppStore((state) => state.saveGridState);
 	const getGridState = useAppStore((state) => state.getGridState);
+	const getDefaultLayout = useAppStore((state) => state.getDefaultLayout);
+	const setLiveGridState = useAppStore((state) => state.setLiveGridState);
 	const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 	// Restoration: Get initial state once on mount
 	const initialState = useMemo(() => {
 		if (!gridStateKey) return undefined;
-		const state = getGridState(gridStateKey);
+		const state = getGridState(gridStateKey) || getDefaultLayout(gridStateKey);
 		return state || undefined;
-	}, [gridStateKey, getGridState]);
+	}, [gridStateKey, getDefaultLayout, getGridState]);
 
 	const setLayoutDirty = useAppStore((state) => state.setLayoutDirty);
 	const gridInitializedRef = useRef(false);
@@ -93,13 +95,15 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 			if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
 
 			// Debounce save to avoid excessive localStorage writes
+			const state = api.getState();
+			setLiveGridState(gridStateKey, state);
+
 			saveTimerRef.current = setTimeout(() => {
-				const state = api.getState();
 				saveGridState(gridStateKey, state);
 				saveTimerRef.current = null;
 			}, 500);
 		}
-	}, [gridStateKey, saveGridState, gridApiRef]);
+	}, [gridStateKey, saveGridState, setLiveGridState, gridApiRef]);
 
 	const handleLayoutChange = useCallback(() => {
 		// Only mark as dirty if the grid has been initialized (avoid false positive on initial load)
@@ -163,10 +167,13 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 
 			// Mark grid as initialized after a short delay to ensure restoration is complete
 			setTimeout(() => {
+				if (gridStateKey && !params.api.isDestroyed()) {
+					setLiveGridState(gridStateKey, params.api.getState());
+				}
 				gridInitializedRef.current = true;
 			}, 100);
 		},
-		[handleGridReady, attemptJump],
+		[gridStateKey, handleGridReady, attemptJump, setLiveGridState],
 	);
 
 	const onFirstDataRenderedInternal = useCallback(
@@ -175,8 +182,12 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 
 			// Second opportunity to retry the jump
 			attemptJump();
+
+			if (gridStateKey && !params.api.isDestroyed()) {
+				setLiveGridState(gridStateKey, params.api.getState());
+			}
 		},
-		[handleFirstDataRendered, attemptJump],
+		[gridStateKey, handleFirstDataRendered, attemptJump, setLiveGridState],
 	);
 
 	// Cleanup timer on unmount
