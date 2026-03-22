@@ -24,20 +24,7 @@ export const getBaseColumns = (
   onAttachClick?: (row: PendingRow) => void,
   isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-  // Index 0: Checkbox column placeholder
-  {
-    headerName: "",
-    colId: "checkbox-selection-col",
-    width: 50,
-    maxWidth: 50,
-    sortable: false,
-    filter: false,
-    resizable: false,
-    suppressHeaderMenuButton: true,
-    suppressMovable: true,
-    lockPosition: "left",
-  },
-  // Index 1: ACTIONS column (second column, after checkbox)
+  // AG Grid injects the selection checkbox column separately.
   {
     headerName: "ACTIONS",
     colId: "row-actions",
@@ -280,9 +267,9 @@ export const getCallColumns = (
     onAttachClick,
   );
   return [
-    ...baseColumns.slice(0, 3), // Include checkbox, actions, stats
+    ...baseColumns.slice(0, 2), // Include actions and stats
     { headerName: "BOOKING", field: "bookingDate", width: 120 },
-    ...baseColumns.slice(3), // Continue from R/DATE onwards
+    ...baseColumns.slice(2), // Continue from R/DATE onwards
     {
       headerName: "PART STATUS",
       field: "partStatus",
