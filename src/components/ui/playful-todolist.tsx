@@ -13,7 +13,7 @@ export interface PlayfulTodoItem {
 	checkboxClassName?: string;
 }
 
-export interface PlayfulTodolistProps {
+interface PlayfulTodolistProps {
 	items: PlayfulTodoItem[];
 	className?: string;
 	itemClassName?: string;

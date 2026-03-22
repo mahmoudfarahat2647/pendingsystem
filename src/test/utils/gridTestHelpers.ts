@@ -2,7 +2,7 @@ import type { GridApi, IRowNode } from "ag-grid-community";
 import { vi } from "vitest";
 import type { PendingRow } from "@/types";
 
-export type MockGridNode = Pick<
+type MockGridNode = Pick<
 	IRowNode<PendingRow>,
 	"group" | "selectable" | "isSelected" | "setSelected" | "data"
 >;
