@@ -8,8 +8,8 @@ import {
 } from "@testing-library/react";
 import type { ButtonHTMLAttributes } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { appendTaggedUserNote } from "@/lib/orderWorkflow";
 import * as orderWorkflow from "@/lib/orderWorkflow";
+import { appendTaggedUserNote } from "@/lib/orderWorkflow";
 import type { PendingRow } from "@/types";
 import {
 	createMockGridApi,
@@ -334,7 +334,8 @@ const renderView = () => render(<SearchResultsView />);
 
 const getRenderedRowIds = () => (mocks.gridRowData ?? []).map((row) => row.id);
 
-const getMasterCheckboxState = () => (mocks.gridColumnsArgs?.[4] as any)?.current;
+const getMasterCheckboxState = () =>
+	(mocks.gridColumnsArgs?.[4] as any)?.current;
 
 const getOnSelectAllFiltered = () =>
 	mocks.gridColumnsArgs?.[5] as ((selected: boolean) => void) | undefined;
@@ -356,7 +357,9 @@ const connectGridApi = async (api: MockGridApi) => {
 const triggerSelectionChanged = async (
 	rows: PendingRow[],
 	api = createMockGridApi({
-		filteredNodes: rows.map((r) => createMockGridNode({ selected: true, data: r })),
+		filteredNodes: rows.map((r) =>
+			createMockGridNode({ selected: true, data: r }),
+		),
 	}),
 ) => {
 	expect(mocks.gridProps).toBeTruthy();
@@ -375,7 +378,7 @@ const triggerDisplayedRowsChanged = async (api: MockGridApi) => {
 const triggerGridPreDestroyed = async () => {
 	expect(mocks.gridProps).toBeTruthy();
 	await act(async () => {
-	mocks.gridProps?.onGridPreDestroyed?.();
+		mocks.gridProps?.onGridPreDestroyed?.();
 	});
 };
 
@@ -673,7 +676,9 @@ describe("SearchResultsView", () => {
 
 		renderView();
 
-		const mockNodes = rows.map((r) => createMockGridNode({ selected: true, data: r }));
+		const mockNodes = rows.map((r) =>
+			createMockGridNode({ selected: true, data: r }),
+		);
 		await triggerSelectionChanged(
 			rows,
 			createMockGridApi({
@@ -705,13 +710,15 @@ describe("SearchResultsView", () => {
 		mocks.queryData.main = rows;
 		renderView();
 
-		const mockNodes = rows.map((r) => createMockGridNode({ selected: true, data: r }));
-		
+		const mockNodes = rows.map((r) =>
+			createMockGridNode({ selected: true, data: r }),
+		);
+
 		await triggerSelectionChanged(
 			rows,
 			createMockGridApi({
 				filteredNodes: mockNodes,
-			})
+			}),
 		);
 
 		// Now filter to just 1 row visible
@@ -720,7 +727,7 @@ describe("SearchResultsView", () => {
 			createMockGridApi({
 				filteredNodes: [visibleNode],
 				allNodes: mockNodes,
-			})
+			}),
 		);
 
 		expect(mocks.searchToolbarProps?.selectedCount).toBe(1);
@@ -734,7 +741,7 @@ describe("SearchResultsView", () => {
 		await waitFor(() => {
 			expect(mocks.saveMutateAsync).toHaveBeenCalledTimes(1);
 			expect(mocks.saveMutateAsync).toHaveBeenCalledWith(
-				expect.objectContaining({ id: "main-1" })
+				expect.objectContaining({ id: "main-1" }),
 			);
 		});
 	});
@@ -844,9 +851,9 @@ describe("SearchResultsView", () => {
 				? "bookingOnly" in mocks.lastOpenedBookingModalProps
 				: true,
 		).toBe(false);
-		expect(screen.getByTestId("booking-modal-selected-count")).toHaveTextContent(
-			"2",
-		);
+		expect(
+			screen.getByTestId("booking-modal-selected-count"),
+		).toHaveTextContent("2");
 	});
 
 	it("prints reservation labels for selected search rows without mutating orders", async () => {
@@ -947,7 +954,9 @@ describe("SearchResultsView", () => {
 		});
 		const payload = mocks.saveMutateAsync.mock.calls[0][0];
 		expect(payload.updates).not.toHaveProperty("bookingStatus");
-		expect(payload.updates.noteHistory).toBe("Old note\nBulk booking note #booking");
+		expect(payload.updates.noteHistory).toBe(
+			"Old note\nBulk booking note #booking",
+		);
 	});
 
 	it("explicit status includes bookingStatus alongside noteHistory", async () => {
@@ -1385,7 +1394,6 @@ describe("SearchResultsView", () => {
 				ids: ["main-1", "main-2"],
 			}),
 		);
-
 	});
 
 	describe("Orders missing parts guards", () => {

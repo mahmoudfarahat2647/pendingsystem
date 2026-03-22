@@ -45,13 +45,8 @@ vi.mock("@/components/booking/hooks/useBookingCalendar", () => ({
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
-	Dialog: ({
-		open,
-		children,
-	}: {
-		open: boolean;
-		children: ReactNode;
-	}) => (open ? <div data-testid="booking-dialog">{children}</div> : null),
+	Dialog: ({ open, children }: { open: boolean; children: ReactNode }) =>
+		open ? <div data-testid="booking-dialog">{children}</div> : null,
 	DialogContent: ({
 		children,
 		className,
@@ -59,7 +54,9 @@ vi.mock("@/components/ui/dialog", () => ({
 		children: ReactNode;
 		className?: string;
 	}) => <div className={className}>{children}</div>,
-	DialogHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	DialogHeader: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
 	DialogTitle: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 

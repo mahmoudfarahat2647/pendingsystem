@@ -358,12 +358,10 @@ describe("orderService", () => {
 				.mockResolvedValue({ data: savedData, error: null });
 			const mockEq = vi.fn().mockReturnThis();
 			const mockSelect = vi.fn().mockReturnThis();
-			const mockMaybeSingle = vi
-				.fn()
-				.mockResolvedValue({
-					data: { metadata: existingMetadata },
-					error: null,
-				});
+			const mockMaybeSingle = vi.fn().mockResolvedValue({
+				data: { metadata: existingMetadata },
+				error: null,
+			});
 
 			(
 				supabase.from as unknown as { mockReturnValue: Function }
@@ -432,14 +430,14 @@ describe("orderService", () => {
 				existingMetadata: { attachmentLink: "C:\\files\\existing.pdf" },
 				savedData: { id: VALID_UUID },
 			});
-			
+
 			await orderService.saveOrder({
 				id: VALID_UUID,
 				stage: "booking",
 				noteHistory: "moved to booking",
 				// attachmentLink intentionally absent
 			});
-			
+
 			const writtenPayload = mockUpdate.mock.calls[0][0];
 			expect(writtenPayload).not.toHaveProperty("attachment_link");
 			expect(writtenPayload).not.toHaveProperty("attachment_file_path");

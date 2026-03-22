@@ -92,9 +92,7 @@ function withTimeout<T>(promise: PromiseLike<T>, label: string): Promise<T> {
 	return new Promise<T>((resolve, reject) => {
 		const timer = setTimeout(() => {
 			reject(
-				new Error(
-					`${label} timed out after ${SUPABASE_REQUEST_TIMEOUT_MS}ms`,
-				),
+				new Error(`${label} timed out after ${SUPABASE_REQUEST_TIMEOUT_MS}ms`),
 			);
 		}, SUPABASE_REQUEST_TIMEOUT_MS);
 
@@ -152,10 +150,7 @@ export async function GET() {
 		let storageAvailable = false;
 
 		const [dbResult, bucketsResult] = await Promise.allSettled([
-			withTimeout(
-				supabase.rpc("get_database_size_bytes"),
-				"Database size RPC",
-			),
+			withTimeout(supabase.rpc("get_database_size_bytes"), "Database size RPC"),
 			withTimeout(supabase.storage.listBuckets(), "Storage bucket listing"),
 		]);
 
@@ -196,8 +191,7 @@ export async function GET() {
 				} else {
 					storageUsedBytes = bucketSizeResults.reduce(
 						(total, result) =>
-							total +
-							(result.status === "fulfilled" ? result.value : 0),
+							total + (result.status === "fulfilled" ? result.value : 0),
 						0,
 					);
 					storageAvailable = true;

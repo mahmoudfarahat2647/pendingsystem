@@ -107,7 +107,7 @@ describe("Grid Column Configuration Selection Fix", () => {
 	describe("getGlobalSearchWorkspaceColumns", () => {
 		it("should have correct column order and fit-mode protections", () => {
 			const columns = getGlobalSearchWorkspaceColumns([]);
-			
+
 			// 1. SOURCE (Index 0)
 			expect(columns[0].field).toBe("sourceType");
 			expect(columns[0].width).toBe(96);
@@ -127,23 +127,25 @@ describe("Grid Column Configuration Selection Fix", () => {
 			expect(columns[2].pinned).toBe("left");
 
 			// 4. Sequence Assertions
-			const fields = columns.map(c => c.field || c.colId);
+			const fields = columns.map((c) => c.field || c.colId);
 			expect(fields).toContain("vin");
 			expect(fields).toContain("mobile");
 			expect(fields).toContain("customerName");
 			expect(fields[fields.length - 1]).toBe("partStatus");
 
 			// 5. MinWidth protections
-			const vinCol = columns.find(c => c.field === "vin");
-			const mobileCol = columns.find(c => c.field === "mobile");
-			const customerCol = columns.find(c => c.field === "customerName");
+			const vinCol = columns.find((c) => c.field === "vin");
+			const mobileCol = columns.find((c) => c.field === "mobile");
+			const customerCol = columns.find((c) => c.field === "customerName");
 
 			expect(vinCol?.minWidth).toBeGreaterThanOrEqual(180);
 			expect(mobileCol?.minWidth).toBeGreaterThanOrEqual(130);
 			expect(customerCol?.minWidth).toBeGreaterThanOrEqual(180);
 
 			// 6. Native checkbox placeholder must be ABSENT
-			expect(columns.find(c => c.colId === "ag-Grid-AutoColumn")).toBeUndefined();
+			expect(
+				columns.find((c) => c.colId === "ag-Grid-AutoColumn"),
+			).toBeUndefined();
 		});
 	});
 });

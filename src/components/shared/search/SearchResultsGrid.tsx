@@ -46,9 +46,12 @@ export const SearchResultsGrid = ({
 }: SearchResultsGridProps) => {
 	const gridRef = useRef<AgGridReact<PendingRow>>(null);
 
-	const onGridReady = useCallback((params: GridReadyEvent<PendingRow>) => {
-		onGridApiReady?.(params.api);
-	}, [onGridApiReady]);
+	const onGridReady = useCallback(
+		(params: GridReadyEvent<PendingRow>) => {
+			onGridApiReady?.(params.api);
+		},
+		[onGridApiReady],
+	);
 
 	const handleSelectionChanged = useCallback(
 		(event: SelectionChangedEvent<PendingRow>) => {

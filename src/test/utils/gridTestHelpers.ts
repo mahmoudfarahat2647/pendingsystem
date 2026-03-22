@@ -61,8 +61,11 @@ export const createMockGridApi = ({
 			const statefulSelectedData = _allNodes
 				.filter((n) => n.isSelected() && n.data)
 				.map((n) => n.data!);
-			
-			if (statefulSelectedData.length > 0 || _allNodes.some(n => Reflect.has(n, '_selected'))) {
+
+			if (
+				statefulSelectedData.length > 0 ||
+				_allNodes.some((n) => Reflect.has(n, "_selected"))
+			) {
 				return statefulSelectedData;
 			}
 			return selectedRows;

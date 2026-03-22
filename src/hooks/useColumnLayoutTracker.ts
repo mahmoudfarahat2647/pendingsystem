@@ -71,7 +71,13 @@ export function useColumnLayoutTracker(gridKey: string) {
 			toast.info("Resetting to original layout. Refreshing...");
 			window.location.reload();
 		}
-	}, [gridKey, clearGridState, clearLiveGridState, setLayoutDirty, getDefaultLayout]);
+	}, [
+		gridKey,
+		clearGridState,
+		clearLiveGridState,
+		setLayoutDirty,
+		getDefaultLayout,
+	]);
 
 	return {
 		isDirty,

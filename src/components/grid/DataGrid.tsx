@@ -113,7 +113,13 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				saveTimerRef.current = null;
 			}, 500);
 		}
-	}, [gridStateKey, saveGridState, setLiveGridState, clearLiveGridState, gridApiRef]);
+	}, [
+		gridStateKey,
+		saveGridState,
+		setLiveGridState,
+		clearLiveGridState,
+		gridApiRef,
+	]);
 
 	const handleLayoutChange = useCallback(() => {
 		// Only mark as dirty if the grid has been initialized (avoid false positive on initial load)

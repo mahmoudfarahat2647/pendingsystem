@@ -190,7 +190,9 @@ export const SearchResultsView = () => {
 	// Combined rows handled in useMemo below
 
 	const getMissingPartRows = (rows: PendingRow[]): PendingRow[] => {
-		return rows.filter((row) => !row.partNumber?.trim() || !row.description?.trim());
+		return rows.filter(
+			(row) => !row.partNumber?.trim() || !row.description?.trim(),
+		);
 	};
 
 	// Handlers
@@ -377,7 +379,11 @@ export const SearchResultsView = () => {
 						updates: {
 							bookingDate: date,
 							bookingNote: note,
-							noteHistory: appendTaggedUserNote(getEffectiveNoteHistory(freshRow), note, "booking"),
+							noteHistory: appendTaggedUserNote(
+								getEffectiveNoteHistory(freshRow),
+								note,
+								"booking",
+							),
 							...(status ? { bookingStatus: status } : {}),
 						},
 						stage: "booking",
