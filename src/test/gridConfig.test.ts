@@ -31,17 +31,15 @@ describe("Grid Column Configuration Selection Fix", () => {
   });
 
   describe("getBaseColumns", () => {
-    it("Checkbox should be at index 0, ACTIONS column should be at index 1 (second column)", () => {
+    it("should expose ACTIONS as the first configured column", () => {
       const columns = getBaseColumns();
-      // Checkbox column at index 0
-      const checkboxCol = columns[0];
-      expect(checkboxCol).toBeDefined();
-      expect(checkboxCol?.colId).toBe("checkbox-selection-col");
-      // ACTIONS column at index 1
-      const actionsCol = columns[1];
+      const actionsCol = columns[0];
       expect(actionsCol).toBeDefined();
       expect(actionsCol?.headerName).toBe("ACTIONS");
       expect(actionsCol?.colId).toBe("row-actions");
+      expect(columns.find((c) => c.colId === "checkbox-selection-col")).toBe(
+        undefined,
+      );
     });
 
     it("should use a pure comparator for COMPANY column aligning with pendingsystem display value", () => {
@@ -76,7 +74,7 @@ describe("Grid Column Configuration Selection Fix", () => {
   });
 
   describe("useColumnDefs hook", () => {
-    it("Checkbox should be at index 0, ACTIONS column should be at index 1 (second column) for all grid types", () => {
+    it("should expose ACTIONS as the first configured column for all grid types", () => {
       const gridTypes: Array<
         "main" | "orders" | "booking" | "archive" | "call"
       > = ["main", "orders", "booking", "archive", "call"];
@@ -84,52 +82,36 @@ describe("Grid Column Configuration Selection Fix", () => {
       for (const type of gridTypes) {
         const { result } = renderHook(() => useColumnDefs(type));
 
-        // Checkbox column at index 0
-        const checkboxCol = result.current[0];
-        expect(
-          checkboxCol,
-          `Checkbox column missing at index 0 for type ${type}`,
-        ).toBeDefined();
-
-        // ACTIONS column at index 1
-        const actionsCol = result.current[1];
+        const actionsCol = result.current[0];
         expect(
           actionsCol,
-          `Actions column missing at index 1 for type ${type}`,
+          `Actions column missing at index 0 for type ${type}`,
         ).toBeDefined();
         expect(actionsCol?.colId).toBe("row-actions");
+        expect(
+          result.current.find((c) => c.colId === "checkbox-placeholder"),
+          `Checkbox placeholder should be absent for type ${type}`,
+        ).toBeUndefined();
       }
     });
   });
 
   describe("Other column getters", () => {
-    it("getOrdersColumns: Checkbox at index 0, ACTIONS at index 1 (second column)", () => {
+    it("getOrdersColumns: ACTIONS should be the first configured column", () => {
       const columns = getOrdersColumns([]);
-      // Checkbox column at index 0
-      const checkboxCol = columns[0];
-      expect(checkboxCol).toBeDefined();
-      // ACTIONS column at index 1
-      const actionsCol = columns[1];
+      const actionsCol = columns[0];
       expect(actionsCol?.colId).toBe("row-actions");
     });
 
-    it("getMainSheetColumns: Checkbox at index 0, ACTIONS at index 1 (second column)", () => {
+    it("getMainSheetColumns: ACTIONS should be the first configured column", () => {
       const columns = getMainSheetColumns([]);
-      // Checkbox column at index 0
-      const checkboxCol = columns[0];
-      expect(checkboxCol).toBeDefined();
-      // ACTIONS column at index 1
-      const actionsCol = columns[1];
+      const actionsCol = columns[0];
       expect(actionsCol?.colId).toBe("row-actions");
     });
 
-    it("getBookingColumns: Checkbox at index 0, ACTIONS at index 1 (second column)", () => {
+    it("getBookingColumns: ACTIONS should be the first configured column", () => {
       const columns = getBookingColumns();
-      // Checkbox column at index 0
-      const checkboxCol = columns[0];
-      expect(checkboxCol).toBeDefined();
-      // ACTIONS column at index 1
-      const actionsCol = columns[1];
+      const actionsCol = columns[0];
       expect(actionsCol?.colId).toBe("row-actions");
     });
   });

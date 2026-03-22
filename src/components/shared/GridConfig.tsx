@@ -24,20 +24,7 @@ export const getBaseColumns = (
   onAttachClick?: (row: PendingRow) => void,
   isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-  // Index 0: Checkbox column placeholder
-  {
-    headerName: "",
-    colId: "checkbox-selection-col",
-    width: 50,
-    maxWidth: 50,
-    sortable: false,
-    filter: false,
-    resizable: false,
-    suppressHeaderMenuButton: true,
-    suppressMovable: true,
-    lockPosition: "left",
-  },
-  // Index 1: ACTIONS column (second column, after checkbox)
+  // ACTIONS is the first configured column; AG Grid injects the selection checkbox separately.
   {
     headerName: "ACTIONS",
     colId: "row-actions",
@@ -164,34 +151,34 @@ export const getOrdersColumns = (
   onReminderClick?: (row: PendingRow) => void,
   onAttachClick?: (row: PendingRow) => void,
 ): ColDef<PendingRow>[] => [
-  ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
-  {
-    headerName: "PART STATUS",
-    field: "partStatus",
-    width: 100,
-    minWidth: 100,
-    editable: true,
-    cellRenderer: PartStatusRenderer,
-    cellRendererParams: {
-      partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-    },
-    cellEditor: "agSelectCellEditor",
-    cellEditorParams: {
-      values:
-        Array.isArray(partStatuses) && partStatuses.length > 0
-          ? partStatuses
+    ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+    {
+      headerName: "PART STATUS",
+      field: "partStatus",
+      width: 100,
+      minWidth: 100,
+      editable: true,
+      cellRenderer: PartStatusRenderer,
+      cellRendererParams: {
+        partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+      },
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values:
+          Array.isArray(partStatuses) && partStatuses.length > 0
+            ? partStatuses
               .filter((s) => s && typeof s.label === "string")
               .map((s) => s.label)
-          : [],
+            : [],
+      },
+      cellClass: "flex items-center justify-center",
     },
-    cellClass: "flex items-center justify-center",
-  },
-  {
-    headerName: "REQUESTER",
-    field: "requester",
-    width: 120,
-  },
-];
+    {
+      headerName: "REQUESTER",
+      field: "requester",
+      width: 120,
+    },
+  ];
 
 export const getMainSheetColumns = (
   partStatuses: PartStatusDef[] = [],
@@ -200,28 +187,28 @@ export const getMainSheetColumns = (
   onAttachClick?: (row: PendingRow) => void,
   isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-  ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick, isLocked),
-  {
-    headerName: "PART STATUS",
-    field: "partStatus",
-    width: 70,
-    editable: !isLocked,
-    cellRenderer: PartStatusRenderer,
-    cellRendererParams: {
-      partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-    },
-    cellEditor: "agSelectCellEditor",
-    cellEditorParams: {
-      values:
-        Array.isArray(partStatuses) && partStatuses.length > 0
-          ? partStatuses
+    ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick, isLocked),
+    {
+      headerName: "PART STATUS",
+      field: "partStatus",
+      width: 70,
+      editable: !isLocked,
+      cellRenderer: PartStatusRenderer,
+      cellRendererParams: {
+        partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+      },
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values:
+          Array.isArray(partStatuses) && partStatuses.length > 0
+            ? partStatuses
               .filter((s) => s && typeof s.label === "string")
               .map((s) => s.label)
-          : [],
+            : [],
+      },
+      cellClass: "flex items-center justify-center",
     },
-    cellClass: "flex items-center justify-center",
-  },
-];
+  ];
 
 export const getBookingColumns = (
   partStatuses: PartStatusDef[] = [],
@@ -229,44 +216,44 @@ export const getBookingColumns = (
   onReminderClick?: (row: PendingRow) => void,
   onAttachClick?: (row: PendingRow) => void,
 ): ColDef<PendingRow>[] => [
-  ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
-  {
-    headerName: "BOOKING DATE",
-    field: "bookingDate",
-    width: 130,
-    cellStyle: { color: "#22c55e", fontWeight: 500 },
-    valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
-      if (!params.value) return "";
-      try {
-        return format(new Date(params.value), "EEE, MMM d, yyyy");
-      } catch {
-        return params.value;
-      }
+    ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+    {
+      headerName: "BOOKING DATE",
+      field: "bookingDate",
+      width: 130,
+      cellStyle: { color: "#22c55e", fontWeight: 500 },
+      valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
+        if (!params.value) return "";
+        try {
+          return format(new Date(params.value), "EEE, MMM d, yyyy");
+        } catch {
+          return params.value;
+        }
+      },
     },
-  },
-  {
-    headerName: "STATUS",
-    field: "bookingStatus",
-    width: 70,
-    cellRenderer: PartStatusRenderer,
-    cellRendererParams: {
-      partStatuses: useAppStore.getState().bookingStatuses,
+    {
+      headerName: "STATUS",
+      field: "bookingStatus",
+      width: 70,
+      cellRenderer: PartStatusRenderer,
+      cellRendererParams: {
+        partStatuses: useAppStore.getState().bookingStatuses,
+      },
+      cellClass: "flex items-center justify-center",
     },
-    cellClass: "flex items-center justify-center",
-  },
-  {
-    headerName: "PART STATUS",
-    field: "partStatus",
-    width: 100,
-    minWidth: 100,
-    editable: false,
-    cellRenderer: PartStatusRenderer,
-    cellRendererParams: {
-      partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+    {
+      headerName: "PART STATUS",
+      field: "partStatus",
+      width: 100,
+      minWidth: 100,
+      editable: false,
+      cellRenderer: PartStatusRenderer,
+      cellRendererParams: {
+        partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+      },
+      cellClass: "flex items-center justify-center",
     },
-    cellClass: "flex items-center justify-center",
-  },
-];
+  ];
 
 export const getCallColumns = (
   partStatuses: PartStatusDef[] = [],
@@ -280,9 +267,9 @@ export const getCallColumns = (
     onAttachClick,
   );
   return [
-    ...baseColumns.slice(0, 3), // Include checkbox, actions, stats
+    ...baseColumns.slice(0, 3), // Include actions, stats, and R/DATE
     { headerName: "BOOKING", field: "bookingDate", width: 120 },
-    ...baseColumns.slice(3), // Continue from R/DATE onwards
+    ...baseColumns.slice(3), // Continue from COMPANY onwards
     {
       headerName: "PART STATUS",
       field: "partStatus",
@@ -489,8 +476,8 @@ export const getGlobalSearchWorkspaceColumns = (
         values:
           Array.isArray(partStatuses) && partStatuses.length > 0
             ? partStatuses
-                .filter((s) => s && typeof s.label === "string")
-                .map((s) => s.label)
+              .filter((s) => s && typeof s.label === "string")
+              .map((s) => s.label)
             : [],
       },
       cellClass: "flex items-center justify-center",

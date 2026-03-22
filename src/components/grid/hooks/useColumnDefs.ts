@@ -32,23 +32,8 @@ export function useColumnDefs(
 	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
 
 	// Common column definitions
-	// Index 0: Checkbox placeholder (for AG Grid native checkbox selection)
-	// Index 1: ACTIONS column
+	// ACTIONS is the first configured column; AG Grid injects the selection checkbox separately.
 	const baseColumns: ColDef[] = [
-		// Index 0: Checkbox column placeholder (reserved for AG Grid native checkbox selection)
-		{
-			headerName: "",
-			colId: "checkbox-placeholder",
-			width: 50,
-			maxWidth: 50,
-			sortable: false,
-			filter: false,
-			resizable: false,
-			suppressHeaderMenuButton: true,
-			suppressMovable: true,
-			lockPosition: "left",
-		},
-		// Index 1: ACTIONS column (second column, after checkbox)
 		{
 			headerName: "ACTIONS",
 			colId: "row-actions",
