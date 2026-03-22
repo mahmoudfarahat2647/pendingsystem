@@ -4,7 +4,7 @@ import type { GridApi, IRowNode } from "ag-grid-community";
  * Represents the outcome of an attempt to jump to a specific row in the AG Grid.
  * The `reason` property is only populated when `success` is `false`.
  */
-export interface JumpResult {
+interface JumpResult {
 	success: boolean;
 	reason?: "no-row-id" | "grid-not-ready" | "grid-destroyed" | "row-not-found";
 }

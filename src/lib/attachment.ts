@@ -1,6 +1,6 @@
 import { env } from "./env";
 
-export type AttachmentKind = "image-pdf" | "link";
+type AttachmentKind = "image-pdf" | "link";
 export interface AttachmentValue {
 	attachmentLink?: string;
 	attachmentFilePath?: string;
