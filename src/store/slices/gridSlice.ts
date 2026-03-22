@@ -9,11 +9,6 @@ interface GridSlice {
 	gridStates: Record<string, GridState>;
 
 	/**
-	 * In-memory snapshots of the latest grid state before the user explicitly saves it.
-	 */
-	liveGridStates: Record<string, GridState>;
-
-	/**
 	 * Track which layouts have unsaved changes.
 	 */
 	dirtyLayouts: Record<string, boolean>;
@@ -36,20 +31,6 @@ interface GridSlice {
 	 * @returns The saved GridState or null if not found.
 	 */
 	getGridState: (gridKey: string) => GridState | null;
-
-	/**
-	 * Tracks the latest live state for a specific grid.
-	 * @param gridKey Unique identifier for the grid.
-	 * @param state The current state object from AG Grid api.getState().
-	 */
-	setLiveGridState: (gridKey: string, state: GridState) => void;
-
-	/**
-	 * Retrieves the latest live state for a specific grid.
-	 * @param gridKey Unique identifier for the grid.
-	 * @returns The live GridState or null if not found.
-	 */
-	getLiveGridState: (gridKey: string) => GridState | null;
 
 	/**
 	 * Clears the saved state for a specific grid.
@@ -78,7 +59,6 @@ export const createGridSlice: StateCreator<CombinedStore, [], [], GridSlice> = (
 	get,
 ) => ({
 	gridStates: {},
-	liveGridStates: {},
 	dirtyLayouts: {},
 	defaultLayouts: {},
 
@@ -95,30 +75,14 @@ export const createGridSlice: StateCreator<CombinedStore, [], [], GridSlice> = (
 		return get().gridStates[gridKey] || null;
 	},
 
-	setLiveGridState: (gridKey, state) => {
-		set((prev) => ({
-			liveGridStates: {
-				...prev.liveGridStates,
-				[gridKey]: state,
-			},
-		}));
-	},
-
-	getLiveGridState: (gridKey) => {
-		return get().liveGridStates[gridKey] || null;
-	},
-
 	clearGridState: (gridKey) => {
 		set((prev) => {
 			const newStates = { ...prev.gridStates };
 			delete newStates[gridKey];
-			const newLiveStates = { ...prev.liveGridStates };
-			delete newLiveStates[gridKey];
 			const newDirty = { ...prev.dirtyLayouts };
 			delete newDirty[gridKey];
 			return {
 				gridStates: newStates,
-				liveGridStates: newLiveStates,
 				dirtyLayouts: newDirty,
 			};
 		});

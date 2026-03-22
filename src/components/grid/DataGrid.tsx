@@ -11,6 +11,7 @@ import { AgGridReact } from "ag-grid-react";
 import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
 import { tryJumpToRow } from "@/lib/ag-grid-helpers";
 import { gridTheme } from "@/lib/ag-grid-setup";
+import { useLiveGridStore } from "@/store/useLiveGridStore";
 import { useAppStore } from "@/store/useStore";
 import { defaultColDef, defaultGridOptions } from "./config/defaultOptions";
 import { useGridCallbacks } from "./hooks/useGridCallbacks";
@@ -73,7 +74,10 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	const saveGridState = useAppStore((state) => state.saveGridState);
 	const getGridState = useAppStore((state) => state.getGridState);
 	const getDefaultLayout = useAppStore((state) => state.getDefaultLayout);
-	const setLiveGridState = useAppStore((state) => state.setLiveGridState);
+	const setLiveGridState = useLiveGridStore((state) => state.setLiveGridState);
+	const clearLiveGridState = useLiveGridStore(
+		(state) => state.clearLiveGridState,
+	);
 	const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 	// Restoration: Get initial state once on mount
@@ -100,10 +104,16 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 
 			saveTimerRef.current = setTimeout(() => {
 				saveGridState(gridStateKey, state);
+				// Drop the in-memory snapshot once committed to persistence
+				clearLiveGridState(gridStateKey);
+				console.log(
+					`[DataGrid persistence] Saved state for ${gridStateKey}. useLiveGridStore after cleanup:`,
+					useLiveGridStore.getState().liveGridStates,
+				);
 				saveTimerRef.current = null;
 			}, 500);
 		}
-	}, [gridStateKey, saveGridState, setLiveGridState, gridApiRef]);
+	}, [gridStateKey, saveGridState, setLiveGridState, clearLiveGridState, gridApiRef]);
 
 	const handleLayoutChange = useCallback(() => {
 		// Only mark as dirty if the grid has been initialized (avoid false positive on initial load)

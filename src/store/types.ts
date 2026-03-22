@@ -133,7 +133,6 @@ export interface UndoRedoActions {
 
 interface GridSliceState {
 	gridStates: Record<string, GridState>;
-	liveGridStates: Record<string, GridState>;
 	dirtyLayouts: Record<string, boolean>;
 	defaultLayouts: Record<string, GridState>;
 }
@@ -141,8 +140,6 @@ interface GridSliceState {
 interface GridSliceActions {
 	saveGridState: (gridKey: string, state: GridState) => void;
 	getGridState: (gridKey: string) => GridState | null;
-	setLiveGridState: (gridKey: string, state: GridState) => void;
-	getLiveGridState: (gridKey: string) => GridState | null;
 	clearGridState: (gridKey: string) => void;
 	setLayoutDirty: (gridKey: string, dirty: boolean) => void;
 	saveAsDefaultLayout: (gridKey: string, state: GridState) => void;

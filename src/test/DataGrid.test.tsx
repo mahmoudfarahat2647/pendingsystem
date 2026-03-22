@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useLiveGridStore } from "../store/useLiveGridStore";
 import { useAppStore } from "../store/useStore";
 
 let lastAgGridProps: Record<string, unknown> | null = null;
@@ -19,9 +20,11 @@ describe("DataGrid layout restoration", () => {
 		localStorage.clear();
 		useAppStore.setState({
 			gridStates: {},
-			liveGridStates: {},
 			dirtyLayouts: {},
 			defaultLayouts: {},
+		});
+		useLiveGridStore.setState({
+			liveGridStates: {},
 		});
 	});
 

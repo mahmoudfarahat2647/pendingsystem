@@ -15,6 +15,7 @@ vi.mock("@/lib/supabase", () => ({
 }));
 
 import { useColumnLayoutTracker } from "../hooks/useColumnLayoutTracker";
+import { useLiveGridStore } from "../store/useLiveGridStore";
 import { useAppStore } from "../store/useStore";
 
 // Mock sonner toast
@@ -41,9 +42,11 @@ describe("useColumnLayoutTracker", () => {
 		localStorage.clear();
 		useAppStore.setState({
 			gridStates: {},
-			liveGridStates: {},
 			dirtyLayouts: {},
 			defaultLayouts: {},
+		});
+		useLiveGridStore.setState({
+			liveGridStates: {},
 		});
 	});
 
@@ -86,7 +89,7 @@ describe("useColumnLayoutTracker", () => {
 		} as never;
 
 		useAppStore.getState().saveGridState("test-grid", persistedState);
-		useAppStore.getState().setLiveGridState("test-grid", liveState);
+		useLiveGridStore.getState().setLiveGridState("test-grid", liveState);
 		useAppStore.getState().setLayoutDirty("test-grid", true);
 
 		const { result } = renderHook(() => useColumnLayoutTracker("test-grid"));
@@ -104,7 +107,7 @@ describe("useColumnLayoutTracker", () => {
 			columnOrder: { orderedColIds: ["status", "vin"] },
 		} as never;
 
-		useAppStore.getState().setLiveGridState("test-grid", liveState);
+		useLiveGridStore.getState().setLiveGridState("test-grid", liveState);
 		useAppStore.getState().setLayoutDirty("test-grid", true);
 
 		const { result } = renderHook(() => useColumnLayoutTracker("test-grid"));

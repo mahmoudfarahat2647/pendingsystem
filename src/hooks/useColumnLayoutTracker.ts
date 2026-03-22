@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { useLiveGridStore } from "@/store/useLiveGridStore";
 import { useAppStore } from "@/store/useStore";
 
 /**
@@ -15,7 +16,10 @@ export function useColumnLayoutTracker(gridKey: string) {
 	const saveAsDefaultLayout = useAppStore((state) => state.saveAsDefaultLayout);
 	const getDefaultLayout = useAppStore((state) => state.getDefaultLayout);
 	const getGridState = useAppStore((state) => state.getGridState);
-	const getLiveGridState = useAppStore((state) => state.getLiveGridState);
+	const getLiveGridState = useLiveGridStore((state) => state.getLiveGridState);
+	const clearLiveGridState = useLiveGridStore(
+		(state) => state.clearLiveGridState,
+	);
 
 	const markDirty = useCallback(() => {
 		if (!isDirty) {
@@ -62,11 +66,12 @@ export function useColumnLayoutTracker(gridKey: string) {
 		} else {
 			// No user-defined default, clear everything to use the original code default
 			clearGridState(gridKey);
+			clearLiveGridState(gridKey);
 			setLayoutDirty(gridKey, false);
 			toast.info("Resetting to original layout. Refreshing...");
 			window.location.reload();
 		}
-	}, [gridKey, clearGridState, setLayoutDirty, getDefaultLayout]);
+	}, [gridKey, clearGridState, clearLiveGridState, setLayoutDirty, getDefaultLayout]);
 
 	return {
 		isDirty,
