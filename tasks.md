@@ -48,16 +48,16 @@
 > Gate: `npm run test` after each stage
 
 ### 4a — Orders stage
-- [ ] `src/app/(app)/orders/useOrdersPageHandlers.ts`
-  - [ ] Add `useDraftSession("orders")`, consume `workingRows` as grid data source (fallback to `useOrdersQuery`)
-  - [ ] `handleCommit` → `applyCommand({ type: "moveRows", ids, sourceStage: "orders", destinationStage: "main" })`
-  - [ ] `handleSaveOrder` (create) → `applyCommand({ type: "createRows", ... })`
-  - [ ] `handleSaveOrder` (edit) → `applyCommand({ type: "patchRow", ... })`
-  - [ ] `handleDeleteSelected` → `applyCommand({ type: "deleteRows", ids })`
-  - [ ] `handleSendToCallList` → `applyCommand({ type: "moveRows", ..., destinationStage: "call" })`
-  - [ ] `handleSendToArchive` → `applyCommand({ type: "moveRows", ..., destinationStage: "archive" })`
-  - [ ] `handleUpdatePartStatus` with VIN auto-move → `applyCommand({ type: "composite", ... })`
-  - [ ] Remove all direct `mutation.mutateAsync(...)` calls that were replaced
+- [x] `src/app/(app)/orders/useOrdersPageHandlers.ts` — all handlers migrated
+  - [x] Add `useDraftSession("orders")`, consume `workingRows` as grid data source (fallback to `useOrdersQuery`)
+  - [x] `handleCommit` → `applyCommand({ type: "moveRows", ids, sourceStage: "orders", destinationStage: "main" })`
+  - [x] `handleSaveOrder` (create) → `applyCommand({ type: "createRows", ... })`
+  - [x] `handleSaveOrder` (edit) → `applyCommand({ type: "patchRow", ... })`
+  - [x] `handleDeleteSelected` → `applyCommand({ type: "deleteRows", ids })`
+  - [x] `handleSendToCallList` → `applyCommand({ type: "moveRows", ..., destinationStage: "call" })`
+  - [x] `handleSendToArchive` → `applyCommand({ type: "moveRows", ..., destinationStage: "archive" })`
+  - [x] `handleUpdatePartStatus` with VIN auto-move → `applyCommand` for patch + moveRows
+  - [x] Remove all direct `mutation.mutateAsync(...)` calls that were replaced
 
 ### 4b — Main Sheet stage
 - [x] `src/app/(app)/main-sheet/page.tsx` (inline handlers, no separate file)
