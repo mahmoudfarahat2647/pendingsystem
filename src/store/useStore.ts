@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { createBookingSlice } from "./slices/bookingSlice";
+import { createDraftSessionSlice } from "./slices/draftSessionSlice";
 import { createGridSlice } from "./slices/gridSlice";
 import { createInventorySlice } from "./slices/inventorySlice";
 import { createNotificationSlice } from "./slices/notificationSlice";
@@ -21,6 +22,7 @@ export const useAppStore = create<CombinedStore>()(
 			...createNotificationSlice(...a),
 			...createUISlice(...a),
 			...createUndoRedoSlice(...a),
+			...createDraftSessionSlice(...a),
 			...createGridSlice(...a),
 			...createReportSettingsSlice(...a),
 		}),

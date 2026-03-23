@@ -5,6 +5,10 @@ import type {
 	PendingRow,
 	StickyNote,
 } from "@/types";
+import type {
+	DraftSessionState,
+	DraftSessionActions,
+} from "./slices/draftSessionSlice";
 
 export interface OrdersState {
 	ordersRowData: PendingRow[];
@@ -152,6 +156,7 @@ export type StoreState = OrdersState &
 	NotificationState &
 	UIState &
 	UndoRedoState &
+	DraftSessionState &
 	GridSliceState &
 	ReportSettingsState;
 export type StoreActions = OrdersActions &
@@ -160,6 +165,7 @@ export type StoreActions = OrdersActions &
 	NotificationActions &
 	UIActions &
 	UndoRedoActions &
+	DraftSessionActions &
 	GridSliceActions &
 	ReportSettingsActions;
 export type CombinedStore = StoreState & StoreActions;

@@ -25,14 +25,9 @@ import { getMainSheetColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import {
-	useBulkDeleteOrdersMutation,
-	useBulkUpdateOrderStageMutation,
-	useOrdersQuery,
-	useSaveOrderMutation,
-} from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
+import { useDraftSession } from "@/hooks/useDraftSession";
 import {
 	appendTaggedUserNote,
 	getEffectiveNoteHistory,
@@ -42,13 +37,21 @@ import {
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 
 export default function MainSheetPage() {
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: rowData = [] } = useOrdersQuery("main");
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("main");
-	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("main");
-	const saveOrderMutation = useSaveOrderMutation();
+
+	// Draft session for undo/redo
+	const {
+		workingRows: draftWorkingRows,
+		applyCommand,
+		saving: draftSaving,
+	} = useDraftSession("main");
+
+	// Use draft working rows if available, fallback to query data
+	const effectiveRowData = draftWorkingRows || rowData;
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
@@ -62,15 +65,23 @@ export default function MainSheetPage() {
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			return saveOrderMutation.mutateAsync({ id, updates, stage: "main" });
+			applyCommand({
+				type: "patchRow",
+				id,
+				sourceStage: "main",
+				destinationStage: "main",
+				updates,
+				previousValues: {},
+			});
+			return Promise.resolve();
 		},
-		[saveOrderMutation],
+		[applyCommand],
 	);
 
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = rowData.find((r) => r.id === id);
+				const row = effectiveRowData.find((r) => r.id === id);
 				if (row) {
 					const newNoteHistory = appendTaggedUserNote(
 						getEffectiveNoteHistory(row),
@@ -78,16 +89,18 @@ export default function MainSheetPage() {
 						"archive",
 					);
 
-					saveOrderMutation.mutate({
+					applyCommand({
+						type: "patchRow",
 						id,
-						updates: { archiveReason: reason, noteHistory: newNoteHistory },
-						stage: "archive",
 						sourceStage: "main",
+						destinationStage: "archive",
+						updates: { archiveReason: reason, noteHistory: newNoteHistory },
+						previousValues: {},
 					});
 				}
 			}
 		},
-		[saveOrderMutation, rowData],
+		[effectiveRowData, applyCommand],
 	);
 
 	const [isSheetLocked, setIsSheetLocked] = useState(true);
@@ -125,20 +138,13 @@ export default function MainSheetPage() {
 	const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
 	const filteredRowData = useMemo(() => {
-		if (!activeFilter) return rowData;
-		return rowData.filter((row: any) => row.partStatus === activeFilter);
-	}, [rowData, activeFilter]);
+		if (!activeFilter) return effectiveRowData;
+		return effectiveRowData.filter((row: any) => row.partStatus === activeFilter);
+	}, [effectiveRowData, activeFilter]);
 
 	// Sync selectedRows with the latest filteredRowData to prevent stale data
 	// and automatically drop rows that no longer match the active filter
 	useSelectedRowsSync("main", filteredRowData, selectedRows, setSelectedRows);
-
-	const _handleSelectionChanged = useMemo(
-		() => (rows: PendingRow[]) => {
-			setSelectedRows(rows);
-		},
-		[],
-	);
 
 	const {
 		activeModal,
@@ -175,12 +181,17 @@ export default function MainSheetPage() {
 	const handleUpdatePartStatus = async (status: string) => {
 		if (selectedRows.length === 0) return;
 
-		// 1. Persist all status changes to DB
-		await Promise.all(
-			selectedRows.map((row) =>
-				handleUpdateOrder(row.id, { partStatus: status }),
-			),
-		);
+		// 1. Apply patch commands for all status changes
+		for (const row of selectedRows) {
+			applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "main",
+				destinationStage: "main",
+				updates: { partStatus: status },
+				previousValues: { partStatus: row.partStatus },
+			});
+		}
 
 		// 2. Check each unique VIN for auto-move to Call List
 		const uniqueVins = [
@@ -194,36 +205,25 @@ export default function MainSheetPage() {
 
 			const vinIds = getVinAutoMoveIds({
 				stage: "main",
-				stageRows: rowData,
+				stageRows: effectiveRowData,
 				editedRowId: editedRow.id,
 				editedVin: vin,
 				nextPartStatus: status,
 			});
 
 			if (vinIds.length > 0) {
-				try {
-					await bulkUpdateStageMutation.mutateAsync({
-						ids: vinIds,
-						stage: "call",
-						silentErrorToast: true,
-					});
-					toast.success(
-						`All parts for VIN ${vin} arrived! Moved to Call List.`,
-						{
-							duration: 5000,
-						},
-					);
-				} catch (error) {
-					console.error("[MainSheetPage] vin_auto_move_failed", {
-						error,
-						vin,
-						stage: "main",
-						ids: vinIds,
-					});
-					toast.error(
-						"Part saved, but VIN group move failed - refresh and try again.",
-					);
-				}
+				applyCommand({
+					type: "moveRows",
+					ids: vinIds,
+					sourceStage: "main",
+					destinationStage: "call",
+				});
+				toast.success(
+					`All parts for VIN ${vin} arrived! Moved to Call List.`,
+					{
+						duration: 5000,
+					},
+				);
 			}
 		}
 
@@ -242,16 +242,18 @@ export default function MainSheetPage() {
 				"booking",
 			);
 
-			await saveOrderMutation.mutateAsync({
+			applyCommand({
+				type: "patchRow",
 				id: row.id,
+				sourceStage: "main",
+				destinationStage: "booking",
 				updates: {
 					bookingDate: date,
 					bookingNote: note,
 					noteHistory: newNoteHistory,
 					...(status ? { bookingStatus: status } : {}),
 				},
-				stage: "booking",
-				sourceStage: "main",
+				previousValues: {},
 			});
 		}
 		setSelectedRows([]);
@@ -305,9 +307,11 @@ export default function MainSheetPage() {
 							onSendToCallList={async () => {
 								if (selectedRows.length === 0) return;
 								const ids = getSelectedIds(selectedRows);
-								await bulkUpdateStageMutation.mutateAsync({
+								applyCommand({
+									type: "moveRows",
 									ids,
-									stage: "call",
+									sourceStage: "main",
+									destinationStage: "call",
 								});
 								setSelectedRows([]);
 								toast.success(`${ids.length} item(s) sent to Call List`);
@@ -340,36 +344,25 @@ export default function MainSheetPage() {
 										// 2. Check for auto-move to Call List
 										const vinIds = getVinAutoMoveIds({
 											stage: "main",
-											stageRows: rowData,
+											stageRows: effectiveRowData,
 											editedRowId: params.data.id,
 											editedVin: vin,
 											nextPartStatus: newStatus,
 										});
 
 										if (vinIds.length > 0) {
-											try {
-												await bulkUpdateStageMutation.mutateAsync({
-													ids: vinIds,
-													stage: "call",
-													silentErrorToast: true,
-												});
-												toast.success(
-													`All parts for VIN ${vin} arrived! Moved to Call List.`,
-													{
-														duration: 5000,
-													},
-												);
-											} catch (error) {
-												console.error("[MainSheetPage] vin_auto_move_failed", {
-													error,
-													vin,
-													stage: "main",
-													ids: vinIds,
-												});
-												toast.error(
-													"Part saved, but VIN group move failed - refresh and try again.",
-												);
-											}
+											applyCommand({
+												type: "moveRows",
+												ids: vinIds,
+												sourceStage: "main",
+												destinationStage: "call",
+											});
+											toast.success(
+												`All parts for VIN ${vin} arrived! Moved to Call List.`,
+												{
+													duration: 5000,
+												},
+											);
 										}
 									}
 								}}
@@ -410,10 +403,12 @@ export default function MainSheetPage() {
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
 				onConfirm={async () => {
-					await bulkDeleteOrdersMutation.mutateAsync(
-						getSelectedIds(selectedRows),
-					);
-					setSelectedRows([]);
+					const ids = getSelectedIds(selectedRows);
+				applyCommand({
+					type: "deleteRows",
+					ids,
+				});
+			setSelectedRows([]);
 					toast.success("Row(s) deleted");
 					setShowDeleteConfirm(false);
 				}}

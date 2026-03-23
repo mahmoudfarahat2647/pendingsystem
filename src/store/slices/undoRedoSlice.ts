@@ -13,65 +13,23 @@ export const createUndoRedoSlice: StateCreator<
 	redoStack: [],
 
 	pushUndo: () => {
-		const state = get();
-		const snapshot = {
-			rowData: structuredClone(state.rowData),
-			ordersRowData: structuredClone(state.ordersRowData),
-			bookingRowData: structuredClone(state.bookingRowData),
-			callRowData: structuredClone(state.callRowData),
-			archiveRowData: structuredClone(state.archiveRowData),
-		};
-
-		set((state) => ({
-			undoStack: [...state.undoStack, snapshot].slice(-UNDO_STACK_LIMIT),
-			redoStack: [], // New action clears redo stack
-		}));
+		// DEPRECATED: Use applyCommand() from draftSessionSlice instead
+		// This is a no-op to maintain compatibility during migration
 	},
 
 	undo: () => {
-		const state = get();
-		if (state.undoStack.length === 0) return;
-
-		const currentSnapshot = {
-			rowData: structuredClone(state.rowData),
-			ordersRowData: structuredClone(state.ordersRowData),
-			bookingRowData: structuredClone(state.bookingRowData),
-			callRowData: structuredClone(state.callRowData),
-			archiveRowData: structuredClone(state.archiveRowData),
-		};
-
-		const lastSnapshot = state.undoStack[state.undoStack.length - 1];
-
-		set({
-			...lastSnapshot,
-			undoStack: state.undoStack.slice(0, -1),
-			redoStack: [...state.redoStack, currentSnapshot],
-		});
+		// DEPRECATED: Use undoDraft() from draftSessionSlice instead
+		// This is a no-op to maintain compatibility during migration
 	},
 
 	redo: () => {
-		const state = get();
-		if (state.redoStack.length === 0) return;
-
-		const currentSnapshot = {
-			rowData: structuredClone(state.rowData),
-			ordersRowData: structuredClone(state.ordersRowData),
-			bookingRowData: structuredClone(state.bookingRowData),
-			callRowData: structuredClone(state.callRowData),
-			archiveRowData: structuredClone(state.archiveRowData),
-		};
-
-		const nextSnapshot = state.redoStack[state.redoStack.length - 1];
-
-		set({
-			...nextSnapshot,
-			redoStack: state.redoStack.slice(0, -1),
-			undoStack: [...state.undoStack, currentSnapshot],
-		});
+		// DEPRECATED: Use redoDraft() from draftSessionSlice instead
+		// This is a no-op to maintain compatibility during migration
 	},
 
 	clearUndoRedo: () => {
-		set({ undoStack: [], redoStack: [] });
+		// DEPRECATED: Use discardDraft() from draftSessionSlice instead
+		// This is a no-op to maintain compatibility during migration
 	},
 });
 

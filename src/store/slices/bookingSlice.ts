@@ -18,7 +18,7 @@ export const createBookingSlice: StateCreator<
 	 * @param bookingStatus - Optional initial booking status.
 	 */
 	sendToBooking: (ids, bookingDate, bookingNote, bookingStatus) => {
-		get().pushUndo();
+		// DEPRECATED: pushUndo removed; use applyCommand() from draftSessionSlice
 		set((state) => {
 			const rowsFromMainSheet = state.rowData.filter((r) => ids.includes(r.id));
 			const rowsFromOrders = state.ordersRowData.filter((r) =>
@@ -58,7 +58,7 @@ export const createBookingSlice: StateCreator<
 	 * @param bookingStatus - The new booking status value.
 	 */
 	updateBookingStatus: (id, bookingStatus) => {
-		get().pushUndo();
+		// DEPRECATED: pushUndo removed; use applyCommand() from draftSessionSlice
 		const updateInArray = (arr: PendingRow[]) =>
 			arr.map((row) => (row.id === id ? { ...row, bookingStatus } : row));
 
