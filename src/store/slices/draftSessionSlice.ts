@@ -424,9 +424,11 @@ export const createDraftSessionSlice: StateCreator<
 			}));
 
 			try {
-				// Execute all pending commands in order
+				// Execute all pending commands in order, tracking temp→real ID mappings
+				// so that post-create commands (delete/move/patch) target the right Supabase rows.
+				const idMap = new Map<string, string>();
 				for (const cmd of state.pendingCommands) {
-					await executeCommand(cmd, mutations);
+					await executeCommand(cmd, mutations, idMap);
 				}
 
 				// On success: clear session
@@ -538,43 +540,82 @@ function getAllCommandStages(commands: DraftCommand[]): OrderStage[] {
 	return Array.from(stages);
 }
 
+function isTempId(id: string): boolean {
+	return id.startsWith("temp-");
+}
+
+function remapCommand(
+	cmd: AtomicCommand,
+	idMap: Map<string, string>,
+): AtomicCommand {
+	if (idMap.size === 0) return cmd;
+	const remap = (id: string) => idMap.get(id) ?? id;
+
+	switch (cmd.type) {
+		case "patchRow":
+			return { ...cmd, id: remap(cmd.id) };
+		case "createRows":
+			// id:"" is passed to saveOrder for INSERT — no remap needed here
+			return cmd;
+		case "deleteRows":
+			return { ...cmd, ids: cmd.ids.map(remap) };
+		case "moveRows":
+			return { ...cmd, ids: cmd.ids.map(remap) };
+	}
+}
+
 async function executeCommand(
 	cmd: DraftCommand,
 	mutations: DraftSaveMutations,
+	idMap: Map<string, string>,
 ): Promise<void> {
-	if (cmd.type === "patchRow") {
-		await mutations.saveOrder({
-			id: cmd.id,
-			updates: cmd.updates,
-			stage: cmd.destinationStage,
-			sourceStage:
-				cmd.sourceStage !== cmd.destinationStage ? cmd.sourceStage : undefined,
-		});
-	} else if (cmd.type === "createRows") {
-		for (const row of cmd.rows) {
-			await mutations.saveOrder({
-				id: "",
-				updates: row,
-				stage: cmd.stage,
-			});
-		}
-	} else if (cmd.type === "deleteRows") {
-		await mutations.bulkDelete(cmd.ids);
-	} else if (cmd.type === "moveRows") {
-		await mutations.bulkUpdateStage({
-			ids: cmd.ids,
-			stage: cmd.destinationStage,
-		});
-	} else if (cmd.type === "composite") {
-		// Execute non-delete commands first, then deletes
+	if (cmd.type === "composite") {
+		// Do NOT remap at the composite level — each child remaps individually
+		// so that createRows children can populate idMap before sibling
+		// deleteRows/moveRows children are remapped.
 		const nonDeletes = cmd.children.filter((c) => c.type !== "deleteRows");
 		const deletes = cmd.children.filter((c) => c.type === "deleteRows");
 
 		for (const child of nonDeletes) {
-			await executeCommand(child, mutations);
+			await executeCommand(child, mutations, idMap);
 		}
 		for (const child of deletes) {
-			await executeCommand(child, mutations);
+			await executeCommand(child, mutations, idMap);
 		}
+		return;
+	}
+
+	const remapped = remapCommand(cmd, idMap);
+
+	if (remapped.type === "patchRow") {
+		await mutations.saveOrder({
+			id: remapped.id,
+			updates: remapped.updates,
+			stage: remapped.destinationStage,
+			sourceStage:
+				remapped.sourceStage !== remapped.destinationStage
+					? remapped.sourceStage
+					: undefined,
+		});
+	} else if (remapped.type === "createRows") {
+		for (const row of remapped.rows) {
+			const result = await mutations.saveOrder({
+				id: "",
+				updates: row,
+				stage: remapped.stage,
+			});
+			// Capture temp→real ID so subsequent commands can reference this row
+			const realId = (result as Record<string, unknown>)?.id;
+			if (typeof realId === "string" && realId && isTempId(row.id)) {
+				idMap.set(row.id, realId);
+			}
+		}
+	} else if (remapped.type === "deleteRows") {
+		await mutations.bulkDelete(remapped.ids);
+	} else if (remapped.type === "moveRows") {
+		await mutations.bulkUpdateStage({
+			ids: remapped.ids,
+			stage: remapped.destinationStage,
+		});
 	}
 }

@@ -175,6 +175,125 @@ describe("draftSessionSlice", () => {
 		]);
 	});
 
+	describe("saveDraft temp ID reconciliation", () => {
+		const REAL_UUID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+		const TEMP_ID = "temp-11111111-2222-3333-4444-555555555555";
+
+		it("remaps temp ID so deleteRows after createRows deletes the real row", async () => {
+			seedStageData({ orders: [] });
+
+			const tempRow = createRow(TEMP_ID, "orders");
+			useAppStore.getState().applyCommand({
+				type: "createRows",
+				stage: "orders",
+				rows: [tempRow],
+			});
+			useAppStore.getState().applyCommand({
+				type: "deleteRows",
+				ids: [TEMP_ID],
+			});
+
+			const saveOrder = vi.fn().mockResolvedValue({ id: REAL_UUID });
+			const bulkUpdateStage = vi.fn().mockResolvedValue([]);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(saveOrder).toHaveBeenCalledWith(
+				expect.objectContaining({ id: "" }),
+			);
+			expect(bulkDelete).toHaveBeenCalledWith([REAL_UUID]);
+		});
+
+		it("remaps temp ID so moveRows after createRows moves the real row", async () => {
+			seedStageData({ orders: [] });
+
+			const tempRow = createRow(TEMP_ID, "orders");
+			useAppStore.getState().applyCommand({
+				type: "createRows",
+				stage: "orders",
+				rows: [tempRow],
+			});
+			useAppStore.getState().applyCommand({
+				type: "moveRows",
+				ids: [TEMP_ID],
+				sourceStage: "orders",
+				destinationStage: "main",
+			});
+
+			const saveOrder = vi.fn().mockResolvedValue({ id: REAL_UUID });
+			const bulkUpdateStage = vi.fn().mockResolvedValue([]);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(bulkUpdateStage).toHaveBeenCalledWith(
+				expect.objectContaining({ ids: [REAL_UUID] }),
+			);
+		});
+
+		it("remaps temp ID so patchRow after createRows updates rather than duplicates", async () => {
+			seedStageData({ orders: [] });
+
+			const tempRow = createRow(TEMP_ID, "orders");
+			useAppStore.getState().applyCommand({
+				type: "createRows",
+				stage: "orders",
+				rows: [tempRow],
+			});
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: TEMP_ID,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates: { partStatus: "Arrived" },
+				previousValues: { partStatus: "Pending" },
+			});
+
+			const saveOrder = vi.fn().mockResolvedValue({ id: REAL_UUID });
+			const bulkUpdateStage = vi.fn().mockResolvedValue([]);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			// Second saveOrder call (the patchRow) must use the real UUID, not the temp ID
+			expect(saveOrder).toHaveBeenNthCalledWith(
+				2,
+				expect.objectContaining({ id: REAL_UUID }),
+			);
+		});
+
+		it("remaps temp IDs inside a composite command", async () => {
+			seedStageData({ orders: [] });
+
+			const tempRow = createRow(TEMP_ID, "orders");
+			useAppStore.getState().applyCommand({
+				type: "composite",
+				label: "create-then-delete",
+				children: [
+					{ type: "createRows", stage: "orders", rows: [tempRow] },
+					{ type: "deleteRows", ids: [TEMP_ID] },
+				],
+			});
+
+			const saveOrder = vi.fn().mockResolvedValue({ id: REAL_UUID });
+			const bulkUpdateStage = vi.fn().mockResolvedValue([]);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(bulkDelete).toHaveBeenCalledWith([REAL_UUID]);
+		});
+	});
+
 	it("keeps the draft dirty after a save failure and clears it after retry", async () => {
 		const row = createRow("00000000-0000-4000-8000-000000000003", "orders");
 		seedStageData({ orders: [row] });

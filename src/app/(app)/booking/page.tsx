@@ -390,7 +390,7 @@ export default function BookingPage() {
 					</div>
 
 					<div className="flex items-center gap-1.5">
-						<VINLineCounter rows={bookingRowData} />
+						<VINLineCounter rows={effectiveBookingData} />
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
@@ -410,7 +410,7 @@ export default function BookingPage() {
 
 				<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden mt-4">
 					<DataGrid
-						rowData={bookingRowData}
+						rowData={effectiveBookingData}
 						columnDefs={columns}
 						gridStateKey="booking"
 						readOnly={draftSaving}

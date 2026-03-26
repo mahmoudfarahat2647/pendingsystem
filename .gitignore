@@ -48,15 +48,17 @@ yarn-error.log*
 !.env.example
 .env.local
 
+# vercel
+/.vercel/
+
+# AI Tools
+/.claude/
+/.cursor/
+
 # mcp configs
+.mcp.json
 mcp.json
 .vscode/mcp.json
-
-# agent
-.agent/
-
-# vercel
-.vercel
 
 # typescript
 *.tsbuildinfo
