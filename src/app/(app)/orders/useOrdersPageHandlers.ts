@@ -14,6 +14,7 @@ import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
 import { exportToLogisticsCSV } from "@/lib/exportUtils";
 import {
 	appendTaggedUserNote,
+	filterReservedRows,
 	getEffectiveNoteHistory,
 	getSelectedIds,
 	getVinAutoMoveIds,
@@ -45,6 +46,7 @@ export const useOrdersPageHandlers = () => {
 	const effectiveOrdersData = draftWorkingRows || ordersRowData;
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
+	const partStatuses = useAppStore((state) => state.partStatuses);
 
 	// 2. Local State
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -398,8 +400,9 @@ export const useOrdersPageHandlers = () => {
 	};
 
 	const handleReserve = () => {
-		if (selectedRows.length === 0) return;
-		printReservationLabels(selectedRows);
+		const reservedRows = filterReservedRows(selectedRows, partStatuses);
+		if (reservedRows.length === 0) return;
+		printReservationLabels(reservedRows);
 	};
 
 	const handleShareToLogistics = () => {

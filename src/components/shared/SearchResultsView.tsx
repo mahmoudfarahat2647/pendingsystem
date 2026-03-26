@@ -27,6 +27,7 @@ import { exportToLogisticsCSV } from "@/lib/exportUtils";
 import { normalizeOrderStage } from "@/lib/orderStage";
 import {
 	appendTaggedUserNote,
+	filterReservedRows,
 	getEffectiveNoteHistory,
 	getVinAutoMoveIds,
 } from "@/lib/orderWorkflow";
@@ -349,8 +350,9 @@ export const SearchResultsView = () => {
 
 	// Toolbar Actions
 	const handleReserve = () => {
-		if (selectedRows.length === 0) return;
-		printReservationLabels(selectedRows);
+		const reservedRows = filterReservedRows(selectedRows, partStatuses);
+		if (reservedRows.length === 0) return;
+		printReservationLabels(reservedRows);
 	};
 
 	const handleBookingConfirm = async (

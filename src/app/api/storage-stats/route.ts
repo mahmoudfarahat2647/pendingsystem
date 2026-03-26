@@ -8,7 +8,7 @@ import {
 } from "@/lib/storage-limits";
 
 export const runtime = "nodejs";
-const SUPABASE_REQUEST_TIMEOUT_MS = 5000;
+const SUPABASE_REQUEST_TIMEOUT_MS = 30000;
 
 /** Response shape returned by GET /api/storage-stats. */
 export interface StorageStatsResponse {

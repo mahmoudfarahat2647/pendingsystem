@@ -362,3 +362,25 @@ export function getStageDisplayName(stage: string | undefined): string {
 	// Fallback to capitalized string
 	return stage.charAt(0).toUpperCase() + stage.slice(1);
 }
+
+/**
+ * Filters a selection of rows to only those whose `partStatus` matches the
+ * configured reserve status label (the entry with `id === "reserve"` in
+ * `partStatuses`). Comparison is trim + case-insensitive so label renames
+ * are handled transparently.
+ *
+ * @param rows - The selected rows to filter
+ * @param partStatuses - The app's part-status definitions from the store
+ * @returns Only the rows whose `partStatus` matches the reserve label
+ */
+export function filterReservedRows(
+	rows: PendingRow[],
+	partStatuses: { id: string; label: string }[],
+): PendingRow[] {
+	const reserveLabel = partStatuses.find((s) => s.id === "reserve")?.label;
+	if (!reserveLabel) return [];
+	const normalized = reserveLabel.trim().toLowerCase();
+	return rows.filter(
+		(r) => (r.partStatus ?? "").trim().toLowerCase() === normalized,
+	);
+}
