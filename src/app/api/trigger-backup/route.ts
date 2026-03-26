@@ -1,9 +1,16 @@
 import { errorResponse, successResponse } from "@/lib/apiResponse";
+import { auth } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
 // Manual backup trigger coordinating with GitHub Actions.
 export async function POST() {
+	const { headers } = await import("next/headers");
+	const session = await auth.api.getSession({ headers: await headers() });
+	if (!session) {
+		return errorResponse("Unauthorized", 401);
+	}
+
 	try {
 		const githubToken = process.env.GITHUB_PAT;
 

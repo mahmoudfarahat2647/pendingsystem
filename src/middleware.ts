@@ -1,10 +1,26 @@
+import { getSessionCookie } from "better-auth/cookies";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+
+// Paths that don't require authentication
+const PUBLIC_PATHS = [
+	"/login",
+	"/forgot-password",
+	"/reset-password",
+	"/api/auth",
+	"/api/health",
+];
+
+function isPublicPath(pathname: string): boolean {
+	return PUBLIC_PATHS.some(
+		(p) => pathname === p || pathname.startsWith(p + "/"),
+	);
+}
 
 /**
  * Security middleware for production hardening.
  *
- * Applies security headers to all responses:
+ * Applies auth redirect logic and security headers to all responses:
  * - X-Frame-Options: DENY
  * - X-Content-Type-Options: nosniff
  * - X-XSS-Protection
@@ -13,6 +29,27 @@ import { NextResponse } from "next/server";
  * - Content-Security-Policy (development-friendly: 'unsafe-eval' removed in production)
  */
 export function middleware(request: NextRequest) {
+	const { pathname } = request.nextUrl;
+
+	// Auth redirect logic (optimistic cookie check — no DB calls in Edge)
+	const sessionCookie = getSessionCookie(request);
+	const isAuthPage =
+		pathname === "/login" ||
+		pathname === "/forgot-password" ||
+		pathname === "/reset-password";
+
+	if (!sessionCookie && !isPublicPath(pathname)) {
+		// Not authenticated, accessing protected route → redirect to login
+		const loginUrl = new URL("/login", request.url);
+		return NextResponse.redirect(loginUrl);
+	}
+
+	if (sessionCookie && isAuthPage) {
+		// Already authenticated, accessing auth page → redirect to dashboard
+		const dashboardUrl = new URL("/dashboard", request.url);
+		return NextResponse.redirect(dashboardUrl);
+	}
+
 	const response = NextResponse.next();
 
 	// Security headers
