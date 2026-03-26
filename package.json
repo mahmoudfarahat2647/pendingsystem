@@ -23,7 +23,8 @@
 		"docs:validate": "node scripts/validate-docs.js",
 		"docs:extract": "node scripts/extract-jsdoc.js",
 		"testsprite": "echo \"To run TestSprite tests, use an MCP-compatible IDE and enter: Help me test this project with TestSprite.\"",
-		"commit": "pwsh scripts/quick-commit.ps1"
+		"commit": "pwsh scripts/quick-commit.ps1",
+		"auth:seed-admin": "node scripts/seed-admin-user.mjs"
 	},
 	"dependencies": {
 		"@hugeicons/core-free-icons": "^3.1.1",
