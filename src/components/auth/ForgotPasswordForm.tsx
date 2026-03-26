@@ -24,12 +24,15 @@ export function ForgotPasswordForm() {
 	});
 
 	const onSubmit = async (data: ForgotPasswordFormData) => {
-		await fetch("/api/password-reset/request", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ username: data.username }),
-		});
-		// Always show success regardless of outcome (enumeration prevention)
+		try {
+			await fetch("/api/password-reset/request", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ username: data.username }),
+			});
+		} catch {
+			// Swallow errors — always show success (enumeration prevention)
+		}
 		setSubmitted(true);
 	};
 
