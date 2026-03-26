@@ -36,8 +36,8 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
-import { useDraftSession } from "@/hooks/useDraftSession";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import {
@@ -342,6 +342,7 @@ export default function ArchivePage() {
 						rowData={effectiveData}
 						columnDefs={columns}
 						gridStateKey="archive"
+						readOnly={draftSaving}
 						onSelectionChange={setSelectedRows}
 						onGridReady={(api) => setGridApi(api)}
 						showFloatingFilters={showFilters}

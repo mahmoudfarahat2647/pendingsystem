@@ -125,7 +125,6 @@ describe("normalizeMileageAsNumber", () => {
 		it("100,000 is blocked (exactly at threshold)", () => {
 			expect(normalizeMileageAsNumber("100,000")).toBe(100000);
 			expect(normalizeMileageAsNumber("100 000")).toBe(100000);
-			expect(100000 >= 100000).toBe(true);
 		});
 	});
 

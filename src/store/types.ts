@@ -6,8 +6,8 @@ import type {
 	StickyNote,
 } from "@/types";
 import type {
-	DraftSessionState,
 	DraftSessionActions,
+	DraftSessionState,
 } from "./slices/draftSessionSlice";
 
 export interface OrdersState {
@@ -115,26 +115,6 @@ export interface UIActions {
 	clearCurrentEditVin: () => void;
 }
 
-export interface UndoRedoSnapshot {
-	rowData: PendingRow[];
-	ordersRowData: PendingRow[];
-	bookingRowData: PendingRow[];
-	callRowData: PendingRow[];
-	archiveRowData: PendingRow[];
-}
-
-export interface UndoRedoState {
-	undoStack: UndoRedoSnapshot[];
-	redoStack: UndoRedoSnapshot[];
-}
-
-export interface UndoRedoActions {
-	pushUndo: () => void;
-	undo: () => void;
-	redo: () => void;
-	clearUndoRedo: () => void;
-}
-
 interface GridSliceState {
 	gridStates: Record<string, GridState>;
 	dirtyLayouts: Record<string, boolean>;
@@ -155,7 +135,6 @@ export type StoreState = OrdersState &
 	BookingState &
 	NotificationState &
 	UIState &
-	UndoRedoState &
 	DraftSessionState &
 	GridSliceState &
 	ReportSettingsState;
@@ -164,7 +143,6 @@ export type StoreActions = OrdersActions &
 	BookingActions &
 	NotificationActions &
 	UIActions &
-	UndoRedoActions &
 	DraftSessionActions &
 	GridSliceActions &
 	ReportSettingsActions;

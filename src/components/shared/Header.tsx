@@ -1,9 +1,19 @@
 "use client";
 
-import { Download, Redo2, RefreshCw, Search, Undo2, X, Loader2 } from "lucide-react";
+import {
+	Download,
+	Loader2,
+	Redo2,
+	RefreshCw,
+	Save,
+	Search,
+	Undo2,
+	X,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useDraftSession } from "@/hooks/useDraftSession";
 import { exportAllSystemDataCSV } from "@/lib/exportUtils";
 import {
 	ALLOWED_COMPANIES,
@@ -12,7 +22,6 @@ import {
 import { cn } from "@/lib/utils";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
-import { useDraftSession } from "@/hooks/useDraftSession";
 import type { PendingRow } from "@/types";
 import { CloudSync } from "./CloudSync";
 import { NotificationsDropdown } from "./NotificationsDropdown";
@@ -41,7 +50,6 @@ export const Header = React.memo(function Header() {
 		saving,
 		pendingCommandCount,
 		saveDraft,
-		discardDraft,
 	} = useDraftSession();
 
 	// Handle keyboard shortcuts
@@ -54,6 +62,13 @@ export const Header = React.memo(function Header() {
 				target.tagName === "TEXTAREA" ||
 				target.isContentEditable ||
 				target.closest(".ag-cell-edit-wrapper"); // AG-Grid edit mode
+
+			// Ctrl+S must preventDefault regardless of focus to block the browser Save Page dialog
+			if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+				e.preventDefault();
+				if (!isEditing && dirty && !saving) saveDraft();
+				return;
+			}
 
 			if (isEditing) return;
 
@@ -79,7 +94,7 @@ export const Header = React.memo(function Header() {
 
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [undoDraft, redoDraft, saving]);
+	}, [undoDraft, redoDraft, saving, dirty, saveDraft]);
 
 	// Notification Check Interval (Throttled to reduce lag)
 	useEffect(() => {
@@ -234,7 +249,7 @@ export const Header = React.memo(function Header() {
 
 			{/* Right: Actions */}
 			<div className="flex items-center gap-3 ml-8">
-				{/* Action Buttons Group */}
+				{/* Undo / Redo / Save Button Group */}
 				<div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/5">
 					<button
 						type="button"
@@ -248,7 +263,7 @@ export const Header = React.memo(function Header() {
 								? "text-gray-400 hover:text-white hover:bg-white/10"
 								: "text-gray-700 cursor-not-allowed",
 						)}
-						title="Undo (Cmd+Z)"
+						title="Undo (Ctrl+Z)"
 					>
 						<Undo2 className="h-4 w-4" />
 					</button>
@@ -265,57 +280,38 @@ export const Header = React.memo(function Header() {
 								? "text-gray-400 hover:text-white hover:bg-white/10"
 								: "text-gray-700 cursor-not-allowed",
 						)}
-						title="Redo (Cmd+Shift+Z)"
+						title="Redo (Ctrl+Y)"
 					>
 						<Redo2 className="h-4 w-4" />
 					</button>
-				</div>
-
-				{/* Draft Save/Discard Controls */}
-				{dirty && (
-					<div className="flex items-center gap-2">
-						<button
-							type="button"
-							suppressHydrationWarning
-							onClick={() => saveDraft()}
-							disabled={saving}
-							aria-label="Save draft"
-							className={cn(
-								"px-3 py-2 rounded-lg transition-all font-medium text-sm flex items-center gap-2",
-								saving
-									? "bg-blue-600/50 text-blue-100 cursor-not-allowed"
-									: "bg-blue-600 hover:bg-blue-700 text-white",
-							)}
-						>
-							{saving ? (
-								<>
-									<Loader2 className="h-4 w-4 animate-spin" />
-									Saving...
-								</>
-							) : (
-								<>
-									Save
-									{pendingCommandCount > 0 && (
-										<span className="ml-1 text-xs bg-blue-700 px-2 py-0.5 rounded-full">
-											{pendingCommandCount}
-										</span>
-									)}
-								</>
-							)}
-						</button>
-						{!saving && (
-							<button
-								type="button"
-								suppressHydrationWarning
-								onClick={discardDraft}
-								aria-label="Discard draft"
-								className="px-3 py-2 rounded-lg transition-all font-medium text-sm text-gray-400 hover:text-white hover:bg-white/10"
-							>
-								Discard
-							</button>
+					<div className="w-px h-4 bg-white/10" />
+					<button
+						type="button"
+						suppressHydrationWarning
+						onClick={() => saveDraft()}
+						disabled={!dirty || saving}
+						aria-label="Save draft"
+						className={cn(
+							"p-2 rounded-lg transition-all",
+							dirty && !saving
+								? "text-gray-400 hover:text-white hover:bg-white/10"
+								: "text-gray-700 cursor-not-allowed",
 						)}
-					</div>
-				)}
+						title={
+							saving
+								? "Saving..."
+								: dirty
+									? `Save ${pendingCommandCount} change${pendingCommandCount !== 1 ? "s" : ""} (Ctrl+S)`
+									: "Save (Ctrl+S)"
+						}
+					>
+						{saving ? (
+							<Loader2 className="h-4 w-4 animate-spin" />
+						) : (
+							<Save className="h-4 w-4" />
+						)}
+					</button>
+				</div>
 
 				<div className="flex items-center gap-2">
 					<button

@@ -1,96 +1,138 @@
 "use client";
 
-import { useEffect, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import type { OrderStage } from "@/services/orderService";
 import type { DraftRecoverySnapshot } from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
-import { useSaveOrderMutation } from "./queries/useSaveOrderMutation";
-import { useBulkUpdateOrderStageMutation } from "./queries/useBulkUpdateOrderStageMutation";
 import { useBulkDeleteOrdersMutation } from "./queries/useBulkDeleteOrdersMutation";
-import { toast } from "sonner";
+import { useBulkUpdateOrderStageMutation } from "./queries/useBulkUpdateOrderStageMutation";
+import { useSaveOrderMutation } from "./queries/useSaveOrderMutation";
 
 const RECOVERY_STORAGE_KEY = "pending-sys-draft-v1";
-const WORKSPACE_ID_KEY = "pending-sys-workspace-id";
+const RECOVERY_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+let activeRecoveryToastId: string | number | null = null;
+let activeRecoveryToastKey: string | null = null;
+
+function clearRecoveryToastOffer() {
+	if (activeRecoveryToastId !== null) {
+		toast.dismiss(activeRecoveryToastId);
+		activeRecoveryToastId = null;
+	}
+
+	activeRecoveryToastKey = null;
+}
 
 export function useDraftSession(stage?: OrderStage) {
-	// Slice state
-	const draftSession = useAppStore((s) => s.draftSession);
-	const applyCommand = useAppStore((s) => s.applyCommand);
-	const undoDraft = useAppStore((s) => s.undoDraft);
-	const redoDraft = useAppStore((s) => s.redoDraft);
-	const discardDraft = useAppStore((s) => s.discardDraft);
-	const restoreFromRecovery = useAppStore((s) => s.restoreFromRecovery);
-	const getWorkingRows = useAppStore((s) => s.getWorkingRows);
-	const saveDraftInternal = useAppStore((s) => s.saveDraft);
+	const draftSession = useAppStore((state) => state.draftSession);
+	const applyCommand = useAppStore((state) => state.applyCommand);
+	const undoDraft = useAppStore((state) => state.undoDraft);
+	const redoDraft = useAppStore((state) => state.redoDraft);
+	const discardDraft = useAppStore((state) => state.discardDraft);
+	const restoreFromRecovery = useAppStore((state) => state.restoreFromRecovery);
+	const getWorkingRows = useAppStore((state) => state.getWorkingRows);
+	const saveDraftInternal = useAppStore((state) => state.saveDraft);
 
-	// Mutation hooks
 	const saveOrderMutation = useSaveOrderMutation();
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation(stage ?? "orders");
-	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation(stage ?? "orders");
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation(
+		stage ?? "orders",
+	);
+	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation(
+		stage ?? "orders",
+	);
 
-	// Bind mutations at call time
 	const saveDraft = useCallback(() => {
 		return saveDraftInternal({
 			saveOrder: (vars) => saveOrderMutation.mutateAsync(vars),
 			bulkUpdateStage: (vars) => bulkUpdateStageMutation.mutateAsync(vars),
 			bulkDelete: (ids) => bulkDeleteOrdersMutation.mutateAsync(ids),
 		});
-	}, [saveDraftInternal, saveOrderMutation, bulkUpdateStageMutation, bulkDeleteOrdersMutation]);
+	}, [
+		bulkDeleteOrdersMutation,
+		bulkUpdateStageMutation,
+		saveDraftInternal,
+		saveOrderMutation,
+	]);
 
-	// Recovery check on mount (moved to app initialization for better startup perf)
 	useEffect(() => {
-		if (typeof window === "undefined") return;
+		if (typeof window === "undefined") {
+			return;
+		}
+
 		const raw = localStorage.getItem(RECOVERY_STORAGE_KEY);
-		if (!raw) return;
+		if (!raw) {
+			clearRecoveryToastOffer();
+			return;
+		}
 
 		try {
 			const snapshot: DraftRecoverySnapshot = JSON.parse(raw);
-			// Check workspace match and command existence before age/restore logic
-			if (snapshot.workspaceId !== draftSession.workspaceId || !snapshot.pendingCommands?.length) {
+			if (
+				snapshot.workspaceId !== draftSession.workspaceId ||
+				!snapshot.pendingCommands?.length
+			) {
 				return;
 			}
 
-			// Check age: if >7 days, silently discard
-			const ageMs = Date.now() - snapshot.updatedAt;
-			const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-			if (ageMs > sevenDaysMs) {
+			if (Date.now() - snapshot.updatedAt > RECOVERY_MAX_AGE_MS) {
 				localStorage.removeItem(RECOVERY_STORAGE_KEY);
+				clearRecoveryToastOffer();
 				return;
 			}
 
-			// Surface recovery offer as non-blocking toast
-			toast.custom((t) => (
-				<div className="flex flex-col gap-3 p-4 bg-slate-900 border border-slate-700 rounded-lg">
-					<p className="text-sm text-white">
-						You have <strong>{snapshot.pendingCommands.length} unsaved changes</strong> from your last session.
-					</p>
-					<div className="flex gap-2">
-						<button
-							onClick={() => {
-								restoreFromRecovery(snapshot);
-								toast.dismiss(t);
-							}}
-							className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-						>
-							Restore
-						</button>
-						<button
-							onClick={() => {
-								discardDraft();
-								toast.dismiss(t);
-							}}
-							className="px-3 py-1 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors"
-						>
-							Discard
-						</button>
+			const snapshotKey = [
+				snapshot.workspaceId,
+				snapshot.updatedAt,
+				snapshot.pendingCommands.length,
+			].join(":");
+			if (activeRecoveryToastKey === snapshotKey) {
+				return;
+			}
+
+			clearRecoveryToastOffer();
+			activeRecoveryToastKey = snapshotKey;
+			activeRecoveryToastId = toast.custom(
+				(t) => (
+					<div className="flex flex-col gap-3 rounded-lg border border-slate-700 bg-slate-900 p-4">
+						<p className="text-sm text-white">
+							You have{" "}
+							<strong>{snapshot.pendingCommands.length} unsaved changes</strong>{" "}
+							from your last session.
+						</p>
+						<div className="flex gap-2">
+							<button
+								type="button"
+								onClick={() => {
+									clearRecoveryToastOffer();
+									restoreFromRecovery(snapshot);
+									toast.dismiss(t);
+								}}
+								className="rounded bg-blue-600 px-3 py-1 text-sm text-white transition-colors hover:bg-blue-700"
+							>
+								Restore
+							</button>
+							<button
+								type="button"
+								onClick={() => {
+									clearRecoveryToastOffer();
+									discardDraft();
+									toast.dismiss(t);
+								}}
+								className="rounded bg-slate-700 px-3 py-1 text-sm text-white transition-colors hover:bg-slate-600"
+							>
+								Discard
+							</button>
+						</div>
 					</div>
-				</div>
-			), { duration: Infinity });
-		} catch (e) {
-			// Malformed recovery data
-			console.warn("Failed to parse recovery snapshot:", e);
+				),
+				{ duration: Infinity },
+			);
+		} catch (error) {
+			clearRecoveryToastOffer();
+			console.warn("Failed to parse recovery snapshot:", error);
 		}
-	}, [draftSession.workspaceId, restoreFromRecovery, discardDraft]);
+	}, [draftSession.workspaceId, discardDraft, restoreFromRecovery]);
 
 	const workingRows = useMemo(
 		() => (stage ? getWorkingRows(stage) : undefined),

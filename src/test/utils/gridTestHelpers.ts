@@ -58,9 +58,9 @@ export const createMockGridApi = ({
 		getSelectedRows: vi.fn(() => {
 			// If we provided stateful nodes (with _selected), derive selectedRows from them
 			// Otherwise fallback to the static selectedRows
-			const statefulSelectedData = _allNodes
-				.filter((n) => n.isSelected() && n.data)
-				.map((n) => n.data!);
+			const statefulSelectedData = _allNodes.flatMap((n) =>
+				n.isSelected() && n.data ? [n.data] : [],
+			);
 
 			if (
 				statefulSelectedData.length > 0 ||

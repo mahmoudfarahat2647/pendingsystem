@@ -25,9 +25,10 @@ import { getMainSheetColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
+import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
-import { useDraftSession } from "@/hooks/useDraftSession";
 import {
 	appendTaggedUserNote,
 	getEffectiveNoteHistory,
@@ -37,7 +38,6 @@ import {
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
-import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 
 export default function MainSheetPage() {
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -139,7 +139,9 @@ export default function MainSheetPage() {
 
 	const filteredRowData = useMemo(() => {
 		if (!activeFilter) return effectiveRowData;
-		return effectiveRowData.filter((row: any) => row.partStatus === activeFilter);
+		return effectiveRowData.filter(
+			(row: PendingRow) => row.partStatus === activeFilter,
+		);
 	}, [effectiveRowData, activeFilter]);
 
 	// Sync selectedRows with the latest filteredRowData to prevent stale data
@@ -218,12 +220,9 @@ export default function MainSheetPage() {
 					sourceStage: "main",
 					destinationStage: "call",
 				});
-				toast.success(
-					`All parts for VIN ${vin} arrived! Moved to Call List.`,
-					{
-						duration: 5000,
-					},
-				);
+				toast.success(`All parts for VIN ${vin} arrived! Moved to Call List.`, {
+					duration: 5000,
+				});
 			}
 		}
 
@@ -366,7 +365,7 @@ export default function MainSheetPage() {
 										}
 									}
 								}}
-								readOnly={isSheetLocked}
+								readOnly={isSheetLocked || draftSaving}
 								onGridReady={(api) => setGridApi(api)}
 								showFloatingFilters={showFilters}
 								enablePagination={true}
@@ -404,11 +403,11 @@ export default function MainSheetPage() {
 				onOpenChange={setShowDeleteConfirm}
 				onConfirm={async () => {
 					const ids = getSelectedIds(selectedRows);
-				applyCommand({
-					type: "deleteRows",
-					ids,
-				});
-			setSelectedRows([]);
+					applyCommand({
+						type: "deleteRows",
+						ids,
+					});
+					setSelectedRows([]);
 					toast.success("Row(s) deleted");
 					setShowDeleteConfirm(false);
 				}}

@@ -1,12 +1,15 @@
+import { toast } from "sonner";
 import type { StateCreator } from "zustand";
+import {
+	getOrdersQueryKey,
+	ORDER_STAGES,
+	queryClient,
+} from "@/lib/queryClient";
+import { BeastModeSchema } from "@/schemas/form.schema";
 import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 import type { CombinedStore } from "../types";
-import { ORDER_STAGES, getOrdersQueryKey, queryClient } from "@/lib/queryClient";
-import { BeastModeSchema } from "@/schemas/form.schema";
 import { useAppStore } from "../useStore";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/queryCacheHelpers";
 
 // Constants
 const COMMAND_LIMIT = 30;
@@ -46,7 +49,12 @@ export interface MoveRowsCommand {
 export interface CompositeCommand {
 	type: "composite";
 	label: string;
-	children: (PatchRowCommand | CreateRowsCommand | DeleteRowsCommand | MoveRowsCommand)[];
+	children: (
+		| PatchRowCommand
+		| CreateRowsCommand
+		| DeleteRowsCommand
+		| MoveRowsCommand
+	)[];
 }
 
 export type AtomicCommand =
@@ -56,6 +64,25 @@ export type AtomicCommand =
 	| MoveRowsCommand;
 
 export type DraftCommand = AtomicCommand | CompositeCommand;
+
+export interface SaveOrderDraftMutationVars {
+	id: string;
+	updates: Partial<PendingRow>;
+	stage: OrderStage;
+	sourceStage?: OrderStage;
+}
+
+export interface BulkUpdateStageDraftMutationVars {
+	ids: string[];
+	stage: OrderStage;
+	silentErrorToast?: boolean;
+}
+
+export interface DraftSaveMutations {
+	saveOrder: (vars: SaveOrderDraftMutationVars) => Promise<unknown>;
+	bulkUpdateStage: (vars: BulkUpdateStageDraftMutationVars) => Promise<unknown>;
+	bulkDelete: (ids: string[]) => Promise<unknown>;
+}
 
 // --- Session State ---
 
@@ -88,14 +115,10 @@ export interface DraftSessionState {
 }
 
 export interface DraftSessionActions {
-	applyCommand: (cmd: DraftCommand) => void;
+	applyCommand: (cmd: DraftCommand) => boolean;
 	undoDraft: () => void;
 	redoDraft: () => void;
-	saveDraft: (mutations: {
-		saveOrder: (vars: any) => Promise<any>;
-		bulkUpdateStage: (vars: any) => Promise<any>;
-		bulkDelete: (ids: string[]) => Promise<any>;
-	}) => Promise<void>;
+	saveDraft: (mutations: DraftSaveMutations) => Promise<void>;
 	discardDraft: () => void;
 	restoreFromRecovery: (snapshot: DraftRecoverySnapshot) => void;
 	getWorkingRows: (stage: OrderStage) => PendingRow[] | undefined;
@@ -117,7 +140,10 @@ function getOrCreateWorkspaceId(): string {
 }
 
 function deepCloneByStage(baselineByStage: Record<OrderStage, PendingRow[]>) {
-	const cloned: Record<OrderStage, PendingRow[]> = {} as Record<OrderStage, PendingRow[]>;
+	const cloned: Record<OrderStage, PendingRow[]> = {} as Record<
+		OrderStage,
+		PendingRow[]
+	>;
 	for (const stage of ORDER_STAGES) {
 		cloned[stage] = structuredClone(baselineByStage[stage] ?? []);
 	}
@@ -132,7 +158,6 @@ export const createDraftSessionSlice: StateCreator<
 	[],
 	DraftSessionState & DraftSessionActions
 > = (set, get) => {
-
 	const initialSession: DraftSession = {
 		isActive: false,
 		baselineByStage: {
@@ -157,9 +182,14 @@ export const createDraftSessionSlice: StateCreator<
 		draftSession: initialSession,
 
 		_captureBaseline: () => {
-			const baseline: Record<OrderStage, PendingRow[]> = {} as Record<OrderStage, PendingRow[]>;
+			const baseline: Record<OrderStage, PendingRow[]> = {} as Record<
+				OrderStage,
+				PendingRow[]
+			>;
 			for (const stage of ORDER_STAGES) {
-				baseline[stage] = queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey(stage)) ?? [];
+				baseline[stage] =
+					queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey(stage)) ??
+					[];
 			}
 			set((state) => ({
 				draftSession: {
@@ -178,30 +208,71 @@ export const createDraftSessionSlice: StateCreator<
 
 			const working = deepCloneByStage(state.baselineByStage);
 
-			const applyCommandToWorking = (cmd: DraftCommand, working: Record<OrderStage, PendingRow[]>) => {
+			const applyCommandToWorking = (
+				cmd: DraftCommand,
+				working: Record<OrderStage, PendingRow[]>,
+			) => {
 				if (cmd.type === "patchRow") {
-					const row = working[cmd.destinationStage].find((r) => r.id === cmd.id);
-					if (row) {
-						Object.assign(row, cmd.updates);
+					const sourceRows = working[cmd.sourceStage];
+					const destinationRows = working[cmd.destinationStage];
+					const sourceIndex = sourceRows.findIndex((r) => r.id === cmd.id);
+					const destinationIndex = destinationRows.findIndex(
+						(r) => r.id === cmd.id,
+					);
+					const existingRow =
+						(destinationIndex >= 0
+							? destinationRows[destinationIndex]
+							: undefined) ??
+						(sourceIndex >= 0 ? sourceRows[sourceIndex] : undefined);
+
+					if (!existingRow) {
+						return;
 					}
-					// Handle cross-stage move
+
+					const updatedRow = {
+						...existingRow,
+						...cmd.updates,
+						stage: cmd.destinationStage,
+					};
+
 					if (cmd.sourceStage !== cmd.destinationStage) {
-						const idx = working[cmd.sourceStage].findIndex((r) => r.id === cmd.id);
-						if (idx >= 0) {
-							working[cmd.sourceStage].splice(idx, 1);
+						if (sourceIndex >= 0) {
+							sourceRows.splice(sourceIndex, 1);
 						}
+
+						if (destinationIndex >= 0) {
+							destinationRows[destinationIndex] = updatedRow;
+						} else {
+							destinationRows.push(updatedRow);
+						}
+
+						return;
+					}
+
+					if (destinationIndex >= 0) {
+						destinationRows[destinationIndex] = updatedRow;
 					}
 				} else if (cmd.type === "createRows") {
 					working[cmd.stage].push(...structuredClone(cmd.rows));
 				} else if (cmd.type === "deleteRows") {
 					for (const stage of ORDER_STAGES) {
-						working[stage] = working[stage].filter((r) => !cmd.ids.includes(r.id));
+						working[stage] = working[stage].filter(
+							(r) => !cmd.ids.includes(r.id),
+						);
 					}
 				} else if (cmd.type === "moveRows") {
-					const moved = working[cmd.sourceStage].filter((r) => cmd.ids.includes(r.id));
-					working[cmd.sourceStage] = working[cmd.sourceStage].filter((r) => !cmd.ids.includes(r.id));
+					const moved = working[cmd.sourceStage].filter((r) =>
+						cmd.ids.includes(r.id),
+					);
+					working[cmd.sourceStage] = working[cmd.sourceStage].filter(
+						(r) => !cmd.ids.includes(r.id),
+					);
 					for (const row of moved) {
-						const updated = { ...row, stage: cmd.destinationStage, ...cmd.fieldOverrides };
+						const updated = {
+							...row,
+							stage: cmd.destinationStage,
+							...cmd.fieldOverrides,
+						};
 						working[cmd.destinationStage].push(updated);
 					}
 				} else if (cmd.type === "composite") {
@@ -238,7 +309,7 @@ export const createDraftSessionSlice: StateCreator<
 			localStorage.removeItem(RECOVERY_STORAGE_KEY);
 		},
 
-		applyCommand: (cmd: DraftCommand) => {
+		applyCommand: (cmd: DraftCommand): boolean => {
 			const state = get();
 
 			// Lazy baseline capture
@@ -246,12 +317,16 @@ export const createDraftSessionSlice: StateCreator<
 				get()._captureBaseline();
 			}
 
-			const curSession = get().draftSession;
-
 			// Beast Mode guard for moveRows orders→main
-			if (cmd.type === "moveRows" && cmd.destinationStage === "main" && cmd.sourceStage === "orders") {
+			if (
+				cmd.type === "moveRows" &&
+				cmd.destinationStage === "main" &&
+				cmd.sourceStage === "orders"
+			) {
 				const workingRows = get()._deriveWorkingRows();
-				const affectedRows = workingRows.orders.filter((r) => cmd.ids.includes(r.id));
+				const affectedRows = workingRows.orders.filter((r) =>
+					cmd.ids.includes(r.id),
+				);
 
 				for (const row of affectedRows) {
 					// Run Beast Mode validation
@@ -259,19 +334,23 @@ export const createDraftSessionSlice: StateCreator<
 					if (!result.success) {
 						const uiSlice = useAppStore.getState();
 						uiSlice.triggerBeastMode(row.id, Date.now());
-						toast.error(`Missing required fields for: ${row.trackingId || row.id}`);
-						return;
+						toast.error(
+							`Missing required fields for: ${row.trackingId || row.id}`,
+						);
+						return false;
 					}
 
 					// Also validate partNumber, description, attachment
 					if (!row.partNumber || !row.description) {
-						toast.error(`Part number and description required for: ${row.trackingId || row.id}`);
-						return;
+						toast.error(
+							`Part number and description required for: ${row.trackingId || row.id}`,
+						);
+						return false;
 					}
 
 					if (!row.attachmentFilePath && !row.attachmentLink) {
 						toast.error(`Attachment required for: ${row.trackingId || row.id}`);
-						return;
+						return false;
 					}
 				}
 			}
@@ -279,17 +358,23 @@ export const createDraftSessionSlice: StateCreator<
 			set((state) => {
 				const newSession: DraftSession = {
 					...state.draftSession,
-					pendingCommands: [...state.draftSession.pendingCommands, cmd].slice(-COMMAND_LIMIT),
+					pendingCommands: [...state.draftSession.pendingCommands, cmd].slice(
+						-COMMAND_LIMIT,
+					),
 					past: [...state.draftSession.past, cmd].slice(-COMMAND_LIMIT),
 					future: [],
 					dirty: true,
-					touchedStages: new Set([...state.draftSession.touchedStages, ...getCommandStages(cmd)]),
+					touchedStages: new Set([
+						...state.draftSession.touchedStages,
+						...getCommandStages(cmd),
+					]),
 					lastTouchedAt: Date.now(),
 				};
 				return { draftSession: newSession };
 			});
 
 			get()._persistRecovery();
+			return true;
 		},
 
 		undoDraft: () => {
@@ -362,7 +447,11 @@ export const createDraftSessionSlice: StateCreator<
 			} catch (error) {
 				const message = error instanceof Error ? error.message : "Save failed";
 				set((state) => ({
-					draftSession: { ...state.draftSession, saving: false, saveError: message },
+					draftSession: {
+						...state.draftSession,
+						saving: false,
+						saveError: message,
+					},
 				}));
 				// Keep all draft state intact for retry
 			}
@@ -392,14 +481,11 @@ export const createDraftSessionSlice: StateCreator<
 
 			const newSession = get().draftSession;
 
-			// Replay the commands
-			const working = get()._deriveWorkingRows();
-
-			set((state) => ({
+			set(() => ({
 				draftSession: {
 					...newSession,
 					pendingCommands: snapshot.pendingCommands,
-					past: [...snapshot.pendingCommands],
+					past: [],
 					future: [],
 					dirty: snapshot.pendingCommands.length > 0,
 					touchedStages: new Set(getAllCommandStages(snapshot.pendingCommands)),
@@ -433,7 +519,9 @@ function getCommandStages(cmd: DraftCommand): OrderStage[] {
 	} else if (cmd.type === "composite") {
 		const stages = new Set<OrderStage>();
 		for (const child of cmd.children) {
-			getCommandStages(child).forEach((s) => stages.add(s));
+			for (const stage of getCommandStages(child)) {
+				stages.add(stage);
+			}
 		}
 		return Array.from(stages);
 	}
@@ -443,25 +531,24 @@ function getCommandStages(cmd: DraftCommand): OrderStage[] {
 function getAllCommandStages(commands: DraftCommand[]): OrderStage[] {
 	const stages = new Set<OrderStage>();
 	for (const cmd of commands) {
-		getCommandStages(cmd).forEach((s) => stages.add(s));
+		for (const stage of getCommandStages(cmd)) {
+			stages.add(stage);
+		}
 	}
 	return Array.from(stages);
 }
 
 async function executeCommand(
 	cmd: DraftCommand,
-	mutations: {
-		saveOrder: (vars: any) => Promise<any>;
-		bulkUpdateStage: (vars: any) => Promise<any>;
-		bulkDelete: (ids: string[]) => Promise<any>;
-	},
+	mutations: DraftSaveMutations,
 ): Promise<void> {
 	if (cmd.type === "patchRow") {
 		await mutations.saveOrder({
 			id: cmd.id,
 			updates: cmd.updates,
 			stage: cmd.destinationStage,
-			sourceStage: cmd.sourceStage !== cmd.destinationStage ? cmd.sourceStage : undefined,
+			sourceStage:
+				cmd.sourceStage !== cmd.destinationStage ? cmd.sourceStage : undefined,
 		});
 	} else if (cmd.type === "createRows") {
 		for (const row of cmd.rows) {

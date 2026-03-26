@@ -44,8 +44,8 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
-import { useDraftSession } from "@/hooks/useDraftSession";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import {
@@ -133,7 +133,12 @@ export default function BookingPage() {
 	const [showFilters, setShowFilters] = useState(false);
 
 	// Sync selectedRows with the latest effectiveBookingData to prevent stale data
-	useSelectedRowsSync("booking", effectiveBookingData, selectedRows, setSelectedRows);
+	useSelectedRowsSync(
+		"booking",
+		effectiveBookingData,
+		selectedRows,
+		setSelectedRows,
+	);
 
 	const {
 		activeModal,
@@ -165,7 +170,6 @@ export default function BookingPage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = getSelectedIds(selectedRows);
 		// 1. Apply patchRow commands to send back to Orders with Reorder status
 		for (const row of selectedRows) {
 			const newNoteHistory = appendTaggedUserNote(
@@ -409,6 +413,7 @@ export default function BookingPage() {
 						rowData={bookingRowData}
 						columnDefs={columns}
 						gridStateKey="booking"
+						readOnly={draftSaving}
 						onSelectionChange={setSelectedRows}
 						onGridReady={(api) => setGridApi(api)}
 						showFloatingFilters={showFilters}
@@ -484,11 +489,11 @@ export default function BookingPage() {
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
 					onConfirm={async () => {
-					const ids = getSelectedIds(selectedRows);
-					applyCommand({
-						type: "deleteRows",
-						ids,
-					});
+						const ids = getSelectedIds(selectedRows);
+						applyCommand({
+							type: "deleteRows",
+							ids,
+						});
 						setSelectedRows([]);
 						toast.success("Booking(s) deleted");
 						setShowDeleteConfirm(false);

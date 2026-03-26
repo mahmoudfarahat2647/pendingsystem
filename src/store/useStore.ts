@@ -10,7 +10,6 @@ import { createNotificationSlice } from "./slices/notificationSlice";
 import { createOrdersSlice } from "./slices/ordersSlice";
 import { createReportSettingsSlice } from "./slices/reportSettingsSlice";
 import { createUISlice } from "./slices/uiSlice";
-import { createUndoRedoSlice } from "./slices/undoRedoSlice";
 import type { CombinedStore } from "./types";
 
 export const useAppStore = create<CombinedStore>()(
@@ -21,7 +20,6 @@ export const useAppStore = create<CombinedStore>()(
 			...createBookingSlice(...a),
 			...createNotificationSlice(...a),
 			...createUISlice(...a),
-			...createUndoRedoSlice(...a),
 			...createDraftSessionSlice(...a),
 			...createGridSlice(...a),
 			...createReportSettingsSlice(...a),

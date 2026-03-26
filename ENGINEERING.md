@@ -14,7 +14,7 @@
 The live application is a hybrid of:
 - Supabase for operational data
 - React Query for server-state fetching and optimistic mutations
-- Zustand for persisted UI/reference state and a small set of legacy migration helpers
+- Zustand for persisted UI/reference state, grid layouts, notifications, and the local draft-session command overlay
 - AG Grid for the main desktop work surfaces
 
 ### Tech Stack
@@ -73,8 +73,9 @@ Important related tables and database assets:
 1. Route components call React Query hooks such as `useOrdersQuery("orders")`.
 2. Hooks delegate reads and writes to service-layer methods in `orderService` and `reportSettingsService`.
 3. Services map database rows into `PendingRow` with Zod validation.
-4. Mutations optimistically update React Query caches, then invalidate affected stage keys.
-5. Zustand remains responsible for UI-local state such as search, layout persistence, statuses, templates, notifications, and lock state.
+4. Draft-capable pages stage local edits through `useDraftSession(stage)` and render `workingRows` over the React Query baseline.
+5. `saveDraft()` replays pending commands through the existing React Query mutations, which optimistically update caches and then invalidate affected stage keys.
+6. Zustand remains responsible for UI-local state such as search, layout persistence, statuses, templates, notifications, lock state, and draft-session recovery metadata.
 
 ### React Query Boundaries
 Operational stage data is fetched with:
@@ -105,7 +106,7 @@ The pattern is:
 4. rollback on error
 5. invalidate only touched stages
 
-This is the main reactivity path for live stage data.
+This is the main reactivity path for live stage data once a draft session is saved.
 
 ### Validation Layers
 - `PendingRowSchema` normalizes and validates persisted rows.
@@ -132,6 +133,8 @@ Persisted store state is intentionally small and focused on:
 
 The stage arrays inside some slices are still present for legacy flows and migration tooling, but the active route-level source of truth is React Query plus Supabase.
 
+Draft-session recovery snapshots are stored separately in `localStorage["pending-sys-draft-v1"]` and rebuilt into a working overlay by `draftSessionSlice`.
+
 ## Store API
 
 ### Store Composition
@@ -144,7 +147,7 @@ The combined store type is defined in `src/store/types.ts` and composed from the
 | `bookingSlice` | legacy booking move helpers | kept for compatibility |
 | `notificationSlice` | managed reminder and warranty notifications | actively used |
 | `uiSlice` | search, templates, statuses, lock, notes, todos, Beast Mode triggers | actively used |
-| `undoRedoSlice` | undo/redo stacks for local UI state | actively used by shell controls |
+| `draftSessionSlice` | local command overlays, recovery snapshots, and save/discard orchestration | actively used by stage pages and header controls |
 | `gridSlice` | AG Grid layout persistence | actively used |
 | `reportSettingsSlice` | compatibility wrapper over report settings service | retained but newer UI goes through query hooks |
 
@@ -162,6 +165,12 @@ The combined store type is defined in `src/store/types.ts` and composed from the
 - Persists templates and default vehicle/reference values.
 - Tracks sheet lock state.
 - Tracks Beast Mode trigger timestamps for strict commit validation flows.
+
+#### `draftSessionSlice`
+- Tracks a per-workspace command queue, `past`/`future` history, dirty state, and touched stages.
+- Derives `workingRows` overlays from React Query baselines without mutating the live cache until save.
+- Persists crash-recovery snapshots and restores them with empty `past`/`future` stacks.
+- Executes staged changes through `saveDraft()` using the existing mutation hooks.
 
 #### `gridSlice`
 - Persists AG Grid state by `gridStateKey`.
@@ -243,7 +252,7 @@ The combined store type is defined in `src/store/types.ts` and composed from the
 - File: `src/components/shared/Header.tsx`
 - Owns:
   - debounced global search
-  - undo/redo shortcuts
+  - draft-session undo/redo/save/discard controls
   - full-system exports by company
   - cloud migration button
   - notification polling interval
@@ -407,3 +416,4 @@ These flows intentionally validate prerequisites:
 
 ### Cloud sync behavior is confusing
 `CloudSync` is a migration utility that reads legacy Zustand stage arrays and replays them into Supabase. It is not the normal live sync path for current route data.
+

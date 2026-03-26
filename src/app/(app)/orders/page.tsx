@@ -72,6 +72,7 @@ export default function OrdersPage() {
 		handleSendToCallList,
 		handleDeleteSelected,
 		applyCommand,
+		draftSaving,
 	} = useOrdersPageHandlers();
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
@@ -151,6 +152,7 @@ export default function OrdersPage() {
 								rowData={ordersRowData}
 								columnDefs={columns}
 								gridStateKey="orders"
+								readOnly={draftSaving}
 								onSelectionChange={setSelectedRows}
 								onCellValueChanged={async (params) => {
 									if (

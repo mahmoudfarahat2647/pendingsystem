@@ -24,6 +24,7 @@ import {
 	calculateRemainingTime,
 	normalizeMileageAsNumber,
 } from "@/lib/utils";
+import type { AtomicCommand } from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 
@@ -66,7 +67,12 @@ export const useOrdersPageHandlers = () => {
 	}, [effectiveOrdersData, checkNotifications]);
 
 	// Sync selectedRows with the latest data (draft or query) to prevent stale data
-	useSelectedRowsSync("orders", effectiveOrdersData, selectedRows, setSelectedRows);
+	useSelectedRowsSync(
+		"orders",
+		effectiveOrdersData,
+		selectedRows,
+		setSelectedRows,
+	);
 
 	// 4. Core Handlers
 	const handleUpdateOrder = useCallback(
@@ -121,11 +127,11 @@ export const useOrdersPageHandlers = () => {
 					.filter((row) => !existingRowIdsInModal.has(row.id))
 					.map((row) => row.id);
 
+				// Collect all atomic commands so the entire edit is a single undo step
+				const editChildren: AtomicCommand[] = [];
+
 				if (removedRowIds.length > 0) {
-					applyCommand({
-						type: "deleteRows",
-						ids: removedRowIds,
-					});
+					editChildren.push({ type: "deleteRows", ids: removedRowIds });
 				}
 
 				for (const part of parts) {
@@ -147,7 +153,7 @@ export const useOrdersPageHandlers = () => {
 					};
 
 					if (part.rowId) {
-						applyCommand({
+						editChildren.push({
 							type: "patchRow",
 							id: part.rowId as string,
 							sourceStage: "orders",
@@ -163,12 +169,12 @@ export const useOrdersPageHandlers = () => {
 					} else {
 						const baseId =
 							selectedRows[0]?.baseId || Date.now().toString().slice(-6);
-						applyCommand({
+						editChildren.push({
 							type: "createRows",
 							stage: "orders",
 							rows: [
 								{
-									id: `temp-${Date.now()}`,
+									id: `temp-${crypto.randomUUID()}`,
 									baseId,
 									trackingId: `ORD-${baseId}`,
 									...commonData,
@@ -185,6 +191,16 @@ export const useOrdersPageHandlers = () => {
 					}
 				}
 
+				if (editChildren.length === 1) {
+					applyCommand(editChildren[0]);
+				} else if (editChildren.length > 1) {
+					applyCommand({
+						type: "composite",
+						label: "Edit order",
+						children: editChildren,
+					});
+				}
+
 				toast.success("Grid entries updated successfully");
 			} else {
 				const baseId = Date.now().toString().slice(-6);
@@ -199,7 +215,7 @@ export const useOrdersPageHandlers = () => {
 					const startWarranty = isWarranty ? formData.startWarranty : "";
 
 					return {
-						id: `temp-${Date.now()}-${index}`,
+						id: `temp-${crypto.randomUUID()}`,
 						baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
 						trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
 						...formData,
@@ -243,17 +259,18 @@ export const useOrdersPageHandlers = () => {
 
 		const ids = selectedRows.map((r) => r.id);
 
-		// Beast Mode validation is now handled inside applyCommand before the command is applied.
-		// If validation fails, applyCommand will return early and the command won't be added.
-		applyCommand({
+		// Beast Mode validation is handled inside applyCommand — it returns false if rejected.
+		const applied = applyCommand({
 			type: "moveRows",
 			ids,
 			sourceStage: "orders",
 			destinationStage: "main",
 		});
 
-		setSelectedRows([]);
-		toast.success("Committed to Main Sheet");
+		if (applied) {
+			setSelectedRows([]);
+			toast.success("Committed to Main Sheet");
+		}
 	};
 
 	const handleConfirmBooking = async (
@@ -261,8 +278,6 @@ export const useOrdersPageHandlers = () => {
 		note: string,
 		status?: string,
 	) => {
-		const ids = selectedRows.map((r) => r.id);
-
 		// Part number + description required before booking
 		const rowsMissingParts = selectedRows.filter(
 			(row) => !row.partNumber?.trim() || !row.description?.trim(),
@@ -338,10 +353,9 @@ export const useOrdersPageHandlers = () => {
 					sourceStage: "orders",
 					destinationStage: "call",
 				});
-				toast.success(
-					`All parts for VIN ${vin} arrived! Moved to Call List.`,
-					{ duration: 5000 },
-				);
+				toast.success(`All parts for VIN ${vin} arrived! Moved to Call List.`, {
+					duration: 5000,
+				});
 			}
 		}
 
@@ -467,5 +481,6 @@ export const useOrdersPageHandlers = () => {
 
 		// Draft session
 		applyCommand,
+		draftSaving,
 	};
 };
