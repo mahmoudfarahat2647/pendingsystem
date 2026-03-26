@@ -41,13 +41,9 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-	useBulkDeleteOrdersMutation,
-	useBulkUpdateOrderStageMutation,
-	useOrdersQuery,
-	useSaveOrderMutation,
-} from "@/hooks/queries/useOrdersQuery";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import {
@@ -66,9 +62,15 @@ export default function CallListPage() {
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: callRowData = [] } = useOrdersQuery("call");
 
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("call");
-	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("call");
-	const saveOrderMutation = useSaveOrderMutation();
+	// Draft session for undo/redo
+	const {
+		workingRows: draftWorkingRows,
+		applyCommand,
+		saving: draftSaving,
+	} = useDraftSession("call");
+
+	// Use draft working rows if available, fallback to query data
+	const effectiveData = draftWorkingRows || callRowData;
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
@@ -87,20 +89,28 @@ export default function CallListPage() {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 
-	// Sync selectedRows with the latest callRowData to prevent stale data
-	useSelectedRowsSync("call", callRowData, selectedRows, setSelectedRows);
+	// Sync selectedRows with the latest effectiveData to prevent stale data
+	useSelectedRowsSync("call", effectiveData, selectedRows, setSelectedRows);
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			return saveOrderMutation.mutateAsync({ id, updates, stage: "call" });
+			applyCommand({
+				type: "patchRow",
+				id,
+				sourceStage: "call",
+				destinationStage: "call",
+				updates,
+				previousValues: {},
+			});
+			return Promise.resolve();
 		},
-		[saveOrderMutation],
+		[applyCommand],
 	);
 
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = callRowData.find((r: PendingRow) => r.id === id);
+				const row = effectiveData.find((r: PendingRow) => r.id === id);
 				if (row) {
 					const newNoteHistory = appendTaggedUserNote(
 						getEffectiveNoteHistory(row),
@@ -108,16 +118,18 @@ export default function CallListPage() {
 						"archive",
 					);
 
-					saveOrderMutation.mutate({
+					applyCommand({
+						type: "patchRow",
 						id,
-						updates: { archiveReason: reason, noteHistory: newNoteHistory },
-						stage: "archive",
 						sourceStage: "call",
+						destinationStage: "archive",
+						updates: { archiveReason: reason, noteHistory: newNoteHistory },
+						previousValues: {},
 					});
 				}
 			}
 		},
-		[saveOrderMutation],
+		[effectiveData, applyCommand],
 	);
 
 	const {
@@ -154,16 +166,18 @@ export default function CallListPage() {
 				"booking",
 			);
 
-			await saveOrderMutation.mutateAsync({
+			applyCommand({
+				type: "patchRow",
 				id: row.id,
+				sourceStage: "call",
+				destinationStage: "booking",
 				updates: {
 					bookingDate: date,
 					bookingNote: note,
 					noteHistory: newNoteHistory,
 					...(status ? { bookingStatus: status } : {}),
 				},
-				stage: "booking",
-				sourceStage: "call",
+				previousValues: {},
 			});
 		}
 		setSelectedRows([]);
@@ -175,9 +189,7 @@ export default function CallListPage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = getSelectedIds(selectedRows);
 		// Send to Orders stage with status and note
-		// 1. Update status/note first (optimistic)
 		for (const row of selectedRows) {
 			const newNoteHistory = appendTaggedUserNote(
 				getEffectiveNoteHistory(row),
@@ -185,17 +197,18 @@ export default function CallListPage() {
 				"reorder",
 			);
 
-			await saveOrderMutation.mutateAsync({
+			applyCommand({
+				type: "patchRow",
 				id: row.id,
+				sourceStage: "call",
+				destinationStage: "orders",
 				updates: {
 					noteHistory: newNoteHistory,
 					status: "Reorder",
 				},
-				stage: "orders",
-				sourceStage: "call",
+				previousValues: {},
 			});
 		}
-		// 2. Move stage (bulk opportunistic)
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");
@@ -375,9 +388,10 @@ export default function CallListPage() {
 
 				<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden mt-4">
 					<DataGrid
-						rowData={callRowData}
+						rowData={effectiveData}
 						columnDefs={columns}
 						gridStateKey="call-list"
+						readOnly={draftSaving}
 						onSelectionChange={setSelectedRows}
 						onGridReady={(api) => setGridApi(api)}
 						showFloatingFilters={showFilters}
@@ -447,9 +461,10 @@ export default function CallListPage() {
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
 					onConfirm={async () => {
-						await bulkDeleteOrdersMutation.mutateAsync(
-							getSelectedIds(selectedRows),
-						);
+						applyCommand({
+							type: "deleteRows",
+							ids: getSelectedIds(selectedRows),
+						});
 						setSelectedRows([]);
 						toast.success("Row(s) deleted");
 					}}

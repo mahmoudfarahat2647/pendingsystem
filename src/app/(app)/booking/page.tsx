@@ -43,13 +43,9 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-	useBulkDeleteOrdersMutation,
-	useBulkUpdateOrderStageMutation,
-	useOrdersQuery,
-	useSaveOrderMutation,
-} from "@/hooks/queries/useOrdersQuery";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import {
@@ -66,9 +62,16 @@ export default function BookingPage() {
 	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("booking");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("booking");
-	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("booking");
-	const saveOrderMutation = useSaveOrderMutation();
+
+	// Draft session for undo/redo
+	const {
+		workingRows: draftWorkingRows,
+		applyCommand,
+		saving: draftSaving,
+	} = useDraftSession("booking");
+
+	// Use draft working rows if available, fallback to query data
+	const effectiveBookingData = draftWorkingRows || bookingRowData;
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
@@ -82,15 +85,23 @@ export default function BookingPage() {
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			return saveOrderMutation.mutateAsync({ id, updates, stage: "booking" });
+			applyCommand({
+				type: "patchRow",
+				id,
+				sourceStage: "booking",
+				destinationStage: "booking",
+				updates,
+				previousValues: {},
+			});
+			return Promise.resolve();
 		},
-		[saveOrderMutation],
+		[applyCommand],
 	);
 
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = bookingRowData.find((r: PendingRow) => r.id === id);
+				const row = effectiveBookingData.find((r: PendingRow) => r.id === id);
 				if (row) {
 					const newNoteHistory = appendTaggedUserNote(
 						getEffectiveNoteHistory(row),
@@ -98,16 +109,18 @@ export default function BookingPage() {
 						"archive",
 					);
 
-					saveOrderMutation.mutate({
+					applyCommand({
+						type: "patchRow",
 						id,
-						updates: { archiveReason: reason, noteHistory: newNoteHistory },
-						stage: "archive",
 						sourceStage: "booking",
+						destinationStage: "archive",
+						updates: { archiveReason: reason, noteHistory: newNoteHistory },
+						previousValues: {},
 					});
 				}
 			}
 		},
-		[saveOrderMutation],
+		[effectiveBookingData, applyCommand],
 	);
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -119,14 +132,12 @@ export default function BookingPage() {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 
-	// Sync selectedRows with the latest bookingRowData to prevent stale data
-	useSelectedRowsSync("booking", bookingRowData, selectedRows, setSelectedRows);
-
-	const _handleSelectionChanged = useMemo(
-		() => (rows: PendingRow[]) => {
-			setSelectedRows(rows);
-		},
-		[],
+	// Sync selectedRows with the latest effectiveBookingData to prevent stale data
+	useSelectedRowsSync(
+		"booking",
+		effectiveBookingData,
+		selectedRows,
+		setSelectedRows,
 	);
 
 	const {
@@ -159,8 +170,7 @@ export default function BookingPage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		const ids = getSelectedIds(selectedRows);
-		// 1. Update status/note (sequential but optimistic)
+		// 1. Apply patchRow commands to send back to Orders with Reorder status
 		for (const row of selectedRows) {
 			const newNoteHistory = appendTaggedUserNote(
 				getEffectiveNoteHistory(row),
@@ -168,14 +178,16 @@ export default function BookingPage() {
 				"reorder",
 			);
 
-			await saveOrderMutation.mutateAsync({
+			applyCommand({
+				type: "patchRow",
 				id: row.id,
+				sourceStage: "booking",
+				destinationStage: "orders",
 				updates: {
 					noteHistory: newNoteHistory,
 					status: "Reorder",
 				},
-				stage: "orders",
-				sourceStage: "booking",
+				previousValues: {},
 			});
 		}
 		setSelectedRows([]);
@@ -208,15 +220,18 @@ export default function BookingPage() {
 				"rebooking",
 			);
 
-			await saveOrderMutation.mutateAsync({
+			applyCommand({
+				type: "patchRow",
 				id: row.id,
+				sourceStage: "booking",
+				destinationStage: "booking",
 				updates: {
 					bookingDate: newDate,
 					bookingNote: updatedBookingNote,
 					noteHistory: newNoteHistory,
 					...(status ? { bookingStatus: status } : {}),
 				},
-				stage: "booking",
+				previousValues: {},
 			});
 		}
 		setIsRebookingModalOpen(false);
@@ -375,7 +390,7 @@ export default function BookingPage() {
 					</div>
 
 					<div className="flex items-center gap-1.5">
-						<VINLineCounter rows={bookingRowData} />
+						<VINLineCounter rows={effectiveBookingData} />
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
@@ -395,9 +410,10 @@ export default function BookingPage() {
 
 				<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden mt-4">
 					<DataGrid
-						rowData={bookingRowData}
+						rowData={effectiveBookingData}
 						columnDefs={columns}
 						gridStateKey="booking"
+						readOnly={draftSaving}
 						onSelectionChange={setSelectedRows}
 						onGridReady={(api) => setGridApi(api)}
 						showFloatingFilters={showFilters}
@@ -473,9 +489,11 @@ export default function BookingPage() {
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
 					onConfirm={async () => {
-						await bulkDeleteOrdersMutation.mutateAsync(
-							getSelectedIds(selectedRows),
-						);
+						const ids = getSelectedIds(selectedRows);
+						applyCommand({
+							type: "deleteRows",
+							ids,
+						});
 						setSelectedRows([]);
 						toast.success("Booking(s) deleted");
 						setShowDeleteConfirm(false);

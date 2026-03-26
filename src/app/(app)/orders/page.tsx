@@ -71,7 +71,8 @@ export default function OrdersPage() {
 		handleShareToLogistics,
 		handleSendToCallList,
 		handleDeleteSelected,
-		bulkUpdateStageMutation,
+		applyCommand,
+		draftSaving,
 	} = useOrdersPageHandlers();
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
@@ -151,6 +152,7 @@ export default function OrdersPage() {
 								rowData={ordersRowData}
 								columnDefs={columns}
 								gridStateKey="orders"
+								readOnly={draftSaving}
 								onSelectionChange={setSelectedRows}
 								onCellValueChanged={async (params) => {
 									if (
@@ -175,27 +177,16 @@ export default function OrdersPage() {
 										});
 
 										if (vinIds.length > 0) {
-											try {
-												await bulkUpdateStageMutation.mutateAsync({
-													ids: vinIds,
-													stage: "call",
-													silentErrorToast: true,
-												});
-												toast.success(
-													`All parts for VIN ${vin} arrived! Moved to Call List.`,
-													{ duration: 5000 },
-												);
-											} catch (error) {
-												console.error("[OrdersPage] vin_auto_move_failed", {
-													error,
-													vin,
-													stage: "orders",
-													ids: vinIds,
-												});
-												toast.error(
-													"Part saved, but VIN group move failed - refresh and try again.",
-												);
-											}
+											applyCommand({
+												type: "moveRows",
+												ids: vinIds,
+												sourceStage: "orders",
+												destinationStage: "call",
+											});
+											toast.success(
+												`All parts for VIN ${vin} arrived! Moved to Call List.`,
+												{ duration: 5000 },
+											);
 										}
 									}
 								}}

@@ -5,11 +5,10 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { FormData } from "@/components/orders/form";
 import {
-	useBulkDeleteOrdersMutation,
-	useBulkUpdateOrderStageMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
+import { useDraftSession } from "@/hooks/useDraftSession";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
 import { exportToLogisticsCSV } from "@/lib/exportUtils";
@@ -25,7 +24,7 @@ import {
 	calculateRemainingTime,
 	normalizeMileageAsNumber,
 } from "@/lib/utils";
-import { BeastModeSchema } from "@/schemas/form.schema";
+import type { AtomicCommand } from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 
@@ -34,8 +33,16 @@ export const useOrdersPageHandlers = () => {
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
 	const saveOrderMutation = useSaveOrderMutation();
-	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("orders");
-	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation("orders");
+
+	// Draft session for undo/redo
+	const {
+		workingRows: draftWorkingRows,
+		applyCommand,
+		saving: draftSaving,
+	} = useDraftSession("orders");
+
+	// Use draft working rows if available, fallback to query data
+	const effectiveOrdersData = draftWorkingRows || ordersRowData;
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
@@ -53,53 +60,61 @@ export const useOrdersPageHandlers = () => {
 		row: PendingRow;
 	} | null>(null);
 
-	const triggerBeastMode = useAppStore((state) => state.triggerBeastMode);
 	useEffect(() => {
-		if (ordersRowData) {
+		if (effectiveOrdersData) {
 			checkNotifications();
 		}
-	}, [ordersRowData, checkNotifications]);
+	}, [effectiveOrdersData, checkNotifications]);
 
-	// Sync selectedRows with the latest ordersRowData to prevent stale data
-	// after optimistic updates or refetches.
-	useSelectedRowsSync("orders", ordersRowData, selectedRows, setSelectedRows);
+	// Sync selectedRows with the latest data (draft or query) to prevent stale data
+	useSelectedRowsSync(
+		"orders",
+		effectiveOrdersData,
+		selectedRows,
+		setSelectedRows,
+	);
 
 	// 4. Core Handlers
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			return saveOrderMutation.mutateAsync({ id, updates, stage: "orders" });
+			applyCommand({
+				type: "patchRow",
+				id,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates,
+				previousValues: {},
+			});
+			// Return a resolved promise for compatibility with existing code expecting mutation result
+			return Promise.resolve();
 		},
-		[saveOrderMutation],
+		[applyCommand],
 	);
 
 	const handleSendToArchive = useCallback(
-		async (ids: string[], reason: string) => {
-			const results = await Promise.allSettled(
-				ids.map((id) => {
-					const row = ordersRowData.find((r) => r.id === id);
-					if (!row) return Promise.resolve();
+		(ids: string[], reason: string) => {
+			// Create patchRow commands for each row to add archive reason and note history
+			for (const id of ids) {
+				const row = effectiveOrdersData.find((r) => r.id === id);
+				if (!row) continue;
 
-					const newNoteHistory = appendTaggedUserNote(
-						getEffectiveNoteHistory(row),
-						reason,
-						"archive",
-					);
+				const newNoteHistory = appendTaggedUserNote(
+					getEffectiveNoteHistory(row),
+					reason,
+					"archive",
+				);
 
-					return saveOrderMutation.mutateAsync({
-						id,
-						updates: { archiveReason: reason, noteHistory: newNoteHistory },
-						stage: "archive",
-						sourceStage: "orders",
-					});
-				}),
-			);
-
-			const failedCount = results.filter((r) => r.status === "rejected").length;
-			if (failedCount > 0) {
-				throw new Error(`${failedCount} of ${ids.length} items failed to save`);
+				applyCommand({
+					type: "patchRow",
+					id,
+					sourceStage: "orders",
+					destinationStage: "archive",
+					updates: { archiveReason: reason, noteHistory: newNoteHistory },
+					previousValues: {},
+				});
 			}
 		},
-		[saveOrderMutation, ordersRowData],
+		[effectiveOrdersData, applyCommand],
 	);
 
 	const handleSaveOrder = async (formData: FormData, parts: PartEntry[]) => {
@@ -112,11 +127,14 @@ export const useOrdersPageHandlers = () => {
 					.filter((row) => !existingRowIdsInModal.has(row.id))
 					.map((row) => row.id);
 
+				// Collect all atomic commands so the entire edit is a single undo step
+				const editChildren: AtomicCommand[] = [];
+
 				if (removedRowIds.length > 0) {
-					await bulkDeleteOrdersMutation.mutateAsync(removedRowIds);
+					editChildren.push({ type: "deleteRows", ids: removedRowIds });
 				}
 
-				const savePromises = parts.map((part) => {
+				for (const part of parts) {
 					const isWarranty = formData.repairSystem === "ضمان";
 					const endWarranty = isWarranty
 						? calculateEndWarranty(formData.startWarranty)
@@ -135,43 +153,58 @@ export const useOrdersPageHandlers = () => {
 					};
 
 					if (part.rowId) {
-						return saveOrderMutation.mutateAsync({
+						editChildren.push({
+							type: "patchRow",
 							id: part.rowId as string,
-							stage: "orders",
+							sourceStage: "orders",
+							destinationStage: "orders",
 							updates: {
 								...commonData,
 								partNumber: part.partNumber,
 								description: part.description,
 								parts: [part],
 							},
+							previousValues: {},
 						});
 					} else {
 						const baseId =
 							selectedRows[0]?.baseId || Date.now().toString().slice(-6);
-						return saveOrderMutation.mutateAsync({
-							id: "", // orderService handles new row creation if id is missing/empty
-							updates: {
-								baseId,
-								trackingId: `ORD-${baseId}`,
-								...commonData,
-								partNumber: part.partNumber,
-								description: part.description,
-								parts: [part],
-								status: "Pending",
-								rDate: new Date().toISOString().split("T")[0],
-								requester: formData.requester,
-							},
+						editChildren.push({
+							type: "createRows",
 							stage: "orders",
+							rows: [
+								{
+									id: `temp-${crypto.randomUUID()}`,
+									baseId,
+									trackingId: `ORD-${baseId}`,
+									...commonData,
+									partNumber: part.partNumber,
+									description: part.description,
+									parts: [part],
+									status: "Pending",
+									rDate: new Date().toISOString().split("T")[0],
+									requester: formData.requester,
+									stage: "orders",
+								} as PendingRow,
+							],
 						});
 					}
-				});
+				}
 
-				await Promise.all(savePromises);
+				if (editChildren.length === 1) {
+					applyCommand(editChildren[0]);
+				} else if (editChildren.length > 1) {
+					applyCommand({
+						type: "composite",
+						label: "Edit order",
+						children: editChildren,
+					});
+				}
 
 				toast.success("Grid entries updated successfully");
 			} else {
 				const baseId = Date.now().toString().slice(-6);
-				const createPromises = parts.map((part, index) => {
+				const newRows: PendingRow[] = parts.map((part, index) => {
 					const isWarranty = formData.repairSystem === "ضمان";
 					const endWarranty = isWarranty
 						? calculateEndWarranty(formData.startWarranty)
@@ -181,27 +214,30 @@ export const useOrdersPageHandlers = () => {
 						: "";
 					const startWarranty = isWarranty ? formData.startWarranty : "";
 
-					return saveOrderMutation.mutateAsync({
-						id: "",
-						updates: {
-							baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
-							trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
-							...formData,
-							startWarranty,
-							cntrRdg: normalizeMileageAsNumber(formData.cntrRdg),
-							partNumber: part.partNumber,
-							description: part.description,
-							parts: [part],
-							status: "Pending",
-							rDate: new Date().toISOString().split("T")[0],
-							endWarranty,
-							remainTime,
-						},
+					return {
+						id: `temp-${crypto.randomUUID()}`,
+						baseId: parts.length > 1 ? `${baseId}-${index + 1}` : baseId,
+						trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
+						...formData,
+						startWarranty,
+						cntrRdg: normalizeMileageAsNumber(formData.cntrRdg),
+						partNumber: part.partNumber,
+						description: part.description,
+						parts: [part],
+						status: "Pending",
+						rDate: new Date().toISOString().split("T")[0],
+						endWarranty,
+						remainTime,
 						stage: "orders",
-					});
+					} as PendingRow;
 				});
 
-				await Promise.all(createPromises);
+				applyCommand({
+					type: "createRows",
+					stage: "orders",
+					rows: newRows,
+				});
+
 				toast.success(`${parts.length} order(s) created`);
 			}
 			setIsFormModalOpen(false);
@@ -221,58 +257,20 @@ export const useOrdersPageHandlers = () => {
 	const handleCommit = async () => {
 		if (selectedRows.length === 0) return;
 
-		// 1. Validate against Beast Mode rules
-		const invalidRows: { id: string; errors: string[] }[] = [];
-		for (const row of selectedRows) {
-			const validationPayload = {
-				...row,
-				cntrRdg: row.cntrRdg || 0, // Ensure it passed as number (schema handles both)
-			};
-			const result = BeastModeSchema.safeParse(validationPayload);
-			if (!result.success) {
-				const errorMessages = Object.entries(result.error.flatten().fieldErrors)
-					.map(([field, msgs]) => `${field}: ${msgs?.[0]}`)
-					.join(", ");
-				invalidRows.push({
-					id: row.trackingId || "Unknown",
-					errors: [errorMessages],
-				});
-				// CRITICAL: BEAST MODE TRIGGER - SYNC WITH MODAL TIMER
-				// Records timestamp to enforce 30s deadline even if modal is closed.
-				triggerBeastMode(row.id, Date.now());
-			}
-		}
-
-		if (invalidRows.length > 0) {
-			const first = invalidRows[0];
-			toast.error(
-				`Validation Failed for Order ${first.id}: ${first.errors[0]}. Please edit the order to complete strict requirements.`,
-			);
-			return;
-		}
-
-		// 1b. Part number + description check
-		const rowsMissingParts = selectedRows.filter(
-			(row) => !row.partNumber?.trim() || !row.description?.trim(),
-		);
-		if (rowsMissingParts.length > 0) {
-			toast.error(
-				`${rowsMissingParts.length} order(s) missing part number or description. Complete all part fields before advancing.`,
-			);
-			return;
-		}
-
-		// 2. Attachment Check
-		const rowsWithoutPaths = selectedRows.filter((row) => !hasAttachment(row));
-
-		if (rowsWithoutPaths.length > 0) {
-			toast.error(`${rowsWithoutPaths.length} order(s) missing attachments.`);
-			return;
-		}
 		const ids = selectedRows.map((r) => r.id);
-		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "main" });
-		setSelectedRows([]);
-		toast.success("Committed to Main Sheet");
+
+		// Beast Mode validation is handled inside applyCommand — it returns false if rejected.
+		const applied = applyCommand({
+			type: "moveRows",
+			ids,
+			sourceStage: "orders",
+			destinationStage: "main",
+		});
+
+		if (applied) {
+			setSelectedRows([]);
+			toast.success("Committed to Main Sheet");
+		}
 	};
 
 	const handleConfirmBooking = async (
@@ -280,8 +278,6 @@ export const useOrdersPageHandlers = () => {
 		note: string,
 		status?: string,
 	) => {
-		const ids = selectedRows.map((r) => r.id);
-
 		// Part number + description required before booking
 		const rowsMissingParts = selectedRows.filter(
 			(row) => !row.partNumber?.trim() || !row.description?.trim(),
@@ -321,12 +317,17 @@ export const useOrdersPageHandlers = () => {
 	const handleUpdatePartStatus = async (status: string) => {
 		if (selectedRows.length === 0) return;
 
-		// 1. Persist all status changes to DB
-		await Promise.all(
-			selectedRows.map((row) =>
-				handleUpdateOrder(row.id, { partStatus: status }),
-			),
-		);
+		// 1. Apply patch commands for all status changes
+		for (const row of selectedRows) {
+			applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates: { partStatus: status },
+				previousValues: { partStatus: row.partStatus },
+			});
+		}
 
 		// 2. Check each unique VIN for auto-move to Call List
 		const uniqueVins = [
@@ -339,34 +340,22 @@ export const useOrdersPageHandlers = () => {
 
 			const vinIds = getVinAutoMoveIds({
 				stage: "orders",
-				stageRows: ordersRowData,
+				stageRows: effectiveOrdersData,
 				editedRowId: editedRow.id,
 				editedVin: vin,
 				nextPartStatus: status,
 			});
 
 			if (vinIds.length > 0) {
-				try {
-					await bulkUpdateStageMutation.mutateAsync({
-						ids: vinIds,
-						stage: "call",
-						silentErrorToast: true,
-					});
-					toast.success(
-						`All parts for VIN ${vin} arrived! Moved to Call List.`,
-						{ duration: 5000 },
-					);
-				} catch (error) {
-					console.error("[OrdersPage] vin_auto_move_failed", {
-						error,
-						vin,
-						stage: "orders",
-						ids: vinIds,
-					});
-					toast.error(
-						"Part status saved, but VIN group move failed - refresh and try again.",
-					);
-				}
+				applyCommand({
+					type: "moveRows",
+					ids: vinIds,
+					sourceStage: "orders",
+					destinationStage: "call",
+				});
+				toast.success(`All parts for VIN ${vin} arrived! Moved to Call List.`, {
+					duration: 5000,
+				});
 			}
 		}
 
@@ -433,13 +422,22 @@ export const useOrdersPageHandlers = () => {
 		}
 
 		const ids = getSelectedIds(selectedRows);
-		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "call" });
+		applyCommand({
+			type: "moveRows",
+			ids,
+			sourceStage: "orders",
+			destinationStage: "call",
+		});
 		setSelectedRows([]);
 		toast.success(`${selectedRows.length} order(s) sent to Call List`);
 	};
 
 	const handleDeleteSelected = async () => {
-		await bulkDeleteOrdersMutation.mutateAsync(getSelectedIds(selectedRows));
+		const ids = getSelectedIds(selectedRows);
+		applyCommand({
+			type: "deleteRows",
+			ids,
+		});
 		setSelectedRows([]);
 		toast.success("Order(s) deleted");
 		setShowDeleteConfirm(false);
@@ -447,7 +445,7 @@ export const useOrdersPageHandlers = () => {
 
 	return {
 		// Data
-		ordersRowData,
+		ordersRowData: effectiveOrdersData,
 
 		// State
 		gridApi,
@@ -480,6 +478,9 @@ export const useOrdersPageHandlers = () => {
 		handleShareToLogistics,
 		handleSendToCallList,
 		handleDeleteSelected,
-		bulkUpdateStageMutation,
+
+		// Draft session
+		applyCommand,
+		draftSaving,
 	};
 };

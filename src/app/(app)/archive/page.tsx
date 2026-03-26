@@ -35,12 +35,9 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-	useBulkDeleteOrdersMutation,
-	useOrdersQuery,
-	useSaveOrderMutation,
-} from "@/hooks/queries/useOrdersQuery";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import {
@@ -56,8 +53,16 @@ export default function ArchivePage() {
 	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("archive");
 	const { data: archiveRowData = [] } = useOrdersQuery("archive");
-	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation("archive");
-	const saveOrderMutation = useSaveOrderMutation();
+
+	// Draft session for undo/redo
+	const {
+		workingRows: draftWorkingRows,
+		applyCommand,
+		saving: draftSaving,
+	} = useDraftSession("archive");
+
+	// Use draft working rows if available, fallback to query data
+	const effectiveData = draftWorkingRows || archiveRowData;
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
@@ -71,15 +76,23 @@ export default function ArchivePage() {
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
-			return saveOrderMutation.mutateAsync({ id, updates, stage: "archive" });
+			applyCommand({
+				type: "patchRow",
+				id,
+				sourceStage: "archive",
+				destinationStage: "archive",
+				updates,
+				previousValues: {},
+			});
+			return Promise.resolve();
 		},
-		[saveOrderMutation],
+		[applyCommand],
 	);
 
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
-				const row = archiveRowData.find((r) => r.id === id);
+				const row = effectiveData.find((r) => r.id === id);
 				if (row) {
 					const newNoteHistory = appendTaggedUserNote(
 						getEffectiveNoteHistory(row),
@@ -87,15 +100,18 @@ export default function ArchivePage() {
 						"archive",
 					);
 
-					saveOrderMutation.mutate({
+					applyCommand({
+						type: "patchRow",
 						id,
+						sourceStage: "archive",
+						destinationStage: "archive",
 						updates: { archiveReason: reason, noteHistory: newNoteHistory },
-						stage: "archive",
+						previousValues: {},
 					});
 				}
 			}
 		},
-		[saveOrderMutation, archiveRowData],
+		[effectiveData, applyCommand],
 	);
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -104,8 +120,8 @@ export default function ArchivePage() {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 
-	// Sync selectedRows with the latest archiveRowData to prevent stale data
-	useSelectedRowsSync("archive", archiveRowData, selectedRows, setSelectedRows);
+	// Sync selectedRows with the latest effectiveData to prevent stale data
+	useSelectedRowsSync("archive", effectiveData, selectedRows, setSelectedRows);
 
 	const {
 		activeModal,
@@ -124,7 +140,7 @@ export default function ArchivePage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		// Update status/note and stage via saveOrderMutation (atomic)
+		// Update status/note and stage via applyCommand (atomic)
 		for (const row of selectedRows) {
 			const newNoteHistory = appendTaggedUserNote(
 				getEffectiveNoteHistory(row),
@@ -132,14 +148,16 @@ export default function ArchivePage() {
 				"reorder",
 			);
 
-			await saveOrderMutation.mutateAsync({
+			applyCommand({
+				type: "patchRow",
 				id: row.id,
+				sourceStage: "archive",
+				destinationStage: "orders",
 				updates: {
 					noteHistory: newNoteHistory,
 					status: "Reorder",
 				},
-				stage: "orders",
-				sourceStage: "archive",
+				previousValues: {},
 			});
 		}
 		setSelectedRows([]);
@@ -301,7 +319,7 @@ export default function ArchivePage() {
 					</div>
 
 					<div className="flex items-center gap-1.5">
-						<VINLineCounter rows={archiveRowData} />
+						<VINLineCounter rows={effectiveData} />
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
@@ -321,9 +339,10 @@ export default function ArchivePage() {
 
 				<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden mt-4">
 					<DataGrid
-						rowData={archiveRowData}
+						rowData={effectiveData}
 						columnDefs={columns}
 						gridStateKey="archive"
+						readOnly={draftSaving}
 						onSelectionChange={setSelectedRows}
 						onGridReady={(api) => setGridApi(api)}
 						showFloatingFilters={showFilters}
@@ -388,9 +407,10 @@ export default function ArchivePage() {
 					open={showDeleteConfirm}
 					onOpenChange={setShowDeleteConfirm}
 					onConfirm={async () => {
-						await bulkDeleteOrdersMutation.mutateAsync(
-							getSelectedIds(selectedRows),
-						);
+						applyCommand({
+							type: "deleteRows",
+							ids: getSelectedIds(selectedRows),
+						});
 						setSelectedRows([]);
 						toast.success("Archived record(s) deleted");
 						setShowDeleteConfirm(false);

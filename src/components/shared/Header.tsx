@@ -1,9 +1,19 @@
 "use client";
 
-import { Download, Redo2, RefreshCw, Search, Undo2, X } from "lucide-react";
+import {
+	Download,
+	Loader2,
+	Redo2,
+	RefreshCw,
+	Save,
+	Search,
+	Undo2,
+	X,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useDraftSession } from "@/hooks/useDraftSession";
 import { exportAllSystemDataCSV } from "@/lib/exportUtils";
 import {
 	ALLOWED_COMPANIES,
@@ -24,15 +34,23 @@ export const Header = React.memo(function Header() {
 	const [isExporting, setIsExporting] = useState(false);
 	const exportDropdownRef = useRef<HTMLDivElement>(null);
 
-	const undoStack = useAppStore((state) => state.undoStack);
-	const redoStack = useAppStore((state) => state.redoStack);
-	const undo = useAppStore((state) => state.undo);
-	const redo = useAppStore((state) => state.redo);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
 	const [searchInput, setSearchInput] = useState(searchTerm);
 	const hasSearchInput = searchInput.trim().length > 0;
+
+	// Draft session for undo/redo and save
+	const {
+		canUndo,
+		canRedo,
+		undoDraft,
+		redoDraft,
+		dirty,
+		saving,
+		pendingCommandCount,
+		saveDraft,
+	} = useDraftSession();
 
 	// Handle keyboard shortcuts
 	useEffect(() => {
@@ -45,6 +63,13 @@ export const Header = React.memo(function Header() {
 				target.isContentEditable ||
 				target.closest(".ag-cell-edit-wrapper"); // AG-Grid edit mode
 
+			// Ctrl+S must preventDefault regardless of focus to block the browser Save Page dialog
+			if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+				e.preventDefault();
+				if (!isEditing && dirty && !saving) saveDraft();
+				return;
+			}
+
 			if (isEditing) return;
 
 			// Cmd/Ctrl + K for search
@@ -55,7 +80,7 @@ export const Header = React.memo(function Header() {
 			// Cmd/Ctrl + Z for undo
 			if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
 				e.preventDefault();
-				undo();
+				if (!saving) undoDraft();
 			}
 			// Cmd/Ctrl + Y OR Cmd/Ctrl + Shift + Z for redo
 			if (
@@ -63,13 +88,13 @@ export const Header = React.memo(function Header() {
 				(e.key === "y" || (e.shiftKey && e.key === "z"))
 			) {
 				e.preventDefault();
-				redo();
+				if (!saving) redoDraft();
 			}
 		};
 
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [undo, redo]);
+	}, [undoDraft, redoDraft, saving, dirty, saveDraft]);
 
 	// Notification Check Interval (Throttled to reduce lag)
 	useEffect(() => {
@@ -224,21 +249,21 @@ export const Header = React.memo(function Header() {
 
 			{/* Right: Actions */}
 			<div className="flex items-center gap-3 ml-8">
-				{/* Action Buttons Group */}
+				{/* Undo / Redo / Save Button Group */}
 				<div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/5">
 					<button
 						type="button"
 						suppressHydrationWarning
-						onClick={undo}
-						disabled={undoStack.length === 0}
+						onClick={undoDraft}
+						disabled={!canUndo}
 						aria-label="Undo"
 						className={cn(
 							"p-2 rounded-lg transition-all",
-							undoStack.length > 0
+							canUndo
 								? "text-gray-400 hover:text-white hover:bg-white/10"
 								: "text-gray-700 cursor-not-allowed",
 						)}
-						title="Undo (Cmd+Z)"
+						title="Undo (Ctrl+Z)"
 					>
 						<Undo2 className="h-4 w-4" />
 					</button>
@@ -246,18 +271,45 @@ export const Header = React.memo(function Header() {
 					<button
 						type="button"
 						suppressHydrationWarning
-						onClick={redo}
-						disabled={redoStack.length === 0}
+						onClick={redoDraft}
+						disabled={!canRedo}
 						aria-label="Redo"
 						className={cn(
 							"p-2 rounded-lg transition-all",
-							redoStack.length > 0
+							canRedo
 								? "text-gray-400 hover:text-white hover:bg-white/10"
 								: "text-gray-700 cursor-not-allowed",
 						)}
-						title="Redo (Cmd+Shift+Z)"
+						title="Redo (Ctrl+Y)"
 					>
 						<Redo2 className="h-4 w-4" />
+					</button>
+					<div className="w-px h-4 bg-white/10" />
+					<button
+						type="button"
+						suppressHydrationWarning
+						onClick={() => saveDraft()}
+						disabled={!dirty || saving}
+						aria-label="Save draft"
+						className={cn(
+							"p-2 rounded-lg transition-all",
+							dirty && !saving
+								? "text-gray-400 hover:text-white hover:bg-white/10"
+								: "text-gray-700 cursor-not-allowed",
+						)}
+						title={
+							saving
+								? "Saving..."
+								: dirty
+									? `Save ${pendingCommandCount} change${pendingCommandCount !== 1 ? "s" : ""} (Ctrl+S)`
+									: "Save (Ctrl+S)"
+						}
+					>
+						{saving ? (
+							<Loader2 className="h-4 w-4 animate-spin" />
+						) : (
+							<Save className="h-4 w-4" />
+						)}
 					</button>
 				</div>
 

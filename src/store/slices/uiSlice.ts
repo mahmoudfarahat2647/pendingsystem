@@ -92,7 +92,7 @@ export const createUISlice: StateCreator<
 	},
 
 	addNote: (content, color) => {
-		get().pushUndo();
+		// NOTE: Sticky notes are UI-only, not included in draft session undo
 		set((state) => ({
 			notes: [
 				...state.notes,
@@ -107,7 +107,7 @@ export const createUISlice: StateCreator<
 	},
 
 	updateNote: (id, content) => {
-		get().pushUndo();
+		// NOTE: Sticky notes are UI-only, not included in draft session undo
 		set((state) => ({
 			notes: state.notes.map((note) =>
 				note.id === id ? { ...note, content } : note,
@@ -116,7 +116,7 @@ export const createUISlice: StateCreator<
 	},
 
 	deleteNote: (id) => {
-		get().pushUndo();
+		// NOTE: Sticky notes are UI-only, not included in draft session undo
 		set((state) => ({
 			notes: state.notes.filter((note) => note.id !== id),
 		}));
