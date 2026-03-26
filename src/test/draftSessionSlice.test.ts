@@ -338,4 +338,36 @@ describe("draftSessionSlice", () => {
 		expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(0);
 		expect(saveOrder).toHaveBeenCalledTimes(2);
 	});
+
+	it("preserves all pending commands beyond COMMAND_LIMIT (30) but caps the past stack", async () => {
+		const row = createRow("00000000-0000-4000-8000-000000000010", "orders");
+		seedStageData({ orders: [row] });
+
+		for (let i = 1; i <= 31; i++) {
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates: { partStatus: `Edit-${i}` },
+				previousValues: { partStatus: `Edit-${i - 1}` },
+			});
+		}
+
+		const { draftSession } = useAppStore.getState();
+		expect(draftSession.pendingCommands).toHaveLength(31);
+		expect(draftSession.past).toHaveLength(30);
+
+		const saveOrder = vi.fn().mockResolvedValue({ id: "real-id" });
+		const bulkUpdateStage = vi.fn().mockResolvedValue(undefined);
+		const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+		await useAppStore.getState().saveDraft({
+			saveOrder,
+			bulkUpdateStage,
+			bulkDelete,
+		});
+
+		expect(saveOrder).toHaveBeenCalledTimes(31);
+	});
 });

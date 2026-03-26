@@ -358,9 +358,7 @@ export const createDraftSessionSlice: StateCreator<
 			set((state) => {
 				const newSession: DraftSession = {
 					...state.draftSession,
-					pendingCommands: [...state.draftSession.pendingCommands, cmd].slice(
-						-COMMAND_LIMIT,
-					),
+					pendingCommands: [...state.draftSession.pendingCommands, cmd],
 					past: [...state.draftSession.past, cmd].slice(-COMMAND_LIMIT),
 					future: [],
 					dirty: true,
