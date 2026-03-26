@@ -14,6 +14,11 @@ export const env = createEnv({
 		GITHUB_PAT: z.string().optional(),
 		GITHUB_OWNER: z.string().optional(),
 		GITHUB_REPO: z.string().optional(),
+		DATABASE_URL: z.string().url(),
+		BETTER_AUTH_URL: z.string().url(),
+		BETTER_AUTH_SECRET: z.string().min(32),
+		RESEND_API_KEY: z.string().min(1),
+		RESEND_FROM_EMAIL: z.string().email(),
 	},
 	runtimeEnv: {
 		NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -26,5 +31,10 @@ export const env = createEnv({
 		GITHUB_PAT: process.env.GITHUB_PAT,
 		GITHUB_OWNER: process.env.GITHUB_OWNER,
 		GITHUB_REPO: process.env.GITHUB_REPO,
+		DATABASE_URL: process.env.DATABASE_URL,
+		BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+		BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+		RESEND_API_KEY: process.env.RESEND_API_KEY,
+		RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
 	},
 });
