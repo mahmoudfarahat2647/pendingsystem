@@ -11,6 +11,31 @@ The product is organized around five fixed operational stages:
 4. `booking`
 5. `archive`
 
+## Authentication
+
+The platform uses [Better Auth](https://better-auth.com) for admin-only authentication.
+
+### Login
+- Navigate to `/login` to sign in with username and password
+- No public sign-up — only pre-created admin accounts can log in
+- Sessions expire after **1 hour** with no automatic refresh
+
+### Forgot Password
+- Navigate to `/forgot-password` and enter your **username** (not email)
+- A reset link is sent to the admin's email address (kept private)
+- The form always shows a generic success message (prevents username enumeration)
+- Reset links expire after 1 hour
+
+### Session Behavior
+- Sessions are stored in the `auth_sessions` table
+- Middleware performs optimistic cookie-based redirects (Edge Runtime compatible)
+- Server layouts perform authoritative DB-backed session checks
+- All app routes and private API routes require a valid session
+
+### Sign Out
+- Click the **⋮** (three-dot) button in the sidebar user area
+- Select "Sign out" from the dropdown
+
 ## Workspace Experience
 
 ### App Shell and Navigation
@@ -20,7 +45,7 @@ The product is organized around five fixed operational stages:
 - Sidebar can collapse to icon-only mode.
 - Settings open from the sidebar profile area.
 - When an edit session is active for a VIN, sidebar navigation warns before discarding that edit context.
-- No route-level authentication or RBAC is implemented.
+- Route-level authentication is enforced via Better Auth (see Authentication section above).
 
 ### Header
 - Debounced global search input with `Cmd/Ctrl+K` focus shortcut.
@@ -212,7 +237,7 @@ The product is organized around five fixed operational stages:
 - Attachment columns are used when present in the database schema, with metadata fallback for older schemas.
 
 ## Current Constraints
-- No route-level authentication, RBAC, or server-enforced access control exists.
+- No RBAC or role-differentiated access control exists beyond the single admin role.
 - Settings password/lock is a client-side workflow guard, not a security boundary.
 - Theme customization is not implemented beyond the placeholder tab.
 - Main Sheet still shows share/print toolbar affordances that are not wired to handlers.
