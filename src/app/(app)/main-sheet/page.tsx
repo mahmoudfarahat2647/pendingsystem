@@ -320,10 +320,13 @@ export default function MainSheetPage() {
 							onExtract={() => gridApi?.exportDataAsCsv()}
 							onFilterToggle={() => setShowFilters(!showFilters)}
 							onReserve={() => {
-							const reservedRows = filterReservedRows(selectedRows, partStatuses);
-							if (reservedRows.length === 0) return;
-							printReservationLabels(reservedRows);
-						}}
+								const reservedRows = filterReservedRows(
+									selectedRows,
+									partStatuses,
+								);
+								if (reservedRows.length === 0) return;
+								printReservationLabels(reservedRows);
+							}}
 						/>
 
 						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">

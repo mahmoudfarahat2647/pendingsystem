@@ -296,10 +296,13 @@ export default function BookingPage() {
 									variant="ghost"
 									className="text-gray-400 hover:text-white h-8 w-8"
 									onClick={() => {
-									const reservedRows = filterReservedRows(selectedRows, partStatuses);
-									if (reservedRows.length === 0) return;
-									printReservationLabels(reservedRows);
-								}}
+										const reservedRows = filterReservedRows(
+											selectedRows,
+											partStatuses,
+										);
+										if (reservedRows.length === 0) return;
+										printReservationLabels(reservedRows);
+									}}
 									disabled={selectedRows.length === 0}
 								>
 									<Tag className="h-3.5 w-3.5" />

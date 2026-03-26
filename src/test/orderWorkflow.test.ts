@@ -738,7 +738,10 @@ describe("filterReservedRows", () => {
 	it("returns only rows whose partStatus matches the reserve label", () => {
 		const reservedRow = createMockRow({ id: "1", partStatus: "Reserve" });
 		const otherRow = createMockRow({ id: "2", partStatus: "Arrived" });
-		const result = filterReservedRows([reservedRow, otherRow], defaultPartStatuses);
+		const result = filterReservedRows(
+			[reservedRow, otherRow],
+			defaultPartStatuses,
+		);
 		expect(result).toEqual([reservedRow]);
 	});
 
