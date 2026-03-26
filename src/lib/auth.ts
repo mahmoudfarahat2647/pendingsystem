@@ -15,11 +15,7 @@ export const auth = betterAuth({
 		},
 	},
 	disabledPaths: ["/sign-up/email"],
-	plugins: [
-		username({
-			disabledPaths: ["/is-username-available"],
-		}),
-	],
+	plugins: [username()],
 	user: {
 		modelName: "auth_users",
 	},
