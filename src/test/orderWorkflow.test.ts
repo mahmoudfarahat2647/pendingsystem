@@ -3,6 +3,7 @@ import {
 	appendTaggedUserNote,
 	BLANK_VIN_BUCKET,
 	checkVinPartDuplicate,
+	filterReservedRows,
 	findSameOrderDuplicateIndices,
 	findSameOrderDuplicates,
 	formatVinForDisplay,
@@ -724,5 +725,66 @@ describe("getEffectiveNoteHistory", () => {
 		const row = createMockRow({ actionNote: "legacy note" });
 		// noteHistory is not set by createMockRow, so it is undefined → should fall back
 		expect(getEffectiveNoteHistory(row)).toBe("legacy note");
+	});
+});
+
+describe("filterReservedRows", () => {
+	const defaultPartStatuses = [
+		{ id: "reserve", label: "Reserve" },
+		{ id: "arrived", label: "Arrived" },
+		{ id: "not_arrived", label: "Not Arrived" },
+	];
+
+	it("returns only rows whose partStatus matches the reserve label", () => {
+		const reservedRow = createMockRow({ id: "1", partStatus: "Reserve" });
+		const otherRow = createMockRow({ id: "2", partStatus: "Arrived" });
+		const result = filterReservedRows([reservedRow, otherRow], defaultPartStatuses);
+		expect(result).toEqual([reservedRow]);
+	});
+
+	it("matches when the reserve label was renamed (id stays 'reserve')", () => {
+		const renamedStatuses = [
+			{ id: "reserve", label: "Reserved" },
+			{ id: "arrived", label: "Arrived" },
+		];
+		const reservedRow = createMockRow({ id: "1", partStatus: "Reserved" });
+		const otherRow = createMockRow({ id: "2", partStatus: "Reserve" });
+		const result = filterReservedRows([reservedRow, otherRow], renamedStatuses);
+		expect(result).toEqual([reservedRow]);
+	});
+
+	it("is case-insensitive and trim-tolerant", () => {
+		const row = createMockRow({ id: "1", partStatus: "  reserve  " });
+		const result = filterReservedRows([row], defaultPartStatuses);
+		expect(result).toEqual([row]);
+	});
+
+	it("ignores rows with non-reserve statuses in a mixed selection", () => {
+		const rows = [
+			createMockRow({ id: "1", partStatus: "Reserve" }),
+			createMockRow({ id: "2", partStatus: "Arrived" }),
+			createMockRow({ id: "3", partStatus: "Not Arrived" }),
+			createMockRow({ id: "4", partStatus: "Reserve" }),
+		];
+		const result = filterReservedRows(rows, defaultPartStatuses);
+		expect(result.map((r) => r.id)).toEqual(["1", "4"]);
+	});
+
+	it("returns an empty array when no selected rows qualify", () => {
+		const rows = [
+			createMockRow({ id: "1", partStatus: "Arrived" }),
+			createMockRow({ id: "2", partStatus: "Not Arrived" }),
+		];
+		expect(filterReservedRows(rows, defaultPartStatuses)).toEqual([]);
+	});
+
+	it("returns an empty array when the reserve status definition is absent", () => {
+		const noReserveStatuses = [{ id: "arrived", label: "Arrived" }];
+		const row = createMockRow({ id: "1", partStatus: "Arrived" });
+		expect(filterReservedRows([row], noReserveStatuses)).toEqual([]);
+	});
+
+	it("returns an empty array for an empty row list", () => {
+		expect(filterReservedRows([], defaultPartStatuses)).toEqual([]);
 	});
 });

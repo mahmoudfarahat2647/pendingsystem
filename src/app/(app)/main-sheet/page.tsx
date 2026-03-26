@@ -31,6 +31,7 @@ import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import {
 	appendTaggedUserNote,
+	filterReservedRows,
 	getEffectiveNoteHistory,
 	getSelectedIds,
 	getVinAutoMoveIds,
@@ -318,7 +319,11 @@ export default function MainSheetPage() {
 							onDelete={() => setShowDeleteConfirm(true)}
 							onExtract={() => gridApi?.exportDataAsCsv()}
 							onFilterToggle={() => setShowFilters(!showFilters)}
-							onReserve={() => printReservationLabels(selectedRows)}
+							onReserve={() => {
+							const reservedRows = filterReservedRows(selectedRows, partStatuses);
+							if (reservedRows.length === 0) return;
+							printReservationLabels(reservedRows);
+						}}
 						/>
 
 						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">

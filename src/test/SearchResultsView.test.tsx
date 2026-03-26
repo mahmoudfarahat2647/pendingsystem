@@ -92,8 +92,8 @@ const mocks = vi.hoisted(() => ({
 	storeState: {
 		searchTerm: "VIN123",
 		setSearchTerm: vi.fn(),
-		partStatuses: [],
-		bookingStatuses: [],
+		partStatuses: [] as { id: string; label: string; color: string }[],
+		bookingStatuses: [] as { id: string; label: string; color: string }[],
 	},
 	queryData: {
 		main: [] as PendingRow[],
@@ -424,6 +424,11 @@ describe("SearchResultsView", () => {
 		};
 		mocks.archiveConfirmReason = "duplicate";
 		mocks.storeState.searchTerm = "VIN123";
+		mocks.storeState.partStatuses = [
+			{ id: "reserve", label: "Reserve", color: "#2563eb" },
+			{ id: "arrived", label: "Arrived", color: "#10b981" },
+			{ id: "not_arrived", label: "Not Arrived", color: "#1f2937" },
+		];
 		mocks.queryData.main = [];
 		mocks.queryData.orders = [];
 		mocks.queryData.booking = [];
@@ -861,11 +866,13 @@ describe("SearchResultsView", () => {
 			id: "main-1",
 			stage: "main",
 			sourceType: "Main Sheet",
+			partStatus: "Reserve",
 		});
 		const secondRow = createRow({
 			id: "main-2",
 			stage: "main",
 			sourceType: "Main Sheet",
+			partStatus: "Reserve",
 		});
 		mocks.queryData.main = [firstRow, secondRow];
 
@@ -1132,11 +1139,13 @@ describe("SearchResultsView", () => {
 			id: "main-1",
 			stage: "main",
 			sourceType: "Main Sheet",
+			partStatus: "Reserve",
 		});
 		const ordersRow = createRow({
 			id: "orders-1",
 			stage: "orders",
 			sourceType: "Orders",
+			partStatus: "Not Arrived",
 		});
 		mocks.queryData.main = [mainRow];
 		mocks.queryData.orders = [ordersRow];
@@ -1152,11 +1161,37 @@ describe("SearchResultsView", () => {
 
 		fireEvent.click(reserveButton);
 
+		// Only the reserved row (mainRow) should be passed; ordersRow is skipped
 		expect(mocks.printReservationLabels).toHaveBeenCalledTimes(1);
-		expect(mocks.printReservationLabels).toHaveBeenCalledWith([
-			mainRow,
-			ordersRow,
-		]);
+		expect(mocks.printReservationLabels).toHaveBeenCalledWith([mainRow]);
+		expect(mocks.saveMutateAsync).not.toHaveBeenCalled();
+	});
+
+	it("does not call printReservationLabels when no selected rows are reserved", async () => {
+		const mainRow = createRow({
+			id: "main-1",
+			stage: "main",
+			sourceType: "Main Sheet",
+			partStatus: "Not Arrived",
+		});
+		const ordersRow = createRow({
+			id: "orders-1",
+			stage: "orders",
+			sourceType: "Orders",
+			partStatus: "Arrived",
+		});
+		mocks.queryData.main = [mainRow];
+		mocks.queryData.orders = [ordersRow];
+
+		renderView();
+		await triggerSelectionChanged([mainRow, ordersRow]);
+
+		const reserveButton = screen.getByTestId("search-toolbar-reserve");
+		expect(reserveButton).toBeEnabled();
+
+		fireEvent.click(reserveButton);
+
+		expect(mocks.printReservationLabels).not.toHaveBeenCalled();
 		expect(mocks.saveMutateAsync).not.toHaveBeenCalled();
 	});
 
