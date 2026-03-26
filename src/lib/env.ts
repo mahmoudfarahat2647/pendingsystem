@@ -2,6 +2,7 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
 export const env = createEnv({
+	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	client: {
 		NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
 		NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
