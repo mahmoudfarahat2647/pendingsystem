@@ -33,22 +33,20 @@ export function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 
 	// Auth redirect logic (optimistic cookie check — no DB calls in Edge)
+	// Note: only guards protected routes. Auth pages (login, forgot-password,
+	// reset-password) are handled by (auth)/layout.tsx which performs a real
+	// DB-validated session check, avoiding redirect loops caused by
+	// expired/tampered cookies that pass a presence-only check.
 	const sessionCookie = getSessionCookie(request);
-	const isAuthPage =
-		pathname === "/login" ||
-		pathname === "/forgot-password" ||
-		pathname === "/reset-password";
 
 	if (!sessionCookie && !isPublicPath(pathname)) {
+		// API routes should return 401 JSON, not a browser redirect
+		if (pathname.startsWith("/api/")) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
 		// Not authenticated, accessing protected route → redirect to login
 		const loginUrl = new URL("/login", request.url);
 		return NextResponse.redirect(loginUrl);
-	}
-
-	if (sessionCookie && isAuthPage) {
-		// Already authenticated, accessing auth page → redirect to dashboard
-		const dashboardUrl = new URL("/dashboard", request.url);
-		return NextResponse.redirect(dashboardUrl);
 	}
 
 	const response = NextResponse.next();

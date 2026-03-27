@@ -77,8 +77,12 @@ export async function POST(request: NextRequest) {
 
 			// Fire and forget — do NOT await. This prevents timing differences
 			// between "username found" and "username not found" paths.
-			void auth.api.requestPasswordReset({
+			auth.api.requestPasswordReset({
 				body: { email, redirectTo },
+			}).catch(() => {
+				// Intentionally suppressed — this is fire-and-forget.
+				// Errors here (mail outage, config) must not leak response timing
+				// or crash the worker.
 			});
 		}
 	} catch {

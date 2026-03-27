@@ -19,6 +19,7 @@ vi.mock("@/lib/auth", () => ({
 
 import { POST } from "@/app/api/password-reset/request/route";
 import { pool } from "@/lib/postgres";
+import { auth } from "@/lib/auth";
 
 function makeRequest(body: Record<string, unknown>, ip = "1.2.3.4") {
 	return new NextRequest("http://localhost/api/password-reset/request", {
@@ -76,5 +77,27 @@ describe("POST /api/password-reset/request", () => {
 
 		expect(res.status).toBe(200);
 		expect(data.success).toBe(true);
+	});
+
+	it("handles requestPasswordReset rejection gracefully", async () => {
+		// Mock a rejection from the password reset API
+		vi.mocked(auth.api.requestPasswordReset).mockRejectedValue(
+			new Error("Mail service down"),
+		);
+
+		vi.mocked(pool.query).mockResolvedValue({
+			rows: [{ email: "user@example.com" }],
+		} as never);
+
+		const req = makeRequest({ username: "user" }, "10.0.0.4");
+		const res = await POST(req);
+		const data = await res.json();
+
+		// Even though requestPasswordReset failed, the route should:
+		// 1. Still return 200 with generic success (no timing leak)
+		// 2. Not throw an unhandled rejection
+		expect(res.status).toBe(200);
+		expect(data.success).toBe(true);
+		expect(data.message).toContain("If that username exists");
 	});
 });
