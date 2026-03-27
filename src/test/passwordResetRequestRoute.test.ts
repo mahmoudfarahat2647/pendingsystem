@@ -66,6 +66,39 @@ describe("POST /api/password-reset/request", () => {
 		expect(data.message).toContain("If that username exists");
 	});
 
+	it("waits for password reset dispatch before returning", async () => {
+		let resolveReset: (() => void) | undefined;
+		vi.mocked(pool.query).mockResolvedValue({
+			rows: [{ email: "admin@example.com" }],
+		} as never);
+		vi.mocked(auth.api.requestPasswordReset).mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					resolveReset = resolve;
+				}) as never,
+		);
+
+		let settled = false;
+		const responsePromise = POST(makeRequest({ username: "admin" }, "10.0.0.5")).then(
+			(response) => {
+				settled = true;
+				return response;
+			},
+		);
+
+		await vi.waitFor(() => {
+			expect(auth.api.requestPasswordReset).toHaveBeenCalled();
+		});
+		expect(settled).toBe(false);
+
+		resolveReset?.();
+
+		const res = await responsePromise;
+		const data = await res.json();
+		expect(res.status).toBe(200);
+		expect(data.success).toBe(true);
+	});
+
 	it("returns same generic response when rate limited", async () => {
 		// Send 3 requests to fill the rate limit bucket
 		for (let i = 0; i < 3; i++) {

@@ -18,8 +18,7 @@ export const auth = betterAuth({
 		disableSignUp: true,
 		resetPasswordTokenExpiresIn: 3600,
 		sendResetPassword: async ({ user, url }) => {
-			// Non-awaited fire-and-forget to prevent timing attacks
-			void sendResetEmail({ email: user.email, name: user.name }, url);
+			await sendResetEmail({ email: user.email, name: user.name }, url);
 		},
 	},
 	disabledPaths: ["/sign-up/email"],

@@ -77,15 +77,17 @@ export async function POST(request: NextRequest) {
 			const email = result.rows[0].email;
 			const redirectTo = `${process.env.BETTER_AUTH_URL}/reset-password`;
 
-			// Fire and forget — do NOT await. This prevents timing differences
-			// between "username found" and "username not found" paths.
-			auth.api.requestPasswordReset({
-				body: { email, redirectTo },
-			}).catch(() => {
-				// Intentionally suppressed — this is fire-and-forget.
-				// Errors here (mail outage, config) must not leak response timing
-				// or crash the worker.
-			});
+			try {
+				await auth.api.requestPasswordReset({
+					body: { email, redirectTo },
+				});
+			} catch (error) {
+				console.error("Password reset email dispatch failed", {
+					username,
+					email,
+					error: error instanceof Error ? error.message : String(error),
+				});
+			}
 		}
 	} catch {
 		// Swallow errors — always return generic response
