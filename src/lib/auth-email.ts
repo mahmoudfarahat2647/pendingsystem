@@ -1,10 +1,10 @@
-import { resend } from "./resend";
+import { getResend } from "./resend";
 
 export async function sendResetEmail(
 	user: { email: string; name: string },
 	resetUrl: string,
 ): Promise<void> {
-	await resend.emails.send({
+	await getResend().emails.send({
 		from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
 		to: user.email,
 		subject: "Reset your password",
