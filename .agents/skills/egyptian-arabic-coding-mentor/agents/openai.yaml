@@ -1,4 +1,0 @@
-interface:
-  display_name: "Coding Mentor Masry"
-  short_description: "Teach code in practical Egyptian Arabic"
-  default_prompt: "Use $egyptian-arabic-coding-mentor to explain this plan, bug, review, or solution in Egyptian Arabic while teaching the reasoning."

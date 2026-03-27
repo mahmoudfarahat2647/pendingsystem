@@ -59,7 +59,10 @@ const { betterAuth } = await import("better-auth");
 const { username } = await import("better-auth/plugins/username");
 const { Pool } = await import("pg");
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({
+	connectionString: process.env.DATABASE_URL,
+	ssl: { rejectUnauthorized: false },
+});
 
 // Create a local auth instance with sign-up enabled for seeding
 const auth = betterAuth({

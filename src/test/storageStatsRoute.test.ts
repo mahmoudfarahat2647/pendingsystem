@@ -11,6 +11,15 @@ vi.mock("next/server", () => ({
 	},
 }));
 
+// Mock Better Auth session — always return a valid session for storage-stats tests
+vi.mock("@/lib/auth", () => ({
+	auth: {
+		api: {
+			getSession: vi.fn().mockResolvedValue({ user: { id: "test-user" } }),
+		},
+	},
+}));
+
 // Mock @supabase/supabase-js
 const mockRpc = vi.fn();
 const mockListBuckets = vi.fn();
@@ -47,7 +56,8 @@ describe("GET /api/storage-stats", () => {
 
 	async function callGET() {
 		const { GET } = await import("../app/api/storage-stats/route");
-		return GET();
+		const req = new Request("http://localhost/api/storage-stats");
+		return GET(req as unknown as import("next/server").NextRequest);
 	}
 
 	it("should return 500 when env vars are missing", async () => {
@@ -130,7 +140,7 @@ describe("GET /api/storage-stats", () => {
 
 		const routePromise = callGET();
 
-		await vi.advanceTimersByTimeAsync(5_000);
+		await vi.advanceTimersByTimeAsync(31_000);
 
 		const response = await routePromise;
 		expect(response.status).toBe(200);

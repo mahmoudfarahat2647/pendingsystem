@@ -1,7 +1,7 @@
 "use client";
 
 interface AuthPageShellProps {
-	title: string;
+	title?: string;
 	subtitle?: string;
 	children: React.ReactNode;
 }
@@ -13,84 +13,45 @@ export function AuthPageShell({
 }: AuthPageShellProps) {
 	return (
 		<div
-			className="min-h-screen flex items-center justify-center relative"
+			className="min-h-screen flex items-center justify-start relative px-4 sm:px-12 md:px-24 xl:px-48"
 			style={{
 				backgroundImage: "url('/auth-background.webp')",
 				backgroundSize: "cover",
 				backgroundPosition: "center",
 			}}
 		>
-			{/* Dark overlay */}
-			<div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+			<div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent pointer-events-none" />
 
 			{/* Card */}
-			<div className="relative z-10 w-full max-w-md mx-4">
-				<div className="bg-black/80 border border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-md">
+			<div className="relative z-10 w-full max-w-[380px]">
+				<div className="bg-[#0A0A0A]/60 border border-white/5 border-t-white/10 rounded-3xl px-8 pb-8 pt-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-all relative overflow-hidden flex flex-col items-center">
+					{/* Outer inner glow effect */}
+					<div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] to-transparent pointer-events-none" />
+
 					{/* Logo mark */}
-					<div className="flex items-center gap-3 mb-8">
-						<div className="w-10 h-10 bg-[#FFCC00] rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(255,204,0,0.3)]">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 32 32"
-								className="w-6 h-6"
-								role="img"
-								aria-label="pendingsystem Logo"
-							>
-								<g transform="translate(16, 16)">
-									<rect
-										x="-8"
-										y="-13"
-										width="4.5"
-										height="26"
-										rx="2.25"
-										fill="#000000"
-										transform="rotate(-8)"
-									/>
-									<rect
-										x="3.5"
-										y="-13"
-										width="4.5"
-										height="26"
-										rx="2.25"
-										fill="#000000"
-										transform="rotate(-8)"
-									/>
-									<rect
-										x="-13"
-										y="-6.25"
-										width="26"
-										height="4.5"
-										rx="2.25"
-										fill="#000000"
-										transform="rotate(-8)"
-									/>
-									<rect
-										x="-13"
-										y="1.75"
-										width="26"
-										height="4.5"
-										rx="2.25"
-										fill="#000000"
-										transform="rotate(-8)"
-									/>
-								</g>
-							</svg>
-						</div>
-						<div>
-							<p className="font-bold text-white text-lg leading-none">
-								BODY&PAINT
-							</p>
-							<p className="text-[#FFCC00] text-xs tracking-[0.2em] leading-none mt-1">
-								pending system
-							</p>
+					<div className="flex flex-col items-center mb-10 relative z-10 w-full">
+						<div className="relative inline-block">
+							<h1 className="text-[40px] leading-tight font-extrabold tracking-widest text-white">
+								Eim
+							</h1>
+							<div className="absolute -bottom-1 left-0 right-0 h-1 bg-[#FFCC00] rounded-sm shadow-[0_0_10px_rgba(255,204,0,0.4)]"></div>
 						</div>
 					</div>
 
-					<h1 className="text-2xl font-bold text-white mb-1">{title}</h1>
-					{subtitle && <p className="text-gray-400 text-sm mb-6">{subtitle}</p>}
+					{title && <h2 className="text-xl font-bold text-white/90 mb-1 text-center w-full relative z-10">{title}</h2>}
+					{subtitle && <p className="text-white/40 text-sm mb-8 text-center w-full relative z-10">{subtitle}</p>}
 
-					{children}
+					<div className="w-full relative z-10">
+						{children}
+					</div>
 				</div>
+			</div>
+
+			<div className="absolute bottom-12 left-0 right-0 flex flex-col items-center justify-center z-10 select-none pointer-events-none">
+				<div className="w-64 h-[2px] bg-gradient-to-r from-transparent via-[#FFCC00]/80 to-transparent mb-4 shadow-[0_0_15px_rgba(255,204,0,0.6)]" />
+				<p className="text-[16px] tracking-[0.8em] uppercase font-thin text-white/20 ml-[0.2em] [text-shadow:-1px_-1px_1px_rgba(0,0,0,0.8),_1px_1px_1px_rgba(255,255,255,0.15)]">
+					pending system
+				</p>
 			</div>
 		</div>
 	);

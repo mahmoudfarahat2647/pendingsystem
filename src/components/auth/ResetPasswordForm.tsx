@@ -65,56 +65,56 @@ export function ResetPasswordForm() {
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-			<div className="space-y-2">
-				<Label htmlFor="newPassword" className="text-gray-300 text-sm">
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
+				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
 					New Password
-				</Label>
-				<Input
+				</legend>
+				<input
 					id="newPassword"
 					type="password"
 					autoComplete="new-password"
-					placeholder="Enter new password"
-					className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#FFCC00]/50 focus:ring-[#FFCC00]/20"
+					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
 					{...register("newPassword")}
 				/>
-				{errors.newPassword && (
-					<p className="text-red-400 text-xs">{errors.newPassword.message}</p>
-				)}
-			</div>
+			</fieldset>
+			{errors.newPassword && (
+				<p className="text-red-400 text-xs -mt-4">{errors.newPassword.message}</p>
+			)}
 
-			<div className="space-y-2">
-				<Label htmlFor="confirmPassword" className="text-gray-300 text-sm">
+			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
+				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
 					Confirm Password
-				</Label>
-				<Input
+				</legend>
+				<input
 					id="confirmPassword"
 					type="password"
 					autoComplete="new-password"
-					placeholder="Confirm new password"
-					className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#FFCC00]/50 focus:ring-[#FFCC00]/20"
+					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
 					{...register("confirmPassword")}
 				/>
-				{errors.confirmPassword && (
-					<p className="text-red-400 text-xs">
-						{errors.confirmPassword.message}
-					</p>
-				)}
-			</div>
+			</fieldset>
+			{errors.confirmPassword && (
+				<p className="text-red-400 text-xs -mt-4">
+					{errors.confirmPassword.message}
+				</p>
+			)}
 
 			{error && (
-				<div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+				<div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mt-2">
 					<p className="text-red-400 text-sm">{error}</p>
 				</div>
 			)}
 
-			<Button
-				type="submit"
-				disabled={isSubmitting}
-				className="w-full bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black font-bold h-11"
-			>
-				{isSubmitting ? "Resetting..." : "Reset Password"}
-			</Button>
+			<div className="pt-2">
+				<Button
+					type="submit"
+					disabled={isSubmitting}
+					className="w-full bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black font-bold h-10 rounded-md transition-all active:scale-[0.98]"
+				>
+					{isSubmitting ? "Resetting..." : "Reset Password"}
+				</Button>
+			</div>
 		</form>
 	);
 }
