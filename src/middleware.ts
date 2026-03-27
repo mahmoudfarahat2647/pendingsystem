@@ -1,4 +1,3 @@
-import { getSessionCookie } from "better-auth/cookies";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -37,7 +36,11 @@ export function middleware(request: NextRequest) {
 	// reset-password) are handled by (auth)/layout.tsx which performs a real
 	// DB-validated session check, avoiding redirect loops caused by
 	// expired/tampered cookies that pass a presence-only check.
-	const sessionCookie = getSessionCookie(request);
+	// Inline cookie check — avoids better-auth/cookies import which transitively
+	// pulls in jose (CompressionStream) and breaks Edge Runtime on Vercel.
+	const sessionCookie =
+		request.cookies.get("better-auth.session_token") ||
+		request.cookies.get("__Secure-better-auth.session_token");
 
 	if (!sessionCookie && !isPublicPath(pathname)) {
 		// API routes should return 401 JSON, not a browser redirect
