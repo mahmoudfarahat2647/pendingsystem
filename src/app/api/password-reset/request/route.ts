@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { pool } from "@/lib/postgres";
 
+export const runtime = "nodejs";
+
 // Simple in-memory rate limiter: ip -> [timestamp, ...]
 const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_MAX = 3;
