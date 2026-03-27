@@ -1,10 +1,15 @@
 import { redirect } from "next/navigation";
+import { getServerSession } from "@/lib/auth-session";
 
 /**
- * Root page that redirects to the dashboard.
+ * Root page that redirects based on session state.
  *
- * This ensures users land on the main dashboard.
+ * Authenticated users land on the dashboard; unauthenticated users go to login.
  */
-export default function RootPage() {
-	redirect("/dashboard");
+export default async function RootPage() {
+	const session = await getServerSession();
+	if (session) {
+		redirect("/dashboard");
+	}
+	redirect("/login");
 }

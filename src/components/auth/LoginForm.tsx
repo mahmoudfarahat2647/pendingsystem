@@ -1,0 +1,99 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
+import { type LoginFormData, LoginFormSchema } from "@/schemas/auth.schema";
+
+export function LoginForm() {
+	const router = useRouter();
+	const [error, setError] = useState<string | null>(null);
+
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+	} = useForm<LoginFormData>({
+		resolver: zodResolver(LoginFormSchema),
+	});
+
+	const onSubmit = async (data: LoginFormData) => {
+		setError(null);
+		const result = await authClient.signIn.username({
+			username: data.username,
+			password: data.password,
+		});
+		if (result.error) {
+			setError(result.error.message ?? "Invalid username or password");
+			return;
+		}
+		router.replace("/dashboard");
+	};
+
+	return (
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
+				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+					Username
+				</legend>
+				<input
+					id="username"
+					type="text"
+					autoComplete="username"
+					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
+					{...register("username")}
+				/>
+			</fieldset>
+			{errors.username && (
+				<p className="text-red-400 text-xs -mt-4">{errors.username.message}</p>
+			)}
+
+			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
+				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+					Password
+				</legend>
+				<input
+					id="password"
+					type="password"
+					autoComplete="current-password"
+					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
+					{...register("password")}
+				/>
+			</fieldset>
+			{errors.password && (
+				<p className="text-red-400 text-xs -mt-4">{errors.password.message}</p>
+			)}
+
+			{error && (
+				<div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mt-2">
+					<p className="text-red-400 text-sm">{error}</p>
+				</div>
+			)}
+
+			<div className="pt-2">
+				<Button
+					type="submit"
+					disabled={isSubmitting}
+					className="w-full bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black font-bold h-10 rounded-md transition-all active:scale-[0.98]"
+				>
+					{isSubmitting ? "Signing in..." : "Sign In"}
+				</Button>
+			</div>
+
+			<p className="text-center text-sm pt-4">
+				<Link
+					href="/forgot-password"
+					className="text-[#FFCC00] hover:text-[#FFCC00]/80 transition-colors"
+				>
+					Forgot Password?
+				</Link>
+			</p>
+		</form>
+	);
+}

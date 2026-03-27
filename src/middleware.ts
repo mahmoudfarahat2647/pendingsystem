@@ -1,10 +1,26 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+// Paths that don't require authentication
+const PUBLIC_PATHS = [
+	"/login",
+	"/forgot-password",
+	"/reset-password",
+	"/api/auth",
+	"/api/health",
+	"/api/password-reset",
+];
+
+function isPublicPath(pathname: string): boolean {
+	return PUBLIC_PATHS.some(
+		(p) => pathname === p || pathname.startsWith(p + "/"),
+	);
+}
+
 /**
  * Security middleware for production hardening.
  *
- * Applies security headers to all responses:
+ * Applies auth redirect logic and security headers to all responses:
  * - X-Frame-Options: DENY
  * - X-Content-Type-Options: nosniff
  * - X-XSS-Protection
@@ -13,6 +29,29 @@ import { NextResponse } from "next/server";
  * - Content-Security-Policy (development-friendly: 'unsafe-eval' removed in production)
  */
 export function middleware(request: NextRequest) {
+	const { pathname } = request.nextUrl;
+
+	// Auth redirect logic (optimistic cookie check — no DB calls in Edge)
+	// Note: only guards protected routes. Auth pages (login, forgot-password,
+	// reset-password) are handled by (auth)/layout.tsx which performs a real
+	// DB-validated session check, avoiding redirect loops caused by
+	// expired/tampered cookies that pass a presence-only check.
+	// Inline cookie check — avoids better-auth/cookies import which transitively
+	// pulls in jose (CompressionStream) and breaks Edge Runtime on Vercel.
+	const sessionCookie =
+		request.cookies.get("better-auth.session_token") ||
+		request.cookies.get("__Secure-better-auth.session_token");
+
+	if (!sessionCookie && !isPublicPath(pathname)) {
+		// API routes should return 401 JSON, not a browser redirect
+		if (pathname.startsWith("/api/")) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+		// Not authenticated, accessing protected route → redirect to login
+		const loginUrl = new URL("/login", request.url);
+		return NextResponse.redirect(loginUrl);
+	}
+
 	const response = NextResponse.next();
 
 	// Security headers

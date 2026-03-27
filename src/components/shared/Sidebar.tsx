@@ -27,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import { SettingsModal } from "./SettingsModal";
+import { SidebarUserMenu } from "./SidebarUserMenu";
 
 interface NavItem {
 	href: string;
@@ -382,14 +383,17 @@ export const Sidebar = React.memo(function Sidebar() {
 						)}
 					</button>
 					{!isCollapsed && (
-						<button
-							type="button"
-							className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
-							aria-label="User menu"
-							onClick={() => setSettingsOpen(true)}
-						>
-							<MoreVertical className="h-4 w-4" />
-						</button>
+						<SidebarUserMenu
+							trigger={
+								<button
+									type="button"
+									className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+									aria-label="Sign out menu"
+								>
+									<MoreVertical className="h-4 w-4" />
+								</button>
+							}
+						/>
 					)}
 				</div>
 			</div>

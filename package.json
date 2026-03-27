@@ -23,9 +23,11 @@
 		"docs:validate": "node scripts/validate-docs.js",
 		"docs:extract": "node scripts/extract-jsdoc.js",
 		"testsprite": "echo \"To run TestSprite tests, use an MCP-compatible IDE and enter: Help me test this project with TestSprite.\"",
-		"commit": "pwsh scripts/quick-commit.ps1"
+		"commit": "pwsh scripts/quick-commit.ps1",
+		"auth:seed-admin": "node scripts/seed-admin-user.mjs"
 	},
 	"dependencies": {
+		"@hookform/resolvers": "^5.2.2",
 		"@hugeicons/core-free-icons": "^3.1.1",
 		"@hugeicons/react": "^1.1.4",
 		"@radix-ui/react-alert-dialog": "^1.1.15",
@@ -45,19 +47,24 @@
 		"@tanstack/react-query-devtools": "^5.91.2",
 		"ag-grid-community": "^32.3.3",
 		"ag-grid-react": "^32.3.3",
+		"better-auth": "^1.5.6",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"cmdk": "^1.1.1",
 		"date-fns": "^4.1.0",
 		"framer-motion": "^12.23.26",
+		"kysely": "^0.28.14",
 		"lucide-react": "^0.468.0",
 		"motion": "^12.27.0",
 		"next": "^15.5.12",
 		"nodemailer": "^8.0.1",
+		"pg": "^8.20.0",
 		"react": "^19.0.0",
 		"react-day-picker": "^9.13.0",
 		"react-dom": "^19.0.0",
+		"react-hook-form": "^7.72.0",
 		"recharts": "^2.15.0",
+		"resend": "^6.9.4",
 		"sonner": "^1.7.1",
 		"tailwind-merge": "^2.6.0",
 		"zod": "^4.3.5",
@@ -70,6 +77,7 @@
 		"@testing-library/react": "^16.3.1",
 		"@testing-library/user-event": "^14.6.1",
 		"@types/node": "^20.19.37",
+		"@types/pg": "^8.20.0",
 		"@types/react": "^19.0.0",
 		"@types/react-dom": "^19.0.0",
 		"@vitejs/plugin-react": "^5.1.2",
@@ -82,5 +90,8 @@
 		"tailwindcss": "^3.4.17",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.16"
+	},
+	"optionalDependencies": {
+		"@opentelemetry/api": "^1.9.1"
 	}
 }

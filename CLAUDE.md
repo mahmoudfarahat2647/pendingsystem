@@ -62,6 +62,17 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 ### App Shell
 `src/app/layout.tsx` -> `src/app/(app)/layout.tsx` -> `AppShell` (Sidebar + Header + error boundary). All application routes live under `src/app/(app)/`.
 
+### Authentication Architecture
+- **Library**: Better Auth with username plugin, direct pg connection via `DATABASE_URL`
+- **Tables**: `auth_users`, `auth_sessions`, `auth_accounts`, `auth_verifications` (prefixed to avoid collisions)
+- **Server config**: `src/lib/auth.ts` — exported `auth` instance
+- **Client config**: `src/lib/auth-client.ts` — exported `authClient` with `usernameClient` plugin
+- **Session helper**: `src/lib/auth-session.ts` — `getServerSession()` for RSC/Route Handlers
+- **Route handler**: `src/app/api/auth/[...all]/route.ts` — Better Auth catch-all
+- **Protection**: Middleware (optimistic cookie check) + `(app)/layout.tsx` (authoritative DB check)
+- **Admin setup**: Run `npm run auth:seed-admin` after setting `AUTH_ADMIN_*` env vars in `.env.local`
+- **Session expiry**: 1 hour, no refresh (`session.expiresIn: 3600`, `session.disableSessionRefresh: true`)
+
 ### Key Cross-Cutting Components
 - **`BookingCalendarModal`** - shared booking workflow modal used across multiple stages
 - **`SearchResultsView`** - aggregates all five stage queries for global header search
@@ -84,7 +95,7 @@ When making changes, update accordingly:
 
 ## Known Constraints
 
-- No authentication gate is implemented.
+- Authentication uses Better Auth (username+password only, admin-only, 1-hour sessions).
 - Theme customization tab in Settings is a placeholder only.
 - `CloudSync` is a legacy migration utility (Zustand -> Supabase), not the live sync path.
 - Some legacy Zustand stage arrays remain in the store for compatibility; do not expand that pattern.

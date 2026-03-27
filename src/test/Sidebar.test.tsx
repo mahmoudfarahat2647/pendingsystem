@@ -56,6 +56,12 @@ vi.mock("@/components/shared/SettingsModal", () => ({
 	SettingsModal: () => null,
 }));
 
+vi.mock("@/components/shared/SidebarUserMenu", () => ({
+	SidebarUserMenu: ({ trigger }: { trigger: React.ReactNode }) => (
+		<div data-testid="sign-out-menu">{trigger}</div>
+	),
+}));
+
 describe("Sidebar", () => {
 	beforeEach(() => {
 		navigationMocks.pathname = "/orders";
@@ -74,5 +80,10 @@ describe("Sidebar", () => {
 		await user.click(screen.getByRole("link", { name: /go to dashboard/i }));
 
 		expect(navigationMocks.push).toHaveBeenCalledWith("/dashboard");
+	});
+
+	it("shows the sign-out menu trigger when sidebar is expanded", () => {
+		render(<Sidebar />);
+		expect(screen.getByTestId("sign-out-menu")).toBeInTheDocument();
 	});
 });
