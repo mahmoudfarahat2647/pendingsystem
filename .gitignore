@@ -66,3 +66,27 @@ next-env.d.ts
 
 # Git worktrees
 .worktrees/
+
+# Superpowers
+.superpowers/
+
+# docs
+docs/superpowers/specs/*.md
+docs/superpowers/specs/*.txt
+docs/superpowers/specs/*.html
+docs/superpowers/specs/*.md
+docs/superpowers/specs/*.json
+docs/superpowers/specs/*.yaml
+docs/superpowers/specs/*.yml
+docs/superpowers/specs/*.js
+docs/superpowers/specs/*.ts
+docs/superpowers/specs/*.tsx
+docs/superpowers/specs/*.css
+docs/superpowers/specs/*.scss
+docs/superpowers/specs/*.sass
+docs/superpowers/specs/*.less
+docs/superpowers/specs/*.styl
+docs/superpowers/specs/*.scss
+docs/superpowers/specs/*.sass
+docs/superpowers/specs/*.less
+docs/superpowers/specs/*.styl   
