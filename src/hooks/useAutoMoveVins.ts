@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { AUTO_MOVE_DEBOUNCE_MS } from "@/lib/constants";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
@@ -22,6 +23,9 @@ export const useAutoMoveVins = () => {
 
 		// Prevent re-entry during processing
 		if (isProcessingRef.current) return;
+
+		// Track the inner reset timeout so it can be cancelled on unmount
+		let resetTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
 		// Debounce slightly to allow multiple rapid changes to settle
 		const timeoutId = setTimeout(() => {
@@ -63,12 +67,15 @@ export const useAutoMoveVins = () => {
 				sendToCallList(idsToMove);
 
 				// Reset flag after state has settled
-				setTimeout(() => {
+				resetTimeoutId = setTimeout(() => {
 					isProcessingRef.current = false;
-				}, 500);
+				}, AUTO_MOVE_DEBOUNCE_MS);
 			}
-		}, 500);
+		}, AUTO_MOVE_DEBOUNCE_MS);
 
-		return () => clearTimeout(timeoutId);
+		return () => {
+			clearTimeout(timeoutId);
+			clearTimeout(resetTimeoutId);
+		};
 	}, [rowData, sendToCallList]);
 };

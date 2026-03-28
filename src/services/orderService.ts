@@ -461,6 +461,7 @@ export const orderService = {
 			.from("orders")
 			.select("id, vin, stage, metadata")
 			.ilike("vin", normalizedVin)
+			.filter("metadata->>partNumber", "ilike", normalizedPart)
 			.limit(100);
 
 		if (error) {
@@ -505,12 +506,11 @@ export const orderService = {
 		const normalizedPart = partNumber.trim().toUpperCase();
 		const normalizedDesc = currentDescription.trim().toLowerCase();
 
-		// NOTE: Scans existing orders for part-description conflicts.
-		// A proper DB-level partNumber filter requires a dedicated column or GIN index.
 		const { data, error } = await supabase
 			.from("orders")
 			.select("id, vin, stage, metadata")
-			.limit(1000);
+			.filter("metadata->>partNumber", "ilike", normalizedPart)
+			.limit(100);
 
 		if (error) {
 			console.warn(

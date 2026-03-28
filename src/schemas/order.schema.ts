@@ -165,6 +165,28 @@ export const PendingRowSchema = z
 		};
 	});
 
+// ReminderInputSchema — used for form submission only (not for mapSupabaseOrder).
+// Adds future-date validation on top of the base ReminderSchema shape.
+// Keep ReminderSchema unchanged inside PendingRowSchema to avoid rejecting
+// historical reminders with past dates already stored in the database.
+export const ReminderInputSchema = z
+	.object({
+		date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+		time: z.string().regex(/^\d{2}:\d{2}$/),
+		subject: z.string(),
+	})
+	.nullable()
+	.superRefine((val, ctx) => {
+		if (val === null) return;
+		const reminderDateTime = new Date(`${val.date}T${val.time}`);
+		if (reminderDateTime <= new Date()) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Reminder date/time must be in the future",
+			});
+		}
+	});
+
 // Infer types from schemas
 type Status = z.infer<typeof StatusSchema>;
 export type PartEntry = z.infer<typeof PartEntrySchema>;

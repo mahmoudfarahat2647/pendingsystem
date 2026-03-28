@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
+import { ClientErrorBoundary } from "@/components/shared/ClientErrorBoundary";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardStatsQuery } from "@/hooks/queries/useDashboardStatsQuery";
 import { useStorageStats } from "@/hooks/useStorageStats";
@@ -233,6 +234,7 @@ export default function DashboardPage() {
 			{/* Bottom Grid */}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 				<div className="animate-in fade-in slide-in-from-bottom-4 h-full">
+					<ClientErrorBoundary fallbackTitle="Storage Chart Error">
 					<Suspense
 						fallback={
 							<Card className="bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden h-full">
@@ -346,9 +348,11 @@ export default function DashboardPage() {
 							</CardContent>
 						</Card>
 					</Suspense>
+					</ClientErrorBoundary>
 				</div>
 
 				<div className="animate-in fade-in slide-in-from-bottom-4 h-full">
+					<ClientErrorBoundary fallbackTitle="Distribution Chart Error">
 					<Suspense
 						fallback={
 							<Card className="bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden h-full">
@@ -389,6 +393,7 @@ export default function DashboardPage() {
 							</CardContent>
 						</Card>
 					</Suspense>
+					</ClientErrorBoundary>
 				</div>
 			</div>
 		</div>

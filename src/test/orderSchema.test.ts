@@ -1,5 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { PendingRowSchema } from "@/schemas/order.schema";
+import { PendingRowSchema, ReminderInputSchema } from "@/schemas/order.schema";
+
+describe("ReminderInputSchema", () => {
+	const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+	const futureDateStr = futureDate.toISOString().slice(0, 10);
+
+	it("accepts null", () => {
+		expect(ReminderInputSchema.safeParse(null).success).toBe(true);
+	});
+
+	it("accepts a future date/time", () => {
+		const result = ReminderInputSchema.safeParse({
+			date: futureDateStr,
+			time: "10:00",
+			subject: "Follow up",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects a past date/time", () => {
+		const result = ReminderInputSchema.safeParse({
+			date: "2000-01-01",
+			time: "00:00",
+			subject: "Old reminder",
+		});
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error.issues[0]?.message).toMatch(/future/i);
+		}
+	});
+});
 
 describe("PendingRowSchema - Array Field Handling", () => {
 	it("should validate string fields correctly", () => {

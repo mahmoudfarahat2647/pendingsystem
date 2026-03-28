@@ -3,6 +3,8 @@
 import { format } from "date-fns";
 import { Bell, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { ReminderInputSchema } from "@/schemas/order.schema";
 import { Button } from "@/components/ui/button";
 import DateTimePicker from "@/components/ui/date-time-picker";
 import {
@@ -74,6 +76,22 @@ export const EditReminderModal = ({
 		if (dateTime) {
 			const date = format(dateTime, "yyyy-MM-dd");
 			const time = format(dateTime, "HH:mm");
+
+			// Validate that newly entered reminders are in the future.
+			// Skip the check when the user is editing an existing reminder without
+			// changing its date/time (e.g. updating only the subject).
+			const isDateUnchanged =
+				initialData?.date === date && initialData?.time === time;
+			if (!isDateUnchanged) {
+				const result = ReminderInputSchema.safeParse({ date, time, subject });
+				if (!result.success) {
+					toast.error(
+						result.error.issues[0]?.message ?? "Reminder must be in the future",
+					);
+					return;
+				}
+			}
+
 			onSave({ date, time, subject });
 		} else {
 			// If cleared or invalid, defaulting to today

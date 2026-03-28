@@ -51,11 +51,11 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 	];
 
 	const handleUnlock = (attempt: string) => {
-		// Get password from environment variable (injected at build time)
-		// Fallback to "1234" only in development for convenience
-		const validPassword = process.env.NEXT_PUBLIC_SETTINGS_PASSWORD || "1234";
+		// Get password from environment variable (injected at build time).
+		// If not configured, unlock always fails — do not fall back to a default.
+		const validPassword = process.env.NEXT_PUBLIC_SETTINGS_PASSWORD;
 
-		if (attempt === validPassword) {
+		if (validPassword && attempt === validPassword) {
 			setIsLocked(false);
 			setShowPasswordPrompt(false);
 			setPasswordAttempt("");

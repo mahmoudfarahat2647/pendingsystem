@@ -9,11 +9,16 @@ import { useBulkDeleteOrdersMutation } from "./queries/useBulkDeleteOrdersMutati
 import { useBulkUpdateOrderStageMutation } from "./queries/useBulkUpdateOrderStageMutation";
 import { useSaveOrderMutation } from "./queries/useSaveOrderMutation";
 
+import { DRAFT_RECOVERY_MAX_AGE_MS } from "@/lib/constants";
+
 const RECOVERY_STORAGE_KEY = "pending-sys-draft-v1";
-const RECOVERY_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const RECOVERY_MAX_AGE_MS = DRAFT_RECOVERY_MAX_AGE_MS;
 
 let activeRecoveryToastId: string | number | null = null;
 let activeRecoveryToastKey: string | null = null;
+// Synchronous lock set before localStorage is read to prevent duplicate recovery
+// offers in React Strict Mode (where effects are invoked twice on mount).
+let recoveryLockActive = false;
 
 function clearRecoveryToastOffer() {
 	if (activeRecoveryToastId !== null) {
@@ -59,6 +64,11 @@ export function useDraftSession(stage?: OrderStage) {
 		if (typeof window === "undefined") {
 			return;
 		}
+
+		// Guard against rapid remounts (React Strict Mode, fast navigation) showing
+		// the recovery toast twice before the first mount sets activeRecoveryToastKey.
+		if (recoveryLockActive) return;
+		recoveryLockActive = true;
 
 		const raw = localStorage.getItem(RECOVERY_STORAGE_KEY);
 		if (!raw) {
@@ -132,6 +142,11 @@ export function useDraftSession(stage?: OrderStage) {
 			clearRecoveryToastOffer();
 			console.warn("Failed to parse recovery snapshot:", error);
 		}
+
+		return () => {
+			// Release lock on cleanup so the component can re-evaluate on the next mount.
+			recoveryLockActive = false;
+		};
 	}, [draftSession.workspaceId, discardDraft, restoreFromRecovery]);
 
 	const workingRows = useMemo(
