@@ -1,12 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import {
 	type ResetPasswordFormData,
@@ -19,6 +18,8 @@ export function ResetPasswordForm() {
 	const token = searchParams.get("token");
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
+	const [showNewPassword, setShowNewPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 	const {
 		register,
@@ -70,29 +71,61 @@ export function ResetPasswordForm() {
 				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
 					New Password
 				</legend>
-				<input
-					id="newPassword"
-					type="password"
-					autoComplete="new-password"
-					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
-					{...register("newPassword")}
-				/>
+				<div className="flex items-center">
+					<input
+						id="newPassword"
+						type={showNewPassword ? "text" : "password"}
+						autoComplete="new-password"
+						className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
+						{...register("newPassword")}
+					/>
+					<button
+						type="button"
+						tabIndex={-1}
+						aria-label={showNewPassword ? "Hide password" : "Show password"}
+						onClick={() => setShowNewPassword((v) => !v)}
+						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#FFCC00]/35 hover:text-[#FFCC00] transition-colors duration-150 outline-none"
+					>
+						{showNewPassword ? (
+							<EyeOff size={16} strokeWidth={1.75} />
+						) : (
+							<Eye size={16} strokeWidth={1.75} />
+						)}
+					</button>
+				</div>
 			</fieldset>
 			{errors.newPassword && (
-				<p className="text-red-400 text-xs -mt-4">{errors.newPassword.message}</p>
+				<p className="text-red-400 text-xs -mt-4">
+					{errors.newPassword.message}
+				</p>
 			)}
 
 			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
 				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
 					Confirm Password
 				</legend>
-				<input
-					id="confirmPassword"
-					type="password"
-					autoComplete="new-password"
-					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
-					{...register("confirmPassword")}
-				/>
+				<div className="flex items-center">
+					<input
+						id="confirmPassword"
+						type={showConfirmPassword ? "text" : "password"}
+						autoComplete="new-password"
+						className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
+						{...register("confirmPassword")}
+					/>
+					<button
+						type="button"
+						tabIndex={-1}
+						aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+						onClick={() => setShowConfirmPassword((v) => !v)}
+						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#FFCC00]/35 hover:text-[#FFCC00] transition-colors duration-150 outline-none"
+					>
+						{showConfirmPassword ? (
+							<EyeOff size={16} strokeWidth={1.75} />
+						) : (
+							<Eye size={16} strokeWidth={1.75} />
+						)}
+					</button>
+				</div>
 			</fieldset>
 			{errors.confirmPassword && (
 				<p className="text-red-400 text-xs -mt-4">
