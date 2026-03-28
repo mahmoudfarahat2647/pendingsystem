@@ -59,6 +59,7 @@
 		"next": "^15.5.12",
 		"nodemailer": "^8.0.1",
 		"pg": "^8.20.0",
+		"pg-connection-string": "^2.12.0",
 		"react": "^19.0.0",
 		"react-day-picker": "^9.13.0",
 		"react-dom": "^19.0.0",
@@ -82,7 +83,6 @@
 		"@types/react-dom": "^19.0.0",
 		"@vitejs/plugin-react": "^5.1.2",
 		"autoprefixer": "^10.4.20",
-		"dotenv": "^17.2.3",
 		"husky": "^9.1.7",
 		"jsdom": "^27.3.0",
 		"knip": "^5.88.1",
@@ -93,5 +93,8 @@
 	},
 	"optionalDependencies": {
 		"@opentelemetry/api": "^1.9.1"
+	},
+	"knip": {
+		"ignoreBinaries": ["python", "pwsh"]
 	}
 }

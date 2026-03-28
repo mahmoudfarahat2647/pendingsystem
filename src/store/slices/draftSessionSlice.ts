@@ -46,7 +46,7 @@ export interface MoveRowsCommand {
 	fieldOverrides?: Partial<PendingRow>;
 }
 
-export interface CompositeCommand {
+interface CompositeCommand {
 	type: "composite";
 	label: string;
 	children: (
@@ -65,14 +65,14 @@ export type AtomicCommand =
 
 export type DraftCommand = AtomicCommand | CompositeCommand;
 
-export interface SaveOrderDraftMutationVars {
+interface SaveOrderDraftMutationVars {
 	id: string;
 	updates: Partial<PendingRow>;
 	stage: OrderStage;
 	sourceStage?: OrderStage;
 }
 
-export interface BulkUpdateStageDraftMutationVars {
+interface BulkUpdateStageDraftMutationVars {
 	ids: string[];
 	stage: OrderStage;
 	silentErrorToast?: boolean;

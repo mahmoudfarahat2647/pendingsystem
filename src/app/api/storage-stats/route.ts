@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { SUPABASE_REQUEST_TIMEOUT_MS } from "@/lib/constants";
 import {
 	COMBINED_LIMIT_BYTES,
 	DB_LIMIT_BYTES,
@@ -10,7 +11,6 @@ import {
 } from "@/lib/storage-limits";
 
 export const runtime = "nodejs";
-const SUPABASE_REQUEST_TIMEOUT_MS = 30000;
 
 /** Response shape returned by GET /api/storage-stats. */
 export interface StorageStatsResponse {

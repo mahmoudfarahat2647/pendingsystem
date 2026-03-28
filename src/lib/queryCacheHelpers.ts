@@ -1,4 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
+import { ERROR_MESSAGE_TRUNCATE_LENGTH } from "@/lib/constants";
 import { getOrdersQueryKey, ORDER_STAGES } from "@/lib/queryClient";
 import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";
@@ -34,7 +35,9 @@ export const getErrorMessage = (error: unknown): string => {
 	}
 
 	// Truncate to avoid leaking huge payloads into toasts
-	return message.length > 200 ? `${message.slice(0, 197)}...` : message;
+	return message.length > ERROR_MESSAGE_TRUNCATE_LENGTH
+		? `${message.slice(0, ERROR_MESSAGE_TRUNCATE_LENGTH - 3)}...`
+		: message;
 };
 
 export const getMovedRowsById = (
