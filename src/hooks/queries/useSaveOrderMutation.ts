@@ -71,7 +71,13 @@ export function useSaveOrderMutation() {
 			const mappedRow = orderService.mapSupabaseOrder(
 				data as Record<string, unknown>,
 			);
-			if (!mappedRow) return;
+			if (!mappedRow) {
+				console.warn(
+					"[useSaveOrderMutation] mapSupabaseOrder returned null — cache may be stale",
+					data,
+				);
+				return;
+			}
 
 			// Handle multi-stage cache reconciliation
 			if (variables.sourceStage && variables.sourceStage !== variables.stage) {

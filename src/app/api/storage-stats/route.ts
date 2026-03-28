@@ -120,8 +120,11 @@ function withTimeout<T>(promise: PromiseLike<T>, label: string): Promise<T> {
  * @returns JSON containing per-source usage in bytes, limits, and availability flags.
  */
 export async function GET(req: NextRequest) {
+	// auth.api.getSession() performs a full DB lookup against auth_sessions —
+	// this is not an optimistic/cookie-only check. A missing or expired token
+	// returns null here, so the 401 below is authoritative.
 	const session = await auth.api.getSession({ headers: req.headers });
-	if (!session) {
+	if (!session?.user?.id) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 

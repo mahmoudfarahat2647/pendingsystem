@@ -114,14 +114,18 @@ export default function MainSheetPage() {
 		}
 
 		const timer = setInterval(() => {
-			setTimeLeft((prev) => {
-				if (prev <= 1) {
-					setIsSheetLocked(true);
-					toast.info("Sheet automatically locked after 5 minutes");
-					return 300;
-				}
-				return prev - 1;
-			});
+			try {
+				setTimeLeft((prev) => {
+					if (prev <= 1) {
+						setIsSheetLocked(true);
+						toast.info("Sheet automatically locked after 5 minutes");
+						return 300;
+					}
+					return prev - 1;
+				});
+			} catch (err) {
+				console.error("[MainSheet] Auto-lock timer callback failed:", err);
+			}
 		}, 1000);
 
 		return () => clearInterval(timer);

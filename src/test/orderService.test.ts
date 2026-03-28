@@ -245,6 +245,7 @@ describe("orderService", () => {
 			).mockReturnValue({
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
+				filter: vi.fn().mockReturnThis(),
 				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
@@ -277,6 +278,7 @@ describe("orderService", () => {
 			).mockReturnValue({
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
+				filter: vi.fn().mockReturnThis(),
 				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
@@ -304,6 +306,7 @@ describe("orderService", () => {
 			).mockReturnValue({
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
+				filter: vi.fn().mockReturnThis(),
 				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
@@ -330,6 +333,7 @@ describe("orderService", () => {
 			).mockReturnValue({
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
+				filter: vi.fn().mockReturnThis(),
 				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 

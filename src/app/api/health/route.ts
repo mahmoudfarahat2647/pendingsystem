@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { env } from "@/lib/env";
+import { pool } from "@/lib/postgres";
 
 export const runtime = "nodejs";
 
@@ -25,7 +26,7 @@ export async function GET() {
 	};
 
 	try {
-		// Check Supabase connectivity
+		// Verify critical env vars are present
 		const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
 		const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -33,9 +34,15 @@ export async function GET() {
 			health.checks.database = "missing_config";
 			health.status = "degraded";
 		} else {
-			// Simple connectivity check - just verify env vars are present
-			// Full DB check would require a service role client which we don't want to expose
-			health.checks.database = "ok";
+			// Real DB connectivity check via the pg pool
+			try {
+				await pool.query("SELECT 1");
+				health.checks.database = "ok";
+			} catch (dbError) {
+				health.checks.database = "error";
+				health.status = "degraded";
+				console.error("[Health Check] Database connectivity failed:", dbError);
+			}
 		}
 
 		// Determine overall status

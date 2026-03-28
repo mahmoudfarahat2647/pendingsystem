@@ -89,6 +89,14 @@ export function middleware(request: NextRequest) {
 
 	response.headers.set("Content-Security-Policy", csp);
 
+	// HSTS: production only — browsers must not send this over plain HTTP
+	if (isProduction) {
+		response.headers.set(
+			"Strict-Transport-Security",
+			"max-age=63072000; includeSubDomains; preload",
+		);
+	}
+
 	// Remove server header
 	response.headers.delete("Server");
 	response.headers.delete("X-Powered-By");

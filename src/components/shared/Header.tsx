@@ -14,6 +14,7 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useDraftSession } from "@/hooks/useDraftSession";
+import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 import { exportAllSystemDataCSV } from "@/lib/exportUtils";
 import {
 	ALLOWED_COMPANIES,
@@ -135,7 +136,7 @@ export const Header = React.memo(function Header() {
 			if (searchInput !== searchTerm) {
 				setSearchTerm(searchInput);
 			}
-		}, 350);
+		}, SEARCH_DEBOUNCE_MS);
 		return () => clearTimeout(timeoutId);
 	}, [searchInput, searchTerm, setSearchTerm]);
 
