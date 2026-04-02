@@ -1,0 +1,113 @@
+# Full Playwright E2E Scenario Map
+
+## Summary
+- Current repo state: `playwright.config.ts` and `e2e/global-setup.ts` are committed; the full spec suite is implemented across phase folders `e2e/phase-1-auth/` through `e2e/phase-10-settings-ops/`.
+- Scope for this plan: full product coverage with Playwright; Playwright CLI can be used during authoring/debugging, but committed coverage should live as Playwright specs.
+- External boundaries: password-reset email, GitHub backup dispatch, and service-role storage stats should be tested through controlled test doubles or a deterministic test environment, not live third-party side effects.
+- Interfaces exercised: `/login`, `/forgot-password`, `/reset-password`, `/dashboard`, `/orders`, `/main-sheet`, `/call-list`, `/booking`, `/archive`, `/draft-session-test`, `/api/health`, `/api/password-reset/request`, `/api/storage-stats`, `/api/trigger-backup`.
+- Priority legend: `P0` critical smoke/release blocker, `P1` high-value regression, `P2` secondary or ops/edge coverage.
+
+## Main User Journeys
+- `P0` Admin logs in, lands on dashboard, navigates the operational workspaces, and signs out.
+- `P0` Operator creates and edits orders, saves draft changes, commits valid rows to Main Sheet, and sees stage movement persist.
+- `P0` Operator moves ready rows from Orders/Main to Call List or Booking; all-arrived VIN groups auto-move to Call List.
+- `P0` Operator books customers from Orders/Main/Call, rebooks from Booking, and archives completed work.
+- `P1` Operator reorders rows from Call List, Booking, and Archive back to Orders with a required reason.
+- `P1` User finds rows through global search and performs stage-aware bulk actions without violating mixed-source rules.
+
+## Scenario Map
+
+**Auth**
+- `[Smoke][P0][Positive]` Seeded admin logs in with username/password, lands on `/dashboard`, session survives refresh, and sign-out returns to `/login`.
+- `[Smoke][P0][Negative]` Guest access to `/dashboard`, `/orders`, `/main-sheet`, `/call-list`, `/booking`, `/archive`, and `/draft-session-test` redirects to `/login`.
+- `[Regression][P1][Negative/Edge]` Invalid credentials and short-field validation block login; forgot-password always shows the same success message for existing, unknown, invalid-json, and rate-limited usernames; reset-password blocks missing token, short passwords, and mismatches, and succeeds with a valid controlled token.
+
+**App Shell + Dashboard**
+- `[Smoke][P0][Positive]` App shell renders sidebar, header search, export menu, notifications entry, and route navigation for all five operational stages plus dashboard.
+- `[Regression][P1][Edge]` Active edit navigation prompts `Unsaved Changes`, `Discard & Continue` navigates, and cancel preserves the current route/edit context.
+- `[Regression][P1][Positive/Edge]` Dashboard loads live counts, storage widgets, charts, and calendar; degraded or partial storage stats do not crash the page.
+
+**Orders**
+- `[Smoke][P0][Positive]` Create a valid order with required identity fields, part data, and attachment; save/persist; row appears in Orders with expected values.
+- `[Smoke][P0][Positive]` Commit a Beast-Mode-complete order to Main Sheet and verify it leaves Orders and appears in Main Sheet.
+- `[Regression][P1][Negative/Edge]` Mixed-VIN edit is blocked; commit is blocked for missing required fields, missing attachment, invalid mileage/warranty, or duplicate VIN+part/part-number conditions; booking/call-list from Orders is blocked when part number or description is missing.
+- `[Regression][P1][Positive/Edge]` Multi-part create/edit, bulk attachment link set/clear, print/share/extract, delete, archive, and `Arrived` auto-move for all rows of a VIN behave correctly.
+
+**Main Sheet**
+- `[Smoke][P0][Positive]` Committed rows load in Main Sheet, unlock succeeds, and a single-VIN selection can be sent to Booking or Call List.
+- `[Regression][P1][Negative/Edge]` Main Sheet starts locked, edit-sensitive actions are disabled while locked, booking is disabled for mixed VIN selection, and auto-lock returns after the timer expires.
+- `[Regression][P1][Positive]` Part-status bulk update, archive, reserve label, extract, delete, filter, and saved layout flows work; all-arrived VINs auto-move to Call List.
+
+**Call List**
+- `[Smoke][P0][Positive]` Call List loads rows from prior stages and can send a selected VIN group to Booking.
+- `[Regression][P1][Negative]` Reorder requires a non-empty reason and keeps rows in Call List until confirmed.
+- `[Regression][P1][Positive]` Archive, reserve label, status update, extract, delete, filter, and layout persistence work without corrupting stage state.
+
+**Booking**
+- `[Smoke][P0][Positive]` Booking page loads booked rows, shows VIN/line summary, and rebooking updates the booking date successfully.
+- `[Regression][P1][Negative/Edge]` Booking modal cannot confirm while searching history or when a past date is selected; reorder requires a reason.
+- `[Regression][P1][Positive]` Rebooking appends reschedule history to booking note/noteHistory; archive, reserve label, status update, extract, delete, and layout actions work.
+
+**Archive**
+- `[Smoke][P1][Positive]` Archived rows load with booking date visible and can be sent back to Orders through reorder.
+- `[Regression][P1][Negative]` Reorder requires a reason; permanent delete uses confirmation and removes rows only after confirm.
+- `[Regression][P1][Positive/Edge]` Archived rows remain editable for notes, reminders, attachments, and part status.
+
+**Global Search + Shared Workflows**
+- `[Smoke][P1][Positive]` `Cmd/Ctrl+K` focuses search, searching by customer/VIN/part/date opens the search workspace, and results aggregate all five stages.
+- `[Regression][P1][Negative]` Mixed-source selections disable stage-changing bulk actions with the `Mixed sources selected` reason.
+- `[Regression][P1][Positive/Edge]` From search results, booking/archive/call-list/status/delete/reserve/extract work against same-stage selections; Orders-sourced booking/call-list still enforce missing-part rules; status updates from Orders/Main still trigger VIN auto-move.
+
+**Row Modals + Notifications**
+- `[Regression][P1][Positive]` Note, reminder, attachment, and archive modals save correctly from stage grids and search results; archive reason templates add/remove/apply as expected.
+- `[Regression][P1][Negative/Edge]` Attachment upload accepts only JPG/PNG/PDF up to 5 MB, supports external links, and Orders bulk attachment remains link-only.
+- `[Regression][P1][Positive/Edge]` Due reminders surface in notifications, dismiss/removal works, and clicking a notification returns to the originating context; warranty notification/auto-archive coverage is `P2` if seeded dates are deterministic.
+
+**Settings, Reporting, and Ops**
+- `[Smoke][P1][Positive]` Settings modal opens from the sidebar profile area; locked/unlocked state is visible; correct password unlocks and wrong password is rejected.
+- `[Regression][P1][Positive/Negative]` Part status CRUD and report settings edits are blocked while locked and succeed when unlocked; recipient add/remove and frequency changes persist.
+- `[Regression][P2][Positive/Edge]` Manual backup shows success/error toasts via a controlled GitHub boundary; `CloudSync` handles success/error; `/api/health` returns healthy/degraded; dashboard storage stats handle authenticated success and failure states predictably.
+
+## Folder Organization
+
+Specs are organized in phase folders under `e2e/`. Each folder contains a `PLAN.md`, a smoke spec, and a regression spec. Run a single phase with:
+
+```bash
+npx playwright test e2e/phase-N-<name>/ --project=edge
+```
+
+Execution order: Phase 0 (infrastructure) → Phase 1 (auth) → Phase 2 → … → Phase 10.
+
+| Folder | Feature |
+|---|---|
+| `phase-1-auth/` | Login, session, sign-out, guest redirects |
+| `phase-2-app-shell/` | Sidebar, header search, export, dashboard |
+| `phase-3-orders/` | Create order, Beast Mode commit, validation |
+| `phase-4-main-sheet/` | Lock/unlock, stage moves |
+| `phase-5-call-list/` | Call list load, reorder requirement |
+| `phase-6-booking/` | Booking load, past-date block |
+| `phase-7-archive/` | Archive load, reorder/delete confirmation |
+| `phase-8-search/` | Global search Ctrl+K, cross-stage results |
+| `phase-9-modals/` | Notes, attachment upload validation |
+| `phase-10-settings-ops/` | Settings lock/unlock, /api/health |
+
+Seed infrastructure lives in `e2e/seeds/`. All seeded rows use the `E2E_TEST_` prefix in `customer_name` — cleanup only deletes rows matching `customer_name LIKE 'E2E_TEST_%'` so real data is never affected.
+
+## Required Test Data & Preconditions
+- Seed one admin user from `.env.local` via `npm run auth:seed-admin`.
+- Use authenticated storage state for post-login specs and an isolated DB reset/seed per run or worker.
+- Seed Orders rows for: valid Beast-Mode commit, missing part fields, missing attachment, duplicate VIN+part/history, same-VIN multi-part group, and mixed-VIN selection.
+- Seed Main Sheet rows for: single-VIN booking, mixed-VIN booking block, `Arrived` auto-move, and locked-edit checks.
+- Seed Call List, Booking, and Archive rows that can be reordered, archived, deleted, and edited without cross-test coupling.
+- Seed booking/archive history within the last 2 years for booking-modal search, customer grouping, and rebooking-history assertions.
+- Seed one due reminder, one future reminder, and one warranty-near-expiry row if notification coverage is enabled.
+- Seed report settings with at least one recipient and a known frequency.
+- Provide deterministic doubles or test environments for password-reset token issuance, GitHub Actions backup dispatch, and storage-stats service-role access.
+- Prepare download/assertion handling for CSV exports and printable flows; assert file creation or browser download events rather than pixel-perfect print rendering.
+- Treat `/draft-session-test` as an optional `P2` harness for draft recovery, undo/redo, and recovery-snapshot regression when draft-session bugs are active.
+
+## Assumptions
+- No product API or schema changes are required for this plan; the suite only exercises existing routes and APIs.
+- Playwright Test is the committed runner; Playwright CLI is the interactive authoring/debugging aid.
+- Settings lock is a UI guard, not a backend auth boundary; tests should validate gating behavior only.
+- Main Sheet share/print affordances are currently not wired; only presence/non-destructive rendering belongs in smoke until handlers exist.

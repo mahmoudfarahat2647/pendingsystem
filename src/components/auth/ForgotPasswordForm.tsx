@@ -5,8 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	type ForgotPasswordFormData,
 	ForgotPasswordFormSchema,
@@ -39,7 +37,11 @@ export function ForgotPasswordForm() {
 	if (submitted) {
 		return (
 			<div className="space-y-4">
-				<div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+				<div
+					data-testid="forgot-password-success"
+					role="alert"
+					className="bg-green-500/10 border border-green-500/20 rounded-lg p-4"
+				>
 					<p className="text-green-400 text-sm">
 						If that username exists, a reset link has been sent to the
 						associated email address.
