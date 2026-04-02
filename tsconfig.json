@@ -31,5 +31,16 @@
 		".next/dev/types/**/*.ts",
 		"**/*.mts"
 	],
-	"exclude": ["node_modules", "supabase", "e2e"]
+	"exclude": [
+		"node_modules",
+		"supabase",
+		"coverage",
+		"playwright-report",
+		"test-results",
+		"e2e",
+		"e2e/**/*",
+		"src/test/**/*",
+		"playwright.config.ts",
+		"vitest.config.ts"
+	]
 }
