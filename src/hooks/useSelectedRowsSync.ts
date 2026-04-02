@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
 export function useSelectedRowsSync<T extends { id: string }>(
 	stage: string,
 	rowData: T[],
-	selectedRows: T[],
+	_selectedRows: T[],
 	setSelectedRows: Dispatch<SetStateAction<T[]>>,
 ) {
 	const prevRowDataRef = useRef(rowData);

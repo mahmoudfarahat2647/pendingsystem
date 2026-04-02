@@ -18,8 +18,8 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 import { POST } from "@/app/api/password-reset/request/route";
-import { pool } from "@/lib/postgres";
 import { auth } from "@/lib/auth";
+import { pool } from "@/lib/postgres";
 
 function makeRequest(body: Record<string, unknown>, ip = "1.2.3.4") {
 	return new NextRequest("http://localhost/api/password-reset/request", {
@@ -79,12 +79,12 @@ describe("POST /api/password-reset/request", () => {
 		);
 
 		let settled = false;
-		const responsePromise = POST(makeRequest({ username: "admin" }, "10.0.0.5")).then(
-			(response) => {
-				settled = true;
-				return response;
-			},
-		);
+		const responsePromise = POST(
+			makeRequest({ username: "admin" }, "10.0.0.5"),
+		).then((response) => {
+			settled = true;
+			return response;
+		});
 
 		await vi.waitFor(() => {
 			expect(auth.api.requestPasswordReset).toHaveBeenCalled();

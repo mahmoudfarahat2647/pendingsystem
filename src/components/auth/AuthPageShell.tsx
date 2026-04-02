@@ -38,12 +38,18 @@ export function AuthPageShell({
 						</div>
 					</div>
 
-					{title && <h2 className="text-xl font-bold text-white/90 mb-1 text-center w-full relative z-10">{title}</h2>}
-					{subtitle && <p className="text-white/40 text-sm mb-8 text-center w-full relative z-10">{subtitle}</p>}
+					{title && (
+						<h2 className="text-xl font-bold text-white/90 mb-1 text-center w-full relative z-10">
+							{title}
+						</h2>
+					)}
+					{subtitle && (
+						<p className="text-white/40 text-sm mb-8 text-center w-full relative z-10">
+							{subtitle}
+						</p>
+					)}
 
-					<div className="w-full relative z-10">
-						{children}
-					</div>
+					<div className="w-full relative z-10">{children}</div>
 				</div>
 			</div>
 

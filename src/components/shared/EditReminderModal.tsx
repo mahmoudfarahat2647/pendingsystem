@@ -4,7 +4,6 @@ import { format } from "date-fns";
 import { Bell, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ReminderInputSchema } from "@/schemas/order.schema";
 import { Button } from "@/components/ui/button";
 import DateTimePicker from "@/components/ui/date-time-picker";
 import {
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ReminderInputSchema } from "@/schemas/order.schema";
 import { useAppStore } from "@/store/useStore";
 
 interface EditReminderModalProps {

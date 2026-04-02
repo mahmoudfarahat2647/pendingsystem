@@ -26,7 +26,9 @@ export const reportSettingsService = {
 		}
 
 		// No settings row found — auto-create the default on first access
-		console.info("[reportSettingsService] No settings row found. Creating defaults.");
+		console.info(
+			"[reportSettingsService] No settings row found. Creating defaults.",
+		);
 		const { data: newData, error: createError } = await supabase
 			.from("report_settings")
 			.insert([DEFAULT_REPORT_SETTINGS])

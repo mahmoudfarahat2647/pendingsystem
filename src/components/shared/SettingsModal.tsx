@@ -26,7 +26,7 @@ interface SettingsModalProps {
 type TabType = "part-statuses" | "theme-color" | "backup-reports";
 
 // Client-side only settings password (defaults to env var or falls back for development)
-const getSettingsPassword = (): string | undefined => {
+const _getSettingsPassword = (): string | undefined => {
 	if (typeof window === "undefined") return undefined;
 	// This will be set from window.__ENV__ during initialization
 	return (window as unknown as { __SETTINGS_PASSWORD__?: string })

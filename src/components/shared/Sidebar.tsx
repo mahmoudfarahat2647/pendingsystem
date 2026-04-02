@@ -264,7 +264,11 @@ export const Sidebar = React.memo(function Sidebar() {
 			</div>
 
 			{/* Navigation */}
-			<nav className="flex-1 py-8 overflow-y-auto" aria-label="Main navigation" suppressHydrationWarning>
+			<nav
+				className="flex-1 py-8 overflow-y-auto"
+				aria-label="Main navigation"
+				suppressHydrationWarning
+			>
 				<ul className="space-y-2 px-4" suppressHydrationWarning>
 					{navItems.map((item) => {
 						const isActive =
