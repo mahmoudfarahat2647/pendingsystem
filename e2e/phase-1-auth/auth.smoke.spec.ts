@@ -12,12 +12,14 @@ test.describe("Auth — Smoke (P0)", () => {
 		await authedPage.reload();
 		await expect(authedPage).toHaveURL(/\/dashboard/);
 
-		// Sign out — fallback chain covers different UI patterns
-		const signOut = authedPage
-			.getByRole("button", { name: /sign out/i })
-			.or(authedPage.getByTestId("sign-out-button"))
-			.or(authedPage.getByText(/sign out/i).first());
-		await signOut.click();
+		// Open the sidebar user dropdown first
+		const userMenuTrigger = authedPage.getByRole("button", {
+			name: /sign out menu/i,
+		});
+		await userMenuTrigger.click();
+
+		// "Sign out" is now mounted in the DOM as a menu item
+		await authedPage.getByRole("menuitem", { name: /sign out/i }).click();
 		await expect(authedPage).toHaveURL(/\/login/);
 	});
 

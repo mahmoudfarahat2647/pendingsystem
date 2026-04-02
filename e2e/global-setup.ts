@@ -53,7 +53,18 @@ async function globalSetup(config: FullConfig) {
 	// Navigate to /dashboard to confirm the session cookie is active and
 	// ensure any SSR-set cookies are flushed into the context before we
 	// snapshot storage state.
-	await page.goto(`${baseURL}/dashboard`, { waitUntil: "domcontentloaded" });
+	console.log(`[global-setup] Navigating to ${baseURL}/dashboard...`);
+	try {
+		await page.goto(`${baseURL}/dashboard`, {
+			waitUntil: "domcontentloaded",
+			timeout: 60_000,
+		});
+	} catch (err) {
+		console.error(`[global-setup] Navigation to dashboard timed out after 60s. 
+            This is likely due to dev server compilation. 
+            Check if the server is responsive at ${baseURL}/dashboard.`);
+		throw err;
+	}
 	await context.storageState({ path: AUTH_FILE });
 	console.log(`[global-setup] Storage state saved → ${AUTH_FILE}`);
 
