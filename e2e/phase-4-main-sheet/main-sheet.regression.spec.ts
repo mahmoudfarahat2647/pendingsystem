@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 import { cleanupTestRows } from "../seeds";
 
 test.describe("Main Sheet — Regression (P1)", () => {

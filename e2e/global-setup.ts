@@ -17,8 +17,7 @@ async function globalSetup(config: FullConfig) {
 	// 2. Ensure the storage-state directory exists
 	mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
 
-	const baseURL =
-		config.projects[0]?.use?.baseURL ?? "http://localhost:3000";
+	const baseURL = config.projects[0]?.use?.baseURL ?? "http://localhost:3000";
 	const username = process.env.AUTH_ADMIN_USERNAME ?? "admin";
 	const password = process.env.AUTH_ADMIN_PASSWORD ?? "";
 
@@ -38,10 +37,9 @@ async function globalSetup(config: FullConfig) {
 	// page.request shares the cookie jar with the browser context,
 	// so the session cookie it receives is immediately available to the page.
 	console.log("\n[global-setup] Logging in via Better Auth API...");
-	const resp = await page.request.post(
-		`${baseURL}/api/auth/sign-in/username`,
-		{ data: { username, password } },
-	);
+	const resp = await page.request.post(`${baseURL}/api/auth/sign-in/username`, {
+		data: { username, password },
+	});
 
 	if (!resp.ok()) {
 		const body = await resp.text();

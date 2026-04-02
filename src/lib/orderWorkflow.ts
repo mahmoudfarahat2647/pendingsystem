@@ -50,7 +50,7 @@ export const getEffectiveNoteHistory = (row: PendingRow): string => {
 
 	// Backfill legacy fields
 	const parts: string[] = [];
-	if (row.noteContent && row.noteContent.trim()) {
+	if (row.noteContent?.trim()) {
 		parts.push(row.noteContent.trim());
 	}
 
@@ -58,12 +58,12 @@ export const getEffectiveNoteHistory = (row: PendingRow): string => {
 		.split(/\r?\n/)
 		.map((line) => line.trim().toLowerCase());
 
-	if (row.actionNote && row.actionNote.trim()) {
+	if (row.actionNote?.trim()) {
 		parts.push(row.actionNote.trim());
 	}
 
 	// Deduplicate bookingNote against actionNote
-	if (row.bookingNote && row.bookingNote.trim()) {
+	if (row.bookingNote?.trim()) {
 		const taggedBooking = `${row.bookingNote.trim().toLowerCase()} #booking`;
 		const alreadyInAction = normalizedActionNoteLines.some(
 			(line) => line === taggedBooking,
@@ -74,7 +74,7 @@ export const getEffectiveNoteHistory = (row: PendingRow): string => {
 	}
 
 	// Deduplicate archiveReason against actionNote
-	if (row.archiveReason && row.archiveReason.trim()) {
+	if (row.archiveReason?.trim()) {
 		const taggedArchive = `${row.archiveReason.trim().toLowerCase()} #archive`;
 		const alreadyInAction = normalizedActionNoteLines.some(
 			(line) => line === taggedArchive,

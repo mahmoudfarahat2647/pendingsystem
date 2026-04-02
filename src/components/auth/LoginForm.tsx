@@ -86,7 +86,10 @@ export function LoginForm() {
 			)}
 
 			{error && (
-				<div role="alert" className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mt-2">
+				<div
+					role="alert"
+					className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mt-2"
+				>
 					<p className="text-red-400 text-sm">{error}</p>
 				</div>
 			)}

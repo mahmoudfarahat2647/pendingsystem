@@ -18,7 +18,9 @@ export async function seedMainSheetArrivedGroup() {
 		vin,
 		status: "Arrived",
 		metadata: {
-			parts: [{ id: "p1", partNumber: "PN-MA1", description: "Part A", rowId: "r1" }],
+			parts: [
+				{ id: "p1", partNumber: "PN-MA1", description: "Part A", rowId: "r1" },
+			],
 			partStatus: "Arrived",
 			cntrRdg: 0,
 			hasAttachment: false,
@@ -31,7 +33,9 @@ export async function seedMainSheetArrivedGroup() {
 		vin,
 		status: "Arrived",
 		metadata: {
-			parts: [{ id: "p2", partNumber: "PN-MA2", description: "Part B", rowId: "r2" }],
+			parts: [
+				{ id: "p2", partNumber: "PN-MA2", description: "Part B", rowId: "r2" },
+			],
 			partStatus: "Arrived",
 			cntrRdg: 0,
 			hasAttachment: false,

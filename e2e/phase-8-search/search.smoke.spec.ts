@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 
 test.describe("Global Search — Smoke (P1)", () => {
 	test("Ctrl+K opens search workspace", async ({ authedPage }) => {

@@ -235,164 +235,164 @@ export default function DashboardPage() {
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 				<div className="animate-in fade-in slide-in-from-bottom-4 h-full">
 					<ClientErrorBoundary fallbackTitle="Storage Chart Error">
-					<Suspense
-						fallback={
-							<Card className="bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden h-full">
-								<CardContent className="p-6">
-									<div className="h-[220px] bg-white/5 animate-pulse rounded-lg" />
+						<Suspense
+							fallback={
+								<Card className="bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden h-full">
+									<CardContent className="p-6">
+										<div className="h-[220px] bg-white/5 animate-pulse rounded-lg" />
+									</CardContent>
+								</Card>
+							}
+						>
+							{/* Storage Capacity Pie Chart */}
+							<Card className="group bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/10 rounded-xl hover:border-white/20 hover:shadow-[0_0_30px_-5px_var(--renault-yellow)] transition-all duration-500 h-full relative overflow-hidden">
+								{/* Subtle ambient radial glow taking up the whole card background, activated on hover */}
+								<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-renault-yellow/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+								<CardContent className="p-6 relative z-10">
+									<div className="flex items-center gap-2 mb-6">
+										<HardDrive className="w-4 h-4 text-renault-yellow/80 group-hover:text-renault-yellow group-hover:drop-shadow-[0_0_8px_rgba(255,204,0,0.8)] transition-all duration-300" />
+										<h3 className="text-[11px] font-bold text-gray-400 tracking-[0.2em] uppercase">
+											Storage — DB + Files
+										</h3>
+									</div>
+
+									<div className="flex items-center justify-between">
+										{/* Left side: Text Details */}
+										<div className="flex-1 space-y-5">
+											{storageStats ? (
+												<>
+													<div className="flex items-center gap-3 group/db cursor-default">
+														<div className="p-2.5 bg-white/5 rounded-lg border border-white/5 group-hover/db:border-renault-yellow/20 group-hover/db:bg-renault-yellow/5 transition-colors duration-300">
+															<Database className="w-4 h-4 text-renault-yellow/70 group-hover/db:text-renault-yellow transition-colors duration-300" />
+														</div>
+														<div>
+															<p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-1">
+																Database
+															</p>
+															<p className="text-gray-300 font-light text-sm font-sans tabular-nums tracking-tight">
+																{storageStats.dbAvailable &&
+																storageStats.dbUsedBytes !== null ? (
+																	`${formatBytesToMB(storageStats.dbUsedBytes)} / 500 MB`
+																) : (
+																	<span className="text-gray-500 font-sans tracking-normal">
+																		Unavailable
+																	</span>
+																)}
+															</p>
+														</div>
+													</div>
+
+													<div className="flex items-center gap-3 group/files cursor-default">
+														<div className="p-2.5 bg-white/5 rounded-lg border border-white/5 group-hover/files:border-renault-yellow/20 group-hover/files:bg-renault-yellow/5 transition-colors duration-300">
+															<HardDrive className="w-4 h-4 text-renault-yellow/70 group-hover/files:text-renault-yellow transition-colors duration-300" />
+														</div>
+														<div>
+															<p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-1">
+																Files
+															</p>
+															<p className="text-gray-300 font-light text-sm font-sans tabular-nums tracking-tight">
+																{storageStats.storageAvailable ? (
+																	`${formatBytesToMB(storageStats.storageUsedBytes)} / 1 GB`
+																) : (
+																	<span className="text-gray-500 font-sans tracking-normal">
+																		Unavailable
+																	</span>
+																)}
+															</p>
+														</div>
+													</div>
+
+													{!storageStats.dataComplete && (
+														<p className="text-[10px] text-amber-500/80 mt-2">
+															⚠ Partial data — some sources unavailable
+														</p>
+													)}
+												</>
+											) : (
+												<div className="space-y-4">
+													<div className="h-10 w-48 bg-white/5 animate-pulse rounded-lg" />
+													<div className="h-10 w-48 bg-white/5 animate-pulse rounded-lg" />
+												</div>
+											)}
+										</div>
+
+										{/* Right side: Pie Chart with background ambient glow */}
+										<div className="w-[140px] h-[140px] relative flex items-center justify-center shrink-0">
+											{/* High-tech intense radial glow specifically directly behind the pie chart */}
+											<div className="absolute inset-0 bg-renault-yellow/5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
+
+											{storageLoading ? (
+												<div className="h-[120px] w-[120px] bg-white/5 animate-pulse rounded-full relative z-10" />
+											) : (
+												<div className="relative z-10 w-full h-full flex items-center justify-center">
+													<CapacityChart data={pieData} />
+													<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+														<span className="text-[22px] font-bold text-white font-mono leading-none tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+															{storageStats
+																? `${usagePercent(
+																		(storageStats.dbUsedBytes ?? 0) +
+																			storageStats.storageUsedBytes,
+																		storageStats.combinedLimitBytes,
+																	).toFixed(0)}%`
+																: "—"}
+														</span>
+														<span className="text-[9px] text-gray-400 font-medium tracking-widest uppercase mt-0.5">
+															Used
+														</span>
+													</div>
+												</div>
+											)}
+										</div>
+									</div>
 								</CardContent>
 							</Card>
-						}
-					>
-						{/* Storage Capacity Pie Chart */}
-						<Card className="group bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/10 rounded-xl hover:border-white/20 hover:shadow-[0_0_30px_-5px_var(--renault-yellow)] transition-all duration-500 h-full relative overflow-hidden">
-							{/* Subtle ambient radial glow taking up the whole card background, activated on hover */}
-							<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-renault-yellow/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-							<CardContent className="p-6 relative z-10">
-								<div className="flex items-center gap-2 mb-6">
-									<HardDrive className="w-4 h-4 text-renault-yellow/80 group-hover:text-renault-yellow group-hover:drop-shadow-[0_0_8px_rgba(255,204,0,0.8)] transition-all duration-300" />
-									<h3 className="text-[11px] font-bold text-gray-400 tracking-[0.2em] uppercase">
-										Storage — DB + Files
-									</h3>
-								</div>
-
-								<div className="flex items-center justify-between">
-									{/* Left side: Text Details */}
-									<div className="flex-1 space-y-5">
-										{storageStats ? (
-											<>
-												<div className="flex items-center gap-3 group/db cursor-default">
-													<div className="p-2.5 bg-white/5 rounded-lg border border-white/5 group-hover/db:border-renault-yellow/20 group-hover/db:bg-renault-yellow/5 transition-colors duration-300">
-														<Database className="w-4 h-4 text-renault-yellow/70 group-hover/db:text-renault-yellow transition-colors duration-300" />
-													</div>
-													<div>
-														<p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-1">
-															Database
-														</p>
-														<p className="text-gray-300 font-light text-sm font-sans tabular-nums tracking-tight">
-															{storageStats.dbAvailable &&
-															storageStats.dbUsedBytes !== null ? (
-																`${formatBytesToMB(storageStats.dbUsedBytes)} / 500 MB`
-															) : (
-																<span className="text-gray-500 font-sans tracking-normal">
-																	Unavailable
-																</span>
-															)}
-														</p>
-													</div>
-												</div>
-
-												<div className="flex items-center gap-3 group/files cursor-default">
-													<div className="p-2.5 bg-white/5 rounded-lg border border-white/5 group-hover/files:border-renault-yellow/20 group-hover/files:bg-renault-yellow/5 transition-colors duration-300">
-														<HardDrive className="w-4 h-4 text-renault-yellow/70 group-hover/files:text-renault-yellow transition-colors duration-300" />
-													</div>
-													<div>
-														<p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-1">
-															Files
-														</p>
-														<p className="text-gray-300 font-light text-sm font-sans tabular-nums tracking-tight">
-															{storageStats.storageAvailable ? (
-																`${formatBytesToMB(storageStats.storageUsedBytes)} / 1 GB`
-															) : (
-																<span className="text-gray-500 font-sans tracking-normal">
-																	Unavailable
-																</span>
-															)}
-														</p>
-													</div>
-												</div>
-
-												{!storageStats.dataComplete && (
-													<p className="text-[10px] text-amber-500/80 mt-2">
-														⚠ Partial data — some sources unavailable
-													</p>
-												)}
-											</>
-										) : (
-											<div className="space-y-4">
-												<div className="h-10 w-48 bg-white/5 animate-pulse rounded-lg" />
-												<div className="h-10 w-48 bg-white/5 animate-pulse rounded-lg" />
-											</div>
-										)}
-									</div>
-
-									{/* Right side: Pie Chart with background ambient glow */}
-									<div className="w-[140px] h-[140px] relative flex items-center justify-center shrink-0">
-										{/* High-tech intense radial glow specifically directly behind the pie chart */}
-										<div className="absolute inset-0 bg-renault-yellow/5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
-
-										{storageLoading ? (
-											<div className="h-[120px] w-[120px] bg-white/5 animate-pulse rounded-full relative z-10" />
-										) : (
-											<div className="relative z-10 w-full h-full flex items-center justify-center">
-												<CapacityChart data={pieData} />
-												<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-													<span className="text-[22px] font-bold text-white font-mono leading-none tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-														{storageStats
-															? `${usagePercent(
-																	(storageStats.dbUsedBytes ?? 0) +
-																		storageStats.storageUsedBytes,
-																	storageStats.combinedLimitBytes,
-																).toFixed(0)}%`
-															: "—"}
-													</span>
-													<span className="text-[9px] text-gray-400 font-medium tracking-widest uppercase mt-0.5">
-														Used
-													</span>
-												</div>
-											</div>
-										)}
-									</div>
-								</div>
-							</CardContent>
-						</Card>
-					</Suspense>
+						</Suspense>
 					</ClientErrorBoundary>
 				</div>
 
 				<div className="animate-in fade-in slide-in-from-bottom-4 h-full">
 					<ClientErrorBoundary fallbackTitle="Distribution Chart Error">
-					<Suspense
-						fallback={
-							<Card className="bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden h-full">
-								<CardContent className="p-6">
-									<div className="h-[220px] bg-white/5 animate-pulse rounded-lg" />
+						<Suspense
+							fallback={
+								<Card className="bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden h-full">
+									<CardContent className="p-6">
+										<div className="h-[220px] bg-white/5 animate-pulse rounded-lg" />
+									</CardContent>
+								</Card>
+							}
+						>
+							{/* Bar Chart Distribution */}
+							<Card className="group bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/10 rounded-xl hover:border-white/20 hover:shadow-[0_0_30px_-5px_var(--renault-yellow)] transition-all duration-500 h-full relative overflow-hidden">
+								{/* Subtle ambient radial glow taking up the whole card background, activated on hover */}
+								<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-renault-yellow/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+								<CardContent className="p-6 relative z-10">
+									<div className="flex items-center justify-between mb-6">
+										<div className="flex items-center gap-2">
+											<Users className="w-4 h-4 text-renault-yellow/80 group-hover:text-renault-yellow group-hover:drop-shadow-[0_0_8px_rgba(255,204,0,0.8)] transition-all duration-300" />
+											<h3 className="text-[11px] font-bold text-gray-400 tracking-[0.2em] uppercase">
+												STAGE DISTRIBUTION
+											</h3>
+										</div>
+										<span className="text-[10px] text-gray-500">Live Data</span>
+									</div>
+									{isStageLoading ? (
+										<div className="relative">
+											<div className="absolute inset-0 bg-renault-yellow/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
+											<div className="h-[180px] w-full bg-white/5 animate-pulse rounded-lg relative z-10" />
+										</div>
+									) : (
+										<div className="relative">
+											<div className="absolute inset-0 bg-renault-yellow/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
+											<div className="h-[180px] w-full relative z-10">
+												<DistributionChart data={barData} />
+											</div>
+										</div>
+									)}
 								</CardContent>
 							</Card>
-						}
-					>
-						{/* Bar Chart Distribution */}
-						<Card className="group bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/10 rounded-xl hover:border-white/20 hover:shadow-[0_0_30px_-5px_var(--renault-yellow)] transition-all duration-500 h-full relative overflow-hidden">
-							{/* Subtle ambient radial glow taking up the whole card background, activated on hover */}
-							<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-renault-yellow/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-							<CardContent className="p-6 relative z-10">
-								<div className="flex items-center justify-between mb-6">
-									<div className="flex items-center gap-2">
-										<Users className="w-4 h-4 text-renault-yellow/80 group-hover:text-renault-yellow group-hover:drop-shadow-[0_0_8px_rgba(255,204,0,0.8)] transition-all duration-300" />
-										<h3 className="text-[11px] font-bold text-gray-400 tracking-[0.2em] uppercase">
-											STAGE DISTRIBUTION
-										</h3>
-									</div>
-									<span className="text-[10px] text-gray-500">Live Data</span>
-								</div>
-								{isStageLoading ? (
-									<div className="relative">
-										<div className="absolute inset-0 bg-renault-yellow/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
-										<div className="h-[180px] w-full bg-white/5 animate-pulse rounded-lg relative z-10" />
-									</div>
-								) : (
-									<div className="relative">
-										<div className="absolute inset-0 bg-renault-yellow/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
-										<div className="h-[180px] w-full relative z-10">
-											<DistributionChart data={barData} />
-										</div>
-									</div>
-								)}
-							</CardContent>
-						</Card>
-					</Suspense>
+						</Suspense>
 					</ClientErrorBoundary>
 				</div>
 			</div>

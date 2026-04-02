@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 
 test.describe("Auth — Regression (P1)", () => {
 	// Invalid credentials

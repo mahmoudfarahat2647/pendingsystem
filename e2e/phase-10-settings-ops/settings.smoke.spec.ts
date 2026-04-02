@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 
 test.describe("Settings — Smoke (P1)", () => {
 	test("settings modal opens from the profile/sidebar area", async ({

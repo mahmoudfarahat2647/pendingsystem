@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 
 test.describe("Archive — Smoke (P1)", () => {
 	test("Archive page loads with booking date column visible", async ({

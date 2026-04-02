@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 
 test.describe("Main Sheet — Smoke (P0)", () => {
 	test("Main Sheet page loads and shows locked state by default", async ({

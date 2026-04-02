@@ -1,5 +1,5 @@
-import { test, expect } from "../fixtures";
-import { seedBookingRow, cleanupTestRows } from "../seeds";
+import { expect, test } from "../fixtures";
+import { cleanupTestRows, seedBookingRow } from "../seeds";
 
 test.describe("Booking — Regression (P1)", () => {
 	test.afterEach(async () => await cleanupTestRows());
