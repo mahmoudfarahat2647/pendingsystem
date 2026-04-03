@@ -1,9 +1,5 @@
-import { test, expect } from "../fixtures";
-import {
-	seedOrder,
-	seedOrderMissingPartNumber,
-	cleanupTestRows,
-} from "../seeds";
+import { expect, test } from "../fixtures";
+import { cleanupTestRows, seedOrderMissingPartNumber } from "../seeds";
 
 test.describe("Orders — Regression (P1)", () => {
 	test.afterEach(async () => {

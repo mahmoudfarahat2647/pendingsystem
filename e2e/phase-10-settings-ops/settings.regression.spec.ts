@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 
 test.describe("Settings — Regression (P1)", () => {
 	test("settings modal has report/notifications tab visible", async ({

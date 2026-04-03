@@ -47,9 +47,9 @@ describe("Grid Column Configuration Selection Fix", () => {
 			const companyCol = columns.find((c) => c.headerName === "COMPANY");
 
 			expect(companyCol).toBeDefined();
-			expect(typeof companyCol!.comparator).toBe("function");
+			expect(typeof companyCol?.comparator).toBe("function");
 
-			const compare = companyCol!.comparator as (a: any, b: any) => number;
+			const compare = companyCol?.comparator as (a: any, b: any) => number;
 
 			// 1. Equal fallbacks (empty, null, undefined) all sort identically
 			expect(compare("", "")).toBe(0);

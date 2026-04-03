@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { env } from "@/lib/env";
 import { pool } from "@/lib/postgres";
 
 export const runtime = "nodejs";
@@ -26,15 +25,19 @@ export async function GET() {
 	};
 
 	try {
-		// Verify critical env vars are present
-		const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
-		const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+		const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+		const hasDatabaseConfig = Boolean(
+			process.env.DATABASE_URL || process.env.PGHOST,
+		);
 
 		if (!supabaseUrl || !supabaseAnonKey) {
 			health.checks.database = "missing_config";
 			health.status = "degraded";
+		} else if (!hasDatabaseConfig) {
+			health.checks.database = "missing_db_config";
+			health.status = "degraded";
 		} else {
-			// Real DB connectivity check via the pg pool
 			try {
 				await pool.query("SELECT 1");
 				health.checks.database = "ok";

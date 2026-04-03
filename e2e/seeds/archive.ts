@@ -7,7 +7,14 @@ export async function seedArchiveRow() {
 		vin: "E2EVINARCH",
 		status: "Archived",
 		metadata: {
-			parts: [{ id: "p1", partNumber: "PN-ARCH-001", description: "Archive Part", rowId: "r1" }],
+			parts: [
+				{
+					id: "p1",
+					partNumber: "PN-ARCH-001",
+					description: "Archive Part",
+					rowId: "r1",
+				},
+			],
 			partStatus: "Arrived",
 			cntrRdg: 0,
 			hasAttachment: false,

@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 
 test.describe("Booking — Smoke (P0)", () => {
 	test("Booking page loads and shows VIN summary", async ({ authedPage }) => {

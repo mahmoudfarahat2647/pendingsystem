@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 
 test.describe("App Shell + Dashboard — Smoke (P0)", () => {
 	test("sidebar links navigate to all five stage routes", async ({

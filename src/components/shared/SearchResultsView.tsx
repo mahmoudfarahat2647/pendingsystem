@@ -79,7 +79,7 @@ export const SearchResultsView = () => {
 
 	// Grid & Selection State
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
-	const [masterCheckboxState, setMasterCheckboxState] =
+	const [_masterCheckboxState, setMasterCheckboxState] =
 		useState<SearchHeaderCheckboxState>(false);
 	const masterCheckboxStateRef = useRef<SearchHeaderCheckboxState>(false);
 	const [showFilters, setShowFilters] = useState(false);

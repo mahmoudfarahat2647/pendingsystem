@@ -7,7 +7,14 @@ export async function seedCallListRow() {
 		vin: "E2EVINCALL",
 		status: "Ordered",
 		metadata: {
-			parts: [{ id: "p1", partNumber: "PN-CALL-001", description: "Call Part", rowId: "r1" }],
+			parts: [
+				{
+					id: "p1",
+					partNumber: "PN-CALL-001",
+					description: "Call Part",
+					rowId: "r1",
+				},
+			],
 			partStatus: "Arrived",
 			cntrRdg: 0,
 			hasAttachment: false,

@@ -1,5 +1,5 @@
-import { test, expect } from "../fixtures";
-import { seedBeastModeOrder, cleanupTestRows } from "../seeds";
+import { expect, test } from "../fixtures";
+import { cleanupTestRows, seedBeastModeOrder } from "../seeds";
 
 test.describe("Orders — Smoke (P0)", () => {
 	test("Orders page loads without error", async ({ authedPage }) => {
@@ -18,10 +18,9 @@ test.describe("Orders — Smoke (P0)", () => {
 
 	// This test seeds a row, commits it, and verifies it leaves Orders
 	// NOTE: requires SUPABASE_SERVICE_ROLE_KEY to be set in .env.local
-	test("commit Beast-Mode-complete order to Main Sheet", async (
-		{ authedPage },
-		testInfo,
-	) => {
+	test("commit Beast-Mode-complete order to Main Sheet", async ({
+		authedPage,
+	}, testInfo) => {
 		// Seed a row that satisfies all Beast Mode requirements
 		const row = await seedBeastModeOrder();
 		testInfo.attach("seeded-row-id", { body: row.id });

@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { chromium, type FullConfig } from "@playwright/test";
@@ -12,13 +12,14 @@ const AUTH_FILE = path.resolve(process.cwd(), "e2e/.auth/admin.json");
 async function globalSetup(config: FullConfig) {
 	// 1. Seed the admin user (idempotent — exits 0 if already exists)
 	console.log("\n[global-setup] Seeding admin user...");
-	execSync("npm run auth:seed-admin", { stdio: "inherit" });
+	execFileSync(process.execPath, ["scripts/seed-admin-user.mjs"], {
+		stdio: "inherit",
+	});
 
 	// 2. Ensure the storage-state directory exists
 	mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
 
-	const baseURL =
-		config.projects[0]?.use?.baseURL ?? "http://localhost:3000";
+	const baseURL = config.projects[0]?.use?.baseURL ?? "http://localhost:3000";
 	const username = process.env.AUTH_ADMIN_USERNAME ?? "admin";
 	const password = process.env.AUTH_ADMIN_PASSWORD ?? "";
 
@@ -38,10 +39,9 @@ async function globalSetup(config: FullConfig) {
 	// page.request shares the cookie jar with the browser context,
 	// so the session cookie it receives is immediately available to the page.
 	console.log("\n[global-setup] Logging in via Better Auth API...");
-	const resp = await page.request.post(
-		`${baseURL}/api/auth/sign-in/username`,
-		{ data: { username, password } },
-	);
+	const resp = await page.request.post(`${baseURL}/api/auth/sign-in/username`, {
+		data: { username, password },
+	});
 
 	if (!resp.ok()) {
 		const body = await resp.text();
@@ -53,7 +53,30 @@ async function globalSetup(config: FullConfig) {
 	// Navigate to /dashboard to confirm the session cookie is active and
 	// ensure any SSR-set cookies are flushed into the context before we
 	// snapshot storage state.
-	await page.goto(`${baseURL}/dashboard`, { waitUntil: "domcontentloaded" });
+	console.log(`[global-setup] Navigating to ${baseURL}/dashboard...`);
+	try {
+		await page.goto(`${baseURL}/dashboard`, {
+			waitUntil: "domcontentloaded",
+			timeout: 60_000,
+		});
+	} catch (err) {
+		console.error(
+			[
+				"[global-setup] Navigation to dashboard timed out after 60s.",
+				"This is likely due to dev server compilation.",
+				`Check if the server is responsive at ${baseURL}/dashboard.`,
+			].join(" "),
+		);
+		throw err;
+	}
+	const finalUrl = page.url();
+	if (!finalUrl.includes("/dashboard")) {
+		throw new Error(
+			`[global-setup] Session was not established — expected /dashboard but landed on ${finalUrl}. ` +
+				"Check that AUTH_ADMIN_USERNAME and AUTH_ADMIN_PASSWORD are correct and the dev server is running.",
+		);
+	}
+
 	await context.storageState({ path: AUTH_FILE });
 	console.log(`[global-setup] Storage state saved → ${AUTH_FILE}`);
 

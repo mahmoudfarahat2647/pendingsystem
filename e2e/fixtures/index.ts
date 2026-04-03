@@ -13,7 +13,7 @@ type Fixtures = {
 	 * Usage in a test file:
 	 *   test('my test', async ({ authedPage, dbSeed }) => { ... });
 	 */
-	dbSeed: void;
+	dbSeed: undefined;
 };
 
 export const test = base.extend<Fixtures>({
@@ -29,10 +29,10 @@ export const test = base.extend<Fixtures>({
 
 	// auto: false — tests must explicitly request this fixture
 	dbSeed: [
-		async ({}, use) => {
+		async (_fixtureArgs, use) => {
 			const { cleanupTestRows } = await import("../seeds/cleanup");
 			await cleanupTestRows();
-			await use();
+			await use(undefined);
 			await cleanupTestRows();
 		},
 		{ auto: false },

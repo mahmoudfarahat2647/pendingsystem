@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 
 test.describe("Call List — Smoke (P0)", () => {
 	test("Call List page loads without error", async ({ authedPage }) => {

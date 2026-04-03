@@ -1,5 +1,5 @@
-import { test, expect } from "../fixtures";
-import { seedOrder, cleanupTestRows } from "../seeds";
+import { expect, test } from "../fixtures";
+import { cleanupTestRows, seedOrder } from "../seeds";
 
 test.describe("Row Modals — Regression (P1)", () => {
 	test.afterEach(async () => await cleanupTestRows());

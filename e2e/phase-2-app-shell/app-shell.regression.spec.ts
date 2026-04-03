@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { expect, test } from "../fixtures";
 
 test.describe("App Shell + Dashboard — Regression (P1)", () => {
 	test("dashboard storage widgets do not crash when storage stats are unavailable", async ({

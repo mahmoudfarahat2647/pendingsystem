@@ -9,7 +9,14 @@ export async function seedBookingRow() {
 		vin: "E2EVINBOOK",
 		status: "Booked",
 		metadata: {
-			parts: [{ id: "p1", partNumber: "PN-BOOK-001", description: "Booking Part", rowId: "r1" }],
+			parts: [
+				{
+					id: "p1",
+					partNumber: "PN-BOOK-001",
+					description: "Booking Part",
+					rowId: "r1",
+				},
+			],
 			partStatus: "Arrived",
 			cntrRdg: 0,
 			hasAttachment: false,
