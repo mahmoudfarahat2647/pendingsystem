@@ -29,7 +29,7 @@ export const test = base.extend<Fixtures>({
 
 	// auto: false — tests must explicitly request this fixture
 	dbSeed: [
-		async ({}, use) => {
+		async (_fixtureArgs, use) => {
 			const { cleanupTestRows } = await import("../seeds/cleanup");
 			await cleanupTestRows();
 			await use(undefined);

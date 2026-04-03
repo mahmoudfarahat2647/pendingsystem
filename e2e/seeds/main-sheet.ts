@@ -30,7 +30,7 @@ export async function seedMainSheetArrivedGroup() {
 	return seedOrder({
 		stage: "main",
 		customer_name: "E2E_TEST_MainArrived2",
-		vin,
+		vin: vin,
 		status: "Arrived",
 		metadata: {
 			parts: [

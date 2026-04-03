@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { chromium, type FullConfig } from "@playwright/test";
@@ -12,7 +12,9 @@ const AUTH_FILE = path.resolve(process.cwd(), "e2e/.auth/admin.json");
 async function globalSetup(config: FullConfig) {
 	// 1. Seed the admin user (idempotent — exits 0 if already exists)
 	console.log("\n[global-setup] Seeding admin user...");
-	execSync("npm run auth:seed-admin", { stdio: "inherit" });
+	execFileSync(process.execPath, ["scripts/seed-admin-user.mjs"], {
+		stdio: "inherit",
+	});
 
 	// 2. Ensure the storage-state directory exists
 	mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
@@ -58,11 +60,23 @@ async function globalSetup(config: FullConfig) {
 			timeout: 60_000,
 		});
 	} catch (err) {
-		console.error(`[global-setup] Navigation to dashboard timed out after 60s. 
-            This is likely due to dev server compilation. 
-            Check if the server is responsive at ${baseURL}/dashboard.`);
+		console.error(
+			[
+				"[global-setup] Navigation to dashboard timed out after 60s.",
+				"This is likely due to dev server compilation.",
+				`Check if the server is responsive at ${baseURL}/dashboard.`,
+			].join(" "),
+		);
 		throw err;
 	}
+	const finalUrl = page.url();
+	if (!finalUrl.includes("/dashboard")) {
+		throw new Error(
+			`[global-setup] Session was not established — expected /dashboard but landed on ${finalUrl}. ` +
+				"Check that AUTH_ADMIN_USERNAME and AUTH_ADMIN_PASSWORD are correct and the dev server is running.",
+		);
+	}
+
 	await context.storageState({ path: AUTH_FILE });
 	console.log(`[global-setup] Storage state saved → ${AUTH_FILE}`);
 
