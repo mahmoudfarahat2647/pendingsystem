@@ -12,11 +12,10 @@ npm run lint:fix     # Auto-fix lint issues
 npm run type-check   # TypeScript validation (no emit)
 npm run test         # Vitest unit tests
 npm run test:watch   # Vitest watch mode
-npm run e2e          # Playwright E2E tests
 npm run docs:validate # Validate markdown docs structure
 ```
 
-**Quality gates before merging:** `lint` -> `type-check` -> `test` -> `build`. Add `e2e` when touching critical route flows. Add `docs:validate` when documentation changes.
+**Quality gates before merging:** `lint` -> `type-check` -> `test` -> `build`. Add `docs:validate` when documentation changes.
 
 ## Architecture
 
