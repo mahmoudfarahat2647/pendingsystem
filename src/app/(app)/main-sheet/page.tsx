@@ -23,7 +23,17 @@ const RowModals = dynamic(
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getMainSheetColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
@@ -141,6 +151,8 @@ export default function MainSheetPage() {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 	const [activeFilter, setActiveFilter] = useState<string | null>(null);
+	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
+	const [reorderReason, setReorderReason] = useState("");
 
 	const filteredRowData = useMemo(() => {
 		if (!activeFilter) return effectiveRowData;
@@ -234,6 +246,36 @@ export default function MainSheetPage() {
 		toast.success(`Part status updated to "${status}"`);
 	};
 
+	const handleConfirmReorder = () => {
+		if (!reorderReason.trim()) {
+			toast.error("Please provide a reason for reorder");
+			return;
+		}
+		for (const row of selectedRows) {
+			const newNoteHistory = appendTaggedUserNote(
+				getEffectiveNoteHistory(row),
+				`Reorder Reason: ${reorderReason}`,
+				"reorder",
+			);
+			applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "main",
+				destinationStage: "orders",
+				updates: {
+					noteHistory: newNoteHistory,
+					status: "Reorder",
+				},
+				previousValues: {},
+			});
+		}
+		const count = selectedRows.length;
+		setSelectedRows([]);
+		setIsReorderModalOpen(false);
+		setReorderReason("");
+		toast.success(`${count} row(s) sent back to Orders (Reorder)`);
+	};
+
 	const handleConfirmBooking = async (
 		date: string,
 		note: string,
@@ -308,6 +350,7 @@ export default function MainSheetPage() {
 									);
 								}
 							}}
+							onReorder={() => setIsReorderModalOpen(true)}
 							onSendToCallList={async () => {
 								if (selectedRows.length === 0) return;
 								const ids = getSelectedIds(selectedRows);
@@ -409,6 +452,44 @@ export default function MainSheetPage() {
 					selectedRows={selectedRows}
 				/>
 			)}
+
+			{/* Reorder Reason Modal */}
+			<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
+				<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
+					<DialogHeader>
+						<DialogTitle className="text-orange-500">
+							Reorder - Reason Required
+						</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4">
+						<div>
+							<Label>Reason for Reorder</Label>
+							<Input
+								value={reorderReason}
+								onChange={(e) => setReorderReason(e.target.value)}
+								placeholder="e.g., Customer called back, error on main sheet"
+								className="bg-white/5 border-white/10 text-white"
+							/>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => setIsReorderModalOpen(false)}
+							className="border-white/20 text-white hover:bg-white/10"
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="renault"
+							onClick={handleConfirmReorder}
+							disabled={!reorderReason.trim()}
+						>
+							Confirm Reorder
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<ConfirmDialog
 				open={showDeleteConfirm}

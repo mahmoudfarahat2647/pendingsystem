@@ -9,6 +9,7 @@ import {
 	Lock,
 	Phone,
 	Printer,
+	RotateCcw,
 	Send,
 	Tag,
 	Trash2,
@@ -39,6 +40,7 @@ interface MainSheetToolbarProps {
 	onBooking: () => void;
 	onArchive: () => void;
 	onSendToCallList: () => void;
+	onReorder: () => void;
 	onDelete: () => void;
 	onExtract: () => void;
 	onFilterToggle: () => void;
@@ -58,6 +60,7 @@ export const MainSheetToolbar = ({
 	onBooking,
 	onArchive,
 	onSendToCallList,
+	onReorder,
 	onDelete,
 	onExtract,
 	onFilterToggle,
@@ -181,6 +184,22 @@ export const MainSheetToolbar = ({
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>Send to Call List</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							onClick={onReorder}
+							disabled={isLocked || selectedCount === 0}
+							className="text-orange-500/80 hover:text-orange-500 hover:bg-orange-500/10 h-8 w-8"
+						>
+							<RotateCcw className="h-4 w-4" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Reorder</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>
