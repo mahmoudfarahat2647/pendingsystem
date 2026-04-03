@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ShiningText } from "@/components/ui/shining-text";
 
 interface AuthPageShellProps {
@@ -14,15 +15,15 @@ export function AuthPageShell({
 	children,
 }: AuthPageShellProps) {
 	return (
-		<div
-			className="min-h-screen flex items-center justify-start relative px-4 sm:px-12 md:px-24 xl:px-48"
-			style={{
-				backgroundImage: "url('/auth-background.webp')",
-				backgroundSize: "cover",
-				backgroundPosition: "center",
-			}}
-		>
-			<div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent pointer-events-none" />
+		<div className="min-h-screen flex items-center justify-start relative px-4 sm:px-12 md:px-24 xl:px-48">
+			<Image
+				src="/car_login_background_1775237867914.png"
+				alt="Background"
+				fill
+				priority
+				className="object-cover -z-10"
+			/>
+			<div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent pointer-events-none -z-10" />
 
 			{/* Card */}
 			<div className="relative z-10 w-full max-w-[380px]">

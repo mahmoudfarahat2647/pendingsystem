@@ -54,6 +54,8 @@ npm run build        # Production build
 npm run start        # Start production server
 npm run lint         # Biome lint + format check
 npm run lint:fix     # Biome fix/format
+npm run lint:fix:staged # Biome fix staged files
+npm run lint:fix:staged:unsafe # Biome unsafe fix staged files
 npm run type-check   # TypeScript (no emit)
 npm run test         # Vitest run
 npm run test:watch   # Vitest watch
@@ -64,6 +66,8 @@ npm run e2e:debug    # Playwright debug
 npm run e2e:headed   # Playwright headed
 npm run e2e:report   # Playwright report
 ```
+
+`git commit` now runs a Husky pre-commit hook that applies `biome check --write` to staged files and retries with `--unsafe` if the safe pass still fails.
 
 ## Project Structure
 ```

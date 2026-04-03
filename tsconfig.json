@@ -36,6 +36,6 @@
 		"supabase",
 		"coverage",
 		"test-results",
-"vitest.config.ts"
+		"vitest.config.ts"
 	]
 }
