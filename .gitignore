@@ -12,10 +12,7 @@
 
 # testing
 /coverage
-/playwright-report
 /test-results
-/e2e/.auth/
-e2e/debug-*.png
 
 # next.js
 /.next/
@@ -56,7 +53,6 @@ yarn-error.log*
 # AI Tools
 /.claude/
 /.cursor/
-/.playwright-cli/
 
 # mcp configs
 .mcp.json
@@ -69,3 +65,4 @@ next-env.d.ts
 
 # Git worktrees
 .worktrees/
+/playwright-report/

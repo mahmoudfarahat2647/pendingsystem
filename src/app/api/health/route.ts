@@ -25,16 +25,11 @@ export async function GET() {
 	};
 
 	try {
-		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-		const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 		const hasDatabaseConfig = Boolean(
 			process.env.DATABASE_URL || process.env.PGHOST,
 		);
 
-		if (!supabaseUrl || !supabaseAnonKey) {
-			health.checks.database = "missing_config";
-			health.status = "degraded";
-		} else if (!hasDatabaseConfig) {
+		if (!hasDatabaseConfig) {
 			health.checks.database = "missing_db_config";
 			health.status = "degraded";
 		} else {
