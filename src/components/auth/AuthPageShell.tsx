@@ -1,5 +1,7 @@
 "use client";
 
+import { ShiningText } from "@/components/ui/shining-text";
+
 interface AuthPageShellProps {
 	title?: string;
 	subtitle?: string;
@@ -55,9 +57,10 @@ export function AuthPageShell({
 
 			<div className="absolute bottom-12 left-0 right-0 flex flex-col items-center justify-center z-10 select-none pointer-events-none">
 				<div className="w-64 h-[2px] bg-gradient-to-r from-transparent via-[#FFCC00]/80 to-transparent mb-4 shadow-[0_0_15px_rgba(255,204,0,0.6)]" />
-				<p className="text-[16px] tracking-[0.8em] uppercase font-thin text-white/20 ml-[0.2em] [text-shadow:-1px_-1px_1px_rgba(0,0,0,0.8),_1px_1px_1px_rgba(255,255,255,0.15)]">
-					pending system
-				</p>
+				<ShiningText
+					text="pending system"
+					className="text-[16px] tracking-[0.8em] uppercase font-thin ml-[0.2em] [text-shadow:-1px_-1px_1px_rgba(0,0,0,0.8),_1px_1px_1px_rgba(255,255,255,0.15)]"
+				/>
 			</div>
 		</div>
 	);
