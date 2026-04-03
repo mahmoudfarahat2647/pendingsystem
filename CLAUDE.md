@@ -9,6 +9,8 @@ npm run dev          # Dev server (Node max memory 4GB)
 npm run build        # Production build
 npm run lint         # Biome check
 npm run lint:fix     # Auto-fix lint issues
+npm run lint:fix:staged # Auto-fix staged files
+npm run lint:fix:staged:unsafe # Retry staged fixes with unsafe fixes
 npm run type-check   # TypeScript validation (no emit)
 npm run test         # Vitest unit tests
 npm run test:watch   # Vitest watch mode
@@ -16,6 +18,8 @@ npm run docs:validate # Validate markdown docs structure
 ```
 
 **Quality gates before merging:** `lint` -> `type-check` -> `test` -> `build`. Add `docs:validate` when documentation changes.
+
+`git commit` triggers a Husky pre-commit hook that runs Biome safe fixes on staged files first, then retries with unsafe fixes if the safe pass still reports issues.
 
 ## Architecture
 

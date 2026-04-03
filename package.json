@@ -8,6 +8,8 @@
 		"build": "next build",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
+		"lint:fix:staged": "biome check --write --staged --no-errors-on-unmatched",
+		"lint:fix:staged:unsafe": "biome check --write --unsafe --staged --no-errors-on-unmatched",
 		"type-check": "tsc --noEmit",
 		"start": "next start",
 		"test": "vitest run",

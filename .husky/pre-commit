@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+
+printf '%s\n' 'pre-commit: running Biome safe fixes on staged files...'
+biome check --write --staged --no-errors-on-unmatched
+status=$?
+
+if [ $status -ne 0 ]; then
+	printf '%s\n' 'pre-commit: retrying Biome with unsafe fixes on staged files...'
+	biome check --write --unsafe --staged --no-errors-on-unmatched
+	status=$?
+fi
+
+if [ $status -ne 0 ]; then
+	printf '%s\n' 'pre-commit: Biome still reported issues. Commit aborted.'
+	exit $status
+fi
+
+# Re-stage files that Biome modified so the commit includes the fixes.
+git update-index --again
