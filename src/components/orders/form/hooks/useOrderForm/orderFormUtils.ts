@@ -1,5 +1,4 @@
 import { normalizeCompanyName } from "@/lib/company";
-import { DEFAULT_COMPANY } from "@/lib/ordersValidationConstants";
 import { generateId } from "@/lib/utils";
 import type { PartEntry, PendingRow } from "@/types";
 import type { FormData } from "../../types";
@@ -24,7 +23,7 @@ export function buildInitialFormData(first: PendingRow): FormData {
 		requester: first.requester || "",
 		sabNumber: first.sabNumber || "",
 		acceptedBy: first.acceptedBy || "",
-		company: normalizeCompanyName(first.company) || DEFAULT_COMPANY,
+		company: normalizeCompanyName(first.company) || "",
 	};
 }
 

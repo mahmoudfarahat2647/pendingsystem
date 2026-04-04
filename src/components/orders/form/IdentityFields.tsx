@@ -184,13 +184,15 @@ export const IdentityFields = ({
 											}
 											className={cn(
 												"w-full bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all appearance-none outline-none focus:ring-0",
-												isEditMode
-													? "premium-glow-amber text-amber-500"
-													: "premium-glow-indigo text-indigo-400 font-bold",
+												formData.company === ""
+													? "text-slate-500"
+													: isEditMode
+														? "premium-glow-amber text-amber-500"
+														: "premium-glow-indigo text-indigo-400 font-bold",
 											)}
 										>
 											<option value="" disabled>
-												Select Company
+												Select
 											</option>
 											{!ALLOWED_COMPANIES.includes(
 												formData.company as (typeof ALLOWED_COMPANIES)[number],
