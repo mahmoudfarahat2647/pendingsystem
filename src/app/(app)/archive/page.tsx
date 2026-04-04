@@ -210,6 +210,11 @@ export default function ArchivePage() {
 				},
 				cellClass: "flex items-center justify-center",
 			},
+			{
+				headerName: "REQUESTER",
+				field: "requester",
+				width: 120,
+			},
 		];
 	}, [partStatuses, handleNoteClick, handleReminderClick, handleAttachClick]);
 
