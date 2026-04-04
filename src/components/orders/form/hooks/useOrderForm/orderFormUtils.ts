@@ -41,7 +41,7 @@ export function buildEmptyFormData(): FormData {
 		requester: "",
 		sabNumber: "",
 		acceptedBy: "",
-		company: DEFAULT_COMPANY,
+		company: "",
 	};
 }
 
