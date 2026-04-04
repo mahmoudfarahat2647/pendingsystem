@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { isAllowedCompanyName, normalizeCompanyName } from "@/lib/company";
-import { DEFAULT_COMPANY } from "@/lib/ordersValidationConstants";
 import { normalizeMileageAsNumber } from "@/lib/utils";
 
 export const OrderFormSchema = z
@@ -27,7 +26,8 @@ export const OrderFormSchema = z
 		acceptedBy: z.string().optional(),
 		company: z
 			.string()
-			.default(DEFAULT_COMPANY)
+			.min(1, "Company is required")
+			.prefault("")
 			.transform(normalizeCompanyName),
 	})
 	.refine(

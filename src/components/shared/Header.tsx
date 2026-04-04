@@ -24,7 +24,6 @@ import { cn } from "@/lib/utils";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
-import { CloudSync } from "./CloudSync";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 
 export const Header = React.memo(function Header() {
@@ -325,8 +324,6 @@ export const Header = React.memo(function Header() {
 					>
 						<RefreshCw className="h-5 w-5" />
 					</button>
-
-					<CloudSync />
 
 					<div ref={exportDropdownRef} className="relative">
 						<button
