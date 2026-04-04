@@ -171,7 +171,12 @@ export const IdentityFields = ({
 									<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
 										Company
 									</Label>
-									<div className="relative">
+									<div
+										className={cn(
+											"relative rounded-lg transition-all",
+											getFieldError("company") && "ring-2 ring-red-500/50",
+										)}
+									>
 										<select
 											value={formData.company}
 											onChange={(e) =>
@@ -184,13 +189,17 @@ export const IdentityFields = ({
 													: "premium-glow-indigo text-indigo-400 font-bold",
 											)}
 										>
+											<option value="" disabled>
+												Select Company
+											</option>
 											{!ALLOWED_COMPANIES.includes(
 												formData.company as (typeof ALLOWED_COMPANIES)[number],
-											) && (
-												<option value={formData.company}>
-													{formData.company}
-												</option>
-											)}
+											) &&
+												formData.company !== "" && (
+													<option value={formData.company}>
+														{formData.company}
+													</option>
+												)}
 											{ALLOWED_COMPANIES.map((company) => (
 												<option key={company} value={company}>
 													{company}
@@ -199,6 +208,11 @@ export const IdentityFields = ({
 										</select>
 										<ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500 pointer-events-none" />
 									</div>
+									{errors.company && (
+										<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
+											{errors.company}
+										</p>
+									)}
 								</div>
 							</div>
 
