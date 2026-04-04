@@ -150,6 +150,15 @@ function deepCloneByStage(baselineByStage: Record<OrderStage, PendingRow[]>) {
 	return cloned;
 }
 
+// Module-level memoization cache for _deriveWorkingRows
+let _derivedRowsCache: {
+	version: string;
+	rows: Record<OrderStage, PendingRow[]>;
+} | null = null;
+
+// Capture version counter - incremented on every baseline capture to ensure cache invalidation
+let _baselineCaptureVersion = 0;
+
 // --- Slice ---
 
 export const createDraftSessionSlice: StateCreator<
@@ -182,6 +191,7 @@ export const createDraftSessionSlice: StateCreator<
 		draftSession: initialSession,
 
 		_captureBaseline: () => {
+			_baselineCaptureVersion++; // Increment on every capture
 			const baseline: Record<OrderStage, PendingRow[]> = {} as Record<
 				OrderStage,
 				PendingRow[]
@@ -204,6 +214,11 @@ export const createDraftSessionSlice: StateCreator<
 			const state = get().draftSession;
 			if (!state.isActive || state.pendingCommands.length === 0) {
 				return state.baselineByStage;
+			}
+
+			const version = `${_baselineCaptureVersion}|${state.pendingCommands.length}|${state.lastTouchedAt ?? 0}`;
+			if (_derivedRowsCache?.version === version) {
+				return _derivedRowsCache.rows;
 			}
 
 			const working = deepCloneByStage(state.baselineByStage);
@@ -255,17 +270,15 @@ export const createDraftSessionSlice: StateCreator<
 				} else if (cmd.type === "createRows") {
 					working[cmd.stage].push(...structuredClone(cmd.rows));
 				} else if (cmd.type === "deleteRows") {
+					const idSet = new Set(cmd.ids);
 					for (const stage of ORDER_STAGES) {
-						working[stage] = working[stage].filter(
-							(r) => !cmd.ids.includes(r.id),
-						);
+						working[stage] = working[stage].filter((r) => !idSet.has(r.id));
 					}
 				} else if (cmd.type === "moveRows") {
-					const moved = working[cmd.sourceStage].filter((r) =>
-						cmd.ids.includes(r.id),
-					);
+					const idSet = new Set(cmd.ids);
+					const moved = working[cmd.sourceStage].filter((r) => idSet.has(r.id));
 					working[cmd.sourceStage] = working[cmd.sourceStage].filter(
-						(r) => !cmd.ids.includes(r.id),
+						(r) => !idSet.has(r.id),
 					);
 					for (const row of moved) {
 						const updated = {
@@ -286,6 +299,7 @@ export const createDraftSessionSlice: StateCreator<
 				applyCommandToWorking(cmd, working);
 			}
 
+			_derivedRowsCache = { version, rows: working };
 			return working;
 		},
 
