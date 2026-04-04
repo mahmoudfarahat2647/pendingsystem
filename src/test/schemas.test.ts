@@ -76,5 +76,48 @@ describe("Zod Schemas", () => {
 				expect(result.error.issues[0].path).toContain("cntrRdg");
 			}
 		});
+
+		it("should fail when company is empty string", () => {
+			const form = {
+				customerName: "Jane Doe",
+				vin: "VF112345678901234",
+				mobile: "01000000000",
+				cntrRdg: "50000",
+				model: "Duster",
+				repairSystem: "Mechanical",
+				requester: "Admin",
+				sabNumber: "SAB123",
+				acceptedBy: "Agent",
+				company: "",
+			};
+			const result = OrderFormSchema.safeParse(form);
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				const companyErrors = result.error.flatten().fieldErrors.company;
+				expect(companyErrors).toBeDefined();
+				expect(companyErrors?.[0]).toBe("Company is required");
+			}
+		});
+
+		it("should fail when company is omitted (uses empty default)", () => {
+			const form = {
+				customerName: "Jane Doe",
+				vin: "VF112345678901234",
+				mobile: "01000000000",
+				cntrRdg: "50000",
+				model: "Duster",
+				repairSystem: "Mechanical",
+				requester: "Admin",
+				sabNumber: "SAB123",
+				acceptedBy: "Agent",
+			};
+			const result = OrderFormSchema.safeParse(form);
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				const companyErrors = result.error.flatten().fieldErrors.company;
+				expect(companyErrors).toBeDefined();
+				expect(companyErrors?.[0]).toBe("Company is required");
+			}
+		});
 	});
 });
