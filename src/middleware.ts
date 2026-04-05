@@ -114,8 +114,8 @@ export const config = {
 		 * - _next/static (static files)
 		 * - _next/image (image optimization files)
 		 * - favicon.ico (favicon file)
-		 * - public folder files
+		 * - Public static assets (files with extensions served from /public)
 		 */
-		"/((?!_next/static|_next/image|favicon.ico|.*..*$).*)",
+		"/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|ttf|woff|woff2)$).*)",
 	],
 };

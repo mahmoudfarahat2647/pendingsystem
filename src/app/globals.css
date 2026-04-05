@@ -68,20 +68,8 @@
 }
 
 @layer utilities {
-	.text-balance {
-		text-wrap: balance;
-	}
-
 	.glass {
 		@apply bg-white/[0.03] backdrop-blur-md border border-white/[0.08];
-	}
-
-	.glass-card {
-		@apply bg-[#141416]/80 backdrop-blur-xl border border-white/5 shadow-xl;
-	}
-
-	.text-gradient {
-		@apply bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60;
 	}
 
 	.transition-all {

@@ -37,8 +37,6 @@ const createMockRow = (id: string, endWarranty?: string): PendingRow => ({
 });
 
 describe("notificationSlice", () => {
-	const sendToArchiveMock = vi.fn();
-
 	const createTestStore = (rows: PendingRow[]) => {
 		queryClient.setQueryData(getOrdersQueryKey("orders"), rows);
 		queryClient.setQueryData(getOrdersQueryKey("main"), []);
@@ -57,7 +55,6 @@ describe("notificationSlice", () => {
 					callRowData: [],
 					archiveRowData: [],
 					notifications: [],
-					sendToArchive: sendToArchiveMock,
 				}) as unknown as any,
 		);
 	};
@@ -72,67 +69,57 @@ describe("notificationSlice", () => {
 		vi.useRealTimers();
 	});
 
-	it("should auto-archive expired warranties", async () => {
+	it("should not create warranty notification for fully expired warranties", () => {
 		// Set "now" to 2026-01-01
 		const now = new Date("2026-01-01T12:00:00Z");
 		vi.setSystemTime(now);
 
-		// Expired row: 2025-12-31 (yesterday)
+		// Expired row: 2025-12-31 (yesterday) — daysRemaining < 0, fails >= 0 check
 		const expiredRow = createMockRow("1", "2025-12-31");
-		// Valid row: 2026-01-05 (future)
+		// Valid row: 2026-01-05 (future, within 10-day threshold)
 		const validRow = createMockRow("2", "2026-01-05");
 
 		const store = createTestStore([expiredRow, validRow]);
 
-		// Run check
 		store.getState().checkNotifications();
 
-		// Expect sendToArchive to be called for expired row
-		expect(sendToArchiveMock).toHaveBeenCalledTimes(1);
-		expect(sendToArchiveMock).toHaveBeenCalledWith(
-			["1"],
-			"Auto-archived: Warranty expired",
-		);
-
-		// Note: orderService.updateOrdersStage is called via dynamic import in background
-		// We don't wait for it in this test as it's a fire-and-forget operation
+		// Only the valid row should generate a warranty notification
+		const notifications = store.getState().notifications;
+		expect(notifications).toHaveLength(1);
+		expect(notifications[0].type).toBe("warranty");
+		expect(notifications[0].referenceId).toBe("2");
 	});
 
-	it("should NOT archive if warranty is due today (valid)", () => {
+	it("should create warranty notification for warranty expiring today", () => {
 		// Set "now" to 2026-01-01 T10:00
 		const now = new Date("2026-01-01T10:00:00Z");
 		vi.setSystemTime(now);
 
-		// Expires today: 2026-01-01 (Assuming "2026-01-01" parses to 2026-01-01T00:00:00Z)
-		// If "now" is T10:00, then diffTime = (T00:00 - T10:00) = -10 hours.
-		// Wait. If diffTime < 0, it archives.
-		// So if "expires today" means "until end of today", my logic (diffTime < 0) archives it immediately if "now" > "00:00".
-		// This confirms behavior: Date-based expiry means "Expires AT start of date".
-		// If the user considers "Today" as still valid, then my logic is "strictly expired".
-		// Let's test this assumption.
-
-		const expiringRow = createMockRow("1", "2026-01-01"); // T00:00
+		// Expires today: "2026-01-01" parses to T00:00. diffTime is negative (-10h),
+		// but Math.ceil(negative / ms_per_day) = 0, which passes >= 0 && <= 10 check.
+		const expiringRow = createMockRow("1", "2026-01-01");
 		const store = createTestStore([expiringRow]);
 
 		store.getState().checkNotifications();
 
-		// Since 10:00 > 00:00, diff < 0. Should archive.
-		expect(sendToArchiveMock).toHaveBeenCalledWith(["1"], expect.any(String));
+		const notifications = store.getState().notifications;
+		expect(notifications).toHaveLength(1);
+		expect(notifications[0].type).toBe("warranty");
+		expect(notifications[0].description).toContain("0 days");
 	});
 
-	it("should NOT archive if warranty is just future", () => {
+	it("should create warranty notification for near-future warranty", () => {
 		const now = new Date("2026-01-01T10:00:00Z");
 		vi.setSystemTime(now);
 
-		// Tomorrow
+		// Tomorrow — within 10-day threshold
 		const futureRow = createMockRow("1", "2026-01-02");
 		const store = createTestStore([futureRow]);
 
 		store.getState().checkNotifications();
 
-		expect(sendToArchiveMock).not.toHaveBeenCalled();
-		// Should notify
 		expect(store.getState().notifications).toHaveLength(1);
+		expect(store.getState().notifications[0].type).toBe("warranty");
 	});
 
 	describe("Reminder Dismissal Logic", () => {

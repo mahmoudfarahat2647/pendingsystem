@@ -13,28 +13,6 @@ export const createInventorySlice: StateCreator<
 	archiveRowData: [],
 
 	/**
-	 * Moves rows from Orders to the Main Sheet (Pending status).
-	 * @param ids - Array of row IDs to commit.
-	 */
-	commitToMainSheet: (ids) => {
-		set((state) => {
-			const ordersToMove = state.ordersRowData.filter((r) =>
-				ids.includes(r.id),
-			);
-			const updatedOrders = ordersToMove.map((r) => ({
-				...r,
-				status: "Pending" as const,
-				trackingId: `MAIN-${r.baseId}`,
-			}));
-
-			return {
-				ordersRowData: state.ordersRowData.filter((r) => !ids.includes(r.id)),
-				rowData: [...state.rowData, ...updatedOrders],
-			};
-		});
-	},
-
-	/**
 	 * Moves rows from the Main Sheet to the Call List.
 	 * @param ids - Array of row IDs to send.
 	 */
@@ -56,103 +34,6 @@ export const createInventorySlice: StateCreator<
 				rowData: state.rowData.filter((r) => !ids.includes(r.id)),
 				ordersRowData: state.ordersRowData.filter((r) => !ids.includes(r.id)),
 				callRowData: [...state.callRowData, ...updatedRows],
-			};
-		});
-	},
-
-	/**
-	 * Moves rows from any active list (Booking, Call, Main) to the Archive.
-	 * @param ids - Array of row IDs to archive.
-	 * @param actionNote - Optional note explaining the archive action.
-	 */
-	sendToArchive: (ids, actionNote) => {
-		set((state) => {
-			// Check all possible source lists
-			const bookingRows = state.bookingRowData.filter((r) =>
-				ids.includes(r.id),
-			);
-			const callRows = state.callRowData.filter((r) => ids.includes(r.id));
-			const mainRows = state.rowData.filter((r) => ids.includes(r.id));
-			const orderRows = state.ordersRowData.filter((r) => ids.includes(r.id));
-
-			const rowsToMove = [
-				...bookingRows,
-				...callRows,
-				...mainRows,
-				...orderRows,
-			];
-
-			const updatedRows = rowsToMove.map((r) => {
-				const tag = "#archive";
-				const reason = actionNote?.trim();
-				const newNote = reason ? `${reason} ${tag}` : "";
-				const combinedNote = r.actionNote
-					? reason
-						? `${r.actionNote}\n${newNote}`
-						: r.actionNote
-					: newNote;
-
-				return {
-					...r,
-					status: "Archived" as const,
-					trackingId: `ARCH-${r.baseId}`,
-					actionNote: combinedNote,
-				};
-			});
-
-			return {
-				bookingRowData: state.bookingRowData.filter((r) => !ids.includes(r.id)),
-				callRowData: state.callRowData.filter((r) => !ids.includes(r.id)),
-				rowData: state.rowData.filter((r) => !ids.includes(r.id)),
-				ordersRowData: state.ordersRowData.filter((r) => !ids.includes(r.id)),
-				archiveRowData: [...state.archiveRowData, ...updatedRows],
-			};
-		});
-	},
-
-	/**
-	 * Moves rows from any active list (Booking, Call, Archive) back to Orders for re-processing.
-	 * @param ids - Array of row IDs to reorder.
-	 * @param actionNote - Required note explaining the reorder reason.
-	 */
-	sendToReorder: (ids, actionNote) => {
-		set((state) => {
-			// Check all possible source lists
-			const bookingRows = state.bookingRowData.filter((r) =>
-				ids.includes(r.id),
-			);
-			const callRows = state.callRowData.filter((r) => ids.includes(r.id));
-			const archiveRows = state.archiveRowData.filter((r) =>
-				ids.includes(r.id),
-			);
-
-			const rowsToMove = [...bookingRows, ...callRows, ...archiveRows];
-
-			const updatedRows = rowsToMove.map((r) => {
-				const tag = "#reorder";
-				const reason = actionNote?.trim();
-				const newNote = reason ? `${reason} ${tag}` : "";
-				const combinedNote = r.actionNote
-					? reason
-						? `${r.actionNote}\n${newNote}`
-						: r.actionNote
-					: newNote;
-
-				return {
-					...r,
-					status: "Reorder" as const,
-					trackingId: `ORD-${r.baseId}`,
-					actionNote: combinedNote,
-					bookingDate: undefined,
-					bookingNote: undefined,
-				};
-			});
-
-			return {
-				bookingRowData: state.bookingRowData.filter((r) => !ids.includes(r.id)),
-				callRowData: state.callRowData.filter((r) => !ids.includes(r.id)),
-				archiveRowData: state.archiveRowData.filter((r) => !ids.includes(r.id)),
-				ordersRowData: [...state.ordersRowData, ...updatedRows],
 			};
 		});
 	},
