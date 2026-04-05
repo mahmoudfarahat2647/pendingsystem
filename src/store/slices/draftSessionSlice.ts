@@ -89,6 +89,7 @@ export interface DraftSaveMutations {
 export interface DraftSession {
 	isActive: boolean;
 	baselineByStage: Record<OrderStage, PendingRow[]>;
+	derivedRowsRevision: number;
 	pendingCommands: DraftCommand[];
 	past: DraftCommand[];
 	future: DraftCommand[];
@@ -156,8 +157,11 @@ let _derivedRowsCache: {
 	rows: Record<OrderStage, PendingRow[]>;
 } | null = null;
 
-// Capture version counter - incremented on every baseline capture to ensure cache invalidation
-let _baselineCaptureVersion = 0;
+let _nextDerivedRowsRevision = 1;
+
+function allocateDerivedRowsRevision(): number {
+	return _nextDerivedRowsRevision++;
+}
 
 // --- Slice ---
 
@@ -176,6 +180,7 @@ export const createDraftSessionSlice: StateCreator<
 			booking: [],
 			archive: [],
 		},
+		derivedRowsRevision: 0,
 		pendingCommands: [],
 		past: [],
 		future: [],
@@ -191,7 +196,6 @@ export const createDraftSessionSlice: StateCreator<
 		draftSession: initialSession,
 
 		_captureBaseline: () => {
-			_baselineCaptureVersion++; // Increment on every capture
 			const baseline: Record<OrderStage, PendingRow[]> = {} as Record<
 				OrderStage,
 				PendingRow[]
@@ -205,6 +209,7 @@ export const createDraftSessionSlice: StateCreator<
 				draftSession: {
 					...state.draftSession,
 					baselineByStage: baseline,
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					isActive: true,
 				},
 			}));
@@ -216,7 +221,7 @@ export const createDraftSessionSlice: StateCreator<
 				return state.baselineByStage;
 			}
 
-			const version = `${_baselineCaptureVersion}|${state.pendingCommands.length}|${state.lastTouchedAt ?? 0}`;
+			const version = `${state.workspaceId}|${state.derivedRowsRevision}`;
 			if (_derivedRowsCache?.version === version) {
 				return _derivedRowsCache.rows;
 			}
@@ -380,6 +385,7 @@ export const createDraftSessionSlice: StateCreator<
 						...state.draftSession.touchedStages,
 						...getCommandStages(cmd),
 					]),
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					lastTouchedAt: Date.now(),
 				};
 				return { draftSession: newSession };
@@ -401,6 +407,7 @@ export const createDraftSessionSlice: StateCreator<
 					pendingCommands: state.draftSession.pendingCommands.slice(0, -1),
 					past: state.draftSession.past.slice(0, -1),
 					future: [...state.draftSession.future, cmd],
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					dirty: state.draftSession.pendingCommands.length > 1,
 				},
 			}));
@@ -420,6 +427,7 @@ export const createDraftSessionSlice: StateCreator<
 					pendingCommands: [...state.draftSession.pendingCommands, cmd],
 					past: [...state.draftSession.past, cmd],
 					future: state.draftSession.future.slice(0, -1),
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					dirty: true,
 				},
 			}));
@@ -447,6 +455,7 @@ export const createDraftSessionSlice: StateCreator<
 				set((state) => ({
 					draftSession: {
 						...initialSession,
+						derivedRowsRevision: allocateDerivedRowsRevision(),
 						workspaceId: state.draftSession.workspaceId,
 					},
 				}));
@@ -482,6 +491,7 @@ export const createDraftSessionSlice: StateCreator<
 			set((state) => ({
 				draftSession: {
 					...initialSession,
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					workspaceId: state.draftSession.workspaceId,
 				},
 			}));
@@ -498,6 +508,7 @@ export const createDraftSessionSlice: StateCreator<
 			set(() => ({
 				draftSession: {
 					...newSession,
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					pendingCommands: snapshot.pendingCommands,
 					past: [],
 					future: [],
