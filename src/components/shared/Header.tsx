@@ -20,10 +20,16 @@ import {
 	ALLOWED_COMPANIES,
 	type AllowedCompany,
 } from "@/lib/ordersValidationConstants";
+import { getOrdersQueryKey, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
-import { orderService } from "@/services/orderService";
+import { type OrderStage, orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import {
+	NOTIFICATION_CHECK_INTERVAL_MS,
+	NOTIFICATION_INITIAL_DELAY_MS,
+	shouldRunNotificationCheck,
+} from "./headerNotificationPolling";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 
 export const Header = React.memo(function Header() {
@@ -33,6 +39,10 @@ export const Header = React.memo(function Header() {
 	const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 	const [isExporting, setIsExporting] = useState(false);
 	const exportDropdownRef = useRef<HTMLDivElement>(null);
+	const lastNotificationCheckRef = useRef<{
+		dataVersion: number;
+		lastRunAt: number;
+	}>({ dataVersion: 0, lastRunAt: 0 });
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 	const searchTerm = useAppStore((state) => state.searchTerm);
@@ -98,16 +108,36 @@ export const Header = React.memo(function Header() {
 
 	// Notification Check Interval (Throttled to reduce lag)
 	useEffect(() => {
-		const CHECK_INTERVAL = 10000; // 10 seconds for more "instant" feel
-		const INITIAL_DELAY = 3000; // Defer first check by 3 seconds to improve startup performance
-
 		const check = () => {
+			const stages = ["orders", "main", "call", "booking"] as const;
+			const currentDataVersion = Math.max(
+				...stages.map(
+					(s) =>
+						queryClient.getQueryState(getOrdersQueryKey(s as OrderStage))
+							?.dataUpdatedAt ?? 0,
+				),
+			);
+			const now = Date.now();
+			if (
+				!shouldRunNotificationCheck(
+					currentDataVersion,
+					now,
+					lastNotificationCheckRef.current,
+				)
+			) {
+				return;
+			}
+
+			lastNotificationCheckRef.current = {
+				dataVersion: currentDataVersion,
+				lastRunAt: now,
+			};
 			checkNotifications();
 		};
 
 		// Defer first check by 3 seconds to allow app to fully render
-		const initialTimeout = setTimeout(check, INITIAL_DELAY);
-		const interval = setInterval(check, CHECK_INTERVAL);
+		const initialTimeout = setTimeout(check, NOTIFICATION_INITIAL_DELAY_MS);
+		const interval = setInterval(check, NOTIFICATION_CHECK_INTERVAL_MS);
 		return () => {
 			clearTimeout(initialTimeout);
 			clearInterval(interval);

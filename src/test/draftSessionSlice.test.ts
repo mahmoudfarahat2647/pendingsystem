@@ -77,6 +77,7 @@ function resetDraftSession() {
 		draftSession: {
 			isActive: false,
 			baselineByStage: structuredClone(EMPTY_BASELINE),
+			derivedRowsRevision: 0,
 			pendingCommands: [],
 			past: [],
 			future: [],
@@ -171,6 +172,112 @@ describe("draftSessionSlice", () => {
 			expect.objectContaining({
 				id: row.id,
 				partStatus: "Arrived",
+			}),
+		]);
+	});
+
+	it("uses the latest draft commands when undo and re-apply happen in the same millisecond", () => {
+		const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_712_345_678_000);
+		const row = createRow("00000000-0000-4000-8000-000000000004", "orders");
+		seedStageData({ orders: [row] });
+		try {
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates: { partNumber: "" },
+				previousValues: { partNumber: row.partNumber },
+			});
+
+			expect(useAppStore.getState().getWorkingRows("orders")).toEqual([
+				expect.objectContaining({
+					id: row.id,
+					partNumber: "",
+				}),
+			]);
+
+			useAppStore.getState().undoDraft();
+
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates: { partStatus: "Ready" },
+				previousValues: { partStatus: row.partStatus },
+			});
+
+			const moveAccepted = useAppStore.getState().applyCommand({
+				type: "moveRows",
+				ids: [row.id],
+				sourceStage: "orders",
+				destinationStage: "main",
+			});
+
+			expect(moveAccepted).toBe(true);
+			expect(useAppStore.getState().getWorkingRows("orders")).toEqual([]);
+			expect(useAppStore.getState().getWorkingRows("main")).toEqual([
+				expect.objectContaining({
+					id: row.id,
+					stage: "main",
+					partStatus: "Ready",
+					partNumber: row.partNumber,
+				}),
+			]);
+		} finally {
+			nowSpy.mockRestore();
+		}
+	});
+
+	it("restores recovery snapshots against the freshest captured baseline", () => {
+		const row = createRow("00000000-0000-4000-8000-000000000005", "orders");
+		seedStageData({ orders: [row] });
+
+		useAppStore.getState().applyCommand({
+			type: "patchRow",
+			id: row.id,
+			sourceStage: "orders",
+			destinationStage: "orders",
+			updates: { customerName: "Cached Name" },
+			previousValues: { customerName: row.customerName },
+		});
+		expect(useAppStore.getState().getWorkingRows("orders")).toEqual([
+			expect.objectContaining({
+				id: row.id,
+				customerName: "Cached Name",
+			}),
+		]);
+
+		const refreshedBaselineRow = createRow(row.id, "orders", {
+			customerName: "Fresh Baseline",
+			description: "Updated from query cache",
+		});
+		seedStageData({ orders: [refreshedBaselineRow] });
+
+		const snapshot: DraftRecoverySnapshot = {
+			workspaceId: useAppStore.getState().draftSession.workspaceId,
+			updatedAt: 1_712_345_678_000,
+			pendingCommands: [
+				{
+					type: "patchRow",
+					id: row.id,
+					sourceStage: "orders",
+					destinationStage: "orders",
+					updates: { partStatus: "Recovered" },
+					previousValues: { partStatus: refreshedBaselineRow.partStatus },
+				},
+			],
+		};
+
+		useAppStore.getState().restoreFromRecovery(snapshot);
+
+		expect(useAppStore.getState().getWorkingRows("orders")).toEqual([
+			expect.objectContaining({
+				id: row.id,
+				customerName: "Fresh Baseline",
+				description: "Updated from query cache",
+				partStatus: "Recovered",
 			}),
 		]);
 	});

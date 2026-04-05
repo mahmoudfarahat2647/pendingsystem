@@ -89,6 +89,7 @@ export interface DraftSaveMutations {
 export interface DraftSession {
 	isActive: boolean;
 	baselineByStage: Record<OrderStage, PendingRow[]>;
+	derivedRowsRevision: number;
 	pendingCommands: DraftCommand[];
 	past: DraftCommand[];
 	future: DraftCommand[];
@@ -150,6 +151,18 @@ function deepCloneByStage(baselineByStage: Record<OrderStage, PendingRow[]>) {
 	return cloned;
 }
 
+// Module-level memoization cache for _deriveWorkingRows
+let _derivedRowsCache: {
+	version: string;
+	rows: Record<OrderStage, PendingRow[]>;
+} | null = null;
+
+let _nextDerivedRowsRevision = 1;
+
+function allocateDerivedRowsRevision(): number {
+	return _nextDerivedRowsRevision++;
+}
+
 // --- Slice ---
 
 export const createDraftSessionSlice: StateCreator<
@@ -167,6 +180,7 @@ export const createDraftSessionSlice: StateCreator<
 			booking: [],
 			archive: [],
 		},
+		derivedRowsRevision: 0,
 		pendingCommands: [],
 		past: [],
 		future: [],
@@ -195,6 +209,7 @@ export const createDraftSessionSlice: StateCreator<
 				draftSession: {
 					...state.draftSession,
 					baselineByStage: baseline,
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					isActive: true,
 				},
 			}));
@@ -204,6 +219,11 @@ export const createDraftSessionSlice: StateCreator<
 			const state = get().draftSession;
 			if (!state.isActive || state.pendingCommands.length === 0) {
 				return state.baselineByStage;
+			}
+
+			const version = `${state.workspaceId}|${state.derivedRowsRevision}`;
+			if (_derivedRowsCache?.version === version) {
+				return _derivedRowsCache.rows;
 			}
 
 			const working = deepCloneByStage(state.baselineByStage);
@@ -255,17 +275,15 @@ export const createDraftSessionSlice: StateCreator<
 				} else if (cmd.type === "createRows") {
 					working[cmd.stage].push(...structuredClone(cmd.rows));
 				} else if (cmd.type === "deleteRows") {
+					const idSet = new Set(cmd.ids);
 					for (const stage of ORDER_STAGES) {
-						working[stage] = working[stage].filter(
-							(r) => !cmd.ids.includes(r.id),
-						);
+						working[stage] = working[stage].filter((r) => !idSet.has(r.id));
 					}
 				} else if (cmd.type === "moveRows") {
-					const moved = working[cmd.sourceStage].filter((r) =>
-						cmd.ids.includes(r.id),
-					);
+					const idSet = new Set(cmd.ids);
+					const moved = working[cmd.sourceStage].filter((r) => idSet.has(r.id));
 					working[cmd.sourceStage] = working[cmd.sourceStage].filter(
-						(r) => !cmd.ids.includes(r.id),
+						(r) => !idSet.has(r.id),
 					);
 					for (const row of moved) {
 						const updated = {
@@ -286,6 +304,7 @@ export const createDraftSessionSlice: StateCreator<
 				applyCommandToWorking(cmd, working);
 			}
 
+			_derivedRowsCache = { version, rows: working };
 			return working;
 		},
 
@@ -366,6 +385,7 @@ export const createDraftSessionSlice: StateCreator<
 						...state.draftSession.touchedStages,
 						...getCommandStages(cmd),
 					]),
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					lastTouchedAt: Date.now(),
 				};
 				return { draftSession: newSession };
@@ -387,6 +407,7 @@ export const createDraftSessionSlice: StateCreator<
 					pendingCommands: state.draftSession.pendingCommands.slice(0, -1),
 					past: state.draftSession.past.slice(0, -1),
 					future: [...state.draftSession.future, cmd],
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					dirty: state.draftSession.pendingCommands.length > 1,
 				},
 			}));
@@ -406,6 +427,7 @@ export const createDraftSessionSlice: StateCreator<
 					pendingCommands: [...state.draftSession.pendingCommands, cmd],
 					past: [...state.draftSession.past, cmd],
 					future: state.draftSession.future.slice(0, -1),
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					dirty: true,
 				},
 			}));
@@ -433,6 +455,7 @@ export const createDraftSessionSlice: StateCreator<
 				set((state) => ({
 					draftSession: {
 						...initialSession,
+						derivedRowsRevision: allocateDerivedRowsRevision(),
 						workspaceId: state.draftSession.workspaceId,
 					},
 				}));
@@ -468,6 +491,7 @@ export const createDraftSessionSlice: StateCreator<
 			set((state) => ({
 				draftSession: {
 					...initialSession,
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					workspaceId: state.draftSession.workspaceId,
 				},
 			}));
@@ -484,6 +508,7 @@ export const createDraftSessionSlice: StateCreator<
 			set(() => ({
 				draftSession: {
 					...newSession,
+					derivedRowsRevision: allocateDerivedRowsRevision(),
 					pendingCommands: snapshot.pendingCommands,
 					past: [],
 					future: [],
