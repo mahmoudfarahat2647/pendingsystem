@@ -24,8 +24,11 @@ import {
 	DialogFooter,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { authClient } from "@/lib/auth-client";
+import { getOrdersByStageFromCache } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
+import { Logo } from "./Logo";
 import { SettingsModal } from "./SettingsModal";
 import { SidebarUserMenu } from "./SidebarUserMenu";
 
@@ -81,18 +84,24 @@ export const Sidebar = React.memo(function Sidebar() {
 	const router = useRouter();
 	const currentEditVin = useAppStore((state) => state.currentEditVin);
 	const clearCurrentEditVin = useAppStore((state) => state.clearCurrentEditVin);
-	const ordersRowData = useAppStore((state) => state.ordersRowData);
-	const rowData = useAppStore((state) => state.rowData);
+	const { data: session } = authClient.useSession();
+	const userName = session?.user?.name ?? "";
+	const userInitials = userName
+		.split(" ")
+		.map((w) => w[0])
+		.join("")
+		.toUpperCase()
+		.slice(0, 2);
 
 	const getTargetTabVin = (targetHref: string): string | null => {
 		if (targetHref === "/orders") {
-			const targetRow = ordersRowData.find(
+			const targetRow = getOrdersByStageFromCache("orders").find(
 				(r) => r.vin?.toUpperCase() === currentEditVin?.toUpperCase(),
 			);
 			return targetRow ? currentEditVin : "different-context";
 		}
 		if (targetHref === "/main-sheet") {
-			const targetRow = rowData.find(
+			const targetRow = getOrdersByStageFromCache("main").find(
 				(r) => r.vin?.toUpperCase() === currentEditVin?.toUpperCase(),
 			);
 			return targetRow ? currentEditVin : "different-context";
@@ -145,52 +154,7 @@ export const Sidebar = React.memo(function Sidebar() {
 							aria-label="Go to Dashboard"
 						>
 							<div className="w-10 h-10 bg-renault-yellow rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(255,204,0,0.3)]">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 32 32"
-									className="w-6 h-6"
-									role="img"
-									aria-label="pendingsystem Logo"
-								>
-									<g transform="translate(16, 16)">
-										<rect
-											x="-8"
-											y="-13"
-											width="4.5"
-											height="26"
-											rx="2.25"
-											fill="#000000"
-											transform="rotate(-8)"
-										/>
-										<rect
-											x="3.5"
-											y="-13"
-											width="4.5"
-											height="26"
-											rx="2.25"
-											fill="#000000"
-											transform="rotate(-8)"
-										/>
-										<rect
-											x="-13"
-											y="-6.25"
-											width="26"
-											height="4.5"
-											rx="2.25"
-											fill="#000000"
-											transform="rotate(-8)"
-										/>
-										<rect
-											x="-13"
-											y="1.75"
-											width="26"
-											height="4.5"
-											rx="2.25"
-											fill="#000000"
-											transform="rotate(-8)"
-										/>
-									</g>
-								</svg>
+								<Logo />
 							</div>
 							<div className="flex flex-col">
 								<span className="font-bold text-white tracking-wide text-lg leading-none">
@@ -211,52 +175,7 @@ export const Sidebar = React.memo(function Sidebar() {
 							aria-label="Go to Dashboard"
 						>
 							<div className="w-10 h-10 bg-renault-yellow rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(255,204,0,0.3)]">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 32 32"
-									className="w-6 h-6"
-									role="img"
-									aria-label="pendingsystem Logo"
-								>
-									<g transform="translate(16, 16)">
-										<rect
-											x="-8"
-											y="-13"
-											width="4.5"
-											height="26"
-											rx="2.25"
-											fill="#000000"
-											transform="rotate(-8)"
-										/>
-										<rect
-											x="3.5"
-											y="-13"
-											width="4.5"
-											height="26"
-											rx="2.25"
-											fill="#000000"
-											transform="rotate(-8)"
-										/>
-										<rect
-											x="-13"
-											y="-6.25"
-											width="26"
-											height="4.5"
-											rx="2.25"
-											fill="#000000"
-											transform="rotate(-8)"
-										/>
-										<rect
-											x="-13"
-											y="1.75"
-											width="26"
-											height="4.5"
-											rx="2.25"
-											fill="#000000"
-											transform="rotate(-8)"
-										/>
-									</g>
-								</svg>
+								<Logo />
 							</div>
 						</Link>
 					</div>
@@ -366,7 +285,9 @@ export const Sidebar = React.memo(function Sidebar() {
 								suppressHydrationWarning
 								className="absolute inset-0 rounded-full bg-renault-yellow/10 animate-pulse"
 							></div>
-							<span className="text-xs font-bold text-renault-yellow">MF</span>
+							<span className="text-xs font-bold text-renault-yellow">
+								{userInitials || "U"}
+							</span>
 							<div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full"></div>
 						</div>
 						{!isCollapsed && (
@@ -375,7 +296,7 @@ export const Sidebar = React.memo(function Sidebar() {
 									className="text-sm font-semibold text-white truncate"
 									suppressHydrationWarning
 								>
-									Mahmoud Farahat
+									{userName || "User"}
 								</p>
 								<p
 									className="text-xs text-gray-500 truncate"

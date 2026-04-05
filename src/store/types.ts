@@ -30,10 +30,7 @@ export interface InventoryState {
 }
 
 export interface InventoryActions {
-	commitToMainSheet: (ids: string[]) => void;
 	sendToCallList: (ids: string[]) => void;
-	sendToArchive: (ids: string[], actionNote?: string) => void;
-	sendToReorder: (ids: string[], actionNote: string) => void;
 	updatePartStatus: (id: string, partStatus: string) => void;
 	setRowData: (data: PendingRow[]) => void;
 	setCallRowData: (data: PendingRow[]) => void;

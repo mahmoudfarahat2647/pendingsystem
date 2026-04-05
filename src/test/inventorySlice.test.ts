@@ -43,19 +43,6 @@ describe("inventorySlice", () => {
 		);
 	};
 
-	it("should commit orders to main sheet", () => {
-		const store = createTestStore();
-		store.getState().setOrdersRowData([mockRow]);
-
-		store.getState().commitToMainSheet(["1"]);
-
-		const state = store.getState();
-		expect(state.ordersRowData).toHaveLength(0);
-		expect(state.rowData).toHaveLength(1);
-		expect(state.rowData[0].status).toBe("Pending");
-		expect(state.rowData[0].trackingId).toBe("MAIN-B1");
-	});
-
 	it("should send main sheet rows to call list", () => {
 		const store = createTestStore();
 		store.getState().setRowData([mockRow]);
@@ -67,35 +54,6 @@ describe("inventorySlice", () => {
 		expect(state.callRowData).toHaveLength(1);
 		expect(state.callRowData[0].status).toBe("Call");
 		expect(state.callRowData[0].trackingId).toBe("CALL-B1");
-	});
-
-	it("should archive rows from any sheet", () => {
-		const store = createTestStore();
-		store.getState().setRowData([{ ...mockRow, id: "main-1" }]);
-		store.getState().setCallRowData([{ ...mockRow, id: "call-1" }]);
-
-		store.getState().sendToArchive(["main-1", "call-1"], "Test Archive");
-
-		const state = store.getState();
-		expect(state.rowData).toHaveLength(0);
-		expect(state.callRowData).toHaveLength(0);
-		expect(state.archiveRowData).toHaveLength(2);
-		expect(state.archiveRowData[0].status).toBe("Archived");
-		expect(state.archiveRowData[0].actionNote).toContain("Test Archive");
-	});
-
-	it("should send rows back to reorder", () => {
-		const store = createTestStore();
-		store.getState().setArchiveRowData([mockRow]);
-
-		store.getState().sendToReorder(["1"], "Defective Part");
-
-		const state = store.getState();
-		expect(state.archiveRowData).toHaveLength(0);
-		expect(state.ordersRowData).toHaveLength(1);
-		expect(state.ordersRowData[0].status).toBe("Reorder");
-		expect(state.ordersRowData[0].trackingId).toBe("ORD-B1");
-		expect(state.ordersRowData[0].actionNote).toContain("Defective Part");
 	});
 
 	it("should update part status correctly", () => {
