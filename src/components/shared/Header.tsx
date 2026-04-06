@@ -14,6 +14,7 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useDraftSession } from "@/hooks/useDraftSession";
+import { useWarrantyExpiryMaintenance } from "@/hooks/useWarrantyExpiryMaintenance";
 import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 import { exportAllSystemDataCSV } from "@/lib/exportUtils";
 import {
@@ -45,6 +46,7 @@ export const Header = React.memo(function Header() {
 	}>({ dataVersion: 0, lastRunAt: 0 });
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
+	const { runMaintenance } = useWarrantyExpiryMaintenance();
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
 	const [searchInput, setSearchInput] = useState(searchTerm);
@@ -133,6 +135,9 @@ export const Header = React.memo(function Header() {
 				lastRunAt: now,
 			};
 			checkNotifications();
+			// Run auto-archive maintenance on the same interval tick.
+			// The hook has its own rate-limit ref (once per hour) so this is safe.
+			runMaintenance();
 		};
 
 		// Defer first check by 3 seconds to allow app to fully render
@@ -142,7 +147,7 @@ export const Header = React.memo(function Header() {
 			clearTimeout(initialTimeout);
 			clearInterval(interval);
 		};
-	}, [checkNotifications]);
+	}, [checkNotifications, runMaintenance]);
 
 	// Listen for manual notification check requests (e.g., after setting a reminder)
 	useEffect(() => {

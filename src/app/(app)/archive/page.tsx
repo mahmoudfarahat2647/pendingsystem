@@ -40,6 +40,7 @@ import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
+import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import {
 	appendTaggedUserNote,
 	getEffectiveNoteHistory,
@@ -94,18 +95,12 @@ export default function ArchivePage() {
 			for (const id of ids) {
 				const row = effectiveData.find((r) => r.id === id);
 				if (row) {
-					const newNoteHistory = appendTaggedUserNote(
-						getEffectiveNoteHistory(row),
-						reason,
-						"archive",
-					);
-
 					applyCommand({
 						type: "patchRow",
 						id,
 						sourceStage: "archive",
 						destinationStage: "archive",
-						updates: { archiveReason: reason, noteHistory: newNoteHistory },
+						updates: buildArchivePayload(row, reason),
 						previousValues: {},
 					});
 				}

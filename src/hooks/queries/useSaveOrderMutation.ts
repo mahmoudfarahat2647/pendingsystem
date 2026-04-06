@@ -23,12 +23,19 @@ export function useSaveOrderMutation() {
 			id,
 			updates,
 			stage,
+			sourceStage,
 		}: {
 			id: string;
 			updates: Partial<PendingRow>;
 			stage: OrderStage;
 			sourceStage?: OrderStage;
-		}) => orderService.saveOrder({ id, ...updates, stage }),
+		}) =>
+			orderService.saveOrder({
+				id,
+				...updates,
+				stage,
+				expectedCurrentStage: sourceStage,
+			}),
 		onMutate: async ({ id, updates, stage }) => {
 			await queryClient.cancelQueries({ queryKey: ["orders"] });
 

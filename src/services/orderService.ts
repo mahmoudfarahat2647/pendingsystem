@@ -108,6 +108,21 @@ export const orderService = {
 		return data;
 	},
 
+	/**
+	 * Fetches and maps orders for a given stage into validated PendingRow objects.
+	 * Combines getOrders + mapSupabaseOrder so callers don't need to inline the
+	 * mapping step. Used by the auto-archive maintenance hook.
+	 */
+	async fetchMappedOrders(stage: OrderStage): Promise<PendingRow[]> {
+		const data = await orderService.getOrders(stage);
+		if (!data) return [];
+		return data
+			.map((row) =>
+				orderService.mapSupabaseOrder(row as Record<string, unknown>),
+			)
+			.filter((row): row is PendingRow => row !== null);
+	},
+
 	async getDashboardStats() {
 		const { data, error } = await supabase
 			.from("orders")
@@ -155,8 +170,13 @@ export const orderService = {
 		return data;
 	},
 
-	async saveOrder(order: Partial<PendingRow> & { stage: OrderStage }) {
-		const { id, stage, reminder, ...rest } = order;
+	async saveOrder(
+		order: Partial<PendingRow> & {
+			stage: OrderStage;
+			expectedCurrentStage?: OrderStage;
+		},
+	) {
+		const { id, stage, reminder, expectedCurrentStage, ...rest } = order;
 
 		// 1. Prepare Metadata Merge
 		let currentMetadata: Record<string, unknown> = {};
@@ -228,19 +248,44 @@ export const orderService = {
 		let resultData: any;
 
 		if (id && id.length === 36) {
-			const { data, error } = await supabase
+			// When expectedCurrentStage is set, the UPDATE is conditional: it only matches
+			// the row if it is still in that stage. This prevents duplicate archives when
+			// multiple tabs run the maintenance scan concurrently — if another client already
+			// archived the row, stage will be "archive" and this update matches 0 rows (no-op).
+			let updateQuery = supabase
 				.from("orders")
 				.update(supabaseOrder)
-				.eq("id", id)
-				.select()
-				.single();
+				.eq("id", id);
+			if (expectedCurrentStage) {
+				updateQuery = updateQuery.eq("stage", expectedCurrentStage);
+			}
+			const { data, error } = await updateQuery.select().maybeSingle();
+
+			if (!data && !error) {
+				// 0 rows matched — row was already moved to a different stage by another client.
+				console.debug(
+					`[saveOrder] Skipped update for ${id}: row no longer in stage "${expectedCurrentStage}"`,
+				);
+				return null;
+			}
+
 			if (error && isMissingAttachmentColumnError(error)) {
-				const { data: fallbackData, error: fallbackError } = await supabase
+				let fallbackQuery = supabase
 					.from("orders")
 					.update(fallbackSupabaseOrder)
-					.eq("id", id)
+					.eq("id", id);
+				if (expectedCurrentStage) {
+					fallbackQuery = fallbackQuery.eq("stage", expectedCurrentStage);
+				}
+				const { data: fallbackData, error: fallbackError } = await fallbackQuery
 					.select()
-					.single();
+					.maybeSingle();
+				if (!fallbackData && !fallbackError) {
+					console.debug(
+						`[saveOrder] Fallback skipped for ${id}: row no longer in stage "${expectedCurrentStage}"`,
+					);
+					return null;
+				}
 				if (fallbackError) handleSupabaseError(fallbackError);
 				resultData = fallbackData;
 			} else {

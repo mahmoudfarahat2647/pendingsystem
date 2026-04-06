@@ -1,12 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { type AttachmentValue, hasAttachment } from "@/lib/attachment";
 import { normalizeOrderStage } from "@/lib/orderStage";
-import {
-	appendTaggedUserNote,
-	getEffectiveNoteHistory,
-} from "@/lib/orderWorkflow";
 import type { PendingRow } from "@/types";
 
 export type RowModalType =
@@ -139,20 +136,9 @@ export const useRowModals = (
 				onArchive(targetIds, archiveReason);
 				closeModal();
 			} else if (currentRow) {
-				const combinedNote = appendTaggedUserNote(
-					getEffectiveNoteHistory(currentRow),
-					archiveReason,
-					"archive",
-				);
-
 				onUpdate(
 					currentRow.id,
-					{
-						status: "Archived",
-						archiveReason: archiveReason,
-						archivedAt: new Date().toISOString(),
-						noteHistory: combinedNote,
-					},
+					buildArchivePayload(currentRow, archiveReason),
 					resolveRowStage(currentRow),
 				);
 				closeModal();
