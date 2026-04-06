@@ -10,6 +10,7 @@ import {
 } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
+import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
 import { exportToLogisticsCSV } from "@/lib/exportUtils";
 import {
@@ -95,23 +96,16 @@ export const useOrdersPageHandlers = () => {
 
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
-			// Create patchRow commands for each row to add archive reason and note history
 			for (const id of ids) {
 				const row = effectiveOrdersData.find((r) => r.id === id);
 				if (!row) continue;
-
-				const newNoteHistory = appendTaggedUserNote(
-					getEffectiveNoteHistory(row),
-					reason,
-					"archive",
-				);
 
 				applyCommand({
 					type: "patchRow",
 					id,
 					sourceStage: "orders",
 					destinationStage: "archive",
-					updates: { archiveReason: reason, noteHistory: newNoteHistory },
+					updates: buildArchivePayload(row, reason),
 					previousValues: {},
 				});
 			}
