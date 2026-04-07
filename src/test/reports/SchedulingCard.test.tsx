@@ -3,15 +3,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	useReportSettingsQuery,
 	useUpdateReportSettingsMutation,
-} from "@/hooks/queries/useReportSettingsQuery";
-import { SchedulingCard } from "../components/reports/SchedulingCard";
+} from "@/hooks/queries/reports/useReportSettingsQuery";
+import { SchedulingCard } from "../../components/reports/SchedulingCard";
 
-vi.mock("@/hooks/queries/useReportSettingsQuery", () => ({
+vi.mock("@/hooks/queries/reports/useReportSettingsQuery", () => ({
 	useReportSettingsQuery: vi.fn(),
 	useUpdateReportSettingsMutation: vi.fn(),
 }));
 
-vi.mock("../components/ui/card", () => ({
+vi.mock("../../components/ui/card", () => ({
 	Card: ({ children }: { children: React.ReactNode }) => (
 		<div data-testid="card">{children}</div>
 	),
@@ -29,7 +29,7 @@ vi.mock("../components/ui/card", () => ({
 	),
 }));
 
-vi.mock("../components/ui/label", () => ({
+vi.mock("../../components/ui/label", () => ({
 	Label: ({ children, htmlFor, ...props }: any) => (
 		<label data-testid="label" htmlFor={htmlFor} {...props}>
 			{children}
@@ -37,7 +37,7 @@ vi.mock("../components/ui/label", () => ({
 	),
 }));
 
-vi.mock("../components/ui/switch", () => ({
+vi.mock("../../components/ui/switch", () => ({
 	Switch: ({ checked, onCheckedChange, disabled, id }: any) => (
 		<input
 			data-testid="switch"
@@ -50,7 +50,7 @@ vi.mock("../components/ui/switch", () => ({
 	),
 }));
 
-vi.mock("../components/reports/FrequencyPicker", () => ({
+vi.mock("../../components/reports/FrequencyPicker", () => ({
 	default: ({ value, onChange, disabled }: any) => (
 		<select
 			data-testid="frequency-picker"

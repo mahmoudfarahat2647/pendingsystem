@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	useReportSettingsQuery,
 	useTriggerManualBackupMutation,
-} from "@/hooks/queries/useReportSettingsQuery";
-import { ManualActionCard } from "../components/reports/ManualActionCard";
+} from "@/hooks/queries/reports/useReportSettingsQuery";
+import { ManualActionCard } from "../../components/reports/ManualActionCard";
 
-vi.mock("@/hooks/queries/useReportSettingsQuery", () => ({
+vi.mock("@/hooks/queries/reports/useReportSettingsQuery", () => ({
 	useReportSettingsQuery: vi.fn(),
 	useTriggerManualBackupMutation: vi.fn(),
 }));
@@ -23,7 +23,7 @@ vi.mock("date-fns", () => ({
 	format: vi.fn(() => "January 1, 2024 at 12:00 PM"),
 }));
 
-vi.mock("../components/ui/card", () => ({
+vi.mock("../../components/ui/card", () => ({
 	Card: ({
 		children,
 		className,
@@ -175,7 +175,7 @@ describe("ManualActionCard", () => {
 		await userEvent.click(screen.getByTestId("send-button"));
 
 		await waitFor(() => {
-			expect(toast.error).toHaveBeenCalledWith("Failed to start backup");
+			expect(toast.error).toHaveBeenCalledWith("Backup failed");
 		});
 	});
 });

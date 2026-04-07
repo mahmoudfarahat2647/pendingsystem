@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import {
 	useReportSettingsQuery,
 	useUpdateReportSettingsMutation,
-} from "@/hooks/queries/useReportSettingsQuery";
+} from "@/hooks/queries/reports/useReportSettingsQuery";
 import FrequencyPicker from "./FrequencyPicker";
 
 interface SchedulingCardProps {

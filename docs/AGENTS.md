@@ -23,6 +23,18 @@ The following file is already an accepted constitutional reference:
 
 - `order-form-reference.md`
 
+## Refactor Safety Rules
+
+> **RESTRICTED RULE — must not be broken under any circumstance.**
+
+- **Do not alter business logic** during a refactor. Observable behavior must remain identical before and after.
+- **Do not alter the UI** during a refactor. No visual changes to layout, spacing, colors, component structure, text, or interactive behavior unless the user explicitly asked for them.
+- **Warn before proceeding.** If any planned or in-progress change touches logic or UI beyond pure structural cleanup, stop and emit:
+
+  > ⚠️ RESTRICTED RULE: This change affects logic or UI. Proceeding would violate the refactor safety rule. Confirm before continuing.
+
+- This warning is mandatory in plans, code edits, and code review suggestions alike.
+
 ## Intended use
 
 Use feature documents in `docs/` as the stable reference for things like:

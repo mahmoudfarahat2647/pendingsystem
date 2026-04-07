@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
-import { reportSettingsService } from "@/services/reportSettingsService";
-import { createReportSettingsSlice } from "../store/slices/reportSettingsSlice";
-import type { CombinedStore, ReportSettings } from "../store/types";
+import { reportSettingsService } from "@/services/reports/reportSettingsService";
+import { createReportSettingsSlice } from "../../store/slices/reportSettingsSlice";
+import type { CombinedStore, ReportSettings } from "../../store/types";
 
-vi.mock("@/services/reportSettingsService", () => ({
+vi.mock("@/services/reports/reportSettingsService", () => ({
 	reportSettingsService: {
 		getReportSettings: vi.fn(),
 		updateReportSettings: vi.fn(),

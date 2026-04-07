@@ -14,7 +14,7 @@ import {
 import {
 	useReportSettingsQuery,
 	useTriggerManualBackupMutation,
-} from "@/hooks/queries/useReportSettingsQuery";
+} from "@/hooks/queries/reports/useReportSettingsQuery";
 
 interface ManualActionCardProps {
 	isLocked: boolean;
@@ -28,8 +28,10 @@ export function ManualActionCard({ isLocked }: ManualActionCardProps) {
 		try {
 			await triggerManualBackupMutation.mutateAsync();
 			toast.success("Backup process started successfully");
-		} catch {
-			toast.error("Failed to start backup");
+		} catch (error) {
+			const message =
+				error instanceof Error ? error.message : "Failed to start backup";
+			toast.error(message);
 		}
 	};
 

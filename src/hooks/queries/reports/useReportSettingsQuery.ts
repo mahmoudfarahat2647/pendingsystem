@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { reportSettingsService } from "@/services/reportSettingsService";
+import { reportSettingsService } from "@/services/reports/reportSettingsService";
 import type { ReportSettings } from "@/store/types";
 
 const REPORT_SETTINGS_QUERY_KEY = ["report-settings"] as const;

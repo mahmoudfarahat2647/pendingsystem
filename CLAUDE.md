@@ -32,7 +32,7 @@ npm run docs:validate # Validate markdown docs structure
 
 ### Runtime Data Flow
 1. Route components call React Query hooks (`useOrdersQuery`, etc.)
-2. Hooks delegate to `src/services/orderService.ts` or `src/services/reportSettingsService.ts`
+2. Hooks delegate to `src/services/orderService.ts` or `src/services/reports/reportSettingsService.ts`
 3. Services map Supabase rows through `orderService.mapSupabaseOrder()` with Zod validation into `PendingRow`
 4. Draft-capable pages apply local stage edits through `useDraftSession(stage)` and render `workingRows`
 5. `saveDraft()` replays the pending command list through the existing mutation hooks
@@ -86,6 +86,7 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 
 - Use `@/` alias for all source imports.
 - Keep feature code in the existing layout: `app/` routes, `components/` UI, `hooks/` hooks, `services/` Supabase logic, `lib/` utilities, `schemas/` Zod, `store/` Zustand.
+- Feature-specific files live in sub-folders within their top-level directory (e.g., `services/reports/`, `hooks/queries/reports/`, `test/reports/`). The `components/reports/` folder is already self-contained. The store slice and Next.js API routes stay at their top-level locations due to framework and architecture constraints.
 - Use selector-based subscriptions with `useAppStore`, never the bare store without a selector.
 - Booking and Call List actions require part number and description. Commit to Main Sheet also requires an attachment path and Beast Mode validation.
 - Stage pages should mutate operational rows through `useDraftSession()` commands, then persist with `saveDraft()` instead of calling stage mutations directly from the page body.
@@ -102,6 +103,21 @@ When making changes, update accordingly:
 - Theme customization tab in Settings is a placeholder only.
 - `CloudSync` is a legacy migration utility (Zustand -> Supabase), not the live sync path.
 - Some legacy Zustand stage arrays remain in the store for compatibility; do not expand that pattern.
+
+## Refactor Safety Rules
+
+> **RESTRICTED RULE — must not be broken under any circumstance.**
+
+When performing any refactor, optimization, or code cleanup:
+
+- **Do not alter business logic.** The observable behavior of every feature must remain identical before and after the refactor.
+- **Do not alter the UI.** No visual changes to layout, spacing, colors, component structure, text, or interactive behavior are permitted unless the user has explicitly requested them.
+- **Do not silently change data flow.** Do not swap, reorder, or remove data transformations, validation steps, or side effects even if they appear redundant.
+- **Warn before proceeding.** If any planned change would touch logic or UI in a way that goes beyond pure structural cleanup, stop and surface a clear warning:
+
+  > ⚠️ RESTRICTED RULE: This change affects logic or UI. Proceeding would violate the refactor safety rule. Confirm before continuing.
+
+- This warning is mandatory whether the change is proposed in a plan, a code edit, or a code review suggestion.
 
 ## important note
 
