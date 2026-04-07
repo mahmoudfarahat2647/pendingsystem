@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
 	// Enable React Compiler
 	experimental: {
 		// reactCompiler: true,
+		inlineCss: process.env.NEXT_INLINE_CSS === "true",
 		optimizePackageImports: [
 			"lucide-react",
 			"recharts",
@@ -20,6 +21,9 @@ const nextConfig: NextConfig = {
 			"ag-grid-react",
 			"ag-grid-community",
 		],
+	},
+	images: {
+		formats: ["image/avif", "image/webp"],
 	},
 	// Optimize imports for better tree-shaking
 	modularizeImports: {

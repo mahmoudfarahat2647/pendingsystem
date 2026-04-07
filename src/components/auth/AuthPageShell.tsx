@@ -1,7 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import { ShiningText } from "@/components/ui/shining-text";
+
+const ShiningText = dynamic(
+	() => import("@/components/ui/shining-text").then((m) => m.ShiningText),
+	{ ssr: false },
+);
 
 interface AuthPageShellProps {
 	title?: string;
@@ -21,6 +26,7 @@ export function AuthPageShell({
 				alt="Background"
 				fill
 				priority
+				fetchPriority="high"
 				className="object-cover -z-10"
 			/>
 			<div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent pointer-events-none -z-10" />
