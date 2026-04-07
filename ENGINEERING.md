@@ -279,7 +279,7 @@ Responsibilities:
 - detect conflicting descriptions for a known part number
 
 ### `reportSettingsService`
-File: `src/services/reportSettingsService.ts`
+File: `src/services/reports/reportSettingsService.ts`
 
 Responsibilities:
 - get or seed `report_settings`

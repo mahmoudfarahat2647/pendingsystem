@@ -2,6 +2,7 @@
 
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,7 @@ import {
 	useAddEmailRecipientMutation,
 	useRemoveEmailRecipientMutation,
 	useReportSettingsQuery,
-} from "@/hooks/queries/useReportSettingsQuery";
+} from "@/hooks/queries/reports/useReportSettingsQuery";
 
 interface RecipientsCardProps {
 	isLocked: boolean;
@@ -30,10 +31,14 @@ export function RecipientsCard({ isLocked }: RecipientsCardProps) {
 
 	const isLoading = !reportSettings;
 
+	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 	const handleAddEmail = () => {
-		if (emailInput?.includes("@")) {
-			addEmailRecipientMutation.mutate(emailInput);
+		if (EMAIL_RE.test(emailInput.trim())) {
+			addEmailRecipientMutation.mutate(emailInput.trim());
 			setEmailInput("");
+		} else if (emailInput.trim()) {
+			toast.error("Please enter a valid email address");
 		}
 	};
 

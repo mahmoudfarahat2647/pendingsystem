@@ -1,5 +1,5 @@
 import type { StateCreator } from "zustand";
-import { reportSettingsService } from "@/services/reportSettingsService";
+import { reportSettingsService } from "@/services/reports/reportSettingsService";
 import type {
 	CombinedStore,
 	ReportSettingsActions,

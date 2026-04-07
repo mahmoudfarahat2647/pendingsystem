@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import BackupReportsTab from "../components/reports/BackupReportsTab";
+import BackupReportsTab from "../../components/reports/BackupReportsTab";
 
 // Mock the child components to isolate the parent component testing
-vi.mock("../components/reports/SchedulingCard", () => ({
+vi.mock("../../components/reports/SchedulingCard", () => ({
 	SchedulingCard: vi.fn(({ isLocked }) => (
 		<div data-testid="scheduling-card" data-locked={isLocked}>
 			SchedulingCard
@@ -11,7 +11,7 @@ vi.mock("../components/reports/SchedulingCard", () => ({
 	)),
 }));
 
-vi.mock("../components/reports/RecipientsCard", () => ({
+vi.mock("../../components/reports/RecipientsCard", () => ({
 	RecipientsCard: vi.fn(({ isLocked }) => (
 		<div data-testid="recipients-card" data-locked={isLocked}>
 			RecipientsCard
@@ -19,7 +19,7 @@ vi.mock("../components/reports/RecipientsCard", () => ({
 	)),
 }));
 
-vi.mock("../components/reports/ManualActionCard", () => ({
+vi.mock("../../components/reports/ManualActionCard", () => ({
 	ManualActionCard: vi.fn(({ isLocked }) => (
 		<div data-testid="manual-action-card" data-locked={isLocked}>
 			ManualActionCard
