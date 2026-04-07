@@ -66,8 +66,7 @@ export function useColumnDefs(
 			field: "company",
 			width: 90,
 			cellClass: "font-bold text-center",
-			valueFormatter: (params: ValueFormatterParams) =>
-				params.value || "pendingsystem",
+			valueFormatter: (params: ValueFormatterParams) => params.value || "",
 		},
 		{
 			headerName: "CUSTOMER NAME",
