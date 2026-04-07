@@ -71,13 +71,13 @@ export const getBaseColumns = (
 		width: 90,
 		cellClass: "font-bold text-center",
 		valueFormatter: (params: ValueFormatterParams<PendingRow>) =>
-			params.value || "pendingsystem",
+			params.value || "",
 		comparator: (
 			valueA: string | null | undefined,
 			valueB: string | null | undefined,
 		) => {
-			const keyA = (valueA || "pendingsystem").toLowerCase();
-			const keyB = (valueB || "pendingsystem").toLowerCase();
+			const keyA = (valueA || "").toLowerCase();
+			const keyB = (valueB || "").toLowerCase();
 			return keyA.localeCompare(keyB);
 		},
 	},
