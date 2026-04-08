@@ -9,7 +9,7 @@ import { createInventorySlice } from "./slices/inventorySlice";
 import { createNotificationSlice } from "./slices/notificationSlice";
 import { createOrdersSlice } from "./slices/ordersSlice";
 import { createReportSettingsSlice } from "./slices/reportSettingsSlice";
-import { createUISlice } from "./slices/uiSlice";
+import { createUISlice, PROTECTED_REPAIR_SYSTEMS } from "./slices/uiSlice";
 import type { CombinedStore } from "./types";
 
 export const useAppStore = create<CombinedStore>()(
@@ -39,6 +39,15 @@ export const useAppStore = create<CombinedStore>()(
 			// Optimize: Only persist critical UI preferences to reduce localStorage overhead
 			// Reference data (templates, statuses, models) load fresh from database via React Query
 			// This reduces initial load state from ~100KB to ~1KB
+			onRehydrateStorage: () => (state) => {
+				if (!state) return;
+				const missing = PROTECTED_REPAIR_SYSTEMS.filter(
+					(s) => !state.repairSystems.includes(s),
+				);
+				if (missing.length > 0) {
+					state.repairSystems = [...state.repairSystems, ...missing];
+				}
+			},
 			partialize: (state) => ({
 				// Persist UI preferences and reference data
 				partStatuses: state.partStatuses,

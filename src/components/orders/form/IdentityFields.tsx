@@ -402,6 +402,7 @@ export const IdentityFields = ({
 											onAdd={addRepairSystem}
 											onRemove={removeRepairSystem}
 											placeholder="Select repair system"
+											protectedOptions={["ضمان"]}
 										/>
 									</div>
 									{getFieldError("repairSystem") && (

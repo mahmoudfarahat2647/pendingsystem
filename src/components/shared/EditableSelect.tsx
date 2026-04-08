@@ -28,6 +28,7 @@ interface EditableSelectProps {
 	placeholder?: string;
 	emptyMessage?: string;
 	className?: string;
+	protectedOptions?: string[];
 }
 
 export function EditableSelect({
@@ -39,6 +40,7 @@ export function EditableSelect({
 	placeholder = "Select option...",
 	emptyMessage = "No options found.",
 	className,
+	protectedOptions = [],
 }: EditableSelectProps) {
 	const [open, setOpen] = React.useState(false);
 	const [newItem, setNewItem] = React.useState("");
@@ -122,17 +124,19 @@ export function EditableSelect({
 										/>
 										{option}
 									</div>
-									<Button
-										size="icon"
-										variant="ghost"
-										className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-										onClick={(e) => {
-											e.stopPropagation();
-											onRemove(option);
-										}}
-									>
-										<X className="h-3 w-3" />
-									</Button>
+									{!protectedOptions.includes(option) && (
+										<Button
+											size="icon"
+											variant="ghost"
+											className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+											onClick={(e) => {
+												e.stopPropagation();
+												onRemove(option);
+											}}
+										>
+											<X className="h-3 w-3" />
+										</Button>
+									)}
 								</CommandItem>
 							))}
 						</CommandGroup>

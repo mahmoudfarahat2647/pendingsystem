@@ -3,6 +3,8 @@ import { generateId } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 import type { CombinedStore, UIActions, UIState } from "../types";
 
+export const PROTECTED_REPAIR_SYSTEMS = ["ضمان"];
+
 const defaultPartStatuses = [
 	{
 		id: "no_stats",
@@ -86,6 +88,7 @@ export const createUISlice: StateCreator<
 	},
 
 	removeRepairSystem: (system) => {
+		if (PROTECTED_REPAIR_SYSTEMS.includes(system)) return;
 		set((state) => ({
 			repairSystems: state.repairSystems.filter((s) => s !== system),
 		}));
