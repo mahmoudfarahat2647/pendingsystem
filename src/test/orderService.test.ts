@@ -115,6 +115,15 @@ describe("orderService", () => {
 					data: { id: "new-order-id", metadata: {} },
 					error: null,
 				}),
+			})
+			// Third call: re-fetch to include order_reminders join
+			.mockReturnValueOnce({
+				select: vi.fn().mockReturnThis(),
+				eq: vi.fn().mockReturnThis(),
+				maybeSingle: vi.fn().mockResolvedValue({
+					data: { id: "new-order-id", metadata: {} },
+					error: null,
+				}),
 			});
 
 		const result = await orderService.saveOrder({

@@ -353,7 +353,33 @@ export const orderService = {
 			}
 		}
 
-		return resultData;
+		// Re-fetch the complete row with the order_reminders join so the mutation
+		// response reflects the true DB state (including any reminder just saved).
+		// Without this, the bare SELECT above returns no order_reminders data and
+		// mapSupabaseOrder maps reminder: null, briefly wiping the reminder from the UI.
+		const { data: finalData, error: finalError } = await supabase
+			.from("orders")
+			.select(ORDERS_SELECT_WITH_ATTACHMENTS)
+			.eq("id", orderId)
+			.maybeSingle();
+
+		if (finalError) {
+			if (isMissingAttachmentColumnError(finalError)) {
+				const { data: fallbackFinalData, error: fallbackFinalError } =
+					await supabase
+						.from("orders")
+						.select(ORDERS_SELECT_BASE)
+						.eq("id", orderId)
+						.maybeSingle();
+				if (fallbackFinalError) handleSupabaseError(fallbackFinalError);
+				return fallbackFinalData ?? resultData;
+			}
+			// Any other reread failure: surface the error so the mutation rolls back
+			// instead of silently returning stale data with reminder: null.
+			handleSupabaseError(finalError);
+		}
+
+		return finalData ?? resultData;
 	},
 
 	async deleteOrder(id: string) {
