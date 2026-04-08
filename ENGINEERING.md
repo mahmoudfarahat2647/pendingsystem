@@ -27,17 +27,23 @@ The live application is a hybrid of:
 - Grid: `ag-grid-community` and `ag-grid-react`
 - Charts: Recharts
 - Notifications: Sonner
-- Testing: Vitest and Playwright
+- Testing: Vitest, React Testing Library, and jsdom
 
 ### Route Map
-- `/` and `/dashboard`: dashboard and storage overview
+- `/`: session-aware redirect to `/dashboard` or `/login`
+- `/login`, `/forgot-password`, `/reset-password`: auth entrypoints
+- `/dashboard`: storage overview and stage metrics
 - `/orders`: intake and staging
 - `/main-sheet`: active inventory processing
 - `/call-list`: customer contact queue
 - `/booking`: appointment scheduling
 - `/archive`: historical and reorder workflow
+- `/draft-session-test`: internal draft-session recovery harness
+- `/api/auth/[...all]`: Better Auth handlers
+- `/api/password-reset/request`: username-based reset request endpoint
 - `/api/storage-stats`: storage and database quota reporting
 - `/api/trigger-backup`: manual backup trigger for GitHub Actions
+- `/api/health`: authenticated health check
 
 ### App Shell
 - `src/app/layout.tsx` provides metadata, `QueryProvider`, and global toasts.
@@ -47,17 +53,18 @@ The live application is a hybrid of:
 ### Repository Layout
 ```text
 src/
-  app/                Next.js routes, layouts, API handlers
+  app/                Next.js routes, layouts, metadata routes, and API handlers
   components/         Feature and shared UI
   hooks/              Query hooks and UI hooks
-  lib/                Utilities, printing, exports, query helpers
+  lib/                Utilities, printing, exports, query helpers, and auth
   schemas/            Zod schemas for rows and forms
   services/           Supabase-facing services
   store/              Zustand store and slices
   test/               Vitest suites and setup
-tests/                Playwright E2E specs
+docs/                 Stable feature references and design notes
+public/               Static assets
 supabase/migrations/  SQL migrations
-scripts/              backup, docs, and helper scripts
+scripts/              backup, docs, seed, and helper scripts
 ```
 
 ### Data Model Summary
@@ -81,7 +88,7 @@ Important related tables and database assets:
 Operational stage data is fetched with:
 - `src/hooks/queries/useOrdersQuery.ts`
 - `src/hooks/queries/useDashboardStatsQuery.ts`
-- `src/hooks/queries/useReportSettingsQuery.ts`
+- `src/hooks/queries/reports/useReportSettingsQuery.ts`
 - `src/hooks/useStorageStats.ts`
 
 Stage query keys are standardized in `src/lib/queryClient.ts`:
@@ -180,7 +187,7 @@ The combined store type is defined in `src/store/types.ts` and composed from the
 #### `reportSettingsSlice`
 - Provides async wrappers for fetching and updating `report_settings`.
 - Exists for compatibility with older consumers.
-- Newer report UI uses the React Query hooks in `src/hooks/queries/useReportSettingsQuery.ts`.
+- Newer report UI uses the React Query hooks in `src/hooks/queries/reports/useReportSettingsQuery.ts`.
 
 ### Store Usage Guidance
 - Use selector-based subscriptions, not `useAppStore()` without a selector.
@@ -254,7 +261,6 @@ The combined store type is defined in `src/store/types.ts` and composed from the
   - debounced global search
   - draft-session undo/redo/save/discard controls
   - full-system exports by company
-  - cloud migration button
   - notification polling interval
 
 ### Page-Level Composition
@@ -310,21 +316,32 @@ Based on live code paths:
 
 | Variable | Used by | Required |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase clients, storage stats API | yes |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase clients and backup script fallback | yes |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser and server Supabase clients | yes |
-| `SUPABASE_SERVICE_ROLE_KEY` | storage stats API, backup script | yes for storage stats and scheduled backup |
+| `NEXT_PUBLIC_SUPABASE_ATTACHMENTS_BUCKET` | attachment uploads and public file URLs | optional, defaults to `attachments` |
+| `NEXT_PUBLIC_SITE_URL` | metadata base URL | optional but recommended outside localhost |
+| `NEXT_PUBLIC_SETTINGS_PASSWORD` | client-side settings lock | optional |
+| `DATABASE_URL` | Better Auth, health check, seed script, and env validation | yes |
+| `BETTER_AUTH_URL` | Better Auth base URL, password reset redirect, sitemap | yes |
+| `BETTER_AUTH_SECRET` | Better Auth signing secret | yes |
+| `RESEND_API_KEY` | password reset email delivery | yes |
+| `RESEND_FROM_EMAIL` | password reset sender | yes |
+| `SUPABASE_SERVICE_ROLE_KEY` | storage stats API and backup script | yes for storage stats and scheduled backup |
 | `GITHUB_PAT` | manual backup trigger API | yes for `/api/trigger-backup` |
 | `GITHUB_OWNER` | manual backup trigger API | optional in code, recommended in deployment |
 | `GITHUB_REPO` | manual backup trigger API | optional in code, recommended in deployment |
-| `SMTP_HOST` | backup script | yes for email reports |
-| `SMTP_PORT` | backup script | yes |
-| `SMTP_USER` | backup script | yes |
-| `SMTP_PASS` | backup script | yes |
-| `NEXT_PUBLIC_SITE_URL` | metadata, robots, sitemap | optional but recommended outside localhost |
+| `SMTP_HOST` | backup script | yes for backup emails |
+| `SMTP_PORT` | backup script | optional, defaults to `587` |
+| `SMTP_USER` | backup script | yes for backup emails |
+| `SMTP_PASS` | backup script | yes for backup emails |
+| `AUTH_ADMIN_USERNAME` | admin seed script | optional, defaults to `admin` |
+| `AUTH_ADMIN_EMAIL` | admin seed script | required for seeding |
+| `AUTH_ADMIN_PASSWORD` | admin seed script | required for seeding |
+| `AUTH_ADMIN_NAME` | admin seed script | optional, defaults to `Admin` |
 
 ### Notes
-- `.env.example` covers most required variables but currently does not include `NEXT_PUBLIC_SITE_URL`.
-- Playwright loads `.env.local` directly.
+- `.env.example` now includes the current core application variables plus backup-related SMTP settings.
+- `scripts/generate-backup.mjs` accepts `SUPABASE_URL` as an optional override, but falls back to `NEXT_PUBLIC_SUPABASE_URL`.
 
 ## Testing
 
@@ -333,13 +350,13 @@ Based on live code paths:
 npm run lint
 npm run type-check
 npm run test
-npm run e2e
 npm run build
+npm run docs:validate
 ```
 
 ### Current Test Split
-- Vitest covers schemas, services, store slices, hooks, utilities, and selected components under `src/test`.
-- Playwright smoke coverage lives under `tests`.
+- Vitest covers schemas, services, store slices, hooks, utilities, routes, and selected components under `src/test`.
+- The repo does not currently expose a first-class Playwright or `e2e` script in `package.json`.
 
 ### What Is Covered Well
 - order mapping and service behavior
@@ -410,10 +427,15 @@ Reset uses a page reload to restore either the saved default layout or the origi
 
 ### Booking, Call List, or Commit actions are blocked
 These flows intentionally validate prerequisites:
-- Orders to Main Sheet requires strict Beast Mode fields plus attachment path.
+- Orders to Main Sheet requires strict Beast Mode fields plus an attachment link or uploaded file.
 - Booking and Call List flows require part number and description.
 - Reorder flows require a typed reason.
 
-### Cloud sync behavior is confusing
-`CloudSync` is a migration utility that reads legacy Zustand stage arrays and replays them into Supabase. It is not the normal live sync path for current route data.
+### Draft edits seem to disappear or reappear unexpectedly
+Check:
+- whether a draft session is still dirty in the header controls
+- the recovery snapshot in `localStorage["pending-sys-draft-v1"]`
+- invalidations for the touched stages after `saveDraft()` or `discardDraft()`
+
+Most apparent "sync" issues in the current app are draft-session overlay issues, not live Supabase sync problems.
 

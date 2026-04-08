@@ -5,7 +5,7 @@
 
 The product is organized around five fixed operational stages:
 
-1. `orders`
+1. `orders` 
 2. `main`
 3. `call`
 4. `booking`
