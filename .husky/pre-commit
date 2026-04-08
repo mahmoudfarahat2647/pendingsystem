@@ -1,19 +1,34 @@
 #!/usr/bin/env sh
 
-printf '%s\n' 'pre-commit: running Biome safe fixes on staged files...'
-biome check --write --staged --no-errors-on-unmatched
+# pendingsystem - Biome Pre-commit Hook
+# Ensures all staged files are linted and formatted before commit.
+
+# Get staged files that Biome can handle
+STAGED_FILES=$(git diff --name-only --cached --diff-filter=ACMR | grep -E '\.(js|jsx|mjs|cjs|ts|tsx|json|css)$')
+
+if [ -z "$STAGED_FILES" ]; then
+    printf '✨ Biome: No files to check, skipping.\n'
+    exit 0
+fi
+
+printf '🔍 Biome: Running safe fixes on staged files...\n'
+npx @biomejs/biome check --write --staged --no-errors-on-unmatched --files-ignore-unknown=true
 status=$?
 
 if [ $status -ne 0 ]; then
-	printf '%s\n' 'pre-commit: retrying Biome with unsafe fixes on staged files...'
-	biome check --write --unsafe --staged --no-errors-on-unmatched
-	status=$?
+    printf '⚠️  Biome: Some issues remain. Retrying with unsafe fixes...\n'
+    npx @biomejs/biome check --write --unsafe --staged --no-errors-on-unmatched --files-ignore-unknown=true
+    status=$?
 fi
 
 if [ $status -ne 0 ]; then
-	printf '%s\n' 'pre-commit: Biome still reported issues. Commit aborted.'
-	exit $status
+    printf '❌ Biome: Still reported issues. Please fix them manually before committing.\n'
+    exit $status
 fi
 
-# Re-stage files that Biome modified so the commit includes the fixes.
-git update-index --again
+# Re-stage modifies files that Biome fixed.
+# Using git add -u on the specific files we checked is safest.
+# shellcheck disable=SC2086
+git add -u $STAGED_FILES
+
+printf '✅ Biome: All staged files are looking good!\n'

@@ -71,7 +71,7 @@ export const createNotificationSlice: StateCreator<
 	},
 
 	checkNotifications: () => {
-		const state = get() as CombinedStore;
+		const _state = get() as CombinedStore;
 		const now = new Date();
 		const WARRANTY_THRESHOLD_DAYS = 10;
 
