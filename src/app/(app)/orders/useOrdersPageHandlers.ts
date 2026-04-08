@@ -4,10 +4,7 @@ import type { GridApi } from "ag-grid-community";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { FormData } from "@/components/orders/form";
-import {
-	useOrdersQuery,
-	useSaveOrderMutation,
-} from "@/hooks/queries/useOrdersQuery";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
@@ -26,7 +23,10 @@ import {
 	calculateRemainingTime,
 	normalizeMileageAsNumber,
 } from "@/lib/utils";
-import type { AtomicCommand } from "@/store/slices/draftSessionSlice";
+import type {
+	AtomicCommand,
+	DraftCommand,
+} from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 
@@ -34,8 +34,6 @@ export const useOrdersPageHandlers = () => {
 	// 1. Data & Store
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
-	const saveOrderMutation = useSaveOrderMutation();
-
 	// Draft session for undo/redo
 	const {
 		workingRows: draftWorkingRows,
@@ -269,7 +267,7 @@ export const useOrdersPageHandlers = () => {
 		}
 	};
 
-	const handleConfirmBooking = async (
+	const handleConfirmBooking = (
 		date: string,
 		note: string,
 		status?: string,
@@ -285,29 +283,42 @@ export const useOrdersPageHandlers = () => {
 			return;
 		}
 
-		// 1. Update details first (optimistic)
-		for (const row of selectedRows) {
+		const commands = selectedRows.map((row) => {
 			const newNoteHistory = appendTaggedUserNote(
 				getEffectiveNoteHistory(row),
 				note,
 				"booking",
 			);
-
-			await saveOrderMutation.mutateAsync({
+			return {
+				type: "patchRow" as const,
 				id: row.id,
+				sourceStage: "orders" as const,
+				destinationStage: "booking" as const,
 				updates: {
 					bookingDate: date,
 					bookingNote: note,
 					noteHistory: newNoteHistory,
 					...(status ? { bookingStatus: status } : {}),
 				},
-				stage: "booking",
-				sourceStage: "orders",
-			});
-		}
+				previousValues: {
+					bookingDate: row.bookingDate,
+					bookingNote: row.bookingNote,
+					bookingStatus: row.bookingStatus,
+					noteHistory: row.noteHistory,
+				},
+			};
+		});
 
-		setSelectedRows([]);
-		toast.success(`${selectedRows.length} order(s) sent to Booking`);
+		const cmd: DraftCommand =
+			commands.length === 1
+				? commands[0]
+				: { type: "composite", label: "Book Orders", children: commands };
+
+		const applied = applyCommand(cmd);
+		if (applied) {
+			setSelectedRows([]);
+			toast.success(`${selectedRows.length} order(s) sent to Booking`);
+		}
 	};
 
 	const handleUpdatePartStatus = async (status: string) => {
