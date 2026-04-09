@@ -24,6 +24,7 @@ export function buildInitialFormData(first: PendingRow): FormData {
 		sabNumber: first.sabNumber || "",
 		acceptedBy: first.acceptedBy || "",
 		company: normalizeCompanyName(first.company) || "",
+		rDate: first.rDate || new Date().toISOString().split("T")[0],
 	};
 }
 
@@ -41,6 +42,7 @@ export function buildEmptyFormData(): FormData {
 		sabNumber: "",
 		acceptedBy: "",
 		company: "",
+		rDate: new Date().toISOString().split("T")[0],
 	};
 }
 

@@ -64,6 +64,8 @@ export const getBaseColumns = (
 		headerName: "R/DATE",
 		field: "rDate",
 		width: 100,
+		editable: true,
+		cellEditor: "agTextCellEditor",
 	},
 	{
 		headerName: "COMPANY",
@@ -452,7 +454,7 @@ export const getGlobalSearchWorkspaceColumns = (
 		},
 		// 4. Main Sheet Sequence
 		{ ...(statsCol || {}), width: 80 },
-		{ ...(rDateCol || {}), width: 100 },
+		{ ...(rDateCol || {}), width: 100, editable: false },
 		{ ...(companyCol || {}), width: 90 },
 		{
 			...(customerCol || {}),

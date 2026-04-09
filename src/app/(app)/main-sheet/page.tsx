@@ -418,6 +418,13 @@ export default function MainSheetPage() {
 												},
 											);
 										}
+									} else if (
+										params.colDef.field === "rDate" &&
+										params.newValue !== params.oldValue
+									) {
+										const v = params.newValue as string;
+										if (!v?.trim() || isNaN(Date.parse(v))) return;
+										await handleUpdateOrder(params.data.id, { rDate: v });
 									}
 								}}
 								readOnly={isSheetLocked || draftSaving}

@@ -12,6 +12,7 @@ export interface FormData {
 	sabNumber: string;
 	acceptedBy: string;
 	company: string;
+	rDate: string;
 }
 
 export interface OrderFormModalProps {
