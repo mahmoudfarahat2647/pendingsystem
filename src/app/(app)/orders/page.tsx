@@ -188,6 +188,13 @@ export default function OrdersPage() {
 												{ duration: 5000 },
 											);
 										}
+									} else if (
+										params.colDef.field === "rDate" &&
+										params.newValue !== params.oldValue
+									) {
+										const v = params.newValue as string;
+										if (!v?.trim() || isNaN(Date.parse(v))) return;
+										await handleUpdateOrder(params.data.id, { rDate: v });
 									}
 								}}
 								onGridReady={(api) => setGridApi(api)}

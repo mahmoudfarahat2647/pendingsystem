@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronsUpDown, FileSpreadsheet, User } from "lucide-react";
+import { ChevronsUpDown, FileSpreadsheet } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EditableSelect } from "@/components/shared/EditableSelect";
@@ -73,10 +73,12 @@ export const IdentityFields = ({
 				{/* Section header */}
 				<div className="flex items-center justify-between mb-1">
 					<div className="flex items-center gap-2">
-						<User className="h-3 w-3 text-slate-500" />
-						<h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
-							Core Identity
-						</h3>
+						<SimpleDatePicker
+							value={formData.rDate}
+							onChange={(val) => onFieldChange({ rDate: val })}
+							placeholder="R/DATE"
+							className="h-6 text-[10px]"
+						/>
 					</div>
 					<Button
 						type="button"

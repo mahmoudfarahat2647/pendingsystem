@@ -423,6 +423,16 @@ export default function BookingPage() {
 						gridStateKey="booking"
 						readOnly={draftSaving}
 						onSelectionChange={setSelectedRows}
+						onCellValueChanged={async (params) => {
+							if (
+								params.colDef.field === "rDate" &&
+								params.newValue !== params.oldValue
+							) {
+								const v = params.newValue as string;
+								if (!v?.trim() || isNaN(Date.parse(v))) return;
+								await handleUpdateOrder(params.data.id, { rDate: v });
+							}
+						}}
 						onGridReady={(api) => setGridApi(api)}
 						showFloatingFilters={showFilters}
 						enablePagination={true}
