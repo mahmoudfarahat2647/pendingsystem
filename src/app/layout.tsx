@@ -47,7 +47,7 @@ export default function RootLayout({
 			<body className="font-sans" suppressHydrationWarning>
 				<QueryProvider>
 					{children}
-					<Toaster position="top-right" richColors />
+					<Toaster position="bottom-right" richColors />
 				</QueryProvider>
 			</body>
 		</html>
