@@ -101,7 +101,7 @@ export default function DashboardPage() {
 	const pieData = useMemo(() => {
 		if (!storageStats) {
 			return [
-				{ name: "Used", value: 0, color: "#FFCC00" },
+				{ name: "Used", value: 0, color: "#ffffff05" },
 				{ name: "Remaining", value: 100, color: "#ffffff10" },
 			];
 		}
@@ -111,8 +111,10 @@ export default function DashboardPage() {
 			storageStats.combinedLimitBytes,
 		);
 
+		const usedColor = storageStats.dataComplete ? "#FFCC00" : "#FFCC0060";
+
 		return [
-			{ name: "Used", value: usedPercent, color: "#FFCC00" },
+			{ name: "Used", value: usedPercent, color: usedColor },
 			{
 				name: "Remaining",
 				value: Math.max(0, 100 - usedPercent),
@@ -329,13 +331,11 @@ export default function DashboardPage() {
 													<CapacityChart data={pieData} />
 													<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
 														<span className="text-[22px] font-bold text-white font-mono leading-none tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-															{storageStats
-																? `${usagePercent(
-																		(storageStats.dbUsedBytes ?? 0) +
-																			storageStats.storageUsedBytes,
-																		storageStats.combinedLimitBytes,
-																	).toFixed(0)}%`
-																: "—"}
+															{!storageStats
+																? "—"
+																: storageStats.dataComplete
+																	? `${pieData[0].value.toFixed(0)}%`
+																	: `~${pieData[0].value.toFixed(0)}%`}
 														</span>
 														<span className="text-[9px] text-gray-400 font-medium tracking-widest uppercase mt-0.5">
 															Used
