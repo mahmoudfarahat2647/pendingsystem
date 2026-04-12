@@ -2,6 +2,7 @@
 
 import type { GridApi } from "ag-grid-community";
 import {
+	Archive,
 	Calendar,
 	CheckCircle,
 	Download,
@@ -46,6 +47,7 @@ import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
+import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import {
 	appendTaggedUserNote,
 	filterReservedRows,
@@ -113,18 +115,12 @@ export default function CallListPage() {
 			for (const id of ids) {
 				const row = effectiveData.find((r: PendingRow) => r.id === id);
 				if (row) {
-					const newNoteHistory = appendTaggedUserNote(
-						getEffectiveNoteHistory(row),
-						reason,
-						"archive",
-					);
-
 					applyCommand({
 						type: "patchRow",
 						id,
 						sourceStage: "call",
 						destinationStage: "archive",
-						updates: { archiveReason: reason, noteHistory: newNoteHistory },
+						updates: buildArchivePayload(row, reason),
 						previousValues: {},
 					});
 				}
@@ -139,6 +135,7 @@ export default function CallListPage() {
 		handleNoteClick,
 		handleReminderClick,
 		handleAttachClick,
+		handleArchiveClick,
 		closeModal,
 		saveNote,
 		saveReminder,
@@ -373,6 +370,26 @@ export default function CallListPage() {
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>Send to Reorder</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-gray-400 hover:text-white h-8 w-8"
+									disabled={selectedRows.length === 0}
+									onClick={() =>
+										handleArchiveClick(
+											selectedRows[0],
+											selectedRows.map((r) => r.id),
+										)
+									}
+								>
+									<Archive className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Archive</TooltipContent>
 						</Tooltip>
 					</div>
 

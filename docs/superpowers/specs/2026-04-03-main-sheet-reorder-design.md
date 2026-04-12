@@ -1,7 +1,12 @@
-# Main Sheet Reorder Button — Design Spec
+---
+title: Main Sheet Reorder Button — Design Spec
+date: 2026-04-03
+status: implemented
+feature: main-sheet-reorder
+type: spec
+---
 
-**Date:** 2026-04-03  
-**Status:** Approved
+# Main Sheet Reorder Button — Design Spec
 
 ## Context
 

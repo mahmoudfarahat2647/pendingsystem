@@ -1,7 +1,12 @@
-# Company Select Placeholder Design
+---
+title: Company Select Placeholder Design
+date: 2026-04-04
+status: implemented
+feature: company-select-placeholder
+type: spec
+---
 
-**Date:** 2026-04-04
-**Status:** Approved
+# Company Select Placeholder Design
 
 ## Problem
 

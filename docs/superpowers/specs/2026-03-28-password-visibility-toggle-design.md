@@ -1,7 +1,12 @@
-# Password Visibility Toggle — Design Spec
+---
+title: Password Visibility Toggle — Design Spec
+date: 2026-03-28
+status: implemented
+feature: password-visibility-toggle
+type: spec
+---
 
-**Date:** 2026-03-28
-**Status:** Approved for implementation
+# Password Visibility Toggle — Design Spec
 
 ---
 
