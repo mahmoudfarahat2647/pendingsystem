@@ -1,72 +1,74 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { AUTO_MOVE_DEBOUNCE_MS } from "@/lib/constants";
-import { useAppStore } from "@/store/useStore";
-import type { PendingRow } from "@/types";
+import { useBulkUpdateOrderStageMutation } from "./queries/useBulkUpdateOrderStageMutation";
+import { useOrdersQuery } from "./queries/useOrdersQuery";
+
+/** Stable key representing the subset of data that matters for auto-move decisions. */
+function buildStatusKey(
+	rows: { id: string; vin?: string | null; partStatus?: string | null }[],
+): string {
+	return rows
+		.map(
+			(r) =>
+				`${r.id}:${(r.vin ?? "").trim().toLowerCase()}:${(r.partStatus ?? "").trim().toLowerCase()}`,
+		)
+		.join("|");
+}
 
 export const useAutoMoveVins = () => {
-	const rowData = useAppStore((state) => state.rowData);
-	const sendToCallList = useAppStore((state) => state.sendToCallList);
+	const { data: rowData = [] } = useOrdersQuery("main");
+	const { mutate: bulkMoveToCall } = useBulkUpdateOrderStageMutation("main");
 
-	// Use a ref to track if we're currently processing to avoid loops
 	const isProcessingRef = useRef(false);
-
-	// Use a ref to track the last data we processed to avoid redundant work
-	const lastDataLengthRef = useRef(0);
+	const lastStatusKeyRef = useRef("");
 
 	useEffect(() => {
-		// Only run if data length changed or explicitly requested
-		// This avoids running on every single state update that doesn't change rows
-		if (rowData.length === lastDataLengthRef.current) return;
-		lastDataLengthRef.current = rowData.length;
+		const currentKey = buildStatusKey(rowData);
 
-		// Prevent re-entry during processing
+		// Skip if nothing relevant changed
+		if (currentKey === lastStatusKeyRef.current) return;
+
+		// Prevent re-entry during processing; do NOT stamp the key so the
+		// next run after processing completes will re-evaluate this change.
 		if (isProcessingRef.current) return;
+		lastStatusKeyRef.current = currentKey;
 
-		// Track the inner reset timeout so it can be cancelled on unmount
 		let resetTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
-		// Debounce slightly to allow multiple rapid changes to settle
 		const timeoutId = setTimeout(() => {
-			// 1. Group by VIN
-			const vinGroups: Record<string, PendingRow[]> = {};
-
+			// 1. Group rows by normalised VIN
+			const vinGroups: Record<string, typeof rowData> = {};
 			for (const row of rowData) {
-				if (row.vin) {
-					const vin = row.vin.trim().toLowerCase();
-					if (!vinGroups[vin]) {
-						vinGroups[vin] = [];
-					}
-					vinGroups[vin].push(row);
-				}
+				if (!row.vin?.trim()) continue;
+				const vin = row.vin.trim().toLowerCase();
+				if (!vinGroups[vin]) vinGroups[vin] = [];
+				vinGroups[vin].push(row);
 			}
 
-			// 2. Identify groups where ALL parts are 'Arrived'
+			// 2. Collect IDs for groups where every part is "arrived"
 			const idsToMove: string[] = [];
-
-			for (const [_vin, rows] of Object.entries(vinGroups)) {
+			for (const [vin, rows] of Object.entries(vinGroups)) {
 				if (rows.length === 0) continue;
-
-				// Check if every row in this group has "Arrived" status
-				const allArrived = rows.every((row) => {
-					const status = (row.partStatus || "").trim().toLowerCase();
-					return status === "arrived";
-				});
-
+				const allArrived = rows.every(
+					(row) => (row.partStatus ?? "").trim().toLowerCase() === "arrived",
+				);
 				if (allArrived) {
-					for (const r of rows) {
-						idsToMove.push(r.id);
-					}
+					for (const r of rows) idsToMove.push(r.id);
+					toast.success(
+						`All parts for VIN ${vin.toUpperCase()} arrived! Moved to Call List.`,
+						{ duration: 5000 },
+					);
 				}
 			}
 
-			// 3. Move items if any found
+			// 3. Move if any found
 			if (idsToMove.length > 0) {
 				isProcessingRef.current = true;
-				sendToCallList(idsToMove);
+				bulkMoveToCall({ ids: idsToMove, stage: "call" });
 
-				// Reset flag after state has settled
 				resetTimeoutId = setTimeout(() => {
 					isProcessingRef.current = false;
 				}, AUTO_MOVE_DEBOUNCE_MS);
@@ -77,5 +79,5 @@ export const useAutoMoveVins = () => {
 			clearTimeout(timeoutId);
 			clearTimeout(resetTimeoutId);
 		};
-	}, [rowData, sendToCallList]);
+	}, [rowData, bulkMoveToCall]);
 };

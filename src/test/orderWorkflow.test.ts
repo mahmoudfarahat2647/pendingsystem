@@ -545,6 +545,27 @@ describe("getVinAutoMoveIds", () => {
 			}),
 		).toEqual(["1", "2"]);
 	});
+
+	it("returns the single row id when a VIN has exactly one part and it is Arrived", () => {
+		const rows = [
+			createMockRow({
+				id: "1",
+				stage: "main",
+				vin: "VIN111",
+				partStatus: "Not Arrived",
+			}),
+		];
+
+		expect(
+			getVinAutoMoveIds({
+				stage: "main",
+				stageRows: rows,
+				editedRowId: "1",
+				editedVin: "VIN111",
+				nextPartStatus: "Arrived",
+			}),
+		).toEqual(["1"]);
+	});
 });
 
 describe("formatVinForDisplay", () => {
