@@ -7,6 +7,7 @@ import {
 	Download,
 	Filter,
 	Phone,
+	RotateCcw,
 	Tag,
 	Trash2,
 } from "lucide-react";
@@ -33,6 +34,7 @@ interface SearchToolbarProps {
 	onBooking: () => void;
 	onArchive: () => void;
 	onSendToCallList: () => void;
+	onReorder: () => void;
 	onDelete: () => void;
 	onExtract: () => void;
 	onFilterToggle: () => void;
@@ -49,6 +51,7 @@ export const SearchToolbar = ({
 	onBooking,
 	onArchive,
 	onSendToCallList,
+	onReorder,
 	onDelete,
 	onExtract,
 	onFilterToggle,
@@ -139,6 +142,29 @@ export const SearchToolbar = ({
 							{!isSameSource && selectedCount > 0
 								? disabledReason
 								: "Send to Call List"}
+						</TooltipContent>
+					</Tooltip>
+
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								className={cn(
+									"h-8 w-8 transition-colors",
+									!isStageActionDisabled
+										? "text-orange-500/80 hover:text-orange-500 hover:bg-orange-500/10"
+										: "text-gray-600 cursor-not-allowed opacity-50",
+								)}
+								disabled={isStageActionDisabled}
+								onClick={onReorder}
+							>
+								<RotateCcw className="h-4 w-4" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							{!isSameSource && selectedCount > 0 ? disabledReason : "Reorder"}
 						</TooltipContent>
 					</Tooltip>
 

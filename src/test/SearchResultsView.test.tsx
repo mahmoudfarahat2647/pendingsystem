@@ -44,6 +44,7 @@ type MockSearchToolbarProps = {
 	onBooking: () => void;
 	onArchive: () => void;
 	onSendToCallList: () => void;
+	onReorder: () => void;
 };
 
 type MockBookingModalProps = {
@@ -63,6 +64,7 @@ type MockArchiveModalProps = {
 const mocks = vi.hoisted(() => ({
 	toastSuccess: vi.fn(),
 	toastError: vi.fn(),
+	toastWarning: vi.fn(),
 	printReservationLabels: vi.fn(),
 	saveMutateAsync: vi.fn(),
 	deleteMutateAsync: vi.fn(),
@@ -121,6 +123,7 @@ vi.mock("sonner", () => ({
 	toast: {
 		success: mocks.toastSuccess,
 		error: mocks.toastError,
+		warning: mocks.toastWarning,
 	},
 }));
 
@@ -224,6 +227,14 @@ vi.mock("@/components/shared/search/SearchToolbar", () => ({
 					onClick={props.onSendToCallList}
 				>
 					Call
+				</button>
+				<button
+					type="button"
+					data-testid="search-toolbar-reorder"
+					disabled={props.selectedCount === 0 || !props.isSameSource}
+					onClick={props.onReorder}
+				>
+					Reorder
 				</button>
 			</div>
 		);
@@ -1514,6 +1525,132 @@ describe("SearchResultsView", () => {
 
 			expect(mocks.toastError).not.toHaveBeenCalled();
 			expect(mocks.bulkMutations.main).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("reorder flow", () => {
+		const openReorderModal = async (rows: PendingRow[]) => {
+			await triggerSelectionChanged(rows);
+			const reorderButton = screen.getByTestId("search-toolbar-reorder");
+			expect(reorderButton).toBeEnabled();
+			fireEvent.click(reorderButton);
+			await waitFor(() => {
+				expect(
+					screen.getByPlaceholderText(/customer called back/i),
+				).toBeInTheDocument();
+			});
+		};
+
+		it("toasts full success when all rows are moved successfully", async () => {
+			const row = createRow({ id: "row-1", stage: "main" });
+			mocks.queryData.main = [row];
+			mocks.saveMutateAsync.mockResolvedValueOnce({
+				id: "row-1",
+				stage: "orders",
+			});
+
+			renderView();
+			await openReorderModal([row]);
+
+			fireEvent.change(screen.getByPlaceholderText(/customer called back/i), {
+				target: { value: "Test reason" },
+			});
+
+			await act(async () => {
+				fireEvent.click(
+					screen.getByRole("button", { name: /confirm reorder/i }),
+				);
+			});
+
+			await waitFor(() => {
+				expect(mocks.toastSuccess).toHaveBeenCalledWith(
+					expect.stringContaining("1 row(s) sent back to Orders (Reorder)"),
+				);
+			});
+			expect(mocks.toastError).not.toHaveBeenCalled();
+		});
+
+		it("Bug 1: toasts warning (not success) when some rows are skipped (null return)", async () => {
+			const row1 = createRow({ id: "row-1", stage: "main" });
+			const row2 = createRow({ id: "row-2", stage: "main" });
+			mocks.queryData.main = [row1, row2];
+
+			// row1 succeeds, row2 is skipped (already moved — null return)
+			mocks.saveMutateAsync
+				.mockResolvedValueOnce({ id: "row-1", stage: "orders" })
+				.mockResolvedValueOnce(null);
+
+			renderView();
+			await openReorderModal([row1, row2]);
+
+			fireEvent.change(screen.getByPlaceholderText(/customer called back/i), {
+				target: { value: "Test reason" },
+			});
+
+			await act(async () => {
+				fireEvent.click(
+					screen.getByRole("button", { name: /confirm reorder/i }),
+				);
+			});
+
+			await waitFor(() => {
+				expect(mocks.toastSuccess).not.toHaveBeenCalled();
+				expect(mocks.toastError).not.toHaveBeenCalled();
+				// Warning should mention how many succeeded and how many could not be moved
+				expect(mocks.toastWarning).toHaveBeenCalledWith(
+					expect.stringContaining("1 reordered"),
+				);
+			});
+		});
+
+		it("Bug 1: toasts warning when all rows are skipped (all null returns)", async () => {
+			const row = createRow({ id: "row-1", stage: "main" });
+			mocks.queryData.main = [row];
+			mocks.saveMutateAsync.mockResolvedValueOnce(null);
+
+			renderView();
+			await openReorderModal([row]);
+
+			fireEvent.change(screen.getByPlaceholderText(/customer called back/i), {
+				target: { value: "Test reason" },
+			});
+
+			await act(async () => {
+				fireEvent.click(
+					screen.getByRole("button", { name: /confirm reorder/i }),
+				);
+			});
+
+			await waitFor(() => {
+				expect(mocks.toastSuccess).not.toHaveBeenCalled();
+				expect(mocks.toastError).not.toHaveBeenCalled();
+			});
+		});
+
+		it("Bug 2: clears reason when Cancel button is clicked", async () => {
+			const row = createRow({ id: "row-1", stage: "main" });
+			mocks.queryData.main = [row];
+
+			renderView();
+			await openReorderModal([row]);
+
+			const input = screen.getByPlaceholderText(/customer called back/i);
+			fireEvent.change(input, { target: { value: "stale reason" } });
+			expect(input).toHaveValue("stale reason");
+
+			// Click Cancel
+			fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+
+			// Reopen
+			await act(async () => {
+				fireEvent.click(screen.getByTestId("search-toolbar-reorder"));
+			});
+
+			await waitFor(() => {
+				expect(
+					screen.getByPlaceholderText(/customer called back/i),
+				).toHaveValue("");
+			});
 		});
 	});
 });

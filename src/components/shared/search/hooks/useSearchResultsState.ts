@@ -62,6 +62,8 @@ export const useSearchResultsState = () => {
 	const [showBookingModal, setShowBookingModal] = useState(false);
 	const [showArchiveModal, setShowArchiveModal] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [showReorderModal, setShowReorderModal] = useState(false);
+	const [reorderReason, setReorderReason] = useState("");
 
 	// Fetch data from all sources
 	const { data: mainData = [] } = useOrdersQuery("main");
@@ -414,6 +416,82 @@ export const useSearchResultsState = () => {
 		}
 	}, [selectedRows, isSameSource, activeStage, bulkStageMutations]);
 
+	const handleReorderConfirm = useCallback(async () => {
+		if (selectedRows.length === 0 || !isSameSource || !reorderReason.trim())
+			return;
+		try {
+			const results = await Promise.allSettled(
+				selectedRows.map((row) => {
+					const freshRow = searchResults.find((r) => r.id === row.id) ?? row;
+					return saveOrderMutation.mutateAsync({
+						id: row.id,
+						updates: {
+							status: "Reorder",
+							noteHistory: appendTaggedUserNote(
+								getEffectiveNoteHistory(freshRow),
+								`Reorder Reason: ${reorderReason}`,
+								"reorder",
+							),
+						},
+						stage: "orders",
+						sourceStage: row.stage as OrderStage,
+					});
+				}),
+			);
+
+			const succeeded = results.filter(
+				(r) => r.status === "fulfilled" && r.value !== null,
+			);
+			const skipped = results.filter(
+				(r) => r.status === "fulfilled" && r.value === null,
+			);
+			const failed = results.filter((r) => r.status === "rejected");
+
+			if (succeeded.length > 0) {
+				setShowReorderModal(false);
+				setReorderReason("");
+				if (skipped.length === 0 && failed.length === 0) {
+					setSelectedRows([]);
+					toast.success(
+						`${succeeded.length} row(s) sent back to Orders (Reorder)`,
+					);
+				} else {
+					// Keep unresolved rows selected so the user can retry
+					const succeededIds = new Set(
+						selectedRows
+							.filter(
+								(_, i) =>
+									results[i]?.status === "fulfilled" &&
+									(results[i] as PromiseFulfilledResult<unknown>).value !==
+										null,
+							)
+							.map((r) => r.id),
+					);
+					setSelectedRows((prev) =>
+						prev.filter((r) => !succeededIds.has(r.id)),
+					);
+					toast.warning(
+						`${succeeded.length} reordered, ${skipped.length + failed.length} could not be moved (already moved or failed). Remaining rows stay selected.`,
+					);
+				}
+			} else if (skipped.length > 0 && failed.length === 0) {
+				toast.warning(
+					"No rows were moved — they may have already been reordered by another session.",
+				);
+			} else {
+				toast.error("Reorder failed");
+			}
+		} catch (_error) {
+			toast.error("Reorder failed");
+		}
+	}, [
+		selectedRows,
+		isSameSource,
+		reorderReason,
+		searchResults,
+		saveOrderMutation,
+	]);
+
 	const handleDeleteConfirm = useCallback(async () => {
 		if (selectedRows.length === 0 || !isSameSource) return;
 		try {
@@ -553,6 +631,11 @@ export const useSearchResultsState = () => {
 		handleBookingConfirm,
 		handleArchiveConfirm,
 		handleSendToCallList,
+		showReorderModal,
+		setShowReorderModal,
+		reorderReason,
+		setReorderReason,
+		handleReorderConfirm,
 		handleDeleteConfirm,
 		handleBulkStatusUpdate,
 		handleExtract,
