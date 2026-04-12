@@ -152,15 +152,16 @@ describe("useAutoMoveVins", () => {
 
 	it("does not re-fire when the data reference changes but statuses are unchanged", async () => {
 		const row = makeRow({ id: "r1", vin: "VIN444", partStatus: "Not Arrived" });
-		const { rerender } = renderHook(() => useAutoMoveVins());
 
+		// Configure mock before first render so the initial key is committed correctly.
 		mockUseOrdersQuery.mockReturnValue({ data: [row] } as unknown as ReturnType<
 			typeof useOrdersQuery
 		>);
-		vi.runAllTimers();
+		const { rerender } = renderHook(() => useAutoMoveVins());
+		vi.runAllTimers(); // flush initial debounce; status key is now committed
 		mockMutate.mockReset();
 
-		// Same logical content, new array reference
+		// Same logical content, new array reference — key-deduplication should block re-fire.
 		mockUseOrdersQuery.mockReturnValue({
 			data: [{ ...row }],
 		} as unknown as ReturnType<typeof useOrdersQuery>);

@@ -30,10 +30,11 @@ export const useAutoMoveVins = () => {
 
 		// Skip if nothing relevant changed
 		if (currentKey === lastStatusKeyRef.current) return;
-		lastStatusKeyRef.current = currentKey;
 
-		// Prevent re-entry during processing
+		// Prevent re-entry during processing; do NOT stamp the key so the
+		// next run after processing completes will re-evaluate this change.
 		if (isProcessingRef.current) return;
+		lastStatusKeyRef.current = currentKey;
 
 		let resetTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
