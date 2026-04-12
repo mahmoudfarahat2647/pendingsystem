@@ -6,6 +6,15 @@ import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useSearchResultsState } from "@/components/shared/search/hooks/useSearchResultsState";
 import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { RowModals } from "./RowModals";
 import { SearchResultsGrid } from "./search/SearchResultsGrid";
 import { SearchResultsHeader } from "./search/SearchResultsHeader";
@@ -34,6 +43,11 @@ export const SearchResultsView = () => {
 		handleBookingConfirm,
 		handleArchiveConfirm,
 		handleSendToCallList,
+		handleReorderConfirm,
+		showReorderModal,
+		setShowReorderModal,
+		reorderReason,
+		setReorderReason,
 		handleDeleteConfirm,
 		handleBulkStatusUpdate,
 		handleExtract,
@@ -70,6 +84,7 @@ export const SearchResultsView = () => {
 				onBooking={() => setShowBookingModal(true)}
 				onArchive={() => setShowArchiveModal(true)}
 				onSendToCallList={handleSendToCallList}
+				onReorder={() => setShowReorderModal(true)}
 				onDelete={() => setShowDeleteConfirm(true)}
 				onExtract={handleExtract}
 				onFilterToggle={() => setShowFilters((v) => !v)}
@@ -134,6 +149,53 @@ export const SearchResultsView = () => {
 				title="Confirm Delete"
 				description={`Are you sure you want to delete ${selectedRows.length} selected records? This action cannot be undone.`}
 			/>
+
+			{/* Reorder Reason Modal */}
+			<Dialog
+				open={showReorderModal}
+				onOpenChange={(open) => {
+					setShowReorderModal(open);
+					if (!open) setReorderReason("");
+				}}
+			>
+				<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
+					<DialogHeader>
+						<DialogTitle className="text-orange-500">
+							Reorder - Reason Required
+						</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4">
+						<div>
+							<Label>Reason for Reorder</Label>
+							<Input
+								value={reorderReason}
+								onChange={(e) => setReorderReason(e.target.value)}
+								placeholder="e.g., Customer called back, error on main sheet"
+								className="bg-white/5 border-white/10 text-white"
+							/>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setShowReorderModal(false);
+								setReorderReason("");
+							}}
+							className="border-white/20 text-white hover:bg-white/10"
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="renault"
+							onClick={handleReorderConfirm}
+							disabled={!reorderReason.trim()}
+						>
+							Confirm Reorder
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<RowModals
 				activeModal={activeModal}
