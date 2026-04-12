@@ -97,6 +97,93 @@ When making changes, update accordingly:
 - **`FEATURES.md`** - when product behavior changes
 - **`ENGINEERING.md`** - when architecture, data flow, env requirements, or operations change
 
+### Obsidian Docs Workflow
+
+The `docs/` folder is an Obsidian vault. Follow this convention:
+
+| Folder | Purpose | Who writes |
+|--------|---------|-----------|
+| `docs/superpowers/specs/` | Design specs (intent, behavior, acceptance criteria) | User writes in Obsidian |
+| `docs/superpowers/plans/` | Implementation plans | Claude writes via writing-plans skill |
+| `docs/` root | Stable reference docs (post-implementation) | Claude writes after implementing |
+| `docs/_templates/` | Obsidian templates for specs and references | — |
+
+**Spec lifecycle:** `draft` → `approved` → `implemented`
+Update the `status:` frontmatter field in the spec file when its lifecycle stage changes.
+
+**When implementing from a spec:** Read the spec file first, implement, then update the spec `status` to `implemented` and update relevant reference docs.
+
+## Supabase & Database
+
+### Required Environment Variables
+
+All vars live in `.env.local` (never committed). Exact structure:
+
+```
+# Supabase client (Dashboard → Project Settings → API)
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+NEXT_PUBLIC_SUPABASE_ATTACHMENTS_BUCKET=attachments
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+
+# Better Auth DB connection — copy EXACT string from Supabase Dashboard → Connect → Session mode
+# Format: postgresql://postgres.<project-ref>:<password>@aws-<n>-<region>.pooler.supabase.com:5432/postgres
+DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-<n>-<region>.pooler.supabase.com:5432/postgres
+BETTER_AUTH_SECRET=<random-secret>
+BETTER_AUTH_URL=http://localhost:3000
+```
+
+This project's Supabase pooler region is `eu-central-1` (host: `aws-1-eu-central-1.pooler.supabase.com`, port `5432`).
+
+### Debug Rule — Always Check `.env.local` First
+
+**Before trying any other fix** for a database/auth error, run:
+
+```bash
+npm run db:verify
+```
+
+This script parses `.env.local`, validates the `DATABASE_URL` format, attempts a live `SELECT 1`, checks all required vars, and prints row counts for every table. 90% of past failures were a malformed `DATABASE_URL`. Check it character by character before exploring other causes.
+
+### Common Errors & Root Causes
+
+| Error | Real Cause | Fix |
+|-------|-----------|-----|
+| `28P01 password authentication failed` | Wrong password in `DATABASE_URL` or URL is malformed | Copy exact string from Dashboard → Connect → Session mode — do not manually edit |
+| `ENOTFOUND` / `getaddrinfo` | Wrong pooler host | Host must be `aws-<n>-<region>.pooler.supabase.com` |
+| `SASL` / `invalid password` | Password has special chars not URL-encoded | Use Dashboard-provided string verbatim |
+| `relation "auth_users" does not exist` | Better Auth tables not created yet | Trigger with one request to `/api/auth/get-session`, or run `npm run auth:seed-admin` |
+| Auth passes but login fails | Better Auth `CamelCasePlugin` mismatch or wrong `modelName` | Check `src/lib/auth.ts` — model names must match prefixed table names (`auth_users`, etc.) |
+| `duplicate key` on `DATABASE_URL` prefix | Duplicate `NEXT_PUBLIC_` prefix accidentally added to `DATABASE_URL` | `DATABASE_URL` must NOT have `NEXT_PUBLIC_` prefix |
+
+### Better Auth Connection Chain
+
+```
+.env.local DATABASE_URL
+  → src/lib/postgres.ts  (pg Pool, ssl: rejectUnauthorized: false)
+  → src/lib/auth.ts      (Kysely + CamelCasePlugin + Better Auth)
+```
+
+If `SELECT 1` passes but auth still fails, the issue is in `auth.ts` config — not the connection string.
+
+### Database Tables
+
+| Table | Purpose |
+|-------|---------|
+| `orders` | All operational rows across all five stages |
+| `order_reminders` | Per-row reminder records |
+| `report_settings` | Report config per user |
+| `auth_users` | Better Auth users |
+| `auth_sessions` | Sessions (1h expiry, no refresh) |
+| `auth_accounts` | Auth accounts |
+| `auth_verifications` | Auth verifications |
+
+### Supabase MCP
+
+The Supabase MCP server is active in this project. Claude can directly query tables, run SQL, check logs, and inspect schema using MCP tools — **use this before manually debugging connection issues**.
+
+---
+
 ## Known Constraints
 
 - Authentication uses Better Auth (username+password only, admin-only, 1-hour sessions).

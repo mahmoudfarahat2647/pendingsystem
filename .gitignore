@@ -67,3 +67,12 @@ next-env.d.ts
 # Git worktrees
 .worktrees/
 /playwright-report/
+
+# documentation
+/docs/
+
+# scripts
+/scripts/
+
+# CLAUDE.md
+CLAUDE.md
