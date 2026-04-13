@@ -2,11 +2,19 @@
 
 import type { GridApi, ValueFormatterParams } from "ag-grid-community";
 import { format } from "date-fns";
-import { CheckCircle, Download, Filter, RotateCcw, Trash2 } from "lucide-react";
+import {
+	Calendar,
+	CheckCircle,
+	Download,
+	Filter,
+	RotateCcw,
+	Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { PartStatusRenderer } from "@/components/grid/renderers";
+import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -114,6 +122,7 @@ export default function ArchivePage() {
 	const [reorderReason, setReorderReason] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
 	// Sync selectedRows with the latest effectiveData to prevent stale data
 	useSelectedRowsSync("archive", effectiveData, selectedRows, setSelectedRows);
@@ -169,6 +178,35 @@ export default function ArchivePage() {
 			handleUpdateOrder(row.id, { partStatus: status });
 		});
 		toast.success(`Updated ${selectedRows.length} item(s) to ${status}`);
+	};
+
+	const handleConfirmBooking = async (
+		date: string,
+		note: string,
+		status?: string,
+	) => {
+		for (const row of selectedRows) {
+			const newNoteHistory = appendTaggedUserNote(
+				getEffectiveNoteHistory(row),
+				note,
+				"booking",
+			);
+			applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "archive",
+				destinationStage: "booking",
+				updates: {
+					bookingDate: date,
+					bookingNote: note,
+					noteHistory: newNoteHistory,
+					...(status ? { bookingStatus: status } : {}),
+				},
+				previousValues: {},
+			});
+		}
+		setSelectedRows([]);
+		toast.success(`${selectedRows.length} row(s) sent to Booking`);
 	};
 
 	const columns = useMemo(() => {
@@ -316,6 +354,21 @@ export default function ArchivePage() {
 							</TooltipTrigger>
 							<TooltipContent>Reorder</TooltipContent>
 						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-green-500/80 hover:text-green-500 h-8 w-8"
+									onClick={() => setIsBookingModalOpen(true)}
+									disabled={selectedRows.length === 0}
+								>
+									<Calendar className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Reschedule Booking</TooltipContent>
+						</Tooltip>
 					</div>
 
 					<div className="flex items-center gap-1.5">
@@ -412,6 +465,13 @@ export default function ArchivePage() {
 						</DialogFooter>
 					</DialogContent>
 				</Dialog>
+
+				<BookingCalendarModal
+					open={isBookingModalOpen}
+					onOpenChange={setIsBookingModalOpen}
+					onConfirm={handleConfirmBooking}
+					selectedRows={selectedRows}
+				/>
 
 				<ConfirmDialog
 					open={showDeleteConfirm}
