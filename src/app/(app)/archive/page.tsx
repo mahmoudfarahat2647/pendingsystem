@@ -122,6 +122,7 @@ export default function ArchivePage() {
 	const [reorderReason, setReorderReason] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
 	// Sync selectedRows with the latest effectiveData to prevent stale data
 	useSelectedRowsSync("archive", effectiveData, selectedRows, setSelectedRows);
