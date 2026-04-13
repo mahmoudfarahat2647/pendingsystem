@@ -180,6 +180,35 @@ export default function ArchivePage() {
 		toast.success(`Updated ${selectedRows.length} item(s) to ${status}`);
 	};
 
+	const handleConfirmBooking = async (
+		date: string,
+		note: string,
+		status?: string,
+	) => {
+		for (const row of selectedRows) {
+			const newNoteHistory = appendTaggedUserNote(
+				getEffectiveNoteHistory(row),
+				note,
+				"booking",
+			);
+			applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "archive",
+				destinationStage: "booking",
+				updates: {
+					bookingDate: date,
+					bookingNote: note,
+					noteHistory: newNoteHistory,
+					...(status ? { bookingStatus: status } : {}),
+				},
+				previousValues: {},
+			});
+		}
+		setSelectedRows([]);
+		toast.success(`${selectedRows.length} row(s) sent to Booking`);
+	};
+
 	const columns = useMemo(() => {
 		const baseColumns = getBaseColumns(
 			(row) => handleNoteClick(row, "archive"),
