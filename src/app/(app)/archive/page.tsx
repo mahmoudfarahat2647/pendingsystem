@@ -185,6 +185,16 @@ export default function ArchivePage() {
 		note: string,
 		status?: string,
 	) => {
+		const rowsMissingParts = selectedRows.filter(
+			(row) => !row.partNumber?.trim() || !row.description?.trim(),
+		);
+		if (rowsMissingParts.length > 0) {
+			toast.error(
+				`${rowsMissingParts.length} order(s) missing part number or description. Complete all part fields before booking.`,
+			);
+			return;
+		}
+
 		for (const row of selectedRows) {
 			const newNoteHistory = appendTaggedUserNote(
 				getEffectiveNoteHistory(row),
@@ -200,6 +210,9 @@ export default function ArchivePage() {
 					bookingDate: date,
 					bookingNote: note,
 					noteHistory: newNoteHistory,
+					status: "Pending",
+					archiveReason: undefined,
+					archivedAt: undefined,
 					...(status ? { bookingStatus: status } : {}),
 				},
 				previousValues: {},
