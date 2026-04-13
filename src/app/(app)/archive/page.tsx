@@ -354,6 +354,21 @@ export default function ArchivePage() {
 							</TooltipTrigger>
 							<TooltipContent>Reorder</TooltipContent>
 						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-green-500/80 hover:text-green-500 h-8 w-8"
+									onClick={() => setIsBookingModalOpen(true)}
+									disabled={selectedRows.length === 0}
+								>
+									<Calendar className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Reschedule Booking</TooltipContent>
+						</Tooltip>
 					</div>
 
 					<div className="flex items-center gap-1.5">
@@ -398,6 +413,13 @@ export default function ArchivePage() {
 						pageSize={20}
 					/>
 				</div>
+
+				<BookingCalendarModal
+					open={isBookingModalOpen}
+					onOpenChange={setIsBookingModalOpen}
+					onConfirm={handleConfirmBooking}
+					selectedRows={selectedRows}
+				/>
 
 				<RowModals
 					activeModal={activeModal}
