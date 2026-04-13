@@ -414,13 +414,6 @@ export default function ArchivePage() {
 					/>
 				</div>
 
-				<BookingCalendarModal
-					open={isBookingModalOpen}
-					onOpenChange={setIsBookingModalOpen}
-					onConfirm={handleConfirmBooking}
-					selectedRows={selectedRows}
-				/>
-
 				<RowModals
 					activeModal={activeModal}
 					currentRow={currentRow}
@@ -472,6 +465,13 @@ export default function ArchivePage() {
 						</DialogFooter>
 					</DialogContent>
 				</Dialog>
+
+				<BookingCalendarModal
+					open={isBookingModalOpen}
+					onOpenChange={setIsBookingModalOpen}
+					onConfirm={handleConfirmBooking}
+					selectedRows={selectedRows}
+				/>
 
 				<ConfirmDialog
 					open={showDeleteConfirm}
