@@ -2,11 +2,19 @@
 
 import type { GridApi, ValueFormatterParams } from "ag-grid-community";
 import { format } from "date-fns";
-import { CheckCircle, Download, Filter, RotateCcw, Trash2 } from "lucide-react";
+import {
+	Calendar,
+	CheckCircle,
+	Download,
+	Filter,
+	RotateCcw,
+	Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { PartStatusRenderer } from "@/components/grid/renderers";
+import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
