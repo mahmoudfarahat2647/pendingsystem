@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SimpleDatePicker } from "@/components/ui/simple-date-picker";
 import { Textarea } from "@/components/ui/textarea";
+import { useUpdateAppSettingsMutation } from "@/hooks/mutations/useUpdateAppSettingsMutation";
+import { useAppSettingsQuery } from "@/hooks/queries/useAppSettingsQuery";
 import { ALLOWED_COMPANIES } from "@/lib/ordersValidationConstants";
 import { cn, normalizeMileage } from "@/lib/utils";
-import { useAppStore } from "@/store/useStore";
 import type { FormData } from "./types";
 
 interface IdentityFieldsProps {
@@ -26,7 +27,7 @@ interface IdentityFieldsProps {
 /**
  * Left panel of the order form.
  * Renders core identity fields and owns the personal bulk-import state.
- * Accesses models/repairSystems directly from the store to avoid prop drilling.
+ * Fetches models/repairSystems from Supabase via React Query (useAppSettingsQuery).
  */
 export const IdentityFields = ({
 	formData,
@@ -35,13 +36,11 @@ export const IdentityFields = ({
 	getFieldError,
 	isEditMode,
 }: IdentityFieldsProps) => {
-	// Store: models and repair systems (local concern for EditableSelect)
-	const models = useAppStore((state) => state.models);
-	const addModel = useAppStore((state) => state.addModel);
-	const removeModel = useAppStore((state) => state.removeModel);
-	const repairSystems = useAppStore((state) => state.repairSystems);
-	const addRepairSystem = useAppStore((state) => state.addRepairSystem);
-	const removeRepairSystem = useAppStore((state) => state.removeRepairSystem);
+	const { data: appSettings, isPlaceholderData: settingsLoading } =
+		useAppSettingsQuery();
+	const updateAppSettings = useUpdateAppSettingsMutation();
+	const models = appSettings?.models ?? [];
+	const repairSystems = appSettings?.repairSystems ?? [];
 
 	// Personal bulk import state (owned here, not exposed to parent)
 	const [isPersonalBulkMode, setIsPersonalBulkMode] = useState(false);
@@ -344,8 +343,20 @@ export const IdentityFields = ({
 											options={models}
 											value={formData.model}
 											onChange={(val) => onFieldChange({ model: val })}
-											onAdd={addModel}
-											onRemove={removeModel}
+											onAdd={(option) => {
+												if (!settingsLoading && !models.includes(option)) {
+													updateAppSettings.mutate({
+														models: [...models, option],
+													});
+												}
+											}}
+											onRemove={(option) => {
+												if (!settingsLoading) {
+													updateAppSettings.mutate({
+														models: models.filter((m) => m !== option),
+													});
+												}
+											}}
 											placeholder="Select model..."
 										/>
 									</div>
@@ -401,8 +412,25 @@ export const IdentityFields = ({
 													});
 												}
 											}}
-											onAdd={addRepairSystem}
-											onRemove={removeRepairSystem}
+											onAdd={(option) => {
+												if (
+													!settingsLoading &&
+													!repairSystems.includes(option)
+												) {
+													updateAppSettings.mutate({
+														repairSystems: [...repairSystems, option],
+													});
+												}
+											}}
+											onRemove={(option) => {
+												if (!settingsLoading) {
+													updateAppSettings.mutate({
+														repairSystems: repairSystems.filter(
+															(s) => s !== option,
+														),
+													});
+												}
+											}}
 											placeholder="Select repair system"
 											protectedOptions={["ضمان"]}
 										/>

@@ -71,8 +71,6 @@ export interface NotificationActions {
 export interface UIState {
 	searchTerm: string;
 	highlightedRowId: string | null;
-	models: string[];
-	repairSystems: string[];
 	noteTemplates: string[];
 	reminderTemplates: string[];
 	bookingTemplates: string[];
@@ -89,10 +87,6 @@ export interface UIState {
 export interface UIActions {
 	setSearchTerm: (term: string) => void;
 	setHighlightedRowId: (id: string | null) => void;
-	addModel: (model: string) => void;
-	removeModel: (model: string) => void;
-	addRepairSystem: (system: string) => void;
-	removeRepairSystem: (system: string) => void;
 	addNote: (content: string, color: string) => void;
 	updateNote: (id: string, content: string) => void;
 	deleteNote: (id: string) => void;
