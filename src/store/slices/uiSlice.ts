@@ -29,15 +29,6 @@ const defaultBookingStatuses = [
 const initialState: UIState = {
 	searchTerm: "",
 	highlightedRowId: null,
-	models: [
-		"Megane IV",
-		"Clio V",
-		"Kadjar",
-		"Captur II",
-		"Duster II",
-		"Talisman",
-	],
-	repairSystems: ["Mechanical", "Electrical", "Body", "ضمان"],
 	noteTemplates: ["Customer not available", "Wrong number", "Will call back"],
 	reminderTemplates: ["Follow up call", "Check part status", "Confirm booking"],
 	bookingTemplates: ["Morning slot", "Afternoon slot", "Next available"],
@@ -63,35 +54,6 @@ export const createUISlice: StateCreator<
 
 	setHighlightedRowId: (id) => {
 		set({ highlightedRowId: id });
-	},
-
-	addModel: (model) => {
-		set((state) => ({
-			models: state.models.includes(model)
-				? state.models
-				: [...state.models, model],
-		}));
-	},
-
-	removeModel: (model) => {
-		set((state) => ({
-			models: state.models.filter((m) => m !== model),
-		}));
-	},
-
-	addRepairSystem: (system) => {
-		set((state) => ({
-			repairSystems: state.repairSystems.includes(system)
-				? state.repairSystems
-				: [...state.repairSystems, system],
-		}));
-	},
-
-	removeRepairSystem: (system) => {
-		if (PROTECTED_REPAIR_SYSTEMS.includes(system)) return;
-		set((state) => ({
-			repairSystems: state.repairSystems.filter((s) => s !== system),
-		}));
 	},
 
 	addNote: (content, color) => {
