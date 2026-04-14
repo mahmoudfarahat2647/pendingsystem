@@ -9,6 +9,7 @@ import type {
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
+import { toast } from "sonner";
 import { tryJumpToRow } from "@/lib/ag-grid-helpers";
 import { gridTheme } from "@/lib/ag-grid-setup";
 import { useLiveGridStore } from "@/store/useLiveGridStore";
@@ -237,6 +238,70 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 		[readOnly, showFloatingFilters],
 	);
 
+	// Ctrl+C: copy focused cell value, or copy selected rows as TSV
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLDivElement>) => {
+			if (!(e.ctrlKey || e.metaKey) || e.key !== "c") return;
+
+			const api = gridApiRef.current;
+			if (!api || api.isDestroyed()) return;
+
+			// Don't intercept copy when focus is inside an editor or filter input
+			const target = e.target as HTMLElement;
+			const tag = target.tagName;
+			if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable)
+				return;
+
+			// Don't intercept copy when the user has a native text selection
+			const nativeSel = window.getSelection();
+			if (nativeSel && nativeSel.toString().length > 0) return;
+
+			const copyToClipboard = (text: string, successMsg: string) => {
+				void navigator.clipboard
+					.writeText(text)
+					.then(() => {
+						toast.success(successMsg);
+					})
+					.catch(() => {
+						toast.error("Failed to copy.");
+					});
+			};
+
+			// Copy row(s) when checkboxes are selected — takes priority over cell copy
+			const selectedRows = api.getSelectedRows() as Record<string, unknown>[];
+			if (selectedRows.length > 0) {
+				const fields = api
+					.getAllDisplayedColumns()
+					.map((col) => col.getColDef().field)
+					.filter((f): f is string => typeof f === "string");
+
+				const tsv = selectedRows
+					.map((row) => fields.map((f) => String(row[f] ?? "")).join("\t"))
+					.join("\n");
+
+				copyToClipboard(tsv, `Copied ${selectedRows.length} row(s)!`);
+				return;
+			}
+
+			// Copy focused cell value
+			const focusedCell = api.getFocusedCell();
+			if (!focusedCell) return;
+
+			const rowNode = api.getDisplayedRowAtIndex(focusedCell.rowIndex);
+			if (!rowNode?.data) return;
+
+			const colDef = focusedCell.column.getColDef();
+			const field = colDef.field;
+			if (!field) return; // action column — skip
+
+			const value = (rowNode.data as Record<string, unknown>)[field];
+			if (value == null) return;
+
+			copyToClipboard(String(value), "Copied!");
+		},
+		[gridApiRef],
+	);
+
 	// Row ID getter for efficient updates
 	const getRowId = useMemo(
 		() => (params: { data: T }) => {
@@ -276,7 +341,8 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	const style = useMemo(() => ({ height, width: "100%" }), [height]);
 
 	return (
-		<div style={style}>
+		// biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures Ctrl+C events bubbling from AG Grid; AG Grid owns all real a11y/focus management
+		<div role="presentation" style={style} onKeyDown={handleKeyDown}>
 			<AgGridReact<T>
 				theme={gridTheme}
 				rowData={rowData}
