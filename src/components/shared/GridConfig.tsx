@@ -281,7 +281,13 @@ export const getCallColumns = (
 	return [
 		...baseColumns.slice(0, 2), // Include actions and stats
 		{ headerName: "BOOKING", field: "bookingDate", width: 120 },
-		...baseColumns.slice(2), // Continue from R/DATE onwards
+		...baseColumns
+			.slice(2)
+			.map((col) =>
+				col.field === "mobile"
+					? { ...col, cellStyle: { color: "#22c55e" } }
+					: col,
+			),
 		{
 			headerName: "PART STATUS",
 			field: "partStatus",
