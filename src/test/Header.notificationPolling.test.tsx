@@ -49,6 +49,9 @@ vi.mock("@/store/useStore", () => ({
 vi.mock("@/hooks/useDraftSession", () => ({
 	useDraftSession: () => draftSessionMocks.value,
 }));
+vi.mock("@/hooks/useWarrantyExpiryMaintenance", () => ({
+	useWarrantyExpiryMaintenance: () => ({ runMaintenance: vi.fn() }),
+}));
 
 vi.mock("@/components/shared/NotificationsDropdown", () => ({
 	NotificationsDropdown: () => <div data-testid="notifications-dropdown" />,

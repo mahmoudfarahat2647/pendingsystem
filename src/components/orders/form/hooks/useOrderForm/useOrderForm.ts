@@ -76,7 +76,6 @@ export const useOrderForm = ({
 		setBeastModeErrors,
 		duplicateWarning,
 		setDuplicateWarning,
-		isCheckingDuplicates,
 		setIsCheckingDuplicates,
 		checkBeastModeTimer,
 		resetValidation,
@@ -84,7 +83,6 @@ export const useOrderForm = ({
 		partValidationWarnings,
 		hasValidationErrors,
 		getFieldError,
-		validateForm,
 	} = useOrderValidation({ formData, parts, isEditMode, selectedRows });
 
 	const { handleLocalSubmit } = useOrderSubmit({

@@ -41,7 +41,6 @@ export const BookingCalendarModal = ({
 		preBookingStatus,
 		setPreBookingStatus,
 		searchQuery,
-		setSearchQuery,
 		selectedBookingId,
 		setSelectedBookingId,
 		searchMatchDates,

@@ -68,6 +68,7 @@ export function ForgotPasswordForm() {
 					type="text"
 					autoComplete="username"
 					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
+					aria-label="Username"
 					{...register("username")}
 				/>
 			</fieldset>

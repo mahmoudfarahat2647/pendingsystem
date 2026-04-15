@@ -107,10 +107,6 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				saveGridState(gridStateKey, state);
 				// Drop the in-memory snapshot once committed to persistence
 				clearLiveGridState(gridStateKey);
-				console.log(
-					`[DataGrid persistence] Saved state for ${gridStateKey}. useLiveGridStore after cleanup:`,
-					useLiveGridStore.getState().liveGridStates,
-				);
 				saveTimerRef.current = null;
 			}, 500);
 		}
