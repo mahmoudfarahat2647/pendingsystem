@@ -61,7 +61,7 @@ describe("LoginForm", () => {
 	it("renders username and password fields", () => {
 		render(<LoginForm />);
 		expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
-		expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+		expect(screen.getByLabelText("Password")).toBeInTheDocument();
 		expect(
 			screen.getByRole("button", { name: /sign in/i }),
 		).toBeInTheDocument();
@@ -70,7 +70,7 @@ describe("LoginForm", () => {
 	it("shows forgot password link", () => {
 		render(<LoginForm />);
 		expect(
-			screen.getByRole("link", { name: /forgot your password/i }),
+			screen.getByRole("link", { name: /forgot password/i }),
 		).toBeInTheDocument();
 	});
 
@@ -80,7 +80,7 @@ describe("LoginForm", () => {
 		render(<LoginForm />);
 
 		await user.type(screen.getByLabelText(/username/i), "admin");
-		await user.type(screen.getByLabelText(/password/i), "password123");
+		await user.type(screen.getByLabelText("Password"), "password123");
 		await user.click(screen.getByRole("button", { name: /sign in/i }));
 
 		await waitFor(() => {
@@ -96,7 +96,7 @@ describe("LoginForm", () => {
 		render(<LoginForm />);
 
 		await user.type(screen.getByLabelText(/username/i), "wronguser");
-		await user.type(screen.getByLabelText(/password/i), "wrongpassword");
+		await user.type(screen.getByLabelText("Password"), "wrongpassword");
 		await user.click(screen.getByRole("button", { name: /sign in/i }));
 
 		await waitFor(() => {
