@@ -39,9 +39,6 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 		partStatsColor = partStatsColor.replace("text-", "bg-");
 	}
 
-	const _bgOpacity = statsColor.includes("/") ? "" : "/10";
-	const _borderOpacity = statsColor.includes("/") ? "" : "/20";
-
 	return (
 		<div className="w-full relative group">
 			{/* Animated Gradient Border */}

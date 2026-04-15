@@ -23,7 +23,7 @@ export function useOrderValidation({
 	formData,
 	parts,
 	isEditMode,
-	selectedRows,
+	selectedRows: _selectedRows,
 }: UseOrderValidationProps) {
 	// Store selectors
 	const rowData = useAppStore((state) => state.rowData);
