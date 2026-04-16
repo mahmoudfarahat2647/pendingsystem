@@ -217,26 +217,30 @@ export const printOrderDocument = (selected: PendingRow[]): void => {
                     flex-direction: column; 
                 }
                 
-                .part-item { 
-                    display: flex; 
-                    justify-content: space-between; 
+                .part-item {
+                    display: flex;
+                    justify-content: space-between;
                     align-items: baseline;
                     padding: 4px 0;
-                    min-height: 22px;
+                    min-height: 26px;
                 }
                 
-                .part-desc { 
-                    font-size: 12px;
-                    font-weight: 800; 
+                .part-desc {
+                    font-size: 14px;
+                    font-weight: 800;
                     flex: 1;
                     padding-left: 8px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
-                
-                .part-num { 
-                    font-family: 'Inter', monospace; 
-                    font-weight: 800; 
-                    font-size: 11px;
+
+                .part-num {
+                    font-family: 'Inter', monospace;
+                    font-weight: 800;
+                    font-size: 16px;
                     direction: ltr;
+                    white-space: nowrap;
                 }
 
                 /* Footer Section: Signatures and Approvals */
@@ -341,8 +345,8 @@ export const printOrderDocument = (selected: PendingRow[]): void => {
                     <div class="section-header">اعتماد مدير الورشة</div>
                     <div class="note-line">طريقة الطلب ( جوي / بحري / DHL ): ............................................................</div>
                     <div class="signatures">
-                        <div>مدير الورشة</div>
                         <div>مسؤول قطع الغيار</div>
+                        <div>مدير الورشة</div>
                     </div>
                 </div>
             </div>
