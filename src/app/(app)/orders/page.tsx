@@ -57,12 +57,15 @@ export default function OrdersPage() {
 		setIsBulkAttachmentModalOpen,
 		showDeleteConfirm,
 		setShowDeleteConfirm,
+		showCommitConfirm,
+		setShowCommitConfirm,
 		showFilters,
 		setShowFilters,
 		handleUpdateOrder,
 		handleSendToArchive,
 		handleSaveOrder,
 		handleCommit,
+		handleConfirmCommit,
 		handleConfirmBooking,
 		handleUpdatePartStatus,
 		handleSaveBulkAttachment,
@@ -260,6 +263,17 @@ export default function OrdersPage() {
 					title="Delete Orders"
 					description={`Are you sure you want to delete ${selectedRows.length} selected order(s)? This action cannot be undone.`}
 					confirmText="Delete"
+				/>
+
+				<ConfirmDialog
+					open={showCommitConfirm}
+					onOpenChange={setShowCommitConfirm}
+					onConfirm={handleConfirmCommit}
+					title="Commit to Main Sheet"
+					description="Have you verified the request date for all selected orders before committing?"
+					confirmText="Yes, Commit"
+					cancelText="No, Go Back"
+					variant="success"
 				/>
 			</div>
 		</TooltipProvider>
