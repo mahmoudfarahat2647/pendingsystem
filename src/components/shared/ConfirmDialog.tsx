@@ -6,8 +6,6 @@ import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
-	DialogFooter,
-	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
 
@@ -24,22 +22,49 @@ interface ConfirmDialogProps {
 
 const variantConfig = {
 	destructive: {
-		gradient: "from-red-500/50 to-orange-500/50",
-		iconBg: "bg-red-500/10 text-red-500",
+		ambient: "rgba(239,68,68,0.10)",
+		pingBg: "rgba(239,68,68,0.14)",
+		iconBg: "rgba(220,38,38,0.12)",
+		iconBorder: "rgba(239,68,68,0.26)",
+		iconGlow: "0 0 24px rgba(239,68,68,0.24)",
+		iconColor: "#f87171",
+		borderGradient:
+			"linear-gradient(135deg, rgba(239,68,68,0.30) 0%, rgba(255,255,255,0.05) 50%, rgba(239,68,68,0.30) 100%)",
+		accentLine:
+			"linear-gradient(90deg, transparent 0%, rgba(239,68,68,0.85) 50%, transparent 100%)",
+		btnGradient: "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)",
+		btnGlow: "0 6px 20px rgba(239,68,68,0.35)",
 		Icon: AlertTriangle,
-		btnClass: "bg-red-600 hover:bg-red-500 shadow-red-900/20",
 	},
 	default: {
-		gradient: "from-red-500/50 to-orange-500/50",
-		iconBg: "bg-red-500/10 text-red-500",
+		ambient: "rgba(239,68,68,0.10)",
+		pingBg: "rgba(239,68,68,0.14)",
+		iconBg: "rgba(220,38,38,0.12)",
+		iconBorder: "rgba(239,68,68,0.26)",
+		iconGlow: "0 0 24px rgba(239,68,68,0.24)",
+		iconColor: "#f87171",
+		borderGradient:
+			"linear-gradient(135deg, rgba(239,68,68,0.30) 0%, rgba(255,255,255,0.05) 50%, rgba(239,68,68,0.30) 100%)",
+		accentLine:
+			"linear-gradient(90deg, transparent 0%, rgba(239,68,68,0.85) 50%, transparent 100%)",
+		btnGradient: "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)",
+		btnGlow: "0 6px 20px rgba(239,68,68,0.35)",
 		Icon: AlertTriangle,
-		btnClass: "bg-red-600 hover:bg-red-500 shadow-red-900/20",
 	},
 	success: {
-		gradient: "from-green-500/50 to-emerald-500/50",
-		iconBg: "bg-green-500/10 text-green-400",
+		ambient: "rgba(16,185,129,0.09)",
+		pingBg: "rgba(16,185,129,0.13)",
+		iconBg: "rgba(5,150,105,0.12)",
+		iconBorder: "rgba(16,185,129,0.28)",
+		iconGlow: "0 0 24px rgba(16,185,129,0.24)",
+		iconColor: "#34d399",
+		borderGradient:
+			"linear-gradient(135deg, rgba(16,185,129,0.30) 0%, rgba(255,255,255,0.05) 50%, rgba(16,185,129,0.30) 100%)",
+		accentLine:
+			"linear-gradient(90deg, transparent 0%, rgba(16,185,129,0.85) 50%, transparent 100%)",
+		btnGradient: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
+		btnGlow: "0 6px 20px rgba(16,185,129,0.35)",
 		Icon: FileCheck,
-		btnClass: "bg-green-600 hover:bg-green-500 shadow-green-900/20",
 	},
 };
 
@@ -53,48 +78,128 @@ export const ConfirmDialog = ({
 	cancelText = "Cancel",
 	variant = "destructive",
 }: ConfirmDialogProps) => {
-	const { gradient, iconBg, Icon, btnClass } = variantConfig[variant];
+	const cfg = variantConfig[variant];
+	const { Icon } = cfg;
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[425px] bg-[#1c1c1e] border border-white/10 text-white rounded-2xl shadow-2xl overflow-hidden">
-				<div
-					className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${gradient}`}
-				/>
+		<>
+			<style>{`
+				@keyframes cd-ring {
+					0%   { transform: scale(1); opacity: 0.5; }
+					100% { transform: scale(2.8); opacity: 0; }
+				}
+				.cd-ring-1 { animation: cd-ring 2.8s ease-out infinite; }
+				.cd-ring-2 { animation: cd-ring 2.8s ease-out infinite 1.4s; }
+			`}</style>
 
-				<DialogHeader className="pt-4">
-					<div className="flex items-center gap-3 mb-2">
-						<div className={`p-2 rounded-xl ${iconBg}`}>
-							<Icon className="h-5 w-5" />
+			<Dialog open={open} onOpenChange={onOpenChange}>
+				<DialogContent
+					hideClose
+					className="sm:max-w-[400px] p-0 border-0 shadow-none overflow-visible"
+					style={{ background: "transparent" }}
+				>
+					{/* Gradient border shell */}
+					<div
+						className="rounded-2xl p-px"
+						style={{ background: cfg.borderGradient }}
+					>
+						{/* Modal body */}
+						<div
+							className="rounded-2xl overflow-hidden"
+							style={{
+								background: `radial-gradient(ellipse 80% 45% at 50% -10%, ${cfg.ambient}, transparent 65%), #1b1b1d`,
+							}}
+						>
+							{/* Top accent bar */}
+							<div
+								className="h-[1.5px] w-full"
+								style={{ background: cfg.accentLine }}
+							/>
+
+							<div className="px-7 pt-9 pb-7">
+								{/* Floating icon with pulse rings */}
+								<div className="flex justify-center mb-6">
+									<div
+										className="relative flex items-center justify-center"
+										style={{ width: 60, height: 60 }}
+									>
+										<div
+											className="cd-ring-1 absolute inset-0 rounded-full"
+											style={{ background: cfg.pingBg }}
+										/>
+										<div
+											className="cd-ring-2 absolute inset-0 rounded-full"
+											style={{ background: cfg.pingBg }}
+										/>
+										<div
+											className="relative z-10 flex items-center justify-center rounded-xl"
+											style={{
+												inset: 0,
+												width: 52,
+												height: 52,
+												background: cfg.iconBg,
+												border: `1px solid ${cfg.iconBorder}`,
+												boxShadow: cfg.iconGlow,
+												color: cfg.iconColor,
+											}}
+										>
+											<Icon strokeWidth={1.6} className="h-[22px] w-[22px]" />
+										</div>
+									</div>
+								</div>
+
+								{/* Text — centered */}
+								<div className="text-center space-y-2.5">
+									<DialogTitle className="text-[17px] font-bold tracking-tight text-white leading-snug">
+										{title}
+									</DialogTitle>
+									<DialogDescription
+										className="text-[13px] leading-relaxed max-w-[270px] mx-auto"
+										style={{ color: "rgba(255,255,255,0.38)" }}
+									>
+										{description}
+									</DialogDescription>
+								</div>
+
+								{/* Divider */}
+								<div
+									className="mt-7 mb-6 h-px"
+									style={{ background: "rgba(255,255,255,0.06)" }}
+								/>
+
+								{/* Actions */}
+								<div className="flex gap-3">
+									<Button
+										variant="ghost"
+										onClick={() => onOpenChange(false)}
+										className="flex-1 h-10 rounded-xl text-[13px] font-medium active:scale-95 transition-all duration-150"
+										style={{
+											color: "rgba(255,255,255,0.42)",
+											background: "rgba(255,255,255,0.05)",
+											border: "1px solid rgba(255,255,255,0.09)",
+										}}
+									>
+										{cancelText}
+									</Button>
+									<Button
+										onClick={() => {
+											onConfirm();
+											onOpenChange(false);
+										}}
+										className="flex-1 h-10 rounded-xl text-[13px] font-bold text-white border-0 active:scale-95 transition-all duration-150"
+										style={{
+											background: cfg.btnGradient,
+											boxShadow: cfg.btnGlow,
+										}}
+									>
+										{confirmText}
+									</Button>
+								</div>
+							</div>
 						</div>
-						<DialogTitle className="text-xl font-bold tracking-tight text-white leading-none">
-							{title}
-						</DialogTitle>
 					</div>
-					<DialogDescription className="text-slate-400 text-sm leading-relaxed pt-2">
-						{description}
-					</DialogDescription>
-				</DialogHeader>
-
-				<DialogFooter className="gap-3 sm:gap-0 mt-6 pb-2">
-					<Button
-						variant="ghost"
-						onClick={() => onOpenChange(false)}
-						className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 border-none rounded-xl h-11 font-semibold transition-all active:scale-95"
-					>
-						{cancelText}
-					</Button>
-					<Button
-						onClick={() => {
-							onConfirm();
-							onOpenChange(false);
-						}}
-						className={`flex-1 ${btnClass} text-white border-none rounded-xl h-11 font-bold shadow-lg transition-all active:scale-95`}
-					>
-						{confirmText}
-					</Button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
+				</DialogContent>
+			</Dialog>
+		</>
 	);
 };
