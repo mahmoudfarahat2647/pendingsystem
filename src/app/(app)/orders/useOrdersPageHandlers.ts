@@ -9,7 +9,7 @@ import { useDraftSession } from "@/hooks/useDraftSession";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
-import { exportToLogisticsCSV } from "@/lib/exportUtils";
+import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import {
 	appendTaggedUserNote,
 	filterReservedRows,
@@ -410,9 +410,13 @@ export const useOrdersPageHandlers = () => {
 		printReservationLabels(reservedRows);
 	};
 
-	const handleShareToLogistics = () => {
+	const handleShareToLogistics = async () => {
 		if (selectedRows.length === 0) return;
-		exportToLogisticsCSV(selectedRows);
+		try {
+			await exportToLogisticsXLSX(selectedRows);
+		} catch {
+			toast.error("Export failed");
+		}
 	};
 
 	const handleSendToCallList = async () => {
