@@ -55,6 +55,7 @@ export const useOrdersPageHandlers = () => {
 	const [isBulkAttachmentModalOpen, setIsBulkAttachmentModalOpen] =
 		useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [showCommitConfirm, setShowCommitConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 	const [_activeModal, _setActiveModal] = useState<{
 		type: "note" | "reminder" | "archive" | "attachment";
@@ -248,9 +249,12 @@ export const useOrdersPageHandlers = () => {
 		}
 	};
 
-	const handleCommit = async () => {
+	const handleCommit = () => {
 		if (selectedRows.length === 0) return;
+		setShowCommitConfirm(true);
+	};
 
+	const handleConfirmCommit = () => {
 		const ids = selectedRows.map((r) => r.id);
 
 		// Beast Mode validation is handled inside applyCommand — it returns false if rejected.
@@ -474,6 +478,8 @@ export const useOrdersPageHandlers = () => {
 		setIsBulkAttachmentModalOpen,
 		showDeleteConfirm,
 		setShowDeleteConfirm,
+		showCommitConfirm,
+		setShowCommitConfirm,
 		showFilters,
 		setShowFilters,
 
@@ -482,6 +488,7 @@ export const useOrdersPageHandlers = () => {
 		handleSendToArchive,
 		handleSaveOrder,
 		handleCommit,
+		handleConfirmCommit,
 		handleConfirmBooking,
 		handleUpdatePartStatus,
 		handleSaveBulkAttachment,
