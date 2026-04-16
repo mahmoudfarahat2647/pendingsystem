@@ -3,19 +3,14 @@ import type { AllowedCompany } from "./ordersValidationConstants";
 import { getEffectiveNoteHistory } from "./orderWorkflow";
 
 /**
- * Exports selected orders to a CSV format optimized for logistics.
+ * Exports selected orders to an XLSX format optimized for logistics.
  * Columns: Name, VIN, Model, Part Number, Description
  */
-export const exportToLogisticsCSV = (selected: PendingRow[]): boolean => {
+export const exportToLogisticsXLSX = async (
+	selected: PendingRow[],
+): Promise<boolean> => {
 	if (selected.length === 0) return false;
 
-	const headers = [
-		"Customer Name",
-		"VIN",
-		"Model",
-		"Part Number",
-		"Description",
-	];
 	const timestamp = new Date().toISOString().split("T")[0];
 
 	const data = selected.map((row) => ({
@@ -26,7 +21,7 @@ export const exportToLogisticsCSV = (selected: PendingRow[]): boolean => {
 		Description: row.description,
 	}));
 
-	exportToCSV(data, `logistics_export_${timestamp}`, headers);
+	await exportToXLSX(data, `Pending_orders_${timestamp}.xlsx`);
 	return true;
 };
 
@@ -63,6 +58,17 @@ const exportToCSV = (
 	document.body.appendChild(link);
 	link.click();
 	document.body.removeChild(link);
+};
+
+const exportToXLSX = async (
+	data: Array<Record<string, unknown>>,
+	filename: string,
+) => {
+	const XLSX = await import("xlsx");
+	const worksheet = XLSX.utils.json_to_sheet(data);
+	const workbook = XLSX.utils.book_new();
+	XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+	XLSX.writeFile(workbook, filename);
 };
 
 /**

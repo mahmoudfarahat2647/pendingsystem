@@ -22,7 +22,7 @@ import {
 	useSaveOrderMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
-import { exportToLogisticsCSV } from "@/lib/exportUtils";
+import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import { normalizeOrderStage } from "@/lib/orderStage";
 import {
 	appendTaggedUserNote,
@@ -526,7 +526,9 @@ export const useSearchResultsState = () => {
 	);
 
 	const handleExtract = useCallback(() => {
-		exportToLogisticsCSV(searchResults);
+		exportToLogisticsXLSX(searchResults).catch(() => {
+			toast.error("Export failed");
+		});
 	}, [searchResults]);
 
 	const onCellValueChanged = useCallback(
