@@ -1,8 +1,8 @@
 export const NOTIFICATION_CHECK_INTERVAL_MS = 10_000;
 export const NOTIFICATION_INITIAL_DELAY_MS = 3_000;
-export const NOTIFICATION_FRESHNESS_WINDOW_MS = 8_000;
+const NOTIFICATION_FRESHNESS_WINDOW_MS = 8_000;
 
-export interface NotificationPollingState {
+interface NotificationPollingState {
 	dataVersion: number;
 	lastRunAt: number;
 }

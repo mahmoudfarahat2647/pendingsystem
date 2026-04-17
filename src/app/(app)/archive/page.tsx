@@ -10,7 +10,7 @@ import {
 	RotateCcw,
 	Trash2,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { PartStatusRenderer } from "@/components/grid/renderers";
@@ -72,14 +72,6 @@ export default function ArchivePage() {
 
 	// Use draft working rows if available, fallback to query data
 	const effectiveData = draftWorkingRows || archiveRowData;
-
-	const checkNotifications = useAppStore((state) => state.checkNotifications);
-
-	useEffect(() => {
-		if (archiveRowData) {
-			checkNotifications();
-		}
-	}, [archiveRowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 

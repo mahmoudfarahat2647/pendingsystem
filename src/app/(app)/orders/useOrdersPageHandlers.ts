@@ -1,7 +1,7 @@
 "use client";
 
 import type { GridApi } from "ag-grid-community";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import type { FormData } from "@/components/orders/form";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
@@ -44,7 +44,6 @@ export const useOrdersPageHandlers = () => {
 	// Use draft working rows if available, fallback to query data
 	const effectiveOrdersData = draftWorkingRows || ordersRowData;
 
-	const checkNotifications = useAppStore((state) => state.checkNotifications);
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
 	// 2. Local State
@@ -61,12 +60,6 @@ export const useOrdersPageHandlers = () => {
 		type: "note" | "reminder" | "archive" | "attachment";
 		row: PendingRow;
 	} | null>(null);
-
-	useEffect(() => {
-		if (effectiveOrdersData) {
-			checkNotifications();
-		}
-	}, [effectiveOrdersData, checkNotifications]);
 
 	// Sync selectedRows with the latest data (draft or query) to prevent stale data
 	useSelectedRowsSync(

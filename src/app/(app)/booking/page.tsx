@@ -10,7 +10,7 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
@@ -73,14 +73,6 @@ export default function BookingPage() {
 
 	// Use draft working rows if available, fallback to query data
 	const effectiveBookingData = draftWorkingRows || bookingRowData;
-
-	const checkNotifications = useAppStore((state) => state.checkNotifications);
-
-	useEffect(() => {
-		if (bookingRowData) {
-			checkNotifications();
-		}
-	}, [bookingRowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 

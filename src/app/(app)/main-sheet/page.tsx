@@ -64,14 +64,6 @@ export default function MainSheetPage() {
 	// Use draft working rows if available, fallback to query data
 	const effectiveRowData = draftWorkingRows || rowData;
 
-	const checkNotifications = useAppStore((state) => state.checkNotifications);
-
-	useEffect(() => {
-		if (rowData) {
-			checkNotifications();
-		}
-	}, [rowData, checkNotifications]);
-
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
 	const handleUpdateOrder = useCallback(
