@@ -3,6 +3,7 @@
 import { ClientErrorBoundary } from "@/components/shared/ClientErrorBoundary";
 import { Header } from "@/components/shared/Header";
 import { MainContentWrapper } from "@/components/shared/MainContentWrapper";
+import { SessionGuard } from "@/components/shared/SessionGuard";
 import { Sidebar } from "@/components/shared/Sidebar";
 
 interface AppShellProps {
@@ -24,6 +25,7 @@ export function AppShell({ children }: AppShellProps) {
 			className="flex h-screen overflow-hidden bg-background"
 			suppressHydrationWarning
 		>
+			<SessionGuard />
 			<Sidebar />
 			<div className="flex flex-1 flex-col overflow-hidden">
 				<Header />

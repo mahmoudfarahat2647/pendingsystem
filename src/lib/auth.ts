@@ -28,8 +28,8 @@ export const auth = betterAuth({
 	},
 	session: {
 		modelName: "auth_sessions",
-		expiresIn: 3600,
-		disableSessionRefresh: true,
+		expiresIn: 60 * 60 * 8,
+		updateAge: 60 * 5,
 	},
 	account: {
 		modelName: "auth_accounts",

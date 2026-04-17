@@ -10,7 +10,11 @@ import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { type LoginFormData, LoginFormSchema } from "@/schemas/auth.schema";
 
-export function LoginForm() {
+interface LoginFormProps {
+	expired?: boolean;
+}
+
+export function LoginForm({ expired }: LoginFormProps) {
 	const router = useRouter();
 	const [error, setError] = useState<string | null>(null);
 	const [showPassword, setShowPassword] = useState(false);
@@ -38,6 +42,16 @@ export function LoginForm() {
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+			{expired && (
+				<div
+					role="alert"
+					className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3"
+				>
+					<p className="text-amber-400 text-sm">
+						Your session expired. Please sign in again.
+					</p>
+				</div>
+			)}
 			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
 				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
 					Username
