@@ -271,9 +271,10 @@ export default function OrdersPage() {
 					onConfirm={handleConfirmCommit}
 					title="Commit to Main Sheet"
 					description="Have you verified the request date for all selected orders before committing?"
-					confirmText="Yes, Commit"
+					confirmText="Commit"
 					cancelText="No, Go Back"
 					variant="success"
+					requireTypeToConfirm="yes"
 				/>
 			</div>
 		</TooltipProvider>
