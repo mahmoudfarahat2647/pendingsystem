@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, FileCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -18,6 +19,7 @@ interface ConfirmDialogProps {
 	confirmText?: string;
 	cancelText?: string;
 	variant?: "default" | "destructive" | "success";
+	requireTypeToConfirm?: string;
 }
 
 const variantConfig = {
@@ -77,9 +79,22 @@ export const ConfirmDialog = ({
 	confirmText = "Confirm",
 	cancelText = "Cancel",
 	variant = "destructive",
+	requireTypeToConfirm,
 }: ConfirmDialogProps) => {
 	const cfg = variantConfig[variant];
 	const { Icon } = cfg;
+
+	const [inputValue, setInputValue] = useState("");
+
+	useEffect(() => {
+		if (!open) {
+			setInputValue("");
+		}
+	}, [open]);
+
+	const isConfirmDisabled = requireTypeToConfirm
+		? inputValue.toLowerCase() !== requireTypeToConfirm.toLowerCase()
+		: false;
 
 	return (
 		<>
@@ -156,6 +171,39 @@ export const ConfirmDialog = ({
 									</DialogDescription>
 								</div>
 
+								{requireTypeToConfirm && (
+									<div className="mt-4 px-2">
+										<p
+											id="confirm-type-instruction"
+											className="text-[12px] mb-2 font-medium"
+											style={{ color: "rgba(255,255,255,0.5)" }}
+										>
+											Type{" "}
+											<strong className="text-white">
+												"{requireTypeToConfirm}"
+											</strong>{" "}
+											to confirm
+										</p>
+										<input
+											title={`Type ${requireTypeToConfirm} to confirm`}
+											type="text"
+											autoFocus
+											aria-labelledby="confirm-type-instruction"
+											aria-describedby="confirm-type-instruction"
+											value={inputValue}
+											onChange={(e) => setInputValue(e.target.value)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter" && !isConfirmDisabled) {
+													onConfirm();
+													onOpenChange(false);
+												}
+											}}
+											className="w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white text-[13px] placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all"
+											placeholder={requireTypeToConfirm}
+										/>
+									</div>
+								)}
+
 								<div
 									className="mt-7 mb-6 h-px"
 									style={{ background: "rgba(255,255,255,0.06)" }}
@@ -165,24 +213,26 @@ export const ConfirmDialog = ({
 									<Button
 										variant="ghost"
 										onClick={() => onOpenChange(false)}
-										className="flex-1 h-10 rounded-xl text-[13px] font-medium active:scale-95 transition-all duration-150"
+										className="flex-1 h-10 rounded-xl text-[13px] font-medium active:scale-95 transition-all duration-150 hover:bg-white/10 hover:text-white"
 										style={{
-											color: "rgba(255,255,255,0.42)",
-											background: "rgba(255,255,255,0.05)",
-											border: "1px solid rgba(255,255,255,0.09)",
+											color: "rgba(255,255,255,0.85)",
+											background: "rgba(255,255,255,0.08)",
+											border: "1px solid rgba(255,255,255,0.12)",
 										}}
 									>
 										{cancelText}
 									</Button>
 									<Button
 										onClick={() => {
+											if (isConfirmDisabled) return;
 											onConfirm();
 											onOpenChange(false);
 										}}
-										className="flex-1 h-10 rounded-xl text-[13px] font-bold text-white border-0 active:scale-95 transition-all duration-150"
+										disabled={isConfirmDisabled}
+										className="flex-1 h-10 rounded-xl text-[13px] font-bold text-white border-0 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
 										style={{
 											background: cfg.btnGradient,
-											boxShadow: cfg.btnGlow,
+											boxShadow: isConfirmDisabled ? "none" : cfg.btnGlow,
 										}}
 									>
 										{confirmText}
