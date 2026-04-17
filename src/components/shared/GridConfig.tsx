@@ -12,6 +12,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 import { ActionCellRenderer } from "../grid/renderers/ActionCellRenderer";
+import { CompanyLogoRenderer } from "../grid/renderers/CompanyLogoRenderer";
 import { PartStatusRenderer } from "../grid/renderers/PartStatusRenderer";
 import { StatusRenderer } from "../grid/renderers/StatusRenderer";
 import { VinCellRenderer } from "../grid/renderers/VinCellRenderer";
@@ -71,7 +72,13 @@ export const getBaseColumns = (
 		headerName: "COMPANY",
 		field: "company",
 		width: 90,
-		cellClass: "font-bold text-center",
+		cellRenderer: CompanyLogoRenderer,
+		cellStyle: {
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		filterValueGetter: (params) => params.data?.company ?? "",
 		valueFormatter: (params: ValueFormatterParams<PendingRow>) =>
 			params.value || "",
 		comparator: (

@@ -209,3 +209,28 @@ When performing any refactor, optimization, or code cleanup:
 ## important note
 
 - after major changes please update this file (CLAUDE.md) . keep this file up-to-date with the project's status .
+
+## Workflow Conventions
+
+- When a review or audit skill is invoked (`/bug-review`, `/production-code-audit`, `/requesting-code-review`, etc.), deliver **only** the findings report unless the user explicitly asks to apply fixes.
+- For bug-review and adversarial review workflows: verify each finding is a real issue in the current codebase before proposing any fix. Do not propose fixes for unreachable code, dead paths, or already-compensated issues.
+- After any code edit, run `npm run type-check` and `npm run lint` on the changed files before declaring the task done. Both must pass cleanly.
+
+## Planning
+
+- Keep planning proportional to task complexity. For simple UI additions or single-file changes, skip brainstorming and implement directly.
+- When presenting multiple approaches, offer 2–3 concise options with trade-offs and wait for the user to select before deep-diving into the chosen path.
+- If asked to "save a plan", write it to a `.md` file in the **project root** and exit plan mode before beginning implementation. This makes the plan accessible from other sessions.
+
+## Deprecated Commands
+
+The following slash commands are deprecated — do NOT suggest or invoke them:
+
+- `/superpowers:write-plan` — replaced by the `superpowers:writing-plans` skill
+- `/superpowers:execute-plan` — replaced by the `superpowers:executing-plans` skill
+
+## Build & Long-Running Tasks
+
+- `npm run build` can take several minutes. Before starting, announce what you are running and the expected wait time.
+- Prefer `npm run type-check` (`tsc --noEmit`) for fast type validation unless production output is the explicit goal.
+- For lint validation prefer `npm run lint` (read-only Biome check) over `npm run lint:fix` unless the task is specifically to auto-fix.
