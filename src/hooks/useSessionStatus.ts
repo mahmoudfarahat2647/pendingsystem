@@ -13,10 +13,9 @@ interface SessionStatusResult {
 
 const EXPIRING_SOON_THRESHOLD = 5 * 60; // 5 minutes in seconds
 
-function computeStatus(expiresAt: Date): SessionStatusResult {
-	const secondsRemaining = Math.floor(
-		(expiresAt.getTime() - Date.now()) / 1000,
-	);
+function computeStatus(expiresAtMs: number): SessionStatusResult {
+	const expiresAt = new Date(expiresAtMs);
+	const secondsRemaining = Math.floor((expiresAtMs - Date.now()) / 1000);
 	if (secondsRemaining <= 0) {
 		return { status: "expired", expiresAt, secondsRemaining: 0 };
 	}
@@ -39,31 +38,35 @@ export function useSessionStatus(): SessionStatusResult {
 	// null → session confirmed absent; undefined → still loading
 	const sessionConfirmedMissing = !isPending && session === null;
 
-	const expiresAt = session?.session?.expiresAt
-		? new Date(session.session.expiresAt)
+	const expiresAtMs = session?.session?.expiresAt
+		? new Date(session.session.expiresAt).getTime()
 		: null;
 
 	const [result, setResult] = useState<SessionStatusResult>(() =>
-		sessionConfirmedMissing || !expiresAt
+		sessionConfirmedMissing || expiresAtMs === null
 			? EXPIRED_RESULT
-			: computeStatus(expiresAt),
+			: computeStatus(expiresAtMs),
 	);
 
 	useEffect(() => {
-		if (sessionConfirmedMissing || !expiresAt) {
+		if (sessionConfirmedMissing || expiresAtMs === null) {
 			setResult(EXPIRED_RESULT);
 			return;
 		}
 
-		setResult(computeStatus(expiresAt));
+		const updateStatus = () => {
+			setResult(computeStatus(expiresAtMs));
+		};
+
+		updateStatus();
 
 		const interval = setInterval(() => {
-			setResult(computeStatus(expiresAt));
+			updateStatus();
 		}, 30_000);
 
 		const onVisibilityChange = () => {
 			if (document.visibilityState === "visible") {
-				setResult(computeStatus(expiresAt));
+				updateStatus();
 			}
 		};
 		document.addEventListener("visibilitychange", onVisibilityChange);
@@ -72,7 +75,7 @@ export function useSessionStatus(): SessionStatusResult {
 			clearInterval(interval);
 			document.removeEventListener("visibilitychange", onVisibilityChange);
 		};
-	}, [expiresAt, sessionConfirmedMissing]);
+	}, [expiresAtMs, sessionConfirmedMissing]);
 
 	return result;
 }
