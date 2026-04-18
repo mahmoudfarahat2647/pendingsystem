@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
 export type SessionStatus = "active" | "expiringSoon" | "expired" | "absent";
@@ -39,9 +39,12 @@ export function useSessionStatus(): SessionStatusResult {
 	// null → session confirmed absent; undefined → still loading
 	const sessionConfirmedMissing = !isPending && session === null;
 
-	const expiresAt = session?.session?.expiresAt
-		? new Date(session.session.expiresAt)
-		: null;
+	const expiresAt = useMemo(
+		() =>
+			session?.session?.expiresAt ? new Date(session.session.expiresAt) : null,
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[session?.session?.expiresAt],
+	);
 
 	const [result, setResult] = useState<SessionStatusResult>(() =>
 		sessionConfirmedMissing || !expiresAt
