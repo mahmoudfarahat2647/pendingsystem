@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
-export type SessionStatus = "active" | "expiringSoon" | "expired";
+export type SessionStatus = "active" | "expiringSoon" | "expired" | "absent";
 
 interface SessionStatusResult {
 	status: SessionStatus;
@@ -26,9 +26,9 @@ function computeStatus(expiresAt: Date): SessionStatusResult {
 	return { status: "active", expiresAt, secondsRemaining };
 }
 
-/** Sentinel used when the session is confirmed absent (backend returned null). */
-const EXPIRED_RESULT: SessionStatusResult = {
-	status: "expired",
+/** Sentinel used when the session is confirmed absent (signed out or never created). */
+const ABSENT_RESULT: SessionStatusResult = {
+	status: "absent",
 	expiresAt: null,
 	secondsRemaining: 0,
 };
@@ -45,13 +45,13 @@ export function useSessionStatus(): SessionStatusResult {
 
 	const [result, setResult] = useState<SessionStatusResult>(() =>
 		sessionConfirmedMissing || !expiresAt
-			? EXPIRED_RESULT
+			? ABSENT_RESULT
 			: computeStatus(expiresAt),
 	);
 
 	useEffect(() => {
 		if (sessionConfirmedMissing || !expiresAt) {
-			setResult(EXPIRED_RESULT);
+			setResult(ABSENT_RESULT);
 			return;
 		}
 
