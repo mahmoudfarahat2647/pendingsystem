@@ -37,6 +37,7 @@ const RowModals = dynamic(
 	{ ssr: false },
 );
 
+import { useOrdersRealtimeSync } from "@/hooks/useOrdersRealtimeSync";
 import { useAppStore } from "@/store/useStore";
 import { useOrdersPageHandlers } from "./useOrdersPageHandlers";
 
@@ -79,6 +80,7 @@ export default function OrdersPage() {
 	} = useOrdersPageHandlers();
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
+	useOrdersRealtimeSync();
 
 	const {
 		activeModal,
