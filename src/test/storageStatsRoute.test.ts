@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SUPABASE_REQUEST_TIMEOUT_MS } from "../lib/constants";
 
 // Mock Next.js server module
 vi.mock("next/server", () => ({
@@ -140,7 +141,7 @@ describe("GET /api/storage-stats", () => {
 
 		const routePromise = callGET();
 
-		await vi.advanceTimersByTimeAsync(31_000);
+		await vi.advanceTimersByTimeAsync(SUPABASE_REQUEST_TIMEOUT_MS + 1_000);
 
 		const response = await routePromise;
 		expect(response.status).toBe(200);

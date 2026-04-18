@@ -128,6 +128,10 @@ export const useOrderForm = ({
 		} else {
 			clearCurrentEditVin();
 		}
+
+		return () => {
+			clearCurrentEditVin();
+		};
 	}, [open, isEditMode, selectedRows, setCurrentEditVin, clearCurrentEditVin]);
 
 	return {
