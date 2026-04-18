@@ -23,6 +23,41 @@ function todayString(): string {
 	return `${dd}/${mm}/${yyyy}`;
 }
 
+async function mergeAppSettings(
+	supabase: ReturnType<typeof createServiceClient>,
+	model: string,
+	repairSystem: string,
+): Promise<void> {
+	const { data, error } = await supabase
+		.from("app_settings")
+		.select("models, repair_systems")
+		.eq("id", 1)
+		.single();
+
+	if (error || !data) return;
+
+	const currentModels: string[] = data.models ?? [];
+	const currentRepairSystems: string[] = data.repair_systems ?? [];
+
+	const patch: Record<string, unknown> = {
+		updated_at: new Date().toISOString(),
+	};
+	let needsUpdate = false;
+
+	if (model && !currentModels.includes(model)) {
+		patch.models = [...currentModels, model];
+		needsUpdate = true;
+	}
+	if (repairSystem && !currentRepairSystems.includes(repairSystem)) {
+		patch.repair_systems = [...currentRepairSystems, repairSystem];
+		needsUpdate = true;
+	}
+
+	if (needsUpdate) {
+		await supabase.from("app_settings").update(patch).eq("id", 1);
+	}
+}
+
 export async function POST(req: NextRequest) {
 	let body: unknown;
 	try {
@@ -74,6 +109,7 @@ export async function POST(req: NextRequest) {
 		parts.length === 0 ? [{ partNumber: "", description: "" }] : parts;
 
 	const supabase = createServiceClient();
+	await mergeAppSettings(supabase, model, repairSystem);
 	const errors: string[] = [];
 
 	for (const part of rowsToInsert) {

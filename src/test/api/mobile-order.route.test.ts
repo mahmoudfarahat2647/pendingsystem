@@ -6,7 +6,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockInsert = vi.fn();
 const mockSelect = vi.fn();
 const mockSingle = vi.fn();
-const mockFrom = vi.fn(() => ({
+// biome-ignore lint/suspicious/noExplicitAny: test mock needs flexible return type for multi-table mocking
+const mockFrom = vi.fn((_table: string): any => ({
 	insert: mockInsert.mockReturnThis(),
 	select: mockSelect.mockReturnThis(),
 	single: mockSingle,
@@ -109,5 +110,76 @@ describe("POST /api/mobile-order", () => {
 			expect(row.vin).toBe("VIN123");
 			expect(row.customer_phone).toBe("0500000001");
 		}
+	});
+});
+
+// Task 4: app_settings merge tests
+const mockAppSettingsSelect = vi.fn().mockResolvedValue({
+	data: { models: ["Megane IV"], repair_systems: ["Mechanical"] },
+	error: null,
+});
+
+mockFrom.mockImplementation((table: string) => {
+	if (table === "app_settings") {
+		return {
+			select: vi.fn().mockReturnValue({
+				eq: vi.fn().mockReturnValue({
+					single: mockAppSettingsSelect,
+				}),
+			}),
+			update: vi.fn().mockReturnValue({
+				eq: vi.fn().mockResolvedValue({ data: {}, error: null }),
+			}),
+		};
+	}
+	return {
+		insert: mockInsert.mockReturnThis(),
+		select: mockSelect.mockReturnThis(),
+		single: mockSingle,
+	};
+});
+
+describe("POST /api/mobile-order — app_settings merge", () => {
+	beforeEach(() => {
+		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
+		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+		vi.clearAllMocks();
+		mockSingle.mockResolvedValue({
+			data: { id: "uuid-1", stage: "orders" },
+			error: null,
+		});
+		mockAppSettingsSelect.mockResolvedValue({
+			data: { models: ["Megane IV"], repair_systems: ["Mechanical"] },
+			error: null,
+		});
+		mockFrom.mockImplementation((table: string) => {
+			if (table === "app_settings") {
+				return {
+					select: vi.fn().mockReturnValue({
+						eq: vi.fn().mockReturnValue({
+							single: mockAppSettingsSelect,
+						}),
+					}),
+					update: vi.fn().mockReturnValue({
+						eq: vi.fn().mockResolvedValue({ data: {}, error: null }),
+					}),
+				};
+			}
+			return {
+				insert: mockInsert.mockReturnThis(),
+				select: mockSelect.mockReturnThis(),
+				single: mockSingle,
+			};
+		});
+	});
+
+	it("merges new model into app_settings when not already present", async () => {
+		const req = makeRequest({
+			company: "Zeekr",
+			model: "BrandNewModel",
+			parts: [],
+		});
+		await POST(req as never);
+		expect(mockFrom).toHaveBeenCalledWith("app_settings");
 	});
 });
