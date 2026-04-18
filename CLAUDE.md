@@ -160,7 +160,7 @@ This script parses `.env.local`, validates the `DATABASE_URL` format, attempts a
 
 ```
 .env.local DATABASE_URL
-  → src/lib/postgres.ts  (pg Pool, ssl: rejectUnauthorized: false)
+  → src/lib/postgres.ts  (pg Pool with bounded max/connection/query timeouts, ssl: rejectUnauthorized: false)
   → src/lib/auth.ts      (Kysely + CamelCasePlugin + Better Auth)
 ```
 
