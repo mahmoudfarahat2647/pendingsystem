@@ -21,6 +21,9 @@ vi.mock("@supabase/supabase-js", () => ({
 
 // Import after mocks
 const { POST } = await import("@/app/api/mobile-order/route");
+const { _rateLimitMap, RATE_LIMIT_MAX } = await import(
+	"@/app/api/mobile-order/rateLimiter"
+);
 
 function makeRequest(body: unknown) {
 	return new Request("http://localhost/api/mobile-order", {
@@ -34,6 +37,7 @@ describe("POST /api/mobile-order", () => {
 	beforeEach(() => {
 		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+		_rateLimitMap.clear();
 		vi.clearAllMocks();
 		mockSingle.mockResolvedValue({
 			data: { id: "uuid-1", stage: "orders" },
@@ -143,6 +147,7 @@ describe("POST /api/mobile-order — app_settings merge", () => {
 	beforeEach(() => {
 		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+		_rateLimitMap.clear();
 		vi.clearAllMocks();
 		mockSingle.mockResolvedValue({
 			data: { id: "uuid-1", stage: "orders" },
@@ -181,5 +186,56 @@ describe("POST /api/mobile-order — app_settings merge", () => {
 		});
 		await POST(req as never);
 		expect(mockFrom).toHaveBeenCalledWith("app_settings");
+	});
+});
+
+describe("POST /api/mobile-order — rate limiting", () => {
+	const RATE_LIMIT_IP = "10.0.0.1";
+
+	function makeRequestWithIp(ip: string) {
+		return new Request("http://localhost/api/mobile-order", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"x-forwarded-for": ip,
+			},
+			body: JSON.stringify({ company: "Zeekr", parts: [] }),
+		});
+	}
+
+	beforeEach(() => {
+		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
+		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+		_rateLimitMap.clear();
+		vi.clearAllMocks();
+		mockSingle.mockResolvedValue({
+			data: { id: "uuid-1", stage: "orders" },
+			error: null,
+		});
+	});
+
+	it("allows requests up to the rate limit", async () => {
+		for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+			const res = await POST(makeRequestWithIp(RATE_LIMIT_IP) as never);
+			expect(res.status).not.toBe(429);
+		}
+	});
+
+	it("returns 429 after exceeding the rate limit", async () => {
+		for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+			await POST(makeRequestWithIp(RATE_LIMIT_IP) as never);
+		}
+		const res = await POST(makeRequestWithIp(RATE_LIMIT_IP) as never);
+		expect(res.status).toBe(429);
+		const json = await res.json();
+		expect(json.error).toMatch(/too many requests/i);
+	});
+
+	it("does not rate-limit a different IP", async () => {
+		for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+			await POST(makeRequestWithIp(RATE_LIMIT_IP) as never);
+		}
+		const res = await POST(makeRequestWithIp("10.0.0.2") as never);
+		expect(res.status).not.toBe(429);
 	});
 });

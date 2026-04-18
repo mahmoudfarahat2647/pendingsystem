@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { normalizeNullableCompanyName } from "@/lib/company";
 import { MobileQuickOrderSchema } from "@/schemas/mobileOrder.schema";
+import { isRateLimited } from "./rateLimiter";
 
 export const runtime = "nodejs";
 
@@ -59,6 +60,18 @@ async function mergeAppSettings(
 }
 
 export async function POST(req: NextRequest) {
+	const ip =
+		req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+		req.headers.get("x-real-ip") ??
+		"unknown";
+
+	if (isRateLimited(ip)) {
+		return NextResponse.json(
+			{ error: "Too many requests. Try again later." },
+			{ status: 429 },
+		);
+	}
+
 	let body: unknown;
 	try {
 		body = await req.json();
