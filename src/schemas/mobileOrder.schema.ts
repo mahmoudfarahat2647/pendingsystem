@@ -11,7 +11,7 @@ export const MobileQuickOrderSchema = z.object({
 	customerName: z.string().default(""),
 	company: z.preprocess(
 		normalizeNullableCompanyName,
-		z.enum(ALLOWED_COMPANIES as [string, ...string[]]),
+		z.enum([...ALLOWED_COMPANIES] as [string, ...string[]]),
 	),
 	vin: z.string().default(""),
 	mobile: z.string().default(""),
