@@ -333,7 +333,7 @@ export const EditAttachmentModal = ({
 						</DialogDescription>
 					</DialogHeader>
 
-					<div className="space-y-4 p-4 text-sm bg-[#121214]">
+					<div className="min-w-0 space-y-4 p-4 text-sm bg-[#121214]">
 						{/* Dropzone */}
 						<button
 							type="button"
@@ -383,8 +383,8 @@ export const EditAttachmentModal = ({
 						</button>
 
 						{selectedFile && (
-							<div className="flex items-center justify-between rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3">
-								<div className="flex items-center gap-3 overflow-hidden min-w-0">
+							<div className="overflow-hidden flex items-center justify-between rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3">
+								<div className="flex flex-1 items-center gap-3 overflow-hidden min-w-0">
 									<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-indigo-500/20">
 										<File className="h-4 w-4 text-indigo-300" />
 									</div>
@@ -398,27 +398,44 @@ export const EditAttachmentModal = ({
 										</p>
 									</div>
 								</div>
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									onClick={(e) => {
-										e.stopPropagation();
-										setSelectedFile(null);
-										setFileMarkedForRemoval(false);
-										resetFileInput();
-									}}
-									className="ml-2 h-7 px-2 text-xs font-medium text-slate-400 hover:text-white"
-									disabled={isUploading}
-								>
-									Remove
-								</Button>
+								<div className="flex items-center gap-1">
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										onClick={(e) => {
+											e.stopPropagation();
+											const url = URL.createObjectURL(selectedFile);
+											window.open(url, "_blank", "noopener,noreferrer");
+										}}
+										className="h-7 px-2 text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-white"
+										disabled={isUploading}
+									>
+										<ExternalLink className="mr-1.5 h-3 w-3" />
+										Open
+									</Button>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										onClick={(e) => {
+											e.stopPropagation();
+											setSelectedFile(null);
+											setFileMarkedForRemoval(false);
+											resetFileInput();
+										}}
+										className="h-7 px-2 text-xs font-medium text-slate-400 hover:text-white"
+										disabled={isUploading}
+									>
+										Remove
+									</Button>
+								</div>
 							</div>
 						)}
 
 						{!selectedFile && existingFilePath && (
-							<div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-3">
-								<div className="flex items-center gap-3 overflow-hidden text-left min-w-0">
+							<div className="overflow-hidden flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-3">
+								<div className="flex flex-1 items-center gap-3 overflow-hidden text-left min-w-0">
 									<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/10">
 										<File className="h-4 w-4 text-slate-300" />
 									</div>

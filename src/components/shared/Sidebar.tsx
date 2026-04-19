@@ -314,6 +314,7 @@ export const Sidebar = React.memo(function Sidebar() {
 									type="button"
 									className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
 									aria-label="Sign out menu"
+									suppressHydrationWarning
 								>
 									<MoreVertical className="h-4 w-4" />
 								</button>
