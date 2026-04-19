@@ -54,11 +54,14 @@
 
 @layer base {
 	* {
-		@apply border-border;
+		border-color: hsl(var(--border));
 	}
 
 	body {
-		@apply bg-background text-foreground antialiased;
+		background-color: hsl(var(--background));
+		color: hsl(var(--foreground));
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
 		--chart-4: 280 65% 60%;
 		--chart-5: 340 75% 55%;
 		font-family:
@@ -69,7 +72,10 @@
 
 @layer utilities {
 	.glass {
-		@apply bg-white/[0.03] backdrop-blur-md border border-white/[0.08];
+		background-color: rgba(255, 255, 255, 0.03);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		border: 1px solid rgba(255, 255, 255, 0.08);
 	}
 
 	.transition-all {
@@ -107,6 +113,13 @@
 	opacity: 0;
 	pointer-events: none;
 	width: 0;
+}
+
+/* Show column menu button (≡) on header hover for themeQuartz grids */
+.ag-header-cell:hover .ag-header-cell-menu-button {
+	opacity: 1 !important;
+	pointer-events: auto !important;
+	width: auto !important;
 }
 
 /* Show filter icons when enabled */
