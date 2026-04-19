@@ -490,7 +490,13 @@ export const getGlobalSearchWorkspaceColumns = (
 		{ ...(descriptionCol || {}), minWidth: 180, flex: 2 },
 		{ ...(repairSystemCol || {}), width: 100 },
 		{ ...(warrantyCol || {}), width: 100 },
-		// 5. PART STATUS
+		// 5. REQUESTER
+		{
+			headerName: "REQUESTER",
+			field: "requester",
+			width: 120,
+		},
+		// 6. PART STATUS
 		{
 			headerName: "PART STATUS",
 			field: "partStatus",
