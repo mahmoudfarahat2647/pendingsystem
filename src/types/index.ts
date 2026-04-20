@@ -16,13 +16,14 @@ export interface DescriptionConflictResult {
 
 export interface AppNotification {
 	id: string;
-	type: "reminder" | "warranty";
+	type: "reminder" | "warranty" | "booking_followup";
 	title: string;
 	description: string;
 	timestamp: string;
 	isRead: boolean;
 	referenceId: string; // ID of the row it relates to
 	vin: string;
+	bookingDate?: string;
 	trackingId: string;
 	tabName: string;
 	path: string;

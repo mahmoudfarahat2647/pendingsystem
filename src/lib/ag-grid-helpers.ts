@@ -61,3 +61,40 @@ export function tryJumpToRow(
 
 	return { success: true };
 }
+
+export function trySelectRowsByVin(
+	gridApi: GridApi | null | undefined,
+	vin: string | null | undefined,
+	bookingDate?: string | null,
+): boolean {
+	if (!vin || !gridApi) return false;
+	try {
+		if (gridApi.isDestroyed()) return false;
+	} catch {
+		return false;
+	}
+
+	gridApi.deselectAll();
+	const matchingNodes: IRowNode[] = [];
+
+	gridApi.forEachNode((node) => {
+		if (
+			node.data?.vin === vin &&
+			(!bookingDate || node.data?.bookingDate === bookingDate)
+		) {
+			node.setSelected(true, false, "api");
+			matchingNodes.push(node);
+		}
+	});
+
+	if (matchingNodes.length > 0) {
+		gridApi.ensureNodeVisible(matchingNodes[0], "middle");
+		gridApi.flashCells({
+			rowNodes: matchingNodes,
+			flashDuration: 500,
+			fadeDuration: 500,
+		});
+	}
+
+	return matchingNodes.length > 0;
+}

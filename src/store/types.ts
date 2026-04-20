@@ -71,6 +71,7 @@ export interface NotificationActions {
 export interface UIState {
 	searchTerm: string;
 	highlightedRowId: string | null;
+	pendingVinSelection: { vin: string; bookingDate?: string } | string | null;
 	noteTemplates: string[];
 	reminderTemplates: string[];
 	bookingTemplates: string[];
@@ -87,6 +88,9 @@ export interface UIState {
 export interface UIActions {
 	setSearchTerm: (term: string) => void;
 	setHighlightedRowId: (id: string | null) => void;
+	setPendingVinSelection: (
+		vin: { vin: string; bookingDate?: string } | string | null,
+	) => void;
 	addNote: (content: string, color: string) => void;
 	updateNote: (id: string, content: string) => void;
 	deleteNote: (id: string) => void;
