@@ -48,6 +48,7 @@ import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
+import { trySelectRowsByVin } from "@/lib/ag-grid-helpers";
 import {
 	appendTaggedUserNote,
 	filterReservedRows,
@@ -75,6 +76,10 @@ export default function BookingPage() {
 	const effectiveBookingData = draftWorkingRows || bookingRowData;
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
+	const pendingVinSelection = useAppStore((state) => state.pendingVinSelection);
+	const setPendingVinSelection = useAppStore(
+		(state) => state.setPendingVinSelection,
+	);
 
 	useEffect(() => {
 		if (bookingRowData) {
@@ -126,6 +131,25 @@ export default function BookingPage() {
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
+
+	useEffect(() => {
+		if (!pendingVinSelection || !gridApi) return;
+		const vin =
+			typeof pendingVinSelection === "string"
+				? pendingVinSelection
+				: pendingVinSelection.vin;
+		const bookingDate =
+			typeof pendingVinSelection === "string"
+				? undefined
+				: pendingVinSelection.bookingDate;
+		const matched = trySelectRowsByVin(gridApi, vin, bookingDate);
+		if (matched) setPendingVinSelection(null);
+	}, [
+		pendingVinSelection,
+		gridApi,
+		effectiveBookingData,
+		setPendingVinSelection,
+	]);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
 	const [isRebookingModalOpen, setIsRebookingModalOpen] = useState(false);

@@ -182,12 +182,52 @@ export const createNotificationSlice: StateCreator<
 			}
 		}
 
+		const currentlyDueFollowUps: Omit<
+			AppNotification,
+			"id" | "timestamp" | "isRead"
+		>[] = [];
+
+		const bookingSource = sources.find((s) => s.path === "/booking");
+		if (bookingSource) {
+			const seenKeys = new Set<string>();
+			for (const row of bookingSource.data) {
+				if (!row.bookingDate) continue;
+				const key = `${row.vin}::${row.bookingDate}`;
+				if (seenKeys.has(key)) continue;
+				seenKeys.add(key);
+
+				const [year, month, day] = row.bookingDate.split("-").map(Number);
+				const followUpAt = new Date(year, month - 1, day + 1, 10, 0, 0);
+
+				if (now >= followUpAt) {
+					const managedKey = `booking_followup:${row.vin}:${row.bookingDate}`;
+					activeManagedKeys.add(managedKey);
+
+					currentlyDueFollowUps.push({
+						type: "booking_followup",
+						title: "Booking Follow-up",
+						description: `${row.customerName} — VIN ${row.vin}`,
+						referenceId: row.id,
+						vin: row.vin,
+						bookingDate: row.bookingDate,
+						trackingId: row.trackingId,
+						tabName: "Booking",
+						path: "/booking",
+						managedKey,
+					});
+				}
+			}
+		}
+
 		// 2. Synchronize store state
 		set((state) => {
 			// Keep non-reminder AND non-warranty notifications
 			// We only manage reminders and warranties here
 			const preservedNotifications = state.notifications.filter(
-				(n) => n.type !== "reminder" && n.type !== "warranty",
+				(n) =>
+					n.type !== "reminder" &&
+					n.type !== "warranty" &&
+					n.type !== "booking_followup",
 			);
 
 			const newNotifications: AppNotification[] = [];
@@ -196,7 +236,7 @@ export const createNotificationSlice: StateCreator<
 			// Helper to process a list of due items
 			const processDueItems = (
 				dueItems: Omit<AppNotification, "id" | "timestamp" | "isRead">[],
-				type: "reminder" | "warranty",
+				type: AppNotification["type"],
 			) => {
 				for (const due of dueItems) {
 					if (
@@ -232,10 +272,14 @@ export const createNotificationSlice: StateCreator<
 
 			processDueItems(currentlyDueReminders, "reminder");
 			processDueItems(currentlyDueWarranties, "warranty");
+			processDueItems(currentlyDueFollowUps, "booking_followup");
 
 			// Check if any old items were removed
 			const oldManagedCount = state.notifications.filter(
-				(n) => n.type === "reminder" || n.type === "warranty",
+				(n) =>
+					n.type === "reminder" ||
+					n.type === "warranty" ||
+					n.type === "booking_followup",
 			).length;
 
 			if (newNotifications.length !== oldManagedCount) {

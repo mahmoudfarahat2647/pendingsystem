@@ -19,18 +19,25 @@ export const NotificationsDropdown = () => {
 	const clearNotifications = useAppStore((state) => state.clearNotifications);
 	const setHighlightedRowId = useAppStore((state) => state.setHighlightedRowId);
 	const removeNotification = useAppStore((state) => state.removeNotification);
+	const setPendingVinSelection = useAppStore(
+		(state) => state.setPendingVinSelection,
+	);
 
 	const unreadCount = notifications.filter((n) => !n.isRead).length;
 
 	const handleNotificationClick = (n: AppNotification) => {
 		markNotificationAsRead(n.id);
 
-		if (n.path) {
-			// Navigate before setting highlight to preserve row intent across view transitions
-			router.push(n.path);
+		if (n.type === "booking_followup") {
+			navigator.clipboard.writeText(n.vin).catch(() => {});
+			if (n.path) router.push(n.path);
+			setPendingVinSelection({ vin: n.vin, bookingDate: n.bookingDate });
+			setShowNotifications(false);
+			return;
 		}
-		setHighlightedRowId(n.referenceId);
 
+		if (n.path) router.push(n.path);
+		setHighlightedRowId(n.referenceId);
 		setShowNotifications(false);
 	};
 
@@ -141,7 +148,9 @@ export const NotificationsDropdown = () => {
 															"mt-1 w-2 h-2 rounded-full shrink-0 shadow-[0_0_10px_rgba(0,0,0,0.5)]",
 															n.type === "warranty"
 																? "bg-amber-500"
-																: "bg-indigo-500",
+																: n.type === "booking_followup"
+																	? "bg-green-500"
+																	: "bg-indigo-500",
 														)}
 													/>
 													<div className="flex-1 space-y-2">

@@ -29,6 +29,7 @@ const defaultBookingStatuses = [
 const initialState: UIState = {
 	searchTerm: "",
 	highlightedRowId: null,
+	pendingVinSelection: null,
 	noteTemplates: ["Customer not available", "Wrong number", "Will call back"],
 	reminderTemplates: ["Follow up call", "Check part status", "Confirm booking"],
 	bookingTemplates: ["Morning slot", "Afternoon slot", "Next available"],
@@ -55,6 +56,8 @@ export const createUISlice: StateCreator<
 	setHighlightedRowId: (id) => {
 		set({ highlightedRowId: id });
 	},
+
+	setPendingVinSelection: (vin) => set({ pendingVinSelection: vin }),
 
 	addNote: (content, color) => {
 		// NOTE: Sticky notes are UI-only, not included in draft session undo
