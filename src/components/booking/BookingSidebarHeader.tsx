@@ -1,12 +1,5 @@
-import { MessageSquare, X } from "lucide-react";
+import { MessageSquare, Phone, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/origin-select";
 import type { BookingStatus, PendingRow } from "@/types";
 
 interface BookingSidebarHeaderProps {
@@ -21,9 +14,9 @@ interface BookingSidebarHeaderProps {
 
 export const BookingSidebarHeader = ({
 	selectedRows,
-	preBookingStatus,
-	setPreBookingStatus,
-	bookingStatuses,
+	preBookingStatus: _preBookingStatus,
+	setPreBookingStatus: _setPreBookingStatus,
+	bookingStatuses: _bookingStatuses,
 	bookingNote,
 	setBookingNote,
 	onClose,
@@ -60,6 +53,13 @@ export const BookingSidebarHeader = ({
 			</div>
 
 			<div className="grid gap-3">
+				<div className="flex items-center gap-3 px-3 py-3 bg-indigo-500/[0.06] border border-indigo-500/20 rounded-xl">
+					<Phone className="h-4 w-4 text-indigo-400 shrink-0" />
+					<span className="text-xl font-bold tracking-wider text-white">
+						{selectedRows[0]?.mobile || "—"}
+					</span>
+				</div>
+
 				<div className="relative">
 					<MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-500/50 pointer-events-none z-10" />
 					<Input
@@ -69,43 +69,6 @@ export const BookingSidebarHeader = ({
 						className="w-full pl-10 pr-3 h-9 bg-white/[0.02] border-indigo-500/20 rounded-lg focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/30 text-sm text-gray-300 placeholder:text-gray-600 transition-all"
 					/>
 				</div>
-
-				<Select
-					value={preBookingStatus === "" ? "__none__" : preBookingStatus}
-					onValueChange={(val) =>
-						setPreBookingStatus(val === "__none__" ? "" : val)
-					}
-				>
-					<SelectTrigger className="h-9 w-full bg-white/[0.02] border-indigo-500/20 text-gray-300 hover:bg-white/5 focus:ring-indigo-500/30 dropdown-trigger">
-						<SelectValue placeholder="Initial Status (Optional)" />
-					</SelectTrigger>
-					<SelectContent className="bg-[#0f0f11] border-white/10 text-gray-300 fixed-dropdown-content z-dropdown">
-						<SelectItem
-							value="__none__"
-							className="focus:bg-white/5 focus:text-white cursor-pointer"
-						>
-							<div className="flex items-center gap-2">
-								<div className="w-2 h-2 rounded-full bg-gray-600" />
-								None
-							</div>
-						</SelectItem>
-						{bookingStatuses.map((status) => (
-							<SelectItem
-								key={status.id}
-								value={status.label}
-								className="focus:bg-white/5 focus:text-white cursor-pointer"
-							>
-								<div className="flex items-center gap-2">
-									<div
-										className="w-2 h-2 rounded-full"
-										style={{ backgroundColor: status.color }}
-									/>
-									{status.label}
-								</div>
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
 			</div>
 		</div>
 	);
