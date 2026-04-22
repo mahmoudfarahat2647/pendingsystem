@@ -170,13 +170,14 @@ export function useColumnDefs(
 
 			case "booking":
 				return [
-					...baseColumns,
+					baseColumns[0],
 					{
 						headerName: "BOOKING DATE",
 						field: "bookingDate",
 						width: 130,
 						cellStyle: { color: "#22c55e", fontWeight: 500 },
 					},
+					...baseColumns.slice(1),
 					{
 						headerName: "STATUS",
 						field: "bookingStatus",

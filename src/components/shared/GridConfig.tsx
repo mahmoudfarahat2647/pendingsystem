@@ -229,50 +229,58 @@ export const getBookingColumns = (
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
-): ColDef<PendingRow>[] => [
-	...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
-	{
-		headerName: "BOOKING DATE",
-		field: "bookingDate",
-		width: 130,
-		cellStyle: { color: "#22c55e", fontWeight: 500 },
-		valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
-			if (!params.value) return "";
-			try {
-				return format(new Date(params.value), "EEE, MMM d, yyyy");
-			} catch {
-				return params.value;
-			}
+): ColDef<PendingRow>[] => {
+	const baseColumns = getBaseColumns(
+		onNoteClick,
+		onReminderClick,
+		onAttachClick,
+	);
+	return [
+		baseColumns[0], // ACTIONS
+		{
+			headerName: "BOOKING DATE",
+			field: "bookingDate",
+			width: 130,
+			cellStyle: { color: "#22c55e", fontWeight: 500 },
+			valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
+				if (!params.value) return "";
+				try {
+					return format(new Date(params.value), "EEE, MMM d, yyyy");
+				} catch {
+					return params.value;
+				}
+			},
 		},
-	},
-	{
-		headerName: "STATUS",
-		field: "bookingStatus",
-		width: 70,
-		cellRenderer: PartStatusRenderer,
-		cellRendererParams: {
-			partStatuses: useAppStore.getState().bookingStatuses,
+		...baseColumns.slice(1), // STATS … WARRANTY
+		{
+			headerName: "STATUS",
+			field: "bookingStatus",
+			width: 70,
+			cellRenderer: PartStatusRenderer,
+			cellRendererParams: {
+				partStatuses: useAppStore.getState().bookingStatuses,
+			},
+			cellClass: "flex items-center justify-center",
 		},
-		cellClass: "flex items-center justify-center",
-	},
-	{
-		headerName: "PART STATUS",
-		field: "partStatus",
-		width: 100,
-		minWidth: 100,
-		editable: false,
-		cellRenderer: PartStatusRenderer,
-		cellRendererParams: {
-			partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+		{
+			headerName: "PART STATUS",
+			field: "partStatus",
+			width: 100,
+			minWidth: 100,
+			editable: false,
+			cellRenderer: PartStatusRenderer,
+			cellRendererParams: {
+				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+			},
+			cellClass: "flex items-center justify-center",
 		},
-		cellClass: "flex items-center justify-center",
-	},
-	{
-		headerName: "REQUESTER",
-		field: "requester",
-		width: 120,
-	},
-];
+		{
+			headerName: "REQUESTER",
+			field: "requester",
+			width: 120,
+		},
+	];
+};
 
 export const getCallColumns = (
 	partStatuses: PartStatusDef[] = [],
@@ -287,7 +295,6 @@ export const getCallColumns = (
 	);
 	return [
 		...baseColumns.slice(0, 2), // Include actions and stats
-		{ headerName: "BOOKING", field: "bookingDate", width: 120 },
 		...baseColumns
 			.slice(2)
 			.map((col) =>
@@ -466,6 +473,27 @@ export const getGlobalSearchWorkspaceColumns = (
 			pinned: "left" as const,
 		},
 		// 4. Main Sheet Sequence
+		// 7. BOOKING DATE
+		{
+			headerName: "BOOKING DATE",
+			field: "bookingDate",
+			width: 140,
+			valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
+				if (!params.value) return "N/A";
+				try {
+					return format(new Date(params.value), "EEE, MMM d, yyyy");
+				} catch {
+					return "N/A";
+				}
+			},
+			cellStyle: (params: { data?: PendingRow }) => {
+				const source = params.data?.sourceType;
+				if (source === "Booking") return { color: "#22c55e", fontWeight: 500 };
+				if (source === "Archive")
+					return { color: "#6b7280", opacity: 0.5, fontWeight: 700 };
+				return { color: "#6b7280" };
+			},
+		},
 		{ ...(statsCol || {}), width: 80 },
 		{ ...(rDateCol || {}), width: 100, editable: false },
 		{ ...(companyCol || {}), width: 90 },
