@@ -100,6 +100,7 @@ export const SearchResultsGrid = ({
 					onModelUpdated={onModelUpdated}
 					onGridPreDestroyed={handleGridPreDestroyed}
 					suppressHorizontalScroll={false}
+					enableCellTextSelection={true}
 				/>
 			</div>
 		</div>
