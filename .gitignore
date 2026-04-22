@@ -67,6 +67,8 @@ next-env.d.ts
 # Git worktrees
 .worktrees/
 /playwright-report/
+e2e/.auth/
+.playwright-cli/
 
 # documentation
 /docs/

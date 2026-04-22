@@ -10,6 +10,7 @@ describe("BookingSidebarHeader", () => {
 			id: "1",
 			customerName: "John Doe",
 			vin: "VIN123",
+			mobile: "0501234567",
 		} as PendingRow,
 	];
 
@@ -34,16 +35,15 @@ describe("BookingSidebarHeader", () => {
 		expect(screen.getByText(/John Doe/)).toBeInTheDocument();
 	});
 
-	it("renders the status dropdown with None selected when no status is selected", () => {
+	it("displays the customer mobile number prominently", () => {
 		render(<BookingSidebarHeader {...defaultProps} />);
-		// The internal component handles "__none__" by displaying "None"
-		expect(screen.getByText("None")).toBeInTheDocument();
+		expect(screen.getByText("0501234567")).toBeInTheDocument();
 	});
 
-	it("does not throw when preBookingStatus is an empty string", () => {
-		expect(() => {
-			render(<BookingSidebarHeader {...defaultProps} preBookingStatus="" />);
-		}).not.toThrow();
+	it("displays a dash when mobile is empty", () => {
+		const rows = [{ ...mockSelectedRows[0], mobile: "" }] as PendingRow[];
+		render(<BookingSidebarHeader {...defaultProps} selectedRows={rows} />);
+		expect(screen.getByText("—")).toBeInTheDocument();
 	});
 
 	it("calls onClose when the close button is clicked", () => {
