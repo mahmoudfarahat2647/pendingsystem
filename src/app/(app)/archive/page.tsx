@@ -1,6 +1,10 @@
 "use client";
 
-import type { GridApi, ValueFormatterParams } from "ag-grid-community";
+import type {
+	CellStyle,
+	GridApi,
+	ValueFormatterParams,
+} from "ag-grid-community";
 import { format } from "date-fns";
 import {
 	Calendar,
@@ -221,12 +225,16 @@ export default function ArchivePage() {
 				headerName: "BOOKING",
 				field: "bookingDate",
 				width: 120,
+				cellStyle: (params: { value: unknown }): CellStyle =>
+					params.value
+						? { color: "#22c55e", fontWeight: 500 }
+						: { color: "#6b7280" },
 				valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
-					if (!params.value) return "";
+					if (!params.value) return "N/A";
 					try {
 						return format(new Date(params.value), "EEE, MMM d, yyyy");
 					} catch {
-						return params.value;
+						return "N/A";
 					}
 				},
 			},
