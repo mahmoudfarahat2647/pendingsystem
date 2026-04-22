@@ -473,6 +473,27 @@ export const getGlobalSearchWorkspaceColumns = (
 			pinned: "left" as const,
 		},
 		// 4. Main Sheet Sequence
+		// 7. BOOKING DATE
+		{
+			headerName: "BOOKING DATE",
+			field: "bookingDate",
+			width: 140,
+			valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
+				if (!params.value) return "N/A";
+				try {
+					return format(new Date(params.value), "EEE, MMM d, yyyy");
+				} catch {
+					return "N/A";
+				}
+			},
+			cellStyle: (params: { data?: PendingRow }) => {
+				const source = params.data?.sourceType;
+				if (source === "Booking") return { color: "#22c55e", fontWeight: 500 };
+				if (source === "Archive")
+					return { color: "#6b7280", opacity: 0.5, fontWeight: 700 };
+				return { color: "#6b7280" };
+			},
+		},
 		{ ...(statsCol || {}), width: 80 },
 		{ ...(rDateCol || {}), width: 100, editable: false },
 		{ ...(companyCol || {}), width: 90 },
