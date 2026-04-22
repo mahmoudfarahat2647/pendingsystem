@@ -229,50 +229,58 @@ export const getBookingColumns = (
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
-): ColDef<PendingRow>[] => [
-	...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
-	{
-		headerName: "BOOKING DATE",
-		field: "bookingDate",
-		width: 130,
-		cellStyle: { color: "#22c55e", fontWeight: 500 },
-		valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
-			if (!params.value) return "";
-			try {
-				return format(new Date(params.value), "EEE, MMM d, yyyy");
-			} catch {
-				return params.value;
-			}
+): ColDef<PendingRow>[] => {
+	const baseColumns = getBaseColumns(
+		onNoteClick,
+		onReminderClick,
+		onAttachClick,
+	);
+	return [
+		baseColumns[0], // ACTIONS
+		{
+			headerName: "BOOKING DATE",
+			field: "bookingDate",
+			width: 130,
+			cellStyle: { color: "#22c55e", fontWeight: 500 },
+			valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
+				if (!params.value) return "";
+				try {
+					return format(new Date(params.value), "EEE, MMM d, yyyy");
+				} catch {
+					return params.value;
+				}
+			},
 		},
-	},
-	{
-		headerName: "STATUS",
-		field: "bookingStatus",
-		width: 70,
-		cellRenderer: PartStatusRenderer,
-		cellRendererParams: {
-			partStatuses: useAppStore.getState().bookingStatuses,
+		...baseColumns.slice(1), // STATS … WARRANTY
+		{
+			headerName: "STATUS",
+			field: "bookingStatus",
+			width: 70,
+			cellRenderer: PartStatusRenderer,
+			cellRendererParams: {
+				partStatuses: useAppStore.getState().bookingStatuses,
+			},
+			cellClass: "flex items-center justify-center",
 		},
-		cellClass: "flex items-center justify-center",
-	},
-	{
-		headerName: "PART STATUS",
-		field: "partStatus",
-		width: 100,
-		minWidth: 100,
-		editable: false,
-		cellRenderer: PartStatusRenderer,
-		cellRendererParams: {
-			partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+		{
+			headerName: "PART STATUS",
+			field: "partStatus",
+			width: 100,
+			minWidth: 100,
+			editable: false,
+			cellRenderer: PartStatusRenderer,
+			cellRendererParams: {
+				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+			},
+			cellClass: "flex items-center justify-center",
 		},
-		cellClass: "flex items-center justify-center",
-	},
-	{
-		headerName: "REQUESTER",
-		field: "requester",
-		width: 120,
-	},
-];
+		{
+			headerName: "REQUESTER",
+			field: "requester",
+			width: 120,
+		},
+	];
+};
 
 export const getCallColumns = (
 	partStatuses: PartStatusDef[] = [],
@@ -287,7 +295,6 @@ export const getCallColumns = (
 	);
 	return [
 		...baseColumns.slice(0, 2), // Include actions and stats
-		{ headerName: "BOOKING", field: "bookingDate", width: 120 },
 		...baseColumns
 			.slice(2)
 			.map((col) =>
