@@ -26,6 +26,7 @@
 		"db:verify": "node scripts/verify-db.mjs"
 	},
 	"dependencies": {
+		"@base-ui/react": "^1.4.1",
 		"@hookform/resolvers": "^5.2.2",
 		"@hugeicons/core-free-icons": "^3.1.1",
 		"@hugeicons/react": "^1.1.4",
