@@ -22,7 +22,9 @@ export const CallCustomerCounter = ({
 }: CallCustomerCounterProps) => {
 	const count = useMemo(() => {
 		if (!rows || rows.length === 0) return 0;
-		const uniqueVINs = new Set(rows.map((r) => r.vin).filter(Boolean));
+		const uniqueVINs = new Set(
+			rows.map((r) => r.vin?.trim().toUpperCase()).filter(Boolean),
+		);
 		return uniqueVINs.size;
 	}, [rows]);
 

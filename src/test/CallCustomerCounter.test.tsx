@@ -44,4 +44,16 @@ describe("CallCustomerCounter", () => {
 		expect(screen.getByText("1")).toBeInTheDocument();
 		expect(screen.getByText("Customer")).toBeInTheDocument();
 	});
+
+	it("normalizes VIN strings before deduplication", () => {
+		const rows = [
+			{ id: "1", vin: " VIN123 " }, // padded
+			{ id: "2", vin: "vin123" }, // lowercase
+			{ id: "3", vin: "VIN123" }, // normalized
+			{ id: "4", vin: "  " }, // whitespace only
+		] as PendingRow[];
+		renderWithProvider(<CallCustomerCounter rows={rows} />);
+		expect(screen.getByText("1")).toBeInTheDocument();
+		expect(screen.getByText("Customer")).toBeInTheDocument();
+	});
 });
