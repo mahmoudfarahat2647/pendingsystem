@@ -15,6 +15,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
+import { CallCustomerCounter } from "@/components/shared/CallCustomerCounter";
+import { CallRepairSystemFilter } from "@/components/shared/CallRepairSystemFilter";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getCallColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -48,6 +50,10 @@ import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
+import {
+	filterRowsByRepairSystems,
+	getRepairSystemFilterOptions,
+} from "@/lib/callRepairSystemFilter";
 import {
 	appendTaggedUserNote,
 	filterReservedRows,
@@ -91,9 +97,37 @@ export default function CallListPage() {
 	const [reorderReason, setReorderReason] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+	const [selectedRepairSystems, setSelectedRepairSystems] = useState<string[]>(
+		[],
+	);
+
+	const repairSystemOptions = useMemo(
+		() => getRepairSystemFilterOptions(effectiveData),
+		[effectiveData],
+	);
+
+	const filteredEffectiveData = useMemo(
+		() => filterRowsByRepairSystems(effectiveData, selectedRepairSystems),
+		[effectiveData, selectedRepairSystems],
+	);
+
+	useEffect(() => {
+		setSelectedRepairSystems((current) => {
+			const availableValues = new Set(
+				repairSystemOptions.map((option) => option.value),
+			);
+			const next = current.filter((value) => availableValues.has(value));
+			return next.length === current.length ? current : next;
+		});
+	}, [repairSystemOptions]);
 
 	// Sync selectedRows with the latest effectiveData to prevent stale data
-	useSelectedRowsSync("call", effectiveData, selectedRows, setSelectedRows);
+	useSelectedRowsSync(
+		"call",
+		filteredEffectiveData,
+		selectedRows,
+		setSelectedRows,
+	);
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
@@ -391,9 +425,17 @@ export default function CallListPage() {
 							</TooltipTrigger>
 							<TooltipContent>Archive</TooltipContent>
 						</Tooltip>
+
+						<CallRepairSystemFilter
+							options={repairSystemOptions}
+							value={selectedRepairSystems}
+							onChange={setSelectedRepairSystems}
+						/>
 					</div>
 
 					<div className="flex items-center gap-1.5">
+						<CallCustomerCounter rows={filteredEffectiveData} />
+						<div className="w-px h-5 bg-white/10 mx-1" />
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
@@ -413,7 +455,7 @@ export default function CallListPage() {
 
 				<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden mt-4">
 					<DataGrid
-						rowData={effectiveData}
+						rowData={filteredEffectiveData}
 						columnDefs={columns}
 						gridStateKey="call-list"
 						readOnly={draftSaving}
