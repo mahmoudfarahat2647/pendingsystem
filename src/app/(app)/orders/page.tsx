@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { OrderFormErrorBoundary } from "@/components/orders/OrderFormErrorBoundary";
@@ -79,6 +79,10 @@ export default function OrdersPage() {
 		draftSaving,
 	} = useOrdersPageHandlers();
 
+	const [scrollDir, setScrollDir] = useState<"vertical" | "horizontal">(
+		"vertical",
+	);
+
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	useOrdersRealtimeSync();
 
@@ -152,7 +156,21 @@ export default function OrdersPage() {
 							rowData={ordersRowData}
 						/>
 
-						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">
+						{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}
+						<div
+							role="presentation"
+							className={`flex-1 min-h-[500px] border border-white/10 rounded-xl ${
+								scrollDir === "horizontal"
+									? "overflow-x-auto overflow-y-hidden"
+									: "overflow-hidden"
+							}`}
+							onContextMenu={(e) => {
+								e.preventDefault();
+								setScrollDir((d) =>
+									d === "vertical" ? "horizontal" : "vertical",
+								);
+							}}
+						>
 							<DataGrid
 								rowData={ordersRowData}
 								columnDefs={columns}
