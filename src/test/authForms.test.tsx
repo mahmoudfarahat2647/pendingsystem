@@ -88,6 +88,30 @@ describe("LoginForm", () => {
 		});
 	});
 
+	it("shows the mirage loader instead of signing-in text while login is pending", async () => {
+		let resolveLogin: (value: { error: null; data: object }) => void = () => {};
+		authMocks.signIn.username.mockImplementation(
+			() =>
+				new Promise((resolve) => {
+					resolveLogin = resolve;
+				}),
+		);
+		const user = userEvent.setup();
+		const { container } = render(<LoginForm />);
+
+		await user.type(screen.getByLabelText(/username/i), "admin");
+		await user.type(screen.getByLabelText("Password"), "password123");
+		await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+		expect(screen.queryByText(/signing in/i)).not.toBeInTheDocument();
+		expect(container.querySelector("l-mirage")).toBeInTheDocument();
+
+		resolveLogin({ error: null, data: {} });
+		await waitFor(() => {
+			expect(routerMocks.replace).toHaveBeenCalledWith("/dashboard");
+		});
+	});
+
 	it("shows error message on failed login", async () => {
 		authMocks.signIn.username.mockResolvedValue({
 			error: { message: "Invalid username or password" },

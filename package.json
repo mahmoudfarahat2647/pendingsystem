@@ -54,6 +54,7 @@
 		"date-fns": "^4.1.0",
 		"framer-motion": "^12.23.26",
 		"kysely": "^0.28.14",
+		"ldrs": "^1.1.9",
 		"lucide-react": "^0.468.0",
 		"motion": "^12.27.0",
 		"next": "^15.5.12",

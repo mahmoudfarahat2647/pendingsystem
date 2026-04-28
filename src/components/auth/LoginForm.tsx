@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
@@ -18,6 +18,14 @@ export function LoginForm({ expired }: LoginFormProps) {
 	const router = useRouter();
 	const [error, setError] = useState<string | null>(null);
 	const [showPassword, setShowPassword] = useState(false);
+
+	useEffect(() => {
+		if (!("customElements" in window)) return;
+
+		void import("ldrs").then(({ mirage }) => {
+			mirage.register();
+		});
+	}, []);
 
 	const {
 		register,
@@ -114,9 +122,14 @@ export function LoginForm({ expired }: LoginFormProps) {
 				<Button
 					type="submit"
 					disabled={isSubmitting}
+					aria-label={isSubmitting ? "Signing in" : undefined}
 					className="w-full bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black font-bold h-10 rounded-md transition-all active:scale-[0.98]"
 				>
-					{isSubmitting ? "Signing in..." : "Sign In"}
+					{isSubmitting ? (
+						<l-mirage size="60" speed="2.5" color="black" />
+					) : (
+						"Sign In"
+					)}
 				</Button>
 			</div>
 
