@@ -48,6 +48,7 @@ interface OrdersToolbarProps {
 	onArchive: () => void;
 	onShareToLogistics: () => void;
 	onExtract: () => void;
+	onSetAllRDate: () => void;
 	onFilterToggle: () => void;
 	partStatuses?: PartStatus[];
 	onUpdateStatus?: (status: string) => void;
@@ -68,6 +69,7 @@ export const OrdersToolbar = ({
 	onArchive,
 	onShareToLogistics,
 	onExtract,
+	onSetAllRDate,
 	onFilterToggle,
 	partStatuses = [],
 	onUpdateStatus,
@@ -137,15 +139,14 @@ export const OrdersToolbar = ({
 						<Button
 							size="icon"
 							variant="ghost"
-							aria-label="Reserve"
-							className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
-							onClick={onReserve}
-							disabled={selectedCount === 0}
+							aria-label="Set all R/DATE to today"
+							className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 h-8 w-8 font-bold"
+							onClick={onSetAllRDate}
 						>
-							<Tag className="h-3.5 w-3.5" />
+							<span className="text-sm font-black leading-none">R</span>
 						</Button>
 					</TooltipTrigger>
-					<TooltipContent>Reserve</TooltipContent>
+					<TooltipContent>Set All R/DATE to Today</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>
@@ -268,6 +269,22 @@ export const OrdersToolbar = ({
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>Extract</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							aria-label="Set label"
+							className="text-gray-400 hover:text-white h-8 w-8"
+							onClick={onReserve}
+							disabled={selectedCount === 0}
+						>
+							<Tag className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Set Label</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

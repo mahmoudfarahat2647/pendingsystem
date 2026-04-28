@@ -459,6 +459,30 @@ export const useOrdersPageHandlers = () => {
 		setShowDeleteConfirm(false);
 	};
 
+	const handleSetAllRDate = useCallback(() => {
+		if (effectiveOrdersData.length === 0) return;
+
+		const today = new Date().toISOString().split("T")[0];
+		const children: AtomicCommand[] = effectiveOrdersData.map((row) => ({
+			type: "patchRow" as const,
+			id: row.id,
+			sourceStage: "orders" as const,
+			destinationStage: "orders" as const,
+			updates: { rDate: today },
+			previousValues: { rDate: row.rDate },
+		}));
+
+		applyCommand({
+			type: "composite",
+			label: "Set all R/DATE to today",
+			children,
+		});
+
+		toast.success(
+			`R/DATE set to ${today} for ${effectiveOrdersData.length} order(s)`,
+		);
+	}, [effectiveOrdersData, applyCommand]);
+
 	return {
 		// Data
 		ordersRowData: effectiveOrdersData,
@@ -497,6 +521,7 @@ export const useOrdersPageHandlers = () => {
 		handleShareToLogistics,
 		handleSendToCallList,
 		handleDeleteSelected,
+		handleSetAllRDate,
 
 		// Draft session
 		applyCommand,
