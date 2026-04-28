@@ -126,7 +126,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 					className="w-full bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black font-bold h-10 rounded-md transition-all active:scale-[0.98]"
 				>
 					{isSubmitting ? (
-						<l-mirage size="60" speed="2.5" color="black" />
+						<l-mirage size="30" speed="2.5" color="black" />
 					) : (
 						"Sign In"
 					)}
