@@ -75,6 +75,7 @@ export default function OrdersPage() {
 		handleShareToLogistics,
 		handleSendToCallList,
 		handleDeleteSelected,
+		handleSetAllRDate,
 		applyCommand,
 		draftSaving,
 	} = useOrdersPageHandlers();
@@ -150,6 +151,7 @@ export default function OrdersPage() {
 							onShareToLogistics={handleShareToLogistics}
 							onCallList={handleSendToCallList}
 							onExtract={() => gridApi?.exportDataAsCsv()}
+							onSetAllRDate={handleSetAllRDate}
 							onFilterToggle={() => setShowFilters(!showFilters)}
 							partStatuses={partStatuses}
 							onUpdateStatus={handleUpdatePartStatus}
