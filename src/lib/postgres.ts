@@ -16,6 +16,7 @@ function buildPoolConfig() {
 		query_timeout: DATABASE_QUERY_TIMEOUT_MS,
 		statement_timeout: DATABASE_QUERY_TIMEOUT_MS,
 		keepAlive: true,
+		allowExitOnIdle: true,
 	};
 
 	const url = process.env.DATABASE_URL;
