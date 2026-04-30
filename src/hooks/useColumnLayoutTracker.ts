@@ -11,6 +11,12 @@ import { useAppStore } from "@/store/useStore";
 export function useColumnLayoutTracker(gridKey: string) {
 	const isDirty = useAppStore((state) => state.dirtyLayouts[gridKey] || false);
 	const setLayoutDirty = useAppStore((state) => state.setLayoutDirty);
+	const setPositionLayoutDirty = useAppStore(
+		(state) => state.setPositionLayoutDirty,
+	);
+	const isPositionDirty = useAppStore(
+		(state) => state.positionDirtyLayouts[gridKey] || false,
+	);
 	const clearGridState = useAppStore((state) => state.clearGridState);
 	const saveGridState = useAppStore((state) => state.saveGridState);
 	const saveAsDefaultLayout = useAppStore((state) => state.saveAsDefaultLayout);
@@ -34,8 +40,16 @@ export function useColumnLayoutTracker(gridKey: string) {
 		}
 
 		setLayoutDirty(gridKey, false);
+		setPositionLayoutDirty(gridKey, false);
 		toast.success("Grid layout saved successfully");
-	}, [gridKey, getGridState, getLiveGridState, saveGridState, setLayoutDirty]);
+	}, [
+		gridKey,
+		getGridState,
+		getLiveGridState,
+		saveGridState,
+		setLayoutDirty,
+		setPositionLayoutDirty,
+	]);
 
 	const saveAsDefault = useCallback(() => {
 		const currentState = getLiveGridState(gridKey) || getGridState(gridKey);
@@ -43,6 +57,7 @@ export function useColumnLayoutTracker(gridKey: string) {
 			saveGridState(gridKey, currentState);
 			saveAsDefaultLayout(gridKey, currentState);
 			setLayoutDirty(gridKey, false);
+			setPositionLayoutDirty(gridKey, false);
 			toast.success("Layout saved as default");
 		}
 	}, [
@@ -52,6 +67,7 @@ export function useColumnLayoutTracker(gridKey: string) {
 		saveAsDefaultLayout,
 		saveGridState,
 		setLayoutDirty,
+		setPositionLayoutDirty,
 	]);
 
 	const resetLayout = useCallback(() => {
@@ -61,6 +77,7 @@ export function useColumnLayoutTracker(gridKey: string) {
 			// Clear current state will trigger a reload with the default
 			clearGridState(gridKey);
 			setLayoutDirty(gridKey, false);
+			setPositionLayoutDirty(gridKey, false);
 			toast.info("Resetting to your default layout. Refreshing...");
 			window.location.reload();
 		} else {
@@ -68,6 +85,7 @@ export function useColumnLayoutTracker(gridKey: string) {
 			clearGridState(gridKey);
 			clearLiveGridState(gridKey);
 			setLayoutDirty(gridKey, false);
+			setPositionLayoutDirty(gridKey, false);
 			toast.info("Resetting to original layout. Refreshing...");
 			window.location.reload();
 		}
@@ -76,11 +94,13 @@ export function useColumnLayoutTracker(gridKey: string) {
 		clearGridState,
 		clearLiveGridState,
 		setLayoutDirty,
+		setPositionLayoutDirty,
 		getDefaultLayout,
 	]);
 
 	return {
 		isDirty,
+		isPositionDirty,
 		markDirty,
 		saveLayout,
 		saveAsDefault,

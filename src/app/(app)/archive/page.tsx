@@ -63,7 +63,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function ArchivePage() {
-	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
+	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("archive");
 	const { data: archiveRowData = [] } = useOrdersQuery("archive");
 
@@ -298,6 +298,7 @@ export default function ArchivePage() {
 
 						<LayoutSaveButton
 							isDirty={isDirty}
+							isPositionDirty={isPositionDirty}
 							onSave={saveLayout}
 							onSaveAsDefault={saveAsDefault}
 							onReset={resetLayout}

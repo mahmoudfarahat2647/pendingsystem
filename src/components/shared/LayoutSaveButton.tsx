@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 
 interface LayoutSaveButtonProps {
 	isDirty: boolean;
+	isPositionDirty: boolean;
 	onSave: () => void;
 	onSaveAsDefault: () => void;
 	onReset: () => void;
@@ -38,6 +39,7 @@ interface LayoutSaveButtonProps {
 
 export function LayoutSaveButton({
 	isDirty,
+	isPositionDirty,
 	onSave,
 	onSaveAsDefault,
 	onReset,
@@ -69,7 +71,7 @@ export function LayoutSaveButton({
 									size="icon"
 									className={cn(
 										"h-8 w-8 text-gray-400 hover:text-white transition-all",
-										isDirty &&
+										isPositionDirty &&
 											"text-renault animate-pulse bg-renault/10 hover:bg-renault/20",
 									)}
 								>
