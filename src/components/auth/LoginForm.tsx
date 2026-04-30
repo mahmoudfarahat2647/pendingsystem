@@ -49,7 +49,11 @@ export function LoginForm({ expired }: LoginFormProps) {
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+		<form
+			onSubmit={handleSubmit(onSubmit)}
+			autoComplete="off"
+			className="space-y-6"
+		>
 			{expired && (
 				<div
 					role="alert"
@@ -67,7 +71,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 				<input
 					id="username"
 					type="text"
-					autoComplete="username"
+					autoComplete="off"
 					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
 					aria-label="Username"
 					{...register("username")}
@@ -85,7 +89,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 					<input
 						id="password"
 						type={showPassword ? "text" : "password"}
-						autoComplete="current-password"
+						autoComplete="new-password"
 						className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
 						aria-label="Password"
 						{...register("password")}
