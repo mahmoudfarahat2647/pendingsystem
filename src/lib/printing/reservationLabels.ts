@@ -99,6 +99,7 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
 			const description = escapeHtml(row.description || "-");
 			const vin = escapeHtml(row.vin || "-");
 			const partNumber = escapeHtml(row.partNumber || "-");
+			const model = escapeHtml((row.model || "").trim());
 
 			return `
             <div class="label-box">
@@ -108,7 +109,10 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                         ${logoSvg}
                         <span class="brand">${brandName}</span>
                     </div>
-                    <div class="header-right">قطعة غيار محجوزة</div>
+                    <div class="header-right">
+                        <span class="status-text">قطعة غيار محجوزة</span>
+                        ${model ? `<span class="model-text">${model}</span>` : ""}
+                    </div>
                 </div>
                 
                 <!-- Row 1: Customer Full Name -->
@@ -218,10 +222,23 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                     background: black;
                     color: white;
                     display: flex;
+                    flex-direction: column;
                     align-items: center;
                     justify-content: center;
+                    gap: 2px;
                     font-size: 24px;
                     font-weight: 900;
+                }
+
+                .model-text {
+                    font-size: 13px;
+                    font-weight: 700;
+                    letter-spacing: 0.5px;
+                    opacity: 0.85;
+                    max-width: 100%;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
                 }
                 
                 /* Content Rows */
