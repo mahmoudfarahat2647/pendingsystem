@@ -14,6 +14,12 @@ interface GridSlice {
 	dirtyLayouts: Record<string, boolean>;
 
 	/**
+	 * Track which grids had a column position change (drag-to-reorder).
+	 * Used exclusively for the button highlight — separate from the save gate.
+	 */
+	positionDirtyLayouts: Record<string, boolean>;
+
+	/**
 	 * Store default layouts for each grid (user-defined defaults).
 	 */
 	defaultLayouts: Record<string, GridState>;
@@ -44,6 +50,11 @@ interface GridSlice {
 	setLayoutDirty: (gridKey: string, dirty: boolean) => void;
 
 	/**
+	 * Marks a grid's column position as dirty or clean (highlight-only flag).
+	 */
+	setPositionLayoutDirty: (gridKey: string, dirty: boolean) => void;
+
+	/**
 	 * Saves the current layout as the default for a grid.
 	 */
 	saveAsDefaultLayout: (gridKey: string, state: GridState) => void;
@@ -60,6 +71,7 @@ export const createGridSlice: StateCreator<CombinedStore, [], [], GridSlice> = (
 ) => ({
 	gridStates: {},
 	dirtyLayouts: {},
+	positionDirtyLayouts: {},
 	defaultLayouts: {},
 
 	saveGridState: (gridKey, state) => {
@@ -81,9 +93,12 @@ export const createGridSlice: StateCreator<CombinedStore, [], [], GridSlice> = (
 			delete newStates[gridKey];
 			const newDirty = { ...prev.dirtyLayouts };
 			delete newDirty[gridKey];
+			const newPositionDirty = { ...prev.positionDirtyLayouts };
+			delete newPositionDirty[gridKey];
 			return {
 				gridStates: newStates,
 				dirtyLayouts: newDirty,
+				positionDirtyLayouts: newPositionDirty,
 			};
 		});
 	},
@@ -92,6 +107,15 @@ export const createGridSlice: StateCreator<CombinedStore, [], [], GridSlice> = (
 		set((prev) => ({
 			dirtyLayouts: {
 				...prev.dirtyLayouts,
+				[gridKey]: dirty,
+			},
+		}));
+	},
+
+	setPositionLayoutDirty: (gridKey, dirty) => {
+		set((prev) => ({
+			positionDirtyLayouts: {
+				...prev.positionDirtyLayouts,
 				[gridKey]: dirty,
 			},
 		}));

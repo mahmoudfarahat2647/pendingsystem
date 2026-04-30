@@ -89,6 +89,9 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	}, [gridStateKey, getDefaultLayout, getGridState]);
 
 	const setLayoutDirty = useAppStore((state) => state.setLayoutDirty);
+	const setPositionLayoutDirty = useAppStore(
+		(state) => state.setPositionLayoutDirty,
+	);
 	const gridInitializedRef = useRef(false);
 
 	const handleSaveState = useCallback(() => {
@@ -125,6 +128,13 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 		}
 		handleSaveState();
 	}, [gridStateKey, setLayoutDirty, handleSaveState]);
+
+	const handleColumnMoved = useCallback(() => {
+		if (gridStateKey && gridInitializedRef.current) {
+			setPositionLayoutDirty(gridStateKey, true);
+		}
+		handleLayoutChange();
+	}, [gridStateKey, setPositionLayoutDirty, handleLayoutChange]);
 
 	// Scroll to highlighted row
 	const highlightedRowId = useAppStore((state) => state.highlightedRowId);
@@ -352,7 +362,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				onCellValueChanged={handleCellValueChanged}
 				onSelectionChanged={handleSelectionChanged}
 				// State Change tracking for persistence
-				onColumnMoved={handleLayoutChange}
+				onColumnMoved={handleColumnMoved}
 				onColumnResized={handleLayoutChange}
 				onColumnVisible={handleLayoutChange}
 				onColumnPinned={handleLayoutChange}

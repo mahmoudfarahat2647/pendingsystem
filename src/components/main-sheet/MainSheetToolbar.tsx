@@ -72,7 +72,7 @@ export const MainSheetToolbar = ({
 	onFilterChange,
 	rowData = [],
 }: MainSheetToolbarProps) => {
-	const { isDirty, saveLayout, saveAsDefault, resetLayout } =
+	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("main-sheet");
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
@@ -234,6 +234,7 @@ export const MainSheetToolbar = ({
 
 				<LayoutSaveButton
 					isDirty={isDirty}
+					isPositionDirty={isPositionDirty}
 					onSave={saveLayout}
 					onSaveAsDefault={saveAsDefault}
 					onReset={resetLayout}

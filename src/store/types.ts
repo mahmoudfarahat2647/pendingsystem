@@ -113,6 +113,7 @@ export interface UIActions {
 interface GridSliceState {
 	gridStates: Record<string, GridState>;
 	dirtyLayouts: Record<string, boolean>;
+	positionDirtyLayouts: Record<string, boolean>;
 	defaultLayouts: Record<string, GridState>;
 }
 
@@ -121,6 +122,7 @@ interface GridSliceActions {
 	getGridState: (gridKey: string) => GridState | null;
 	clearGridState: (gridKey: string) => void;
 	setLayoutDirty: (gridKey: string, dirty: boolean) => void;
+	setPositionLayoutDirty: (gridKey: string, dirty: boolean) => void;
 	saveAsDefaultLayout: (gridKey: string, state: GridState) => void;
 	getDefaultLayout: (gridKey: string) => GridState | null;
 }
