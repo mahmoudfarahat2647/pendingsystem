@@ -30,10 +30,16 @@ export function LoginForm({ expired }: LoginFormProps) {
 	const {
 		register,
 		handleSubmit,
+		setValue,
 		formState: { errors, isSubmitting },
 	} = useForm<LoginFormData>({
 		resolver: zodResolver(LoginFormSchema),
 	});
+
+	useEffect(() => {
+		const saved = localStorage.getItem("login-username");
+		if (saved) setValue("username", saved);
+	}, [setValue]);
 
 	const onSubmit = async (data: LoginFormData) => {
 		setError(null);
@@ -45,6 +51,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 			setError(result.error.message ?? "Invalid username or password");
 			return;
 		}
+		localStorage.setItem("login-username", data.username);
 		router.replace("/dashboard");
 	};
 
@@ -67,7 +74,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 				<input
 					id="username"
 					type="text"
-					autoComplete="username"
+					autoComplete="off"
 					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
 					aria-label="Username"
 					{...register("username")}
