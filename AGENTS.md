@@ -26,11 +26,13 @@ npm run docs:validate # Validate markdown docs structure
 **pendingsystem** is a Next.js 15 App Router logistics platform for managing automotive parts across five workflow stages: `orders` -> `main` -> `call` -> `booking` -> `archive`.
 
 ### Data Ownership
+
 - **React Query** is the source of truth for all live operational stage data.
 - **Supabase** (`orders`, `order_reminders`, `report_settings` tables) persists all data; access belongs only in `src/services/`.
 - **Zustand** (`src/store/`) manages UI-local and persisted preference state plus the local draft-session command overlay and recovery state. Do not route new server-state through Zustand.
 
 ### Runtime Data Flow
+
 1. Route components call React Query hooks (`useOrdersQuery`, etc.)
 2. Hooks delegate to `src/services/orderService.ts` or `src/services/reports/reportSettingsService.ts`
 3. Services map Supabase rows through `orderService.mapSupabaseOrder()` with Zod validation into `PendingRow`
@@ -39,6 +41,7 @@ npm run docs:validate # Validate markdown docs structure
 6. Stage query keys are defined in `src/lib/queryClient.ts` (for example, `["orders", "main"]`)
 
 ### Validation Layers
+
 - `PendingRowSchema` - all persisted rows
 - `OrderFormSchema` - modal form submission
 - `BeastModeSchema` - strict commit check required before Orders can move to Main Sheet
@@ -46,16 +49,19 @@ npm run docs:validate # Validate markdown docs structure
 Schemas are in `src/schemas/order.schema.ts` and `src/schemas/form.schema.ts`.
 
 ### Mutation Pattern
+
 All stage mutations must follow the optimistic pattern: cancel queries -> snapshot cache -> apply optimistic update -> rollback on error -> invalidate touched stages.
 
 Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `useBulkDeleteOrdersMutation`. Do not make ad hoc `queryClient` edits in page components.
 
 ### Draft Session Flow
+
 - Route handlers for stage data should use `useDraftSession(stage)` and render `workingRows` when a draft is active.
 - `applyCommand()` records local mutations in `draftSessionSlice`; nothing reaches Supabase until `saveDraft()` executes the command list.
 - Recovery snapshots are stored in `localStorage["pending-sys-draft-v1"]`; restoring a snapshot rebuilds the working view and resets `past` and `future`.
 
 ### Grid
+
 - Use `DynamicDataGrid` or `DataGrid` for all stage grids.
 - Every grid must have a stable `gridStateKey` for layout persistence.
 - Column definitions come from `src/components/shared/GridConfig.tsx` unless there is a route-specific reason.
@@ -63,9 +69,11 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 - Use `useColumnLayoutTracker` for save/reset layout controls.
 
 ### App Shell
+
 `src/app/layout.tsx` -> `src/app/(app)/layout.tsx` -> `AppShell` (Sidebar + Header + error boundary). All application routes live under `src/app/(app)/`.
 
 ### Authentication Architecture
+
 - **Library**: Better Auth with username plugin, direct pg connection via `DATABASE_URL`
 - **Tables**: `auth_users`, `auth_sessions`, `auth_accounts`, `auth_verifications` (prefixed to avoid collisions)
 - **Server config**: `src/lib/auth.ts` — exported `auth` instance
@@ -74,9 +82,10 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 - **Route handler**: `src/app/api/auth/[...all]/route.ts` — Better Auth catch-all
 - **Protection**: Middleware (optimistic cookie check) + `(app)/layout.tsx` (authoritative DB check)
 - **Admin setup**: Run `npm run auth:seed-admin` after setting `AUTH_ADMIN_*` env vars in `.env.local`
-- **Session expiry**: 1 hour, no refresh (`session.expiresIn: 3600`, `session.disableSessionRefresh: true`)
+- **Session expiry**: 8 hour, no refresh (`session.expiresIn: 3600`, `session.disableSessionRefresh: true`)
 
 ### Key Cross-Cutting Components
+
 - **`BookingCalendarModal`** - shared booking workflow modal used across multiple stages
 - **`SearchResultsView`** - aggregates all five stage queries for global header search
 - **`OrderFormModal`** - orchestrates create/edit with Beast Mode, multi-part, and duplicate detection
@@ -94,6 +103,7 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 ## Documentation
 
 When making changes, update accordingly:
+
 - **`FEATURES.md`** - when product behavior changes
 - **`ENGINEERING.md`** - when architecture, data flow, env requirements, or operations change
 
@@ -102,7 +112,7 @@ When making changes, update accordingly:
 The `docs/` folder is an Obsidian vault. Follow this convention:
 
 | Folder | Purpose | Who writes |
-|--------|---------|-----------|
+| -------- | --------- | ----------- |
 | `docs/superpowers/specs/` | Design specs (intent, behavior, acceptance criteria) | User writes in Obsidian |
 | `docs/superpowers/plans/` | Implementation plans | Codex writes via writing-plans skill |
 | `docs/` root | Stable reference docs (post-implementation) | Codex writes after implementing |
@@ -119,7 +129,7 @@ Update the `status:` frontmatter field in the spec file when its lifecycle stage
 
 All vars live in `.env.local` (never committed). Exact structure:
 
-```
+```env
 # Supabase client (Dashboard → Project Settings → API)
 NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
@@ -148,7 +158,7 @@ This script parses `.env.local`, validates the `DATABASE_URL` format, attempts a
 ### Common Errors & Root Causes
 
 | Error | Real Cause | Fix |
-|-------|-----------|-----|
+| ------- | ----------- | ----- |
 | `28P01 password authentication failed` | Wrong password in `DATABASE_URL` or URL is malformed | Copy exact string from Dashboard → Connect → Session mode — do not manually edit |
 | `ENOTFOUND` / `getaddrinfo` | Wrong pooler host | Host must be `aws-<n>-<region>.pooler.supabase.com` |
 | `SASL` / `invalid password` | Password has special chars not URL-encoded | Use Dashboard-provided string verbatim |
@@ -158,7 +168,7 @@ This script parses `.env.local`, validates the `DATABASE_URL` format, attempts a
 
 ### Better Auth Connection Chain
 
-```
+```text
 .env.local DATABASE_URL
   → src/lib/postgres.ts  (pg Pool with bounded max/connection/query timeouts, ssl: rejectUnauthorized: false)
   → src/lib/auth.ts      (Kysely + CamelCasePlugin + Better Auth)
@@ -169,7 +179,7 @@ If `SELECT 1` passes but auth still fails, the issue is in `auth.ts` config — 
 ### Database Tables
 
 | Table | Purpose |
-|-------|---------|
+| ------- | --------- |
 | `orders` | All operational rows across all five stages |
 | `order_reminders` | Per-row reminder records |
 | `report_settings` | Report config per user |
@@ -186,7 +196,7 @@ The Supabase MCP server is active in this project. Codex can directly query tabl
 
 ## Known Constraints
 
-- Authentication uses Better Auth (username+password only, admin-only, 1-hour sessions).
+- Authentication uses Better Auth (username+password only, admin-only, 8-hour sessions).
 - Theme customization tab in Settings is a placeholder only.
 - `CloudSync` is a legacy migration utility (Zustand -> Supabase), not the live sync path.
 - Some legacy Zustand stage arrays remain in the store for compatibility; do not expand that pattern.
