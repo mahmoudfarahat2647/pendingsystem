@@ -270,7 +270,7 @@ export default function BookingPage() {
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
 		selectedRows.forEach((row) => {
-			handleUpdateOrder(row.id, { partStatus: status });
+			handleUpdateOrder(row.id, { status });
 		});
 		toast.success(`Updated ${selectedRows.length} item(s) to ${status}`);
 	};
@@ -382,7 +382,7 @@ export default function BookingPage() {
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TooltipTrigger>
-							<TooltipContent>Update Part Status</TooltipContent>
+							<TooltipContent>Update Status</TooltipContent>
 						</Tooltip>
 
 						<div className="w-px h-5 bg-white/10 mx-1" />

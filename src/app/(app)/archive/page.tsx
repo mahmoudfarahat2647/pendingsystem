@@ -17,7 +17,6 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
-import { PartStatusRenderer } from "@/components/grid/renderers";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getBaseColumns } from "@/components/shared/GridConfig";
@@ -182,7 +181,7 @@ export default function ArchivePage() {
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
 		selectedRows.forEach((row) => {
-			handleUpdateOrder(row.id, { partStatus: status });
+			handleUpdateOrder(row.id, { status });
 		});
 		toast.success(`Updated ${selectedRows.length} item(s) to ${status}`);
 	};
@@ -242,18 +241,6 @@ export default function ArchivePage() {
 				},
 			},
 			...baseColumns.slice(1),
-			{
-				headerName: "PART STATUS",
-				field: "partStatus",
-				width: 100,
-				minWidth: 100,
-				editable: false,
-				cellRenderer: PartStatusRenderer,
-				cellRendererParams: {
-					partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-				},
-				cellClass: "flex items-center justify-center",
-			},
 			{
 				headerName: "REQUESTER",
 				field: "requester",
@@ -347,7 +334,7 @@ export default function ArchivePage() {
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</TooltipTrigger>
-							<TooltipContent>Update Part Status</TooltipContent>
+							<TooltipContent>Update Status</TooltipContent>
 						</Tooltip>
 
 						<div className="w-px h-5 bg-white/10 mx-1" />

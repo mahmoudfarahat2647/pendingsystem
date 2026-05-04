@@ -31,7 +31,7 @@ export interface InventoryState {
 
 export interface InventoryActions {
 	sendToCallList: (ids: string[]) => void;
-	updatePartStatus: (id: string, partStatus: string) => void;
+	updatePartStatus: (id: string, status: string) => void;
 	setRowData: (data: PendingRow[]) => void;
 	setCallRowData: (data: PendingRow[]) => void;
 	setArchiveRowData: (data: PendingRow[]) => void;

@@ -1,12 +1,39 @@
 import type { ICellRendererParams } from "ag-grid-community";
-import type { PendingRow } from "@/types";
+import type { PartStatusDef, PendingRow } from "@/types";
 
-// Status Badge Renderer - Minimalist text
-export const StatusRenderer = (params: ICellRendererParams<PendingRow>) => {
-	const value = params.value as string;
+interface StatusRendererProps extends ICellRendererParams<PendingRow> {
+	partStatuses?: PartStatusDef[];
+}
+
+export const StatusRenderer = (params: StatusRendererProps) => {
+	const rawValue = (params.value ?? "") as string;
+	const value = rawValue || "Pending";
+	const statuses = params.partStatuses || [];
+	const statusDef = statuses.find(
+		(status) =>
+			status && typeof status.label === "string" && status.label === value,
+	);
+
+	if (statusDef) {
+		const isCssColor =
+			statusDef.color?.startsWith("#") || statusDef.color?.startsWith("rgb");
+		const textStyle = isCssColor ? { color: statusDef.color } : undefined;
+
+		return (
+			<span
+				className={`text-[10px] uppercase tracking-wider font-semibold leading-none ${
+					isCssColor ? "" : "text-gray-400"
+				}`}
+				style={textStyle}
+				title={value}
+			>
+				{value}
+			</span>
+		);
+	}
+
 	const isReorder = value?.toUpperCase() === "REORDER";
 
-	// Just simple text for the flat look, or minimal coloring if preferred
 	return (
 		<span
 			className={`text-[10px] uppercase tracking-wider font-semibold ${

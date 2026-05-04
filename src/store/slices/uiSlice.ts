@@ -6,17 +6,11 @@ import type { CombinedStore, UIActions, UIState } from "../types";
 export const PROTECTED_REPAIR_SYSTEMS = ["ضمان"];
 
 const defaultPartStatuses = [
-	{
-		id: "no_stats",
-		label: "No Stats",
-		color: "bg-transparent border border-white/20",
-	},
-	{ id: "reserve", label: "Reserve", color: "#2563eb" },
-	{ id: "arrived", label: "Arrived", color: "#10b981" },
-	{ id: "not_arrived", label: "Not Arrived", color: "#1f2937" },
-	{ id: "logistics", label: "Logistics Pending", color: "#facc15" },
-	{ id: "branch", label: "Other Branch", color: "#92400e" },
-	{ id: "issue", label: "Has Issue", color: "#ef4444" },
+	{ id: "no_stats", label: "Pending", color: "" },
+	{ id: "hold", label: "Hold", color: "#f59e0b" },
+	{ id: "reserve", label: "Reserve", color: "#10b981" },
+	{ id: "branch", label: "Branch", color: "#3b82f6" },
+	{ id: "arrive", label: "Arrived", color: "#8b5cf6" },
 ];
 
 const defaultBookingStatuses = [
@@ -150,7 +144,7 @@ export const createUISlice: StateCreator<
 		if (newLabel && newLabel !== oldLabel) {
 			const updateRows = (rows: PendingRow[]) =>
 				rows.map((row) =>
-					row.partStatus === oldLabel ? { ...row, partStatus: newLabel } : row,
+					row.status === oldLabel ? { ...row, status: newLabel } : row,
 				);
 
 			set((state) => ({

@@ -2,21 +2,9 @@ import { z } from "zod";
 import { normalizeNullableCompanyName } from "@/lib/company";
 import { normalizeMileageAsNumber } from "@/lib/utils";
 
-// Status Enum Schema
-const StatusSchema = z.enum([
-	"Pending",
-	"Ordered",
-	"Hold",
-	"Booked",
-	"Archived",
-	"Reorder",
-	"Call",
-	"Main Sheet",
-	"Orders",
-	"Booking",
-	"Archive",
-	"Search Result",
-]);
+// Status Schema — accepts any string; user-managed statuses (Arrived, Reserve, etc.)
+// are now stored here alongside workflow markers (Reorder) and stage defaults (Pending)
+const StatusSchema = z.string();
 
 // Part Entry Schema
 export const PartEntrySchema = z.object({
@@ -108,7 +96,6 @@ export const PendingRowSchema = z
 			.nullish()
 			.transform((v) => v || ""),
 		requestedBy: z.string().optional(),
-		partStatus: z.string().optional(),
 
 		// Legacy (These will be auto-synced via transform)
 		partNumber: z.string().optional(),
@@ -187,7 +174,5 @@ export const ReminderInputSchema = z
 		}
 	});
 
-// Infer types from schemas
-type Status = z.infer<typeof StatusSchema>;
 export type PartEntry = z.infer<typeof PartEntrySchema>;
 export type PendingRow = z.infer<typeof PendingRowSchema>;

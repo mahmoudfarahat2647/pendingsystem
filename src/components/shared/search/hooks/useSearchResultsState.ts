@@ -511,7 +511,7 @@ export const useSearchResultsState = () => {
 					selectedRows.map((row) =>
 						saveOrderMutation.mutateAsync({
 							id: row.id,
-							updates: { partStatus: status },
+							updates: { status },
 							stage: row.stage as OrderStage,
 							sourceStage: row.stage as OrderStage,
 						}),
@@ -534,14 +534,14 @@ export const useSearchResultsState = () => {
 	const onCellValueChanged = useCallback(
 		async (event: CellValueChangedEvent<PendingRow>) => {
 			if (
-				event.colDef.field === "partStatus" &&
+				event.colDef.field === "status" &&
 				event.data?.id &&
 				event.newValue !== event.oldValue
 			) {
 				try {
 					await handleUpdateOrder(
 						event.data.id,
-						{ partStatus: event.newValue },
+						{ status: event.newValue },
 						event.data.stage,
 					);
 				} catch {
@@ -558,7 +558,7 @@ export const useSearchResultsState = () => {
 					stageRows,
 					editedRowId: event.data.id,
 					editedVin: event.data.vin,
-					nextPartStatus: event.newValue,
+					nextStatus: event.newValue,
 				});
 
 				if (vinIds.length === 0) {

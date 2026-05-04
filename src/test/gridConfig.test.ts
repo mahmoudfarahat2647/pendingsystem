@@ -12,9 +12,13 @@ import {
 
 // Mock the store
 vi.mock("@/store/useStore", () => ({
-	useAppStore: Object.assign((fn: any) => fn({ bookingStatuses: [] }), {
-		getState: () => ({ bookingStatuses: [] }),
-	}),
+	useAppStore: Object.assign(
+		(fn: (state: { bookingStatuses: unknown[] }) => unknown) =>
+			fn({ bookingStatuses: [] }),
+		{
+			getState: () => ({ bookingStatuses: [] }),
+		},
+	),
 }));
 
 describe("Grid Column Configuration Selection Fix", () => {
@@ -49,7 +53,10 @@ describe("Grid Column Configuration Selection Fix", () => {
 			expect(companyCol).toBeDefined();
 			expect(typeof companyCol?.comparator).toBe("function");
 
-			const compare = companyCol?.comparator as (a: any, b: any) => number;
+			const compare = companyCol?.comparator as (
+				a: unknown,
+				b: unknown,
+			) => number;
 
 			// 1. Equal fallbacks (empty, null, undefined) all sort identically
 			expect(compare("", "")).toBe(0);
@@ -143,7 +150,7 @@ describe("Grid Column Configuration Selection Fix", () => {
 			expect(fields).toContain("vin");
 			expect(fields).toContain("mobile");
 			expect(fields).toContain("customerName");
-			expect(fields[fields.length - 1]).toBe("partStatus");
+			expect(fields[fields.length - 1]).toBe("requester");
 
 			// 5. MinWidth protections
 			const vinCol = columns.find((c) => c.field === "vin");

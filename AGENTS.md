@@ -65,6 +65,7 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 - Use `DynamicDataGrid` or `DataGrid` for all stage grids.
 - Every grid must have a stable `gridStateKey` for layout persistence.
 - Column definitions come from `src/components/shared/GridConfig.tsx` unless there is a route-specific reason.
+- The STATS grid column is backed by `PendingRow.status`; do not reintroduce a separate `partStatus` row field or PART STATUS grid column.
 - **Do not** replace the action column composite `valueGetter` with `field: "id"` - it is the refresh trigger for notes, reminders, and attachment icons.
 - Use `useColumnLayoutTracker` for save/reset layout controls.
 
@@ -197,6 +198,7 @@ The Supabase MCP server is active in this project. Codex can directly query tabl
 ## Known Constraints
 
 - Authentication uses Better Auth (username+password only, admin-only, 8-hour sessions).
+- User-managed part lifecycle statuses now live in `PendingRow.status` / Supabase `metadata.status`; legacy `metadata.partStatus` remains only as rollback data and should not be used by new code.
 - Theme customization tab in Settings is a placeholder only.
 - `CloudSync` is a legacy migration utility (Zustand -> Supabase), not the live sync path.
 - Some legacy Zustand stage arrays remain in the store for compatibility; do not expand that pattern.

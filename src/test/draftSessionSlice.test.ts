@@ -55,7 +55,6 @@ function createRow(
 		sabNumber: "SAB-001",
 		acceptedBy: "Agent",
 		requester: "Branch",
-		partStatus: "Pending",
 		partNumber: "PN-001",
 		description: "Brake pad",
 		status: "Pending",
@@ -147,10 +146,10 @@ describe("draftSessionSlice", () => {
 			sourceStage: "orders",
 			destinationStage: "orders",
 			updates: {
-				partStatus: "Arrived",
+				status: "Arrived",
 			},
 			previousValues: {
-				partStatus: "Pending",
+				status: "Pending",
 			},
 		};
 
@@ -171,7 +170,7 @@ describe("draftSessionSlice", () => {
 		expect(getWorkingRows("orders")).toEqual([
 			expect.objectContaining({
 				id: row.id,
-				partStatus: "Arrived",
+				status: "Arrived",
 			}),
 		]);
 	});
@@ -204,8 +203,8 @@ describe("draftSessionSlice", () => {
 				id: row.id,
 				sourceStage: "orders",
 				destinationStage: "orders",
-				updates: { partStatus: "Ready" },
-				previousValues: { partStatus: row.partStatus },
+				updates: { status: "Ready" },
+				previousValues: { status: row.status },
 			});
 
 			const moveAccepted = useAppStore.getState().applyCommand({
@@ -221,7 +220,7 @@ describe("draftSessionSlice", () => {
 				expect.objectContaining({
 					id: row.id,
 					stage: "main",
-					partStatus: "Ready",
+					status: "Ready",
 					partNumber: row.partNumber,
 				}),
 			]);
@@ -264,8 +263,8 @@ describe("draftSessionSlice", () => {
 					id: row.id,
 					sourceStage: "orders",
 					destinationStage: "orders",
-					updates: { partStatus: "Recovered" },
-					previousValues: { partStatus: refreshedBaselineRow.partStatus },
+					updates: { status: "Recovered" },
+					previousValues: { status: refreshedBaselineRow.status },
 				},
 			],
 		};
@@ -277,7 +276,7 @@ describe("draftSessionSlice", () => {
 				id: row.id,
 				customerName: "Fresh Baseline",
 				description: "Updated from query cache",
-				partStatus: "Recovered",
+				status: "Recovered",
 			}),
 		]);
 	});
@@ -357,8 +356,8 @@ describe("draftSessionSlice", () => {
 				id: TEMP_ID,
 				sourceStage: "orders",
 				destinationStage: "orders",
-				updates: { partStatus: "Arrived" },
-				previousValues: { partStatus: "Pending" },
+				updates: { status: "Arrived" },
+				previousValues: { status: "Pending" },
 			});
 
 			const saveOrder = vi.fn().mockResolvedValue({ id: REAL_UUID });
@@ -411,10 +410,10 @@ describe("draftSessionSlice", () => {
 			sourceStage: "orders",
 			destinationStage: "orders",
 			updates: {
-				partStatus: "Arrived",
+				status: "Arrived",
 			},
 			previousValues: {
-				partStatus: "Pending",
+				status: "Pending",
 			},
 		});
 
@@ -456,8 +455,8 @@ describe("draftSessionSlice", () => {
 				id: row.id,
 				sourceStage: "orders",
 				destinationStage: "orders",
-				updates: { partStatus: `Edit-${i}` },
-				previousValues: { partStatus: `Edit-${i - 1}` },
+				updates: { status: `Edit-${i}` },
+				previousValues: { status: `Edit-${i - 1}` },
 			});
 		}
 

@@ -125,7 +125,6 @@ export const exportAllSystemDataCSV = (
 		"remainTime",
 		"bookingDate",
 		"bookingStatus",
-		"partStatus",
 		"noteHistory",
 		"reminderText",
 		"archiveReason",

@@ -60,7 +60,6 @@ function createRow(
 		sabNumber: "SAB-001",
 		acceptedBy: "Agent",
 		requester: "Branch",
-		partStatus: "Pending",
 		partNumber: "PN-001",
 		description: "Brake pad",
 		status: "Pending",
@@ -201,11 +200,9 @@ function DraftSessionRecoveryHarnessInner({
 			sourceStage: "orders",
 			destinationStage: "orders",
 			updates: {
-				partStatus: "Arrived",
-				status: "Ordered",
+				status: "Arrived",
 			},
 			previousValues: {
-				partStatus: ordersRow.partStatus,
 				status: ordersRow.status,
 			},
 		});
@@ -448,7 +445,6 @@ function DraftSessionRecoveryHarnessInner({
 												row.trackingId,
 												row.stage,
 												row.status,
-												row.partStatus ?? "",
 												row.bookingStatus ?? "",
 											]
 												.filter(Boolean)

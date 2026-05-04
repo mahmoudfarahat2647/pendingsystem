@@ -8,12 +8,12 @@ import { useOrdersQuery } from "./queries/useOrdersQuery";
 
 /** Stable key representing the subset of data that matters for auto-move decisions. */
 function buildStatusKey(
-	rows: { id: string; vin?: string | null; partStatus?: string | null }[],
+	rows: { id: string; vin?: string | null; status?: string | null }[],
 ): string {
 	return rows
 		.map(
 			(r) =>
-				`${r.id}:${(r.vin ?? "").trim().toLowerCase()}:${(r.partStatus ?? "").trim().toLowerCase()}`,
+				`${r.id}:${(r.vin ?? "").trim().toLowerCase()}:${(r.status ?? "").trim().toLowerCase()}`,
 		)
 		.join("|");
 }
@@ -53,7 +53,7 @@ export const useAutoMoveVins = () => {
 			for (const [vin, rows] of Object.entries(vinGroups)) {
 				if (rows.length === 0) continue;
 				const allArrived = rows.every(
-					(row) => (row.partStatus ?? "").trim().toLowerCase() === "arrived",
+					(row) => (row.status ?? "").trim().toLowerCase() === "arrived",
 				);
 				if (allArrived) {
 					for (const r of rows) idsToMove.push(r.id);

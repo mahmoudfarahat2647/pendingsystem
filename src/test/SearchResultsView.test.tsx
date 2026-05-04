@@ -41,6 +41,7 @@ type MockSearchToolbarProps = {
 	selectedCount: number;
 	isSameSource: boolean;
 	onReserve: () => void;
+	onUpdateStatus: (status: string) => void;
 	onBooking: () => void;
 	onArchive: () => void;
 	onSendToCallList: () => void;
@@ -207,6 +208,14 @@ vi.mock("@/components/shared/search/SearchToolbar", () => ({
 				</button>
 				<button
 					type="button"
+					data-testid="search-toolbar-status-arrived"
+					disabled={props.selectedCount === 0 || !props.isSameSource}
+					onClick={() => props.onUpdateStatus("Arrived")}
+				>
+					Status Arrived
+				</button>
+				<button
+					type="button"
 					data-testid="search-toolbar-booking"
 					disabled={props.selectedCount === 0 || !props.isSameSource}
 					onClick={props.onBooking}
@@ -327,10 +336,9 @@ const createRow = (overrides: Partial<PendingRow> = {}): PendingRow =>
 		sabNumber: "SAB-1",
 		acceptedBy: "Agent",
 		requester: "Requester",
-		partStatus: "Not Arrived",
 		partNumber: "P1",
 		description: "Front bumper",
-		status: "Pending",
+		status: "Not Arrived",
 		rDate: "2024-01-01",
 		repairSystem: "System",
 		startWarranty: "",
@@ -346,7 +354,7 @@ const renderView = () => render(<SearchResultsView />);
 const getRenderedRowIds = () => (mocks.gridRowData ?? []).map((row) => row.id);
 
 const getMasterCheckboxState = () =>
-	(mocks.gridColumnsArgs?.[4] as any)?.current;
+	(mocks.gridColumnsArgs?.[4] as { current?: unknown } | undefined)?.current;
 
 const getOnSelectAllFiltered = () =>
 	mocks.gridColumnsArgs?.[5] as ((selected: boolean) => void) | undefined;
@@ -806,20 +814,20 @@ describe("SearchResultsView", () => {
 			id: "main-1",
 			stage: "main",
 			sourceType: "Main Sheet",
-			partStatus: "Not Arrived",
+			status: "Not Arrived",
 		});
 		const secondRow = createRow({
 			id: "main-2",
 			stage: "main",
 			sourceType: "Main Sheet",
-			partStatus: "Arrived",
+			status: "Arrived",
 		});
 		mocks.queryData.main = [firstRow, secondRow];
 
 		renderView();
 
 		await triggerCellValueChanged({
-			colDef: { field: "partStatus" },
+			colDef: { field: "status" },
 			data: firstRow,
 			newValue: "Arrived",
 			oldValue: "Not Arrived",
@@ -827,7 +835,7 @@ describe("SearchResultsView", () => {
 
 		expect(mocks.saveMutateAsync).toHaveBeenCalledWith({
 			id: "main-1",
-			updates: { partStatus: "Arrived" },
+			updates: { status: "Arrived" },
 			stage: "main",
 			sourceStage: "main",
 		});
@@ -877,13 +885,13 @@ describe("SearchResultsView", () => {
 			id: "main-1",
 			stage: "main",
 			sourceType: "Main Sheet",
-			partStatus: "Reserve",
+			status: "Reserve",
 		});
 		const secondRow = createRow({
 			id: "main-2",
 			stage: "main",
 			sourceType: "Main Sheet",
-			partStatus: "Reserve",
+			status: "Reserve",
 		});
 		mocks.queryData.main = [firstRow, secondRow];
 
@@ -903,6 +911,44 @@ describe("SearchResultsView", () => {
 		expect(mocks.saveMutateAsync).not.toHaveBeenCalled();
 		expect(mocks.toastSuccess).not.toHaveBeenCalled();
 		expect(mocks.toastError).not.toHaveBeenCalled();
+	});
+
+	it("updates the STATS status field from the toolbar for selected search rows", async () => {
+		const firstRow = createRow({
+			id: "main-1",
+			stage: "main",
+			sourceType: "Main Sheet",
+		});
+		const secondRow = createRow({
+			id: "main-2",
+			stage: "main",
+			sourceType: "Main Sheet",
+		});
+		mocks.queryData.main = [firstRow, secondRow];
+
+		renderView();
+		await triggerSelectionChanged([firstRow, secondRow]);
+
+		fireEvent.click(screen.getByTestId("search-toolbar-status-arrived"));
+
+		await waitFor(() => {
+			expect(mocks.saveMutateAsync).toHaveBeenCalledTimes(2);
+		});
+		expect(mocks.saveMutateAsync).toHaveBeenNthCalledWith(1, {
+			id: "main-1",
+			updates: { status: "Arrived" },
+			stage: "main",
+			sourceStage: "main",
+		});
+		expect(mocks.saveMutateAsync).toHaveBeenNthCalledWith(2, {
+			id: "main-2",
+			updates: { status: "Arrived" },
+			stage: "main",
+			sourceStage: "main",
+		});
+		expect(mocks.toastSuccess).toHaveBeenCalledWith(
+			"Updated status for 2 rows",
+		);
 	});
 
 	it("books all selected rows and closes the modal on confirm", async () => {
@@ -1150,13 +1196,13 @@ describe("SearchResultsView", () => {
 			id: "main-1",
 			stage: "main",
 			sourceType: "Main Sheet",
-			partStatus: "Reserve",
+			status: "Reserve",
 		});
 		const ordersRow = createRow({
 			id: "orders-1",
 			stage: "orders",
 			sourceType: "Orders",
-			partStatus: "Not Arrived",
+			status: "Not Arrived",
 		});
 		mocks.queryData.main = [mainRow];
 		mocks.queryData.orders = [ordersRow];
@@ -1183,13 +1229,13 @@ describe("SearchResultsView", () => {
 			id: "main-1",
 			stage: "main",
 			sourceType: "Main Sheet",
-			partStatus: "Not Arrived",
+			status: "Not Arrived",
 		});
 		const ordersRow = createRow({
 			id: "orders-1",
 			stage: "orders",
 			sourceType: "Orders",
-			partStatus: "Arrived",
+			status: "Arrived",
 		});
 		mocks.queryData.main = [mainRow];
 		mocks.queryData.orders = [ordersRow];
@@ -1291,20 +1337,20 @@ describe("SearchResultsView", () => {
 			id: "orders-1",
 			stage: "orders",
 			sourceType: "Orders",
-			partStatus: "Backordered",
+			status: "Backordered",
 		});
 		const secondRow = createRow({
 			id: "orders-2",
 			stage: "orders",
 			sourceType: "Orders",
-			partStatus: "Arrived",
+			status: "Arrived",
 		});
 		mocks.queryData.orders = [firstRow, secondRow];
 
 		renderView();
 
 		await triggerCellValueChanged({
-			colDef: { field: "partStatus" },
+			colDef: { field: "status" },
 			data: firstRow,
 			newValue: "Arrived",
 			oldValue: "Backordered",
@@ -1312,7 +1358,7 @@ describe("SearchResultsView", () => {
 
 		expect(mocks.saveMutateAsync).toHaveBeenCalledWith({
 			id: "orders-1",
-			updates: { partStatus: "Arrived" },
+			updates: { status: "Arrived" },
 			stage: "orders",
 			sourceStage: "orders",
 		});
@@ -1328,20 +1374,20 @@ describe("SearchResultsView", () => {
 			id: "main-1",
 			stage: "main",
 			sourceType: "Main Sheet",
-			partStatus: "Not Arrived",
+			status: "Not Arrived",
 		});
 		const secondRow = createRow({
 			id: "main-2",
 			stage: "main",
 			sourceType: "Main Sheet",
-			partStatus: "Backordered",
+			status: "Backordered",
 		});
 		mocks.queryData.main = [firstRow, secondRow];
 
 		renderView();
 
 		await triggerCellValueChanged({
-			colDef: { field: "partStatus" },
+			colDef: { field: "status" },
 			data: firstRow,
 			newValue: "Arrived",
 			oldValue: "Not Arrived",
@@ -1356,14 +1402,14 @@ describe("SearchResultsView", () => {
 			id: "booking-1",
 			stage: "booking",
 			sourceType: "Booking",
-			partStatus: "Not Arrived",
+			status: "Not Arrived",
 		});
 		mocks.queryData.booking = [bookingRow];
 
 		renderView();
 
 		await triggerCellValueChanged({
-			colDef: { field: "partStatus" },
+			colDef: { field: "status" },
 			data: bookingRow,
 			newValue: "Arrived",
 			oldValue: "Not Arrived",
@@ -1390,7 +1436,7 @@ describe("SearchResultsView", () => {
 		renderView();
 
 		await triggerCellValueChanged({
-			colDef: { field: "partStatus" },
+			colDef: { field: "status" },
 			data: mainRow,
 			newValue: "Arrived",
 			oldValue: "Not Arrived",
@@ -1409,13 +1455,13 @@ describe("SearchResultsView", () => {
 			id: "main-1",
 			stage: "main",
 			sourceType: "Main Sheet",
-			partStatus: "Not Arrived",
+			status: "Not Arrived",
 		});
 		const secondRow = createRow({
 			id: "main-2",
 			stage: "main",
 			sourceType: "Main Sheet",
-			partStatus: "Arrived",
+			status: "Arrived",
 		});
 		mocks.queryData.main = [firstRow, secondRow];
 		mocks.bulkMutations.main.mockRejectedValueOnce(new Error("move failed"));
@@ -1423,7 +1469,7 @@ describe("SearchResultsView", () => {
 		renderView();
 
 		await triggerCellValueChanged({
-			colDef: { field: "partStatus" },
+			colDef: { field: "status" },
 			data: firstRow,
 			newValue: "Arrived",
 			oldValue: "Not Arrived",

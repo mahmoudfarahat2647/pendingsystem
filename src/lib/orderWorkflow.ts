@@ -118,8 +118,8 @@ function normalizeStageKey(stage?: string | null): string {
 	return normalized;
 }
 
-function normalizePartStatus(partStatus?: string | null): string {
-	return (partStatus || "").trim().toLowerCase();
+function normalizeStatus(status?: string | null): string {
+	return (status || "").trim().toLowerCase();
 }
 
 export function isVinComplete(vin: string): boolean {
@@ -137,13 +137,13 @@ export function getVinAutoMoveIds({
 	stageRows,
 	editedRowId,
 	editedVin,
-	nextPartStatus,
+	nextStatus,
 }: {
 	stage?: string | null;
 	stageRows: PendingRow[];
 	editedRowId: string;
 	editedVin?: string | null;
-	nextPartStatus?: string | null;
+	nextStatus?: string | null;
 }): string[] {
 	const normalizedStage = normalizeStageKey(stage);
 	if (normalizedStage !== "main" && normalizedStage !== "orders") {
@@ -155,7 +155,7 @@ export function getVinAutoMoveIds({
 		return [];
 	}
 
-	if (normalizePartStatus(nextPartStatus) !== "arrived") {
+	if (normalizeStatus(nextStatus) !== "arrived") {
 		return [];
 	}
 
@@ -171,8 +171,7 @@ export function getVinAutoMoveIds({
 
 	const allArrived = vinRows.every(
 		(row) =>
-			row.id === editedRowId ||
-			normalizePartStatus(row.partStatus) === "arrived",
+			row.id === editedRowId || normalizeStatus(row.status) === "arrived",
 	);
 
 	return allArrived ? vinRows.map((row) => row.id) : [];
@@ -364,14 +363,14 @@ export function getStageDisplayName(stage: string | undefined): string {
 }
 
 /**
- * Filters a selection of rows to only those whose `partStatus` matches the
+ * Filters a selection of rows to only those whose `status` matches the
  * configured reserve status label (the entry with `id === "reserve"` in
  * `partStatuses`). Comparison is trim + case-insensitive so label renames
  * are handled transparently.
  *
  * @param rows - The selected rows to filter
  * @param partStatuses - The app's part-status definitions from the store
- * @returns Only the rows whose `partStatus` matches the reserve label
+ * @returns Only the rows whose `status` matches the reserve label
  */
 export function filterReservedRows(
 	rows: PendingRow[],
@@ -381,6 +380,6 @@ export function filterReservedRows(
 	if (!reserveLabel) return [];
 	const normalized = reserveLabel.trim().toLowerCase();
 	return rows.filter(
-		(r) => (r.partStatus ?? "").trim().toLowerCase() === normalized,
+		(r) => (r.status ?? "").trim().toLowerCase() === normalized,
 	);
 }

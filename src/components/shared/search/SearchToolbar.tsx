@@ -240,7 +240,12 @@ export const SearchToolbar = ({
 													className={cn("w-2 h-2 rounded-full", colorClass)}
 													style={dotStyle}
 												/>
-												<span className="text-xs">{status.label}</span>
+												<span
+													className="text-xs font-semibold"
+													style={isHex ? { color: status.color } : undefined}
+												>
+													{status.label}
+												</span>
 											</DropdownMenuItem>
 										);
 									})}
@@ -250,7 +255,7 @@ export const SearchToolbar = ({
 						<TooltipContent>
 							{!isSameSource && selectedCount > 0
 								? disabledReason
-								: "Update Part Status"}
+								: "Update Status"}
 						</TooltipContent>
 					</Tooltip>
 				</div>

@@ -352,14 +352,19 @@ export const OrdersToolbar = ({
 												className={cn("w-2 h-2 rounded-full", colorClass)}
 												style={dotStyle}
 											/>
-											<span className="text-xs">{status.label}</span>
+											<span
+												className="text-xs font-semibold"
+												style={isHex ? { color: status.color } : undefined}
+											>
+												{status.label}
+											</span>
 										</DropdownMenuItem>
 									);
 								})}
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</TooltipTrigger>
-					<TooltipContent>Update Part Status</TooltipContent>
+					<TooltipContent>Update Status</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>
