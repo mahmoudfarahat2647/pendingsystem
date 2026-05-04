@@ -62,6 +62,7 @@ export const getBaseColumns = (
 		cellRendererParams: { partStatuses },
 		width: 80,
 		editable: false,
+		cellClass: "flex items-center justify-center",
 	},
 	{
 		headerName: "R/DATE",

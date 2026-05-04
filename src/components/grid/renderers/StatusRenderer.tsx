@@ -6,7 +6,8 @@ interface StatusRendererProps extends ICellRendererParams<PendingRow> {
 }
 
 export const StatusRenderer = (params: StatusRendererProps) => {
-	const value = (params.value ?? "") as string;
+	const rawValue = (params.value ?? "") as string;
+	const value = rawValue || "Pending";
 	const statuses = params.partStatuses || [];
 	const statusDef = statuses.find(
 		(status) =>
@@ -16,21 +17,18 @@ export const StatusRenderer = (params: StatusRendererProps) => {
 	if (statusDef) {
 		const isCssColor =
 			statusDef.color?.startsWith("#") || statusDef.color?.startsWith("rgb");
-		const dotStyle = isCssColor
-			? { backgroundColor: statusDef.color }
-			: undefined;
-		const colorClass = isCssColor ? "" : (statusDef.color ?? "");
+		const textStyle = isCssColor ? { color: statusDef.color } : undefined;
 
 		return (
-			<div
-				className="flex items-center justify-center h-full w-full gap-1.5 px-1"
+			<span
+				className={`text-[10px] uppercase tracking-wider font-semibold leading-none ${
+					isCssColor ? "" : "text-gray-400"
+				}`}
+				style={textStyle}
 				title={value}
 			>
-				<div
-					className={`w-2.5 h-2.5 rounded-full ${colorClass} shadow-sm ring-1 ring-black/10 flex-shrink-0`}
-					style={dotStyle}
-				/>
-			</div>
+				{value}
+			</span>
 		);
 	}
 
