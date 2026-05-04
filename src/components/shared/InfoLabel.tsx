@@ -14,7 +14,6 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 		customerName = "-",
 		vin = "-",
 		mobile = "-",
-		cntrRdg = "-",
 		model = "-",
 		partNumber = "-",
 		description = "-",
@@ -29,8 +28,8 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 		: null;
 	const statsColor = statusDef?.color || "bg-renault-yellow";
 
-	const partStatusDef = data?.partStatus
-		? partStatuses.find((s) => s.label === data.partStatus)
+	const partStatusDef = data?.status
+		? partStatuses.find((s) => s.label === data.status)
 		: null;
 	// Default to cyan hex if not found, to ensure colorful fallback
 	let partStatsColor = partStatusDef?.color || "#06b6d4";
@@ -154,7 +153,7 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
 								part state :
 							</span>
-							{data?.partStatus ? (
+							{data?.status ? (
 								<span
 									className={cn(
 										"px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest transition-all duration-300",
@@ -178,7 +177,7 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 											: undefined
 									}
 								>
-									{data.partStatus}
+									{data.status}
 								</span>
 							) : (
 								<span className="text-xs text-gray-600 italic">No Status</span>

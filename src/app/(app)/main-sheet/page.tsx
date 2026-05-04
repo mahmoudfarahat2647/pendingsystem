@@ -160,7 +160,7 @@ export default function MainSheetPage() {
 	const filteredRowData = useMemo(() => {
 		if (!activeFilter) return effectiveRowData;
 		return effectiveRowData.filter(
-			(row: PendingRow) => row.partStatus === activeFilter,
+			(row: PendingRow) => row.status === activeFilter,
 		);
 	}, [effectiveRowData, activeFilter]);
 
@@ -210,8 +210,8 @@ export default function MainSheetPage() {
 				id: row.id,
 				sourceStage: "main",
 				destinationStage: "main",
-				updates: { partStatus: status },
-				previousValues: { partStatus: row.partStatus },
+				updates: { status },
+				previousValues: { status: row.status },
 			});
 		}
 
@@ -230,7 +230,7 @@ export default function MainSheetPage() {
 				stageRows: effectiveRowData,
 				editedRowId: editedRow.id,
 				editedVin: vin,
-				nextPartStatus: status,
+				nextStatus: status,
 			});
 
 			if (vinIds.length > 0) {
@@ -401,7 +401,7 @@ export default function MainSheetPage() {
 								onSelectionChange={setSelectedRows}
 								onCellValueChanged={async (params) => {
 									if (
-										params.colDef.field === "partStatus" &&
+										params.colDef.field === "status" &&
 										params.newValue !== params.oldValue
 									) {
 										const newStatus = params.newValue;
@@ -409,7 +409,7 @@ export default function MainSheetPage() {
 
 										// 1. Persist the change to Supabase
 										await handleUpdateOrder(params.data.id, {
-											partStatus: newStatus,
+											status: newStatus,
 										});
 
 										// 2. Check for auto-move to Call List
@@ -418,7 +418,7 @@ export default function MainSheetPage() {
 											stageRows: effectiveRowData,
 											editedRowId: params.data.id,
 											editedVin: vin,
-											nextPartStatus: newStatus,
+											nextStatus: newStatus,
 										});
 
 										if (vinIds.length > 0) {

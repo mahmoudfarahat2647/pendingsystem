@@ -359,7 +359,7 @@ export const OrdersToolbar = ({
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</TooltipTrigger>
-					<TooltipContent>Update Part Status</TooltipContent>
+					<TooltipContent>Update Status</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

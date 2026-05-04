@@ -54,6 +54,7 @@ export function useColumnDefs(
 			headerName: "STATS",
 			field: "status",
 			cellRenderer: StatusRenderer,
+			cellRendererParams: { partStatuses },
 			width: 80,
 		},
 		{
@@ -134,29 +135,7 @@ export function useColumnDefs(
 	return useMemo(() => {
 		switch (type) {
 			case "main":
-				return [
-					...baseColumns,
-					{
-						headerName: "PART STATUS",
-						field: "partStatus",
-						width: 70,
-						editable: true,
-						cellRenderer: PartStatusRenderer,
-						cellRendererParams: {
-							partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-						},
-						cellEditor: "agSelectCellEditor",
-						cellEditorParams: {
-							values:
-								Array.isArray(partStatuses) && partStatuses.length > 0
-									? partStatuses
-											.filter((s) => s && typeof s.label === "string")
-											.map((s) => s.label)
-									: [],
-						},
-						cellClass: "flex items-center justify-center",
-					},
-				];
+				return baseColumns;
 
 			case "orders":
 				return [

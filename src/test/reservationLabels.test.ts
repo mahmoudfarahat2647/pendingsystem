@@ -32,7 +32,7 @@ describe("printReservationLabels", () => {
 			onload: null,
 		};
 
-		mockWindowOpen.mockReturnValue(mockPrintWindow as any);
+		mockWindowOpen.mockReturnValue(mockPrintWindow as unknown as Window);
 	});
 
 	it("should show alert when no items are selected", () => {
@@ -129,8 +129,8 @@ describe("printReservationLabels", () => {
 
 	it("should default to pendingsystem branding when company is null/undefined", () => {
 		const testCases = [
-			createMockRow("null-company", null as any),
-			createMockRow("undefined-company", undefined as any),
+			createMockRow("null-company", null),
+			createMockRow("undefined-company", undefined),
 			createMockRow("empty-company", ""),
 		];
 
@@ -272,7 +272,7 @@ describe("printReservationLabels", () => {
 // Helper function to create mock PendingRow objects
 function createMockRow(
 	id: string,
-	company: string | null,
+	company: string | null | undefined,
 	overrides: Partial<PendingRow> = {},
 ): PendingRow {
 	return {
@@ -290,7 +290,6 @@ function createMockRow(
 		acceptedBy: "",
 		requester: "",
 		requestedBy: "",
-		partStatus: "",
 		partNumber: "",
 		description: "",
 		status: "Pending",

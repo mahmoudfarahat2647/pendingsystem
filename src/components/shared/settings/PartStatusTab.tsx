@@ -29,13 +29,13 @@ export const PartStatusTab = ({ isLocked }: PartStatusTabProps) => {
 			...archiveRowData,
 			...bookingRowData,
 		];
-		return allRows.filter((row) => row.partStatus === label).length;
+		return allRows.filter((row) => row.status === label).length;
 	};
 
 	return (
 		<StatusManagementSection
-			title="Add New Part Status"
-			managedTitle="Managed Part Statuses"
+			title="Add New Status"
+			managedTitle="Managed Statuses"
 			statuses={partStatuses}
 			onAdd={(label, color) => {
 				const newStatus: PartStatusDef = {

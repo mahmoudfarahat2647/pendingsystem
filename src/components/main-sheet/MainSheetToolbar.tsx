@@ -284,7 +284,7 @@ export const MainSheetToolbar = ({
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</TooltipTrigger>
-					<TooltipContent>Update Part Status</TooltipContent>
+					<TooltipContent>Update Status</TooltipContent>
 				</Tooltip>
 
 				<div className="w-px h-6 bg-white/10 mx-1" />

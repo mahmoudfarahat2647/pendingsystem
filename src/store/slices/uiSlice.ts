@@ -150,7 +150,7 @@ export const createUISlice: StateCreator<
 		if (newLabel && newLabel !== oldLabel) {
 			const updateRows = (rows: PendingRow[]) =>
 				rows.map((row) =>
-					row.partStatus === oldLabel ? { ...row, partStatus: newLabel } : row,
+					row.status === oldLabel ? { ...row, status: newLabel } : row,
 				);
 
 			set((state) => ({

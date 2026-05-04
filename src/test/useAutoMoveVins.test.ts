@@ -23,14 +23,13 @@ function makeRow(
 		id: string;
 		vin: string;
 		stage: string;
-		partStatus: string;
+		status: string;
 	}> = {},
 ) {
 	return {
 		id: "row-1",
 		vin: "VIN111",
 		stage: "main",
-		partStatus: "Not Arrived",
 		baseId: "B1",
 		trackingId: "T1",
 		customerName: "Test",
@@ -65,7 +64,7 @@ describe("useAutoMoveVins", () => {
 
 	it("moves a single-part VIN to call when its only part is Arrived", async () => {
 		mockUseOrdersQuery.mockReturnValue({
-			data: [makeRow({ id: "r1", vin: "VIN111", partStatus: "Arrived" })],
+			data: [makeRow({ id: "r1", vin: "VIN111", status: "Arrived" })],
 		} as unknown as ReturnType<typeof useOrdersQuery>);
 
 		renderHook(() => useAutoMoveVins());
@@ -77,9 +76,9 @@ describe("useAutoMoveVins", () => {
 	it("moves a multi-part VIN when all parts are Arrived", async () => {
 		mockUseOrdersQuery.mockReturnValue({
 			data: [
-				makeRow({ id: "r1", vin: "VIN222", partStatus: "Arrived" }),
-				makeRow({ id: "r2", vin: "VIN222", partStatus: "Arrived" }),
-				makeRow({ id: "r3", vin: "VIN222", partStatus: "Arrived" }),
+				makeRow({ id: "r1", vin: "VIN222", status: "Arrived" }),
+				makeRow({ id: "r2", vin: "VIN222", status: "Arrived" }),
+				makeRow({ id: "r3", vin: "VIN222", status: "Arrived" }),
 			],
 		} as unknown as ReturnType<typeof useOrdersQuery>);
 
@@ -95,8 +94,8 @@ describe("useAutoMoveVins", () => {
 	it("does NOT move a VIN when at least one part is not Arrived", async () => {
 		mockUseOrdersQuery.mockReturnValue({
 			data: [
-				makeRow({ id: "r1", vin: "VIN333", partStatus: "Arrived" }),
-				makeRow({ id: "r2", vin: "VIN333", partStatus: "Not Arrived" }),
+				makeRow({ id: "r1", vin: "VIN333", status: "Arrived" }),
+				makeRow({ id: "r2", vin: "VIN333", status: "Not Arrived" }),
 			],
 		} as unknown as ReturnType<typeof useOrdersQuery>);
 
@@ -108,7 +107,7 @@ describe("useAutoMoveVins", () => {
 
 	it("does NOT move rows with a blank VIN", async () => {
 		mockUseOrdersQuery.mockReturnValue({
-			data: [makeRow({ id: "r1", vin: "", partStatus: "Arrived" })],
+			data: [makeRow({ id: "r1", vin: "", status: "Arrived" })],
 		} as unknown as ReturnType<typeof useOrdersQuery>);
 
 		renderHook(() => useAutoMoveVins());
@@ -132,11 +131,11 @@ describe("useAutoMoveVins", () => {
 		mockUseOrdersQuery.mockReturnValue({
 			data: [
 				// VIN_A: all arrived → should move
-				makeRow({ id: "a1", vin: "VIN_A", partStatus: "Arrived" }),
-				makeRow({ id: "a2", vin: "VIN_A", partStatus: "Arrived" }),
+				makeRow({ id: "a1", vin: "VIN_A", status: "Arrived" }),
+				makeRow({ id: "a2", vin: "VIN_A", status: "Arrived" }),
 				// VIN_B: partial → should NOT move
-				makeRow({ id: "b1", vin: "VIN_B", partStatus: "Arrived" }),
-				makeRow({ id: "b2", vin: "VIN_B", partStatus: "Not Arrived" }),
+				makeRow({ id: "b1", vin: "VIN_B", status: "Arrived" }),
+				makeRow({ id: "b2", vin: "VIN_B", status: "Not Arrived" }),
 			],
 		} as unknown as ReturnType<typeof useOrdersQuery>);
 
@@ -151,7 +150,7 @@ describe("useAutoMoveVins", () => {
 	});
 
 	it("does not re-fire when the data reference changes but statuses are unchanged", async () => {
-		const row = makeRow({ id: "r1", vin: "VIN444", partStatus: "Not Arrived" });
+		const row = makeRow({ id: "r1", vin: "VIN444", status: "Not Arrived" });
 
 		// Configure mock before first render so the initial key is committed correctly.
 		mockUseOrdersQuery.mockReturnValue({ data: [row] } as unknown as ReturnType<

@@ -56,12 +56,23 @@ describe("inventorySlice", () => {
 		expect(state.callRowData[0].trackingId).toBe("CALL-B1");
 	});
 
-	it("should update part status correctly", () => {
+	it("should update status across inventory arrays through compatibility action", () => {
 		const store = createTestStore();
-		store.getState().setRowData([mockRow]);
+		store.setState({
+			rowData: [mockRow],
+			ordersRowData: [{ ...mockRow, id: "2", status: "Orders" }],
+			bookingRowData: [{ ...mockRow, id: "3", status: "Booking" }],
+			callRowData: [{ ...mockRow, id: "4", status: "Call" }],
+			archiveRowData: [{ ...mockRow, id: "5", status: "Archive" }],
+		});
 
-		store.getState().updatePartStatus("1", "Arrived");
+		store.getState().updatePartStatus("3", "Arrived");
 
-		expect(store.getState().rowData[0].partStatus).toBe("Arrived");
+		const state = store.getState();
+		expect(state.rowData[0].status).toBe("Orders");
+		expect(state.ordersRowData[0].status).toBe("Orders");
+		expect(state.bookingRowData[0].status).toBe("Arrived");
+		expect(state.callRowData[0].status).toBe("Call");
+		expect(state.archiveRowData[0].status).toBe("Archive");
 	});
 });

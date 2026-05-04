@@ -250,7 +250,7 @@ export const SearchToolbar = ({
 						<TooltipContent>
 							{!isSameSource && selectedCount > 0
 								? disabledReason
-								: "Update Part Status"}
+								: "Update Status"}
 						</TooltipContent>
 					</Tooltip>
 				</div>

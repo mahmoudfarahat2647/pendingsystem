@@ -335,8 +335,8 @@ export const useOrdersPageHandlers = () => {
 				id: row.id,
 				sourceStage: "orders",
 				destinationStage: "orders",
-				updates: { partStatus: status },
-				previousValues: { partStatus: row.partStatus },
+				updates: { status },
+				previousValues: { status: row.status },
 			});
 		}
 
@@ -354,7 +354,7 @@ export const useOrdersPageHandlers = () => {
 				stageRows: effectiveOrdersData,
 				editedRowId: editedRow.id,
 				editedVin: vin,
-				nextPartStatus: status,
+				nextStatus: status,
 			});
 
 			if (vinIds.length > 0) {

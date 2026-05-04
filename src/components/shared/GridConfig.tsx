@@ -24,6 +24,7 @@ export const getBaseColumns = (
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
 	isLocked?: boolean,
+	partStatuses: PartStatusDef[] = [],
 ): ColDef<PendingRow>[] => [
 	// AG Grid injects the selection checkbox column separately.
 	{
@@ -58,6 +59,7 @@ export const getBaseColumns = (
 		headerName: "STATS",
 		field: "status",
 		cellRenderer: StatusRenderer,
+		cellRendererParams: { partStatuses },
 		width: 80,
 		editable: false,
 	},
@@ -160,28 +162,13 @@ export const getOrdersColumns = (
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
 ): ColDef<PendingRow>[] => [
-	...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
-	{
-		headerName: "PART STATUS",
-		field: "partStatus",
-		width: 100,
-		minWidth: 100,
-		editable: true,
-		cellRenderer: PartStatusRenderer,
-		cellRendererParams: {
-			partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-		},
-		cellEditor: "agSelectCellEditor",
-		cellEditorParams: {
-			values:
-				Array.isArray(partStatuses) && partStatuses.length > 0
-					? partStatuses
-							.filter((s) => s && typeof s.label === "string")
-							.map((s) => s.label)
-					: [],
-		},
-		cellClass: "flex items-center justify-center",
-	},
+	...getBaseColumns(
+		onNoteClick,
+		onReminderClick,
+		onAttachClick,
+		undefined,
+		partStatuses,
+	),
 	{
 		headerName: "REQUESTER",
 		field: "requester",
@@ -196,27 +183,13 @@ export const getMainSheetColumns = (
 	onAttachClick?: (row: PendingRow) => void,
 	isLocked?: boolean,
 ): ColDef<PendingRow>[] => [
-	...getBaseColumns(onNoteClick, onReminderClick, onAttachClick, isLocked),
-	{
-		headerName: "PART STATUS",
-		field: "partStatus",
-		width: 70,
-		editable: !isLocked,
-		cellRenderer: PartStatusRenderer,
-		cellRendererParams: {
-			partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-		},
-		cellEditor: "agSelectCellEditor",
-		cellEditorParams: {
-			values:
-				Array.isArray(partStatuses) && partStatuses.length > 0
-					? partStatuses
-							.filter((s) => s && typeof s.label === "string")
-							.map((s) => s.label)
-					: [],
-		},
-		cellClass: "flex items-center justify-center",
-	},
+	...getBaseColumns(
+		onNoteClick,
+		onReminderClick,
+		onAttachClick,
+		isLocked,
+		partStatuses,
+	),
 	{
 		headerName: "REQUESTER",
 		field: "requester",
@@ -234,6 +207,8 @@ export const getBookingColumns = (
 		onNoteClick,
 		onReminderClick,
 		onAttachClick,
+		undefined,
+		partStatuses,
 	);
 	return [
 		baseColumns[0], // ACTIONS
@@ -263,18 +238,6 @@ export const getBookingColumns = (
 			cellClass: "flex items-center justify-center",
 		},
 		{
-			headerName: "PART STATUS",
-			field: "partStatus",
-			width: 100,
-			minWidth: 100,
-			editable: false,
-			cellRenderer: PartStatusRenderer,
-			cellRendererParams: {
-				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-			},
-			cellClass: "flex items-center justify-center",
-		},
-		{
 			headerName: "REQUESTER",
 			field: "requester",
 			width: 120,
@@ -292,6 +255,8 @@ export const getCallColumns = (
 		onNoteClick,
 		onReminderClick,
 		onAttachClick,
+		undefined,
+		partStatuses,
 	);
 	return [
 		...baseColumns.slice(0, 2), // Include actions and stats
@@ -302,18 +267,6 @@ export const getCallColumns = (
 					? { ...col, cellStyle: { color: "#22c55e" } }
 					: col,
 			),
-		{
-			headerName: "PART STATUS",
-			field: "partStatus",
-			width: 100,
-			minWidth: 100,
-			editable: false,
-			cellRenderer: PartStatusRenderer,
-			cellRendererParams: {
-				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-			},
-			cellClass: "flex items-center justify-center",
-		},
 		{
 			headerName: "REQUESTER",
 			field: "requester",
@@ -390,7 +343,13 @@ export const getGlobalSearchWorkspaceColumns = (
 	masterCheckboxStateRef?: React.RefObject<SearchHeaderCheckboxState>,
 	onSelectAllFiltered?: (selected: boolean) => void,
 ): ColDef<PendingRow>[] => {
-	const baseCols = getBaseColumns(onNoteClick, onReminderClick, onAttachClick);
+	const baseCols = getBaseColumns(
+		onNoteClick,
+		onReminderClick,
+		onAttachClick,
+		undefined,
+		partStatuses,
+	);
 
 	// Extract specific columns by colId/field for reuse
 	const statsCol = baseCols.find((c) => c.headerName === "STATS");
@@ -413,13 +372,13 @@ export const getGlobalSearchWorkspaceColumns = (
 		// 1. SOURCE
 		{
 			headerName: "SOURCE",
-			field: "sourceType" as any,
+			field: "sourceType" as ColDef<PendingRow>["field"],
 			width: 96,
 			minWidth: 96,
 			maxWidth: 96,
 			suppressSizeToFit: true,
 			pinned: "left" as const,
-			cellRenderer: (params: any) => {
+			cellRenderer: (params: ICellRendererParams<PendingRow, string>) => {
 				const source = params.value;
 				let colorClass = "bg-gray-500/10 text-gray-500 border-gray-500/20";
 				if (source === "Main Sheet")
@@ -523,28 +482,6 @@ export const getGlobalSearchWorkspaceColumns = (
 			headerName: "REQUESTER",
 			field: "requester",
 			width: 120,
-		},
-		// 6. PART STATUS
-		{
-			headerName: "PART STATUS",
-			field: "partStatus",
-			width: 100,
-			minWidth: 100,
-			editable: true,
-			cellRenderer: PartStatusRenderer,
-			cellRendererParams: {
-				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
-			},
-			cellEditor: "agSelectCellEditor",
-			cellEditorParams: {
-				values:
-					Array.isArray(partStatuses) && partStatuses.length > 0
-						? partStatuses
-								.filter((s) => s && typeof s.label === "string")
-								.map((s) => s.label)
-						: [],
-			},
-			cellClass: "flex items-center justify-center",
 		},
 	].filter(
 		(col) =>

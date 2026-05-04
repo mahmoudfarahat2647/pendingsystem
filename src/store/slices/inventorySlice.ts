@@ -39,13 +39,13 @@ export const createInventorySlice: StateCreator<
 	},
 
 	/**
-	 * Updates the part status of a specific row across all slices.
+	 * Updates the user-managed status of a specific row across all slices.
 	 * @param id - The ID of the row to update.
-	 * @param partStatus - The new part status value.
+	 * @param status - The new status value.
 	 */
-	updatePartStatus: (id, partStatus) => {
+	updatePartStatus: (id, status) => {
 		const updateInArray = (arr: PendingRow[]) =>
-			arr.map((row) => (row.id === id ? { ...row, partStatus } : row));
+			arr.map((row) => (row.id === id ? { ...row, status } : row));
 
 		set((state) => ({
 			rowData: updateInArray(state.rowData),

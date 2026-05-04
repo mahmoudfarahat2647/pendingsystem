@@ -44,7 +44,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 	const setIsLocked = useAppStore((state) => state.setIsLocked);
 
 	const navItems = [
-		{ id: "part-statuses", label: "Part Statuses", icon: Tag },
+		{ id: "part-statuses", label: "Statuses", icon: Tag },
 		{ id: "theme-color", label: "Theme Color", icon: Palette },
 
 		{ id: "backup-reports", label: "Backup & Reports", icon: Shield },
@@ -197,7 +197,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 					<header className="p-6 flex items-center justify-between border-b border-white/5 h-[73px]">
 						<div>
 							<h3 className="font-bold text-lg">
-								{activeTab === "part-statuses" && "Part Status Management"}
+								{activeTab === "part-statuses" && "Status Management"}
 								{activeTab === "theme-color" && "System Appearance"}
 
 								{activeTab === "backup-reports" && "Backup & Reports Settings"}

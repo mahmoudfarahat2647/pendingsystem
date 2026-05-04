@@ -375,13 +375,13 @@ describe("getVinAutoMoveIds", () => {
 				id: "1",
 				stage: "main",
 				vin: "VIN111",
-				partStatus: "Not Arrived",
+				status: "Not Arrived",
 			}),
 			createMockRow({
 				id: "2",
 				stage: "main",
 				vin: "VIN111",
-				partStatus: "Arrived",
+				status: "Arrived",
 			}),
 		];
 
@@ -391,7 +391,7 @@ describe("getVinAutoMoveIds", () => {
 				stageRows: rows,
 				editedRowId: "1",
 				editedVin: "VIN111",
-				nextPartStatus: "Arrived",
+				nextStatus: "Arrived",
 			}),
 		).toEqual(["1", "2"]);
 	});
@@ -402,13 +402,13 @@ describe("getVinAutoMoveIds", () => {
 				id: "1",
 				stage: "orders",
 				vin: "VIN111",
-				partStatus: "Not Arrived",
+				status: "Not Arrived",
 			}),
 			createMockRow({
 				id: "2",
 				stage: "orders",
 				vin: "VIN111",
-				partStatus: "Backordered",
+				status: "Backordered",
 			}),
 		];
 
@@ -418,7 +418,7 @@ describe("getVinAutoMoveIds", () => {
 				stageRows: rows,
 				editedRowId: "1",
 				editedVin: "VIN111",
-				nextPartStatus: "Arrived",
+				nextStatus: "Arrived",
 			}),
 		).toEqual([]);
 	});
@@ -429,13 +429,13 @@ describe("getVinAutoMoveIds", () => {
 				id: "1",
 				stage: " main ",
 				vin: " vin111 ",
-				partStatus: "not arrived",
+				status: "not arrived",
 			}),
 			createMockRow({
 				id: "2",
 				stage: "MAIN",
 				vin: "VIN111",
-				partStatus: " arrived ",
+				status: " arrived ",
 			}),
 		];
 
@@ -445,7 +445,7 @@ describe("getVinAutoMoveIds", () => {
 				stageRows: rows,
 				editedRowId: "1",
 				editedVin: " vin111 ",
-				nextPartStatus: " arrived ",
+				nextStatus: " arrived ",
 			}),
 		).toEqual(["1", "2"]);
 	});
@@ -456,7 +456,7 @@ describe("getVinAutoMoveIds", () => {
 				id: "1",
 				stage: "main",
 				vin: "",
-				partStatus: "Arrived",
+				status: "Arrived",
 			}),
 		];
 
@@ -466,7 +466,7 @@ describe("getVinAutoMoveIds", () => {
 				stageRows: rows,
 				editedRowId: "1",
 				editedVin: "   ",
-				nextPartStatus: "Arrived",
+				nextStatus: "Arrived",
 			}),
 		).toEqual([]);
 	});
@@ -477,7 +477,7 @@ describe("getVinAutoMoveIds", () => {
 				id: "1",
 				stage: "main",
 				vin: "VIN111",
-				partStatus: "Not Arrived",
+				status: "Not Arrived",
 			}),
 		];
 
@@ -487,7 +487,7 @@ describe("getVinAutoMoveIds", () => {
 				stageRows: rows,
 				editedRowId: "1",
 				editedVin: "VIN111",
-				nextPartStatus: "Backordered",
+				nextStatus: "Backordered",
 			}),
 		).toEqual([]);
 	});
@@ -498,7 +498,7 @@ describe("getVinAutoMoveIds", () => {
 				id: "1",
 				stage: "booking",
 				vin: "VIN111",
-				partStatus: "Arrived",
+				status: "Arrived",
 			}),
 		];
 
@@ -508,7 +508,7 @@ describe("getVinAutoMoveIds", () => {
 				stageRows: rows,
 				editedRowId: "1",
 				editedVin: "VIN111",
-				nextPartStatus: "Arrived",
+				nextStatus: "Arrived",
 			}),
 		).toEqual([]);
 	});
@@ -519,19 +519,19 @@ describe("getVinAutoMoveIds", () => {
 				id: "1",
 				stage: "orders",
 				vin: "VIN111",
-				partStatus: "Not Arrived",
+				status: "Not Arrived",
 			}),
 			createMockRow({
 				id: "2",
 				stage: "orders",
 				vin: "VIN111",
-				partStatus: "Arrived",
+				status: "Arrived",
 			}),
 			createMockRow({
 				id: "3",
 				stage: "call",
 				vin: "VIN111",
-				partStatus: "Not Arrived",
+				status: "Not Arrived",
 			}),
 		];
 
@@ -541,7 +541,7 @@ describe("getVinAutoMoveIds", () => {
 				stageRows: rows,
 				editedRowId: "1",
 				editedVin: "VIN111",
-				nextPartStatus: "Arrived",
+				nextStatus: "Arrived",
 			}),
 		).toEqual(["1", "2"]);
 	});
@@ -552,7 +552,7 @@ describe("getVinAutoMoveIds", () => {
 				id: "1",
 				stage: "main",
 				vin: "VIN111",
-				partStatus: "Not Arrived",
+				status: "Not Arrived",
 			}),
 		];
 
@@ -562,7 +562,7 @@ describe("getVinAutoMoveIds", () => {
 				stageRows: rows,
 				editedRowId: "1",
 				editedVin: "VIN111",
-				nextPartStatus: "Arrived",
+				nextStatus: "Arrived",
 			}),
 		).toEqual(["1"]);
 	});
@@ -756,9 +756,9 @@ describe("filterReservedRows", () => {
 		{ id: "not_arrived", label: "Not Arrived" },
 	];
 
-	it("returns only rows whose partStatus matches the reserve label", () => {
-		const reservedRow = createMockRow({ id: "1", partStatus: "Reserve" });
-		const otherRow = createMockRow({ id: "2", partStatus: "Arrived" });
+	it("returns only rows whose status matches the reserve label", () => {
+		const reservedRow = createMockRow({ id: "1", status: "Reserve" });
+		const otherRow = createMockRow({ id: "2", status: "Arrived" });
 		const result = filterReservedRows(
 			[reservedRow, otherRow],
 			defaultPartStatuses,
@@ -771,24 +771,24 @@ describe("filterReservedRows", () => {
 			{ id: "reserve", label: "Reserved" },
 			{ id: "arrived", label: "Arrived" },
 		];
-		const reservedRow = createMockRow({ id: "1", partStatus: "Reserved" });
-		const otherRow = createMockRow({ id: "2", partStatus: "Reserve" });
+		const reservedRow = createMockRow({ id: "1", status: "Reserved" });
+		const otherRow = createMockRow({ id: "2", status: "Reserve" });
 		const result = filterReservedRows([reservedRow, otherRow], renamedStatuses);
 		expect(result).toEqual([reservedRow]);
 	});
 
 	it("is case-insensitive and trim-tolerant", () => {
-		const row = createMockRow({ id: "1", partStatus: "  reserve  " });
+		const row = createMockRow({ id: "1", status: "  reserve  " });
 		const result = filterReservedRows([row], defaultPartStatuses);
 		expect(result).toEqual([row]);
 	});
 
 	it("ignores rows with non-reserve statuses in a mixed selection", () => {
 		const rows = [
-			createMockRow({ id: "1", partStatus: "Reserve" }),
-			createMockRow({ id: "2", partStatus: "Arrived" }),
-			createMockRow({ id: "3", partStatus: "Not Arrived" }),
-			createMockRow({ id: "4", partStatus: "Reserve" }),
+			createMockRow({ id: "1", status: "Reserve" }),
+			createMockRow({ id: "2", status: "Arrived" }),
+			createMockRow({ id: "3", status: "Not Arrived" }),
+			createMockRow({ id: "4", status: "Reserve" }),
 		];
 		const result = filterReservedRows(rows, defaultPartStatuses);
 		expect(result.map((r) => r.id)).toEqual(["1", "4"]);
@@ -796,15 +796,15 @@ describe("filterReservedRows", () => {
 
 	it("returns an empty array when no selected rows qualify", () => {
 		const rows = [
-			createMockRow({ id: "1", partStatus: "Arrived" }),
-			createMockRow({ id: "2", partStatus: "Not Arrived" }),
+			createMockRow({ id: "1", status: "Arrived" }),
+			createMockRow({ id: "2", status: "Not Arrived" }),
 		];
 		expect(filterReservedRows(rows, defaultPartStatuses)).toEqual([]);
 	});
 
 	it("returns an empty array when the reserve status definition is absent", () => {
 		const noReserveStatuses = [{ id: "arrived", label: "Arrived" }];
-		const row = createMockRow({ id: "1", partStatus: "Arrived" });
+		const row = createMockRow({ id: "1", status: "Arrived" });
 		expect(filterReservedRows([row], noReserveStatuses)).toEqual([]);
 	});
 

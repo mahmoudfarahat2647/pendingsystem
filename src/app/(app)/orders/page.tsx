@@ -181,7 +181,7 @@ export default function OrdersPage() {
 								onSelectionChange={setSelectedRows}
 								onCellValueChanged={async (params) => {
 									if (
-										params.colDef.field === "partStatus" &&
+										params.colDef.field === "status" &&
 										params.newValue !== params.oldValue
 									) {
 										const newStatus = params.newValue;
@@ -189,7 +189,7 @@ export default function OrdersPage() {
 
 										// 1. Persist the change
 										await handleUpdateOrder(params.data.id, {
-											partStatus: newStatus,
+											status: newStatus,
 										});
 
 										// 2. Check for auto-move to Call List
@@ -198,7 +198,7 @@ export default function OrdersPage() {
 											stageRows: ordersRowData,
 											editedRowId: params.data.id,
 											editedVin: vin,
-											nextPartStatus: newStatus,
+											nextStatus: newStatus,
 										});
 
 										if (vinIds.length > 0) {
