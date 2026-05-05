@@ -264,7 +264,7 @@ export default function MobileOrderPage() {
 
 				{/* Parts */}
 				<div className="space-y-2">
-					<label className="text-sm font-medium">Parts</label>
+					<p className="text-sm font-medium">Parts</p>
 					{parts.map((part, i) => (
 						<div key={part.id} className="flex gap-2 items-start">
 							<input
