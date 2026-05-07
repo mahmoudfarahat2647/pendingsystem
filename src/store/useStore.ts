@@ -9,7 +9,7 @@ import { createInventorySlice } from "./slices/inventorySlice";
 import { createNotificationSlice } from "./slices/notificationSlice";
 import { createOrdersSlice } from "./slices/ordersSlice";
 import { createReportSettingsSlice } from "./slices/reportSettingsSlice";
-import { createUISlice } from "./slices/uiSlice";
+import { createUISlice, defaultPartStatuses } from "./slices/uiSlice";
 import type { CombinedStore } from "./types";
 
 export const useAppStore = create<CombinedStore>()(
@@ -26,7 +26,16 @@ export const useAppStore = create<CombinedStore>()(
 		}),
 		{
 			name: "pending-sys-storage-v1.1",
-			// SSR-safe storage: Only access localStorage in browser environment
+			version: 1,
+			// Migrate v0 (pre-static-colors) → v1: reset partStatuses to new locked defaults
+			// while preserving all other persisted data (templates, notes, grid layouts, etc.)
+			migrate: (persistedState: unknown, version: number) => {
+				if (version === 0) {
+					const old = persistedState as Record<string, unknown>;
+					return { ...old, partStatuses: defaultPartStatuses };
+				}
+				return persistedState;
+			},
 			storage: createJSONStorage(() =>
 				typeof window !== "undefined"
 					? localStorage
@@ -36,10 +45,7 @@ export const useAppStore = create<CombinedStore>()(
 							removeItem: () => {},
 						},
 			),
-			// Optimize: Only persist critical UI preferences to reduce localStorage overhead
-			// This reduces initial load state from ~100KB to ~1KB
 			partialize: (state) => ({
-				// Persist UI preferences and reference data
 				partStatuses: state.partStatuses,
 				bookingStatuses: state.bookingStatuses,
 				noteTemplates: state.noteTemplates,

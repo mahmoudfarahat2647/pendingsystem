@@ -14,6 +14,15 @@ import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
 import { ColorPicker } from "../ColorPicker";
 
+// IDs whose color and label are locked when lockColors is true.
+const LOCKED_BUILT_IN_IDS = new Set([
+	"no_stats",
+	"hold",
+	"reserve",
+	"branch",
+	"arrive",
+]);
+
 interface StatusManagementSectionProps {
 	title: string;
 	managedTitle: string;
@@ -23,6 +32,7 @@ interface StatusManagementSectionProps {
 	onRemove: (id: string) => void;
 	checkUsage: (label: string) => number;
 	isLocked: boolean;
+	lockColors?: boolean;
 }
 
 export const StatusManagementSection = ({
@@ -34,6 +44,7 @@ export const StatusManagementSection = ({
 	onRemove,
 	checkUsage,
 	isLocked,
+	lockColors = false,
 }: StatusManagementSectionProps) => {
 	const [newLabel, setNewLabel] = useState("");
 	const [selectedColor, setSelectedColor] = useState("#10b981");
@@ -140,7 +151,11 @@ export const StatusManagementSection = ({
 										/>
 									</div>
 									<div className="flex justify-between items-center">
-										<ColorPicker color={editColor} onChange={setEditColor} />
+										{lockColors && LOCKED_BUILT_IN_IDS.has(editingId ?? "") ? (
+											<div />
+										) : (
+											<ColorPicker color={editColor} onChange={setEditColor} />
+										)}
 										<div className="flex gap-2">
 											<Button
 												size="sm"
@@ -165,6 +180,9 @@ export const StatusManagementSection = ({
 								</div>
 							);
 						}
+
+						const isLockedBuiltIn =
+							lockColors && LOCKED_BUILT_IN_IDS.has(status.id);
 
 						return (
 							<div
@@ -193,48 +211,50 @@ export const StatusManagementSection = ({
 									)}
 								</div>
 
-								<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-									<Button
-										variant="ghost"
-										size="icon"
-										onClick={() => startEditing(status)}
-										disabled={isLocked}
-										className="h-9 w-9 text-gray-500 hover:text-white hover:bg-white/10 rounded-xl"
-									>
-										<Pencil className="h-4 w-4" />
-									</Button>
+								{!isLockedBuiltIn && (
+									<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+										<Button
+											variant="ghost"
+											size="icon"
+											onClick={() => startEditing(status)}
+											disabled={isLocked}
+											className="h-9 w-9 text-gray-500 hover:text-white hover:bg-white/10 rounded-xl"
+										>
+											<Pencil className="h-4 w-4" />
+										</Button>
 
-									<TooltipProvider>
-										<Tooltip>
-											<TooltipTrigger asChild>
-												<span>
-													<Button
-														variant="ghost"
-														size="icon"
-														onClick={() => onRemove(status.id)}
-														disabled={isLocked || !isDeletable}
-														className={cn(
-															"h-9 w-9 rounded-xl transition-all",
-															!isDeletable
-																? "text-gray-600 cursor-not-allowed"
-																: "text-gray-500 hover:text-red-400 hover:bg-red-400/10",
-														)}
-													>
-														<Trash2 className="h-4 w-4" />
-													</Button>
-												</span>
-											</TooltipTrigger>
-											{!isDeletable && (
-												<TooltipContent>
-													<p>
-														Cannot delete: Currently used by {usageCount} item
-														{usageCount !== 1 ? "s" : ""}
-													</p>
-												</TooltipContent>
-											)}
-										</Tooltip>
-									</TooltipProvider>
-								</div>
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<span>
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => onRemove(status.id)}
+															disabled={isLocked || !isDeletable}
+															className={cn(
+																"h-9 w-9 rounded-xl transition-all",
+																!isDeletable
+																	? "text-gray-600 cursor-not-allowed"
+																	: "text-gray-500 hover:text-red-400 hover:bg-red-400/10",
+															)}
+														>
+															<Trash2 className="h-4 w-4" />
+														</Button>
+													</span>
+												</TooltipTrigger>
+												{!isDeletable && (
+													<TooltipContent>
+														<p>
+															Cannot delete: Currently used by {usageCount} item
+															{usageCount !== 1 ? "s" : ""}
+														</p>
+													</TooltipContent>
+												)}
+											</Tooltip>
+										</TooltipProvider>
+									</div>
+								)}
 							</div>
 						);
 					})}

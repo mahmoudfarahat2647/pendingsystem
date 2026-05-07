@@ -5,12 +5,21 @@ import type { CombinedStore, UIActions, UIState } from "../types";
 
 export const PROTECTED_REPAIR_SYSTEMS = ["ضمان"];
 
-const defaultPartStatuses = [
+// Built-in part-status IDs whose colors are locked — UI must not allow editing these.
+const BUILT_IN_PART_STATUS_IDS = new Set([
+	"no_stats",
+	"hold",
+	"reserve",
+	"branch",
+	"arrive",
+]);
+
+export const defaultPartStatuses = [
 	{ id: "no_stats", label: "Pending", color: "" },
-	{ id: "hold", label: "Hold", color: "#f59e0b" },
-	{ id: "reserve", label: "Reserve", color: "#10b981" },
-	{ id: "branch", label: "Branch", color: "#3b82f6" },
-	{ id: "arrive", label: "Arrived", color: "#8b5cf6" },
+	{ id: "hold", label: "Hold", color: "#3b82f6" },
+	{ id: "reserve", label: "Reserve", color: "#8b5cf6" },
+	{ id: "branch", label: "Branch", color: "#92400e" },
+	{ id: "arrive", label: "Arrived", color: "#10b981" },
 ];
 
 const defaultBookingStatuses = [
@@ -131,12 +140,20 @@ export const createUISlice: StateCreator<
 		const statusToUpdate = state.partStatuses.find((s) => s.id === id);
 		if (!statusToUpdate) return;
 
+		// Built-in statuses have locked colors — strip any incoming color change.
+		const safeUpdates = BUILT_IN_PART_STATUS_IDS.has(id)
+			? (() => {
+					const { color: _color, ...rest } = updates;
+					return rest;
+				})()
+			: updates;
+
 		const oldLabel = statusToUpdate.label;
-		const newLabel = updates.label;
+		const newLabel = safeUpdates.label;
 
 		set((state) => ({
 			partStatuses: state.partStatuses.map((s) =>
-				s.id === id ? { ...s, ...updates } : s,
+				s.id === id ? { ...s, ...safeUpdates } : s,
 			),
 		}));
 

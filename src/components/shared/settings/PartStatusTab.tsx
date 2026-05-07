@@ -49,6 +49,7 @@ export const PartStatusTab = ({ isLocked }: PartStatusTabProps) => {
 			onRemove={removePartStatusDef}
 			checkUsage={getPartStatusUsage}
 			isLocked={isLocked}
+			lockColors
 		/>
 	);
 };
