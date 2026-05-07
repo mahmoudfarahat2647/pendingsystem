@@ -13,6 +13,7 @@ import type { PartStatusDef, PendingRow } from "@/types";
 
 import { ActionCellRenderer } from "../grid/renderers/ActionCellRenderer";
 import { CompanyLogoRenderer } from "../grid/renderers/CompanyLogoRenderer";
+import { MobileCellRenderer } from "../grid/renderers/MobileCellRenderer";
 import { PartStatusRenderer } from "../grid/renderers/PartStatusRenderer";
 import { StatusRenderer } from "../grid/renderers/StatusRenderer";
 import { VinCellRenderer } from "../grid/renderers/VinCellRenderer";
@@ -110,7 +111,8 @@ export const getBaseColumns = (
 	{
 		headerName: "MOBILE",
 		field: "mobile",
-		width: 110,
+		width: 130,
+		cellRenderer: MobileCellRenderer,
 	},
 	{
 		headerName: "CNTR RDG",
