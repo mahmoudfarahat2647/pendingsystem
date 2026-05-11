@@ -11,9 +11,9 @@ import {
 	Trash2,
 	X,
 } from "lucide-react";
-import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -23,12 +23,10 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-	type AttachmentValue,
 	buildStorageObjectPath,
 	getAttachmentsBucket,
+	isAtAttachmentLimit,
 	isSupportedAttachmentFile,
 	isValidFileSize,
 	sanitizeAttachmentLink,
@@ -39,11 +37,32 @@ import { cn } from "@/lib/utils";
 interface EditAttachmentModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onSave: (value: AttachmentValue) => Promise<unknown> | unknown;
+	onSave: (filePaths: string[], link: string) => Promise<unknown> | unknown;
 	orderId?: string;
+	initialFilePaths?: string[];
 	initialLink?: string;
-	initialFilePath?: string;
-	allowUpload: boolean;
+	allowUpload?: boolean;
+}
+
+function getFileName(path: string): string {
+	return path.split("/").pop() || path;
+}
+
+function getPublicUrl(path: string): string {
+	try {
+		const supabase = getSupabaseBrowserClient();
+		const bucket = getAttachmentsBucket();
+		return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+	} catch {
+		return "";
+	}
+}
+
+async function deleteFromStorage(path: string): Promise<void> {
+	const supabase = getSupabaseBrowserClient();
+	const bucket = getAttachmentsBucket();
+	const { error } = await supabase.storage.from(bucket).remove([path]);
+	if (error) throw new Error(error.message);
 }
 
 export const EditAttachmentModal = ({
@@ -51,558 +70,418 @@ export const EditAttachmentModal = ({
 	onOpenChange,
 	onSave,
 	orderId,
+	initialFilePaths,
 	initialLink,
-	initialFilePath,
-	allowUpload,
+	allowUpload = true,
 }: EditAttachmentModalProps) => {
-	const [linkValue, setLinkValue] = useState("");
-	const [selectedFile, setSelectedFile] = useState<File | null>(null);
-	const [isDragging, setIsDragging] = useState(false);
-	const [isUploading, setIsUploading] = useState(false);
-	const [hasCopied, setHasCopied] = useState(false);
-	const [fileMarkedForRemoval, setFileMarkedForRemoval] = useState(false);
-	const [confirmTarget, setConfirmTarget] = useState<"file" | "link" | null>(
+	// Working pill list — what will be passed to onSave
+	const [paths, setPaths] = useState<string[]>([]);
+	// Committed files the user removed — deleted from storage after successful save
+	const [removedPaths, setRemovedPaths] = useState<string[]>([]);
+	// Paths uploaded during this session — cleaned up on cancel
+	const [sessionUploads, setSessionUploads] = useState<string[]>([]);
+	const [uploadingFileName, setUploadingFileName] = useState<string | null>(
 		null,
 	);
+	const [isDragging, setIsDragging] = useState(false);
+	const [isSaving, setIsSaving] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [link, setLink] = useState("");
+	const [hasCopied, setHasCopied] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
-	const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
 		if (!open) return;
-
-		setLinkValue(initialLink || "");
-		setSelectedFile(null);
+		setPaths(initialFilePaths ?? ([] as string[]));
+		setRemovedPaths([]);
+		setSessionUploads([]);
+		setUploadingFileName(null);
 		setIsDragging(false);
-		setIsUploading(false);
+		setIsSaving(false);
+		setError(null);
+		setLink(initialLink ?? "");
 		setHasCopied(false);
-		setFileMarkedForRemoval(false);
-		setConfirmTarget(null);
+		if (fileInputRef.current) fileInputRef.current.value = "";
+	}, [open, initialFilePaths, initialLink]);
 
-		if (fileInputRef.current) {
-			fileInputRef.current.value = "";
-		}
-	}, [open, initialFilePath, initialLink]);
+	const atLimit = isAtAttachmentLimit(paths);
+	const isUploading = uploadingFileName !== null;
+	const dropzoneDisabled = !allowUpload || isUploading || isSaving || atLimit;
 
-	useEffect(() => {
-		return () => {
-			if (copyTimeoutRef.current) {
-				clearTimeout(copyTimeoutRef.current);
-			}
-		};
-	}, []);
-
-	const existingFilePath = fileMarkedForRemoval ? "" : initialFilePath || "";
-	const existingFileName = existingFilePath.split("/").pop() || "";
-	const selectedFileName = selectedFile?.name || "";
-	const dropzoneDisabled = !allowUpload || isUploading;
-	const canSave = Boolean(
-		linkValue.trim() ||
-			existingFilePath ||
-			selectedFile ||
-			initialLink?.trim() ||
-			initialFilePath,
-	);
-
-	const currentFileUrl = useMemo(() => {
-		if (!existingFilePath) return "";
-		try {
-			const supabase = getSupabaseBrowserClient();
-			const bucket = getAttachmentsBucket();
-			return supabase.storage.from(bucket).getPublicUrl(existingFilePath).data
-				.publicUrl;
-		} catch {
-			return "";
-		}
-	}, [existingFilePath]);
-
-	const resetFileInput = () => {
-		if (fileInputRef.current) {
-			fileInputRef.current.value = "";
-		}
-	};
-
-	const validateFile = (file: File): boolean => {
-		if (!isSupportedAttachmentFile(file)) {
-			toast.error("Only JPG, PNG, and PDF files are supported.");
-			return false;
-		}
-
-		if (!isValidFileSize(file)) {
-			toast.error("File size must be 5MB or less.");
-			return false;
-		}
-
-		return true;
-	};
-
-	const queueFile = (file: File) => {
-		if (!validateFile(file)) {
-			resetFileInput();
-			return;
-		}
-
-		setSelectedFile(file);
-		setFileMarkedForRemoval(Boolean(initialFilePath));
-	};
-
-	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const file = event.target.files?.[0];
-		if (!file) return;
-		queueFile(file);
-	};
-
-	const handleDrop = (event: React.DragEvent<HTMLButtonElement>) => {
-		event.preventDefault();
-		if (dropzoneDisabled) return;
-
-		setIsDragging(false);
-		const file = event.dataTransfer.files?.[0];
-		if (!file) return;
-		queueFile(file);
-	};
-
-	const handleLinkChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = event.target.value;
-
-		// Prevent clearing the external link manually via keyboard (e.g. backspace/delete).
-		// Must use the trash icon to delete the link.
-		if (linkValue && !newValue.trim()) {
-			return;
-		}
-
-		setLinkValue(sanitizeAttachmentLink(newValue));
-	};
-
-	const handleLinkPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
-		event.preventDefault();
-		const pastedText = event.clipboardData.getData("text");
-		setLinkValue(sanitizeAttachmentLink(pastedText));
-	};
-
-	const handleCopy = async () => {
-		const valueToCopy = linkValue.trim();
-		if (!valueToCopy) return;
-
-		try {
-			await navigator.clipboard.writeText(valueToCopy);
-			setHasCopied(true);
-			if (copyTimeoutRef.current) {
-				clearTimeout(copyTimeoutRef.current);
-			}
-			copyTimeoutRef.current = setTimeout(() => setHasCopied(false), 1600);
-		} catch (error) {
-			console.error("Failed to copy attachment link", error);
-			toast.error("Failed to copy attachment link.");
-		}
-	};
-
-	const deleteStoredFile = async (path: string) => {
-		const supabase = getSupabaseBrowserClient();
-		const bucket = getAttachmentsBucket();
-		const { error } = await supabase.storage.from(bucket).remove([path]);
-
-		if (error) {
-			throw new Error(error.message);
-		}
-	};
-
-	const uploadFile = async (file: File) => {
-		if (!orderId) {
-			throw new Error("File upload requires an existing order.");
-		}
-
+	const uploadFile = async (file: File): Promise<string> => {
+		if (!orderId) throw new Error("File upload requires an existing order.");
 		const supabase = getSupabaseBrowserClient();
 		const bucket = getAttachmentsBucket();
 		const objectPath = buildStorageObjectPath(orderId, file);
-		const { error } = await supabase.storage
+		const { error: uploadError } = await supabase.storage
 			.from(bucket)
-			.upload(objectPath, file, {
-				upsert: true,
-				contentType: file.type,
-			});
-
-		if (error) {
-			throw new Error(error.message);
-		}
-
+			.upload(objectPath, file, { upsert: true, contentType: file.type });
+		if (uploadError) throw new Error(uploadError.message);
 		return objectPath;
 	};
 
-	const handleOpenExistingFile = () => {
-		if (!currentFileUrl) return;
-		window.open(currentFileUrl, "_blank", "noopener,noreferrer");
+	const processFiles = async (files: FileList | File[]) => {
+		const fileArray = Array.from(files);
+		setError(null);
+		let currentCount = paths.length;
+
+		for (const file of fileArray) {
+			if (currentCount >= 5) {
+				toast.error("Maximum 5 files reached.");
+				break;
+			}
+			if (!isSupportedAttachmentFile(file)) {
+				setError("Only JPG, PNG, and PDF files are supported.");
+				continue;
+			}
+			if (!isValidFileSize(file)) {
+				setError("File size must be 5 MB or less.");
+				continue;
+			}
+			setUploadingFileName(file.name);
+			try {
+				const path = await uploadFile(file);
+				setPaths((prev) => [...prev, path]);
+				setSessionUploads((prev) => [...prev, path]);
+				currentCount++;
+			} catch (err) {
+				const msg = err instanceof Error ? err.message : "Upload failed.";
+				toast.error(`Failed to upload "${file.name}": ${msg}`);
+			} finally {
+				setUploadingFileName(null);
+				if (fileInputRef.current) fileInputRef.current.value = "";
+			}
+		}
 	};
 
-	const executeSave = async () => {
-		if (isUploading) return;
+	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const files = e.target.files;
+		if (!files || files.length === 0) return;
+		await processFiles(files);
+	};
 
-		const sanitizedLink = linkValue.trim()
-			? sanitizeAttachmentLink(linkValue)
-			: undefined;
+	const handleDrop = async (e: React.DragEvent<HTMLButtonElement>) => {
+		e.preventDefault();
+		if (dropzoneDisabled) return;
+		setIsDragging(false);
+		const files = e.dataTransfer.files;
+		if (!files || files.length === 0) return;
+		await processFiles(files);
+	};
 
-		try {
-			setIsUploading(true);
-
-			let nextFilePath = existingFilePath || undefined;
-			const shouldDeleteExistingFile =
-				Boolean(initialFilePath) &&
-				(fileMarkedForRemoval || (!selectedFile && !existingFilePath));
-
-			let newlyUploadedFilePath: string | undefined;
-
-			if (selectedFile) {
-				nextFilePath = await uploadFile(selectedFile);
-				newlyUploadedFilePath = nextFilePath;
-			} else if (shouldDeleteExistingFile) {
-				nextFilePath = undefined;
-			}
-
+	const handleRemove = async (path: string) => {
+		setPaths((prev) => prev.filter((p) => p !== path));
+		if (sessionUploads.includes(path)) {
+			// Already in storage — delete immediately since the user never saved it
+			setSessionUploads((prev) => prev.filter((p) => p !== path));
 			try {
-				await onSave({
-					attachmentLink: sanitizedLink,
-					attachmentFilePath: nextFilePath,
-				});
-			} catch (saveError) {
-				if (newlyUploadedFilePath) {
-					try {
-						await deleteStoredFile(newlyUploadedFilePath);
-					} catch (cleanupError) {
-						console.error(
-							"Failed to delete orphaned file after save error",
-							cleanupError,
-						);
-					}
-				}
-				throw saveError;
+				await deleteFromStorage(path);
+			} catch {
+				// Non-fatal: orphaned file, storage cleanup can handle it
 			}
+		} else {
+			// Was a previously saved file — defer storage deletion until after save
+			setRemovedPaths((prev) => [...prev, path]);
+		}
+	};
 
-			if (
-				initialFilePath &&
-				(selectedFile || shouldDeleteExistingFile) &&
-				initialFilePath !== nextFilePath
-			) {
+	const handleCancel = async () => {
+		if (isSaving) return;
+		// Clean up files uploaded during this session that were never saved
+		const toClean = [...sessionUploads];
+		if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+		onOpenChange(false);
+		for (const path of toClean) {
+			try {
+				await deleteFromStorage(path);
+			} catch {
+				// Best effort
+			}
+		}
+	};
+
+	const handleSave = async () => {
+		if (isSaving || isUploading) return;
+		setIsSaving(true);
+		try {
+			await onSave(paths, link);
+			// After successful save, clean up removed committed files from storage
+			for (const path of removedPaths) {
 				try {
-					await deleteStoredFile(initialFilePath);
-				} catch (deleteError) {
-					console.error("Failed to delete old attachment file", deleteError);
+					await deleteFromStorage(path);
+				} catch {
+					// Best effort — don't fail the save over storage cleanup
 				}
 			}
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : "Failed to save attachment.";
-			console.error("Attachment modal save failed", error);
-			toast.error(message);
+		} catch (err) {
+			const msg =
+				err instanceof Error ? err.message : "Failed to save attachments.";
+			toast.error(msg);
 		} finally {
-			setIsUploading(false);
+			setIsSaving(false);
 		}
 	};
 
 	return (
-		<>
-			<Dialog open={open} onOpenChange={onOpenChange}>
-				<DialogContent
-					hideClose={true}
-					className="overflow-hidden border border-white/10 bg-[#151517] p-0 text-slate-200 shadow-2xl shadow-black/50 sm:max-w-[420px] rounded-2xl"
-				>
-					<DialogHeader className="border-b border-white/5 bg-white/[0.02] px-4 py-3">
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-2.5">
-								<div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/10">
-									<Paperclip className="h-4 w-4 text-indigo-400" />
-								</div>
-								<DialogTitle className="text-base font-medium text-white">
-									Attachments
-								</DialogTitle>
-							</div>
-							<div className="flex items-center gap-1">
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon"
-									onClick={() => onOpenChange(false)}
-									className="h-8 w-8 rounded-full text-slate-500 hover:bg-white/10 hover:text-white"
-									disabled={isUploading}
-								>
-									<X className="h-4 w-4" />
-									<span className="sr-only">Close attachment modal</span>
-								</Button>
-							</div>
-						</div>
-						<DialogDescription className="sr-only">
-							Attach a file or save an external file path for this order.
-						</DialogDescription>
-					</DialogHeader>
-
-					<div className="min-w-0 space-y-4 p-4 text-sm bg-[#121214]">
-						{/* Dropzone */}
-						<button
-							type="button"
-							className={cn(
-								"group relative flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-[#161618] py-8 text-center transition-all",
-								!dropzoneDisabled &&
-									"hover:border-indigo-500/30 hover:bg-indigo-500/5",
-								isDragging && "border-indigo-500 bg-indigo-500/10",
-								dropzoneDisabled &&
-									"cursor-not-allowed opacity-50 pointer-events-none",
-							)}
-							onClick={() => fileInputRef.current?.click()}
-							onDragOver={(event) => {
-								event.preventDefault();
-								if (!dropzoneDisabled) {
-									setIsDragging(true);
-								}
-							}}
-							onDragLeave={() => setIsDragging(false)}
-							onDrop={handleDrop}
-							disabled={dropzoneDisabled}
-						>
-							<div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none rounded-xl" />
-							<Label htmlFor="file-upload" className="sr-only">
-								Upload file
-							</Label>
-							<input
-								id="file-upload"
-								ref={fileInputRef}
-								type="file"
-								className="hidden"
-								accept=".jpg,.jpeg,.png,.pdf"
-								onChange={handleFileChange}
-								disabled={dropzoneDisabled}
-							/>
-
-							<div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/5 shadow-inner ring-1 ring-white/10 transition-all group-hover:bg-indigo-500/20 group-hover:ring-indigo-500/30">
-								<Folder className="h-5 w-5 text-slate-400 transition-colors group-hover:text-indigo-300" />
-							</div>
-
-							<p className="text-sm font-medium text-slate-200">
-								Upload Image or PDF
-							</p>
-							<p className="mt-1 text-xs text-slate-500">
-								Drag and drop or click to browse
-							</p>
-						</button>
-
-						{selectedFile && (
-							<div className="overflow-hidden flex items-center justify-between rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-3">
-								<div className="flex flex-1 items-center gap-3 overflow-hidden min-w-0">
-									<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-indigo-500/20">
-										<File className="h-4 w-4 text-indigo-300" />
-									</div>
-									<div className="min-w-0 flex-1 space-y-0.5 text-left">
-										<p className="truncate text-sm font-medium text-slate-200">
-											{selectedFileName}
-										</p>
-										<p className="text-[11px] text-indigo-200/50">
-											{(selectedFile.size / 1024 / 1024).toFixed(2)} MB • Ready
-											to save
-										</p>
-									</div>
-								</div>
-								<div className="flex items-center gap-1">
-									<Button
-										type="button"
-										variant="ghost"
-										size="sm"
-										onClick={(e) => {
-											e.stopPropagation();
-											const url = URL.createObjectURL(selectedFile);
-											window.open(url, "_blank", "noopener,noreferrer");
-										}}
-										className="h-7 px-2 text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-white"
-										disabled={isUploading}
-									>
-										<ExternalLink className="mr-1.5 h-3 w-3" />
-										Open
-									</Button>
-									<Button
-										type="button"
-										variant="ghost"
-										size="sm"
-										onClick={(e) => {
-											e.stopPropagation();
-											setSelectedFile(null);
-											setFileMarkedForRemoval(false);
-											resetFileInput();
-										}}
-										className="h-7 px-2 text-xs font-medium text-slate-400 hover:text-white"
-										disabled={isUploading}
-									>
-										Remove
-									</Button>
-								</div>
-							</div>
-						)}
-
-						{!selectedFile && existingFilePath && (
-							<div className="overflow-hidden flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-3">
-								<div className="flex flex-1 items-center gap-3 overflow-hidden text-left min-w-0">
-									<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/10">
-										<File className="h-4 w-4 text-slate-300" />
-									</div>
-									<div className="min-w-0 flex-1 space-y-0.5">
-										<p className="truncate text-sm font-medium text-slate-200">
-											{existingFileName}
-										</p>
-										<p className="text-[11px] text-slate-500">
-											Saved in attachments
-										</p>
-									</div>
-								</div>
-								<div className="flex items-center gap-1">
-									<Button
-										type="button"
-										variant="ghost"
-										size="icon"
-										onClick={(e) => {
-											e.stopPropagation();
-											setConfirmTarget("file");
-										}}
-										className="h-7 w-7 text-slate-400 hover:bg-red-500/10 hover:text-red-400"
-										disabled={isUploading}
-									>
-										<Trash2 className="h-3.5 w-3.5" />
-										<span className="sr-only">Delete stored file</span>
-									</Button>
-									<Button
-										type="button"
-										variant="ghost"
-										size="sm"
-										onClick={handleOpenExistingFile}
-										className="h-7 px-2 text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-white"
-									>
-										<ExternalLink className="mr-1.5 h-3 w-3" />
-										Open
-									</Button>
-								</div>
-							</div>
-						)}
-
-						<div className="space-y-2">
-							<div className="flex items-center justify-between">
-								<Label
-									htmlFor="external-link"
-									className="text-xs font-medium text-slate-400"
-								>
-									External Link
-								</Label>
-							</div>
-							<div className="relative">
-								<Input
-									id="external-link"
-									value={linkValue}
-									onChange={handleLinkChange}
-									onPaste={handleLinkPaste}
-									placeholder="Paste local path or URL..."
-									disabled={isUploading}
-									className="h-10 rounded-lg border-white/10 bg-black/20 pl-3 pr-16 text-sm text-slate-200 placeholder:text-slate-600 focus-visible:ring-1 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-0"
-								/>
-								<div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-									<button
-										type="button"
-										onClick={() => setConfirmTarget("link")}
-										disabled={!linkValue.trim() || isUploading}
-										className="rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-40"
-									>
-										<Trash2 className="h-3.5 w-3.5" />
-										<span className="sr-only">Delete link</span>
-									</button>
-									<button
-										type="button"
-										onClick={handleCopy}
-										disabled={!linkValue.trim() || isUploading}
-										className="rounded-md p-1.5 text-slate-500 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-									>
-										{hasCopied ? (
-											<Check className="h-3.5 w-3.5 text-emerald-400" />
-										) : (
-											<Copy className="h-3.5 w-3.5" />
-										)}
-										<span className="sr-only">Copy link</span>
-									</button>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<DialogFooter className="border-t border-white/5 bg-[#151517] p-4 sm:justify-between">
-						<Button
-							type="button"
-							variant="ghost"
-							onClick={() => onOpenChange(false)}
-							disabled={isUploading}
-							className="hidden sm:inline-flex h-10 px-4 text-sm font-medium text-slate-400 hover:text-white"
-						>
-							Cancel
-						</Button>
-						<Button
-							type="button"
-							onClick={executeSave}
-							disabled={!canSave || isUploading}
-							className="w-full sm:w-auto min-w-[120px] h-10 rounded-lg bg-indigo-500 text-sm font-medium text-white hover:bg-indigo-600 disabled:bg-white/5 disabled:text-slate-500"
-						>
-							{isUploading ? (
-								<span className="flex items-center gap-2">
-									<LoaderCircle className="h-4 w-4 animate-spin" />
-									Saving...
-								</span>
-							) : (
-								"Save Changes"
-							)}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-
-			<Dialog
-				open={confirmTarget !== null}
-				onOpenChange={(open) => {
-					if (!open) setConfirmTarget(null);
-				}}
+		<Dialog
+			open={open}
+			onOpenChange={(isOpen) => {
+				if (!isOpen) handleCancel();
+			}}
+		>
+			<DialogContent
+				hideClose={true}
+				className="overflow-hidden border border-white/10 bg-[#151517] p-0 text-slate-200 shadow-2xl shadow-black/50 sm:max-w-[420px] rounded-2xl"
 			>
-				<DialogContent
-					hideClose={true}
-					className="overflow-hidden border border-white/10 bg-[#151517] p-0 text-slate-200 shadow-2xl shadow-black/50 sm:max-w-[360px] rounded-2xl"
-				>
-					<DialogHeader className="border-b border-white/5 bg-white/[0.02] px-4 py-3">
-						<DialogTitle className="text-base font-medium text-white">
-							Are you sure?
-						</DialogTitle>
-					</DialogHeader>
-
-					<div className="p-4 text-sm text-slate-300 bg-[#121214]">
-						{confirmTarget === "file"
-							? "Are you sure you want to delete the stored file?"
-							: "Are you sure you want to delete the external link?"}
-					</div>
-
-					<DialogFooter className="border-t border-white/5 bg-[#151517] p-4 sm:justify-end gap-2">
+				<DialogHeader className="border-b border-white/5 bg-white/[0.02] px-4 py-3">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-2.5">
+							<div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/10">
+								<Paperclip className="h-4 w-4 text-indigo-400" />
+							</div>
+							<DialogTitle className="text-base font-medium text-white">
+								Attachments
+							</DialogTitle>
+							<Badge
+								variant="secondary"
+								className="bg-white/5 text-slate-400 text-[11px] font-normal border-0"
+							>
+								{paths.length} / 5
+							</Badge>
+						</div>
 						<Button
 							type="button"
 							variant="ghost"
-							onClick={() => setConfirmTarget(null)}
-							disabled={isUploading}
-							className="h-9 px-4 text-sm font-medium text-slate-400 hover:text-white"
+							size="icon"
+							onClick={handleCancel}
+							disabled={isSaving}
+							className="h-8 w-8 rounded-full text-slate-500 hover:bg-white/10 hover:text-white"
 						>
-							No
+							<X className="h-4 w-4" />
+							<span className="sr-only">Close</span>
 						</Button>
-						<Button
-							type="button"
-							onClick={() => {
-								if (confirmTarget === "file") {
-									setFileMarkedForRemoval(true);
-								} else if (confirmTarget === "link") {
-									setLinkValue("");
+					</div>
+					<DialogDescription className="sr-only">
+						Attach up to 5 files (JPG, PNG, PDF) for this order.
+					</DialogDescription>
+				</DialogHeader>
+
+				<div className="min-w-0 space-y-3 p-4 text-sm bg-[#121214]">
+					{/* External Link */}
+					<div className="space-y-1.5">
+						<label
+							htmlFor="external-link"
+							className="text-xs font-medium text-slate-400"
+						>
+							External Link
+						</label>
+						<div className="relative flex items-center">
+							<input
+								id="external-link"
+								type="text"
+								value={link}
+								onChange={(e) =>
+									setLink(sanitizeAttachmentLink(e.target.value))
 								}
-								setConfirmTarget(null);
-							}}
-							disabled={isUploading}
-							className="h-9 min-w-[80px] rounded-lg bg-red-500/80 text-sm font-medium text-white hover:bg-red-500 focus:bg-red-500"
-						>
-							Yes, Delete
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-		</>
+								onPaste={(e) => {
+									e.preventDefault();
+									setLink(
+										sanitizeAttachmentLink(e.clipboardData.getData("text")),
+									);
+								}}
+								placeholder="Paste local path or URL…"
+								disabled={isSaving}
+								className="h-10 w-full rounded-lg border border-white/10 bg-black/20 pl-3 pr-16 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50"
+							/>
+							<div className="absolute right-1 flex items-center gap-0.5">
+								{link && (
+									<button
+										type="button"
+										onClick={() => setLink("")}
+										disabled={isSaving}
+										className="rounded-md p-1.5 text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-colors disabled:pointer-events-none"
+										title="Remove link"
+									>
+										<Trash2 className="h-3.5 w-3.5" />
+									</button>
+								)}
+								<button
+									type="button"
+									onClick={() => {
+										if (!link) return;
+										navigator.clipboard.writeText(link);
+										setHasCopied(true);
+										if (copyTimeoutRef.current)
+											clearTimeout(copyTimeoutRef.current);
+										copyTimeoutRef.current = setTimeout(
+											() => setHasCopied(false),
+											2000,
+										);
+									}}
+									disabled={!link || isSaving}
+									className="rounded-md p-1.5 text-slate-500 hover:bg-white/10 hover:text-white transition-colors disabled:pointer-events-none disabled:opacity-40"
+									title="Copy link"
+								>
+									{hasCopied ? (
+										<Check className="h-3.5 w-3.5 text-green-400" />
+									) : (
+										<Copy className="h-3.5 w-3.5" />
+									)}
+								</button>
+							</div>
+						</div>
+					</div>
+
+					{/* Drop zone */}
+					<button
+						type="button"
+						className={cn(
+							"group relative flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-[#161618] py-7 text-center transition-all",
+							!dropzoneDisabled &&
+								"hover:border-indigo-500/30 hover:bg-indigo-500/5 cursor-pointer",
+							isDragging && "border-indigo-500 bg-indigo-500/10",
+							dropzoneDisabled &&
+								"cursor-not-allowed opacity-50 pointer-events-none",
+						)}
+						onClick={() => !dropzoneDisabled && fileInputRef.current?.click()}
+						onDragOver={(e) => {
+							e.preventDefault();
+							if (!dropzoneDisabled) setIsDragging(true);
+						}}
+						onDragLeave={() => setIsDragging(false)}
+						onDrop={handleDrop}
+						disabled={dropzoneDisabled}
+					>
+						<input
+							ref={fileInputRef}
+							type="file"
+							className="hidden"
+							accept=".jpg,.jpeg,.png,.pdf"
+							multiple
+							onChange={handleFileChange}
+							disabled={dropzoneDisabled}
+						/>
+						<div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10 transition-all group-hover:bg-indigo-500/20 group-hover:ring-indigo-500/30">
+							{isUploading ? (
+								<LoaderCircle className="h-5 w-5 animate-spin text-indigo-400" />
+							) : atLimit ? (
+								<Paperclip className="h-5 w-5 text-slate-600" />
+							) : (
+								<Folder className="h-5 w-5 text-slate-400 transition-colors group-hover:text-indigo-300" />
+							)}
+						</div>
+						<p className="text-sm font-medium text-slate-300">
+							{isUploading
+								? `Uploading "${uploadingFileName}"…`
+								: atLimit
+									? "Limit reached"
+									: "Drop files or click to browse"}
+						</p>
+						{!atLimit && !isUploading && (
+							<p className="mt-1 text-xs text-slate-600">
+								JPG, PNG, PDF · max 5 MB each
+							</p>
+						)}
+					</button>
+
+					{/* Error message */}
+					{error && <p className="text-xs text-red-400">{error}</p>}
+
+					{/* Pill list */}
+					{paths.length > 0 && (
+						<div className="flex flex-wrap gap-2">
+							{paths.map((path) => (
+								<FilePill
+									key={path}
+									path={path}
+									onRemove={handleRemove}
+									disabled={isSaving || isUploading}
+								/>
+							))}
+						</div>
+					)}
+
+					{/* Uploading spinner pill */}
+					{uploadingFileName && (
+						<div className="flex flex-wrap gap-2">
+							<div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs text-indigo-300">
+								<LoaderCircle className="h-3 w-3 animate-spin" />
+								<span className="max-w-[160px] truncate">
+									{uploadingFileName}
+								</span>
+							</div>
+						</div>
+					)}
+				</div>
+
+				<DialogFooter className="border-t border-white/5 bg-[#151517] p-4 sm:justify-between">
+					<Button
+						type="button"
+						variant="ghost"
+						onClick={handleCancel}
+						disabled={isSaving}
+						className="hidden sm:inline-flex h-10 px-4 text-sm font-medium text-slate-400 hover:text-white"
+					>
+						Cancel
+					</Button>
+					<Button
+						type="button"
+						onClick={handleSave}
+						disabled={isSaving || isUploading}
+						className="w-full sm:w-auto min-w-[120px] h-10 rounded-lg bg-indigo-500 text-sm font-medium text-white hover:bg-indigo-600 disabled:bg-white/5 disabled:text-slate-500"
+					>
+						{isSaving ? (
+							<span className="flex items-center gap-2">
+								<LoaderCircle className="h-4 w-4 animate-spin" />
+								Saving…
+							</span>
+						) : (
+							"Save Changes"
+						)}
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 };
+
+interface FilePillProps {
+	path: string;
+	onRemove: (path: string) => void;
+	disabled?: boolean;
+}
+
+function FilePill({ path, onRemove, disabled }: FilePillProps) {
+	const name = getFileName(path);
+	const url = getPublicUrl(path);
+
+	return (
+		<div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 pl-2.5 pr-1.5 py-1.5 text-xs text-slate-300 max-w-[220px]">
+			<File className="h-3 w-3 shrink-0 text-slate-500" />
+			<span className="truncate flex-1">{name}</span>
+			{url && (
+				<button
+					type="button"
+					onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+					disabled={disabled}
+					className="shrink-0 rounded-full p-0.5 text-slate-500 hover:text-indigo-400 transition-colors disabled:pointer-events-none"
+					title="Open file"
+				>
+					<ExternalLink className="h-3 w-3" />
+					<span className="sr-only">Open {name}</span>
+				</button>
+			)}
+			<button
+				type="button"
+				onClick={() => onRemove(path)}
+				disabled={disabled}
+				className="shrink-0 rounded-full p-0.5 text-slate-500 hover:text-red-400 transition-colors disabled:pointer-events-none"
+				title="Remove"
+			>
+				<X className="h-3 w-3" />
+				<span className="sr-only">Remove {name}</span>
+			</button>
+		</div>
+	);
+}

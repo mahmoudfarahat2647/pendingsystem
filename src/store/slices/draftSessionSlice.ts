@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import type { StateCreator } from "zustand";
+import { hasAttachment } from "@/lib/attachment";
 import {
 	getOrdersQueryKey,
 	ORDER_STAGES,
@@ -367,7 +368,7 @@ export const createDraftSessionSlice: StateCreator<
 						return false;
 					}
 
-					if (!row.attachmentFilePath && !row.attachmentLink) {
+					if (!hasAttachment(row)) {
 						toast.error(`Attachment required for: ${row.trackingId || row.id}`);
 						return false;
 					}

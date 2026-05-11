@@ -216,6 +216,51 @@ describe("orderService", () => {
 		expect(result.hasAttachment).toBe(true);
 	});
 
+	it("should auto-migrate legacy single attachment_file_path into attachmentFilePaths array", () => {
+		const supabaseRow = {
+			id: "2",
+			order_number: "T2",
+			customer_name: "Jane",
+			customer_phone: "456",
+			vin: "VF1AB000123456790",
+			company: null,
+			attachment_link: null,
+			attachment_file_path: "orders/2/legacy.pdf",
+			attachment_file_paths: [],
+			metadata: { model: "Megane" },
+			order_reminders: [],
+		};
+
+		const result = orderService.mapSupabaseOrder(supabaseRow);
+		expect(result).not.toBeNull();
+		expect(result?.attachmentFilePaths).toEqual(["orders/2/legacy.pdf"]);
+		expect(result?.hasAttachment).toBe(true);
+	});
+
+	it("should use attachment_file_paths array when present and non-empty", () => {
+		const supabaseRow = {
+			id: "3",
+			order_number: "T3",
+			customer_name: "Bob",
+			customer_phone: "789",
+			vin: "VF1AB000123456791",
+			company: null,
+			attachment_link: null,
+			attachment_file_path: "orders/3/old.pdf",
+			attachment_file_paths: ["orders/3/file1.pdf", "orders/3/file2.pdf"],
+			metadata: { model: "Clio" },
+			order_reminders: [],
+		};
+
+		const result = orderService.mapSupabaseOrder(supabaseRow);
+		expect(result).not.toBeNull();
+		expect(result?.attachmentFilePaths).toEqual([
+			"orders/3/file1.pdf",
+			"orders/3/file2.pdf",
+		]);
+		expect(result?.hasAttachment).toBe(true);
+	});
+
 	it("should return null for invalid mapped row", () => {
 		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 

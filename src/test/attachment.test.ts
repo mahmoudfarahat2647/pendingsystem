@@ -4,6 +4,7 @@ import {
 	detectAttachmentKind,
 	getAttachmentsBucket,
 	hasAttachment,
+	isAtAttachmentLimit,
 	isSupportedAttachmentFile,
 	isValidFileSize,
 	sanitizeAttachmentLink,
@@ -158,6 +159,39 @@ describe("attachment helpers", () => {
 			expect(
 				hasAttachment({ attachmentLink: "", attachmentFilePath: "" }),
 			).toBe(false);
+		});
+
+		it("should return true when attachmentFilePaths has entries", () => {
+			expect(
+				hasAttachment({ attachmentFilePaths: ["orders/order-1/test.pdf"] }),
+			).toBe(true);
+		});
+
+		it("should return false when attachmentFilePaths is empty and no legacy fields", () => {
+			expect(hasAttachment({ attachmentFilePaths: [] })).toBe(false);
+		});
+
+		it("should return false for null or undefined", () => {
+			expect(hasAttachment(null)).toBe(false);
+			expect(hasAttachment(undefined)).toBe(false);
+		});
+	});
+
+	describe("isAtAttachmentLimit", () => {
+		it("should return false for empty array", () => {
+			expect(isAtAttachmentLimit([])).toBe(false);
+		});
+
+		it("should return false for 4 paths", () => {
+			expect(isAtAttachmentLimit(["a", "b", "c", "d"])).toBe(false);
+		});
+
+		it("should return true at exactly 5 paths", () => {
+			expect(isAtAttachmentLimit(["a", "b", "c", "d", "e"])).toBe(true);
+		});
+
+		it("should return true for more than 5 paths", () => {
+			expect(isAtAttachmentLimit(["a", "b", "c", "d", "e", "f"])).toBe(true);
 		});
 	});
 });

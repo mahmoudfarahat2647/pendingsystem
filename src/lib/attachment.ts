@@ -4,6 +4,7 @@ type AttachmentKind = "image-pdf" | "link";
 export interface AttachmentValue {
 	attachmentLink?: string;
 	attachmentFilePath?: string;
+	attachmentFilePaths?: string[];
 }
 
 const SUPPORTED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
@@ -66,6 +67,12 @@ export function hasAttachment(
 	value: AttachmentValue | null | undefined,
 ): boolean {
 	return Boolean(
-		value?.attachmentLink?.trim() || value?.attachmentFilePath?.trim(),
+		value?.attachmentLink?.trim() ||
+			value?.attachmentFilePath?.trim() ||
+			(value?.attachmentFilePaths && value.attachmentFilePaths.length > 0),
 	);
+}
+
+export function isAtAttachmentLimit(paths: string[]): boolean {
+	return paths.length >= 5;
 }

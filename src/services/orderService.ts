@@ -51,6 +51,7 @@ const ORDERS_SELECT_WITH_ATTACHMENTS = `
 	company,
 	attachment_link,
 	attachment_file_path,
+	attachment_file_paths,
 	status,
 	metadata,
 	created_at,
@@ -209,6 +210,7 @@ export const orderService = {
 		const metadataToStore = { ...metadataBase };
 		delete (metadataToStore as Record<string, unknown>).attachmentLink;
 		delete (metadataToStore as Record<string, unknown>).attachmentFilePath;
+		delete (metadataToStore as Record<string, unknown>).attachmentFilePaths;
 
 		const fallbackMetadataToStore = { ...metadataBase };
 
@@ -234,6 +236,9 @@ export const orderService = {
 			}),
 			...("attachmentFilePath" in rest && {
 				attachment_file_path: rest.attachmentFilePath ?? null,
+			}),
+			...("attachmentFilePaths" in rest && {
+				attachment_file_paths: rest.attachmentFilePaths ?? [],
 			}),
 			metadata: metadataToStore,
 		};
@@ -462,6 +467,17 @@ export const orderService = {
 				? metadata.attachmentFilePath
 				: "";
 
+		const legacyFilePath =
+			(row.attachment_file_path as string) || metadataAttachmentFilePath;
+
+		// Read the new array column; if empty and a legacy single path exists,
+		// auto-migrate by treating it as a single-element array.
+		const rawPaths = Array.isArray(row.attachment_file_paths)
+			? (row.attachment_file_paths as string[])
+			: [];
+		const attachmentFilePaths =
+			rawPaths.length === 0 && legacyFilePath ? [legacyFilePath] : rawPaths;
+
 		const resultObj = {
 			...metadata,
 			id: row.id,
@@ -474,13 +490,13 @@ export const orderService = {
 			vin: (row.vin as string) || metadata.vin || "",
 			company: normalizeNullableCompanyName(row.company),
 			attachmentLink: (row.attachment_link as string) || metadataAttachmentLink,
-			attachmentFilePath:
-				(row.attachment_file_path as string) || metadataAttachmentFilePath,
+			attachmentFilePath: legacyFilePath,
+			attachmentFilePaths,
 			hasAttachment: hasAttachment({
 				attachmentLink:
 					(row.attachment_link as string) || metadataAttachmentLink,
-				attachmentFilePath:
-					(row.attachment_file_path as string) || metadataAttachmentFilePath,
+				attachmentFilePath: legacyFilePath,
+				attachmentFilePaths,
 			}),
 			reminder: reminder,
 			stage: row.stage,
