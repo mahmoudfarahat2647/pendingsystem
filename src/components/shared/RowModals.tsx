@@ -1,7 +1,6 @@
 "use client";
 
 import type { RowModalType } from "@/hooks/useRowModals";
-import type { AttachmentValue } from "@/lib/attachment";
 import { getEffectiveNoteHistory } from "@/lib/orderWorkflow";
 import type { PendingRow } from "@/types";
 import { ArchiveReasonModal } from "./ArchiveReasonModal";
@@ -20,7 +19,7 @@ interface RowModalsProps {
 			| null
 			| undefined,
 	) => void;
-	onSaveAttachment: (value: AttachmentValue) => void;
+	onSaveAttachment: (filePaths: string[], link: string) => void;
 	onSaveArchive: (reason: string) => void;
 	sourceTag?: string;
 }
@@ -56,8 +55,8 @@ export const RowModals = ({
 				open={activeModal === "attachment"}
 				onOpenChange={(open) => !open && onClose()}
 				orderId={currentRow.id}
+				initialFilePaths={currentRow.attachmentFilePaths}
 				initialLink={currentRow.attachmentLink}
-				initialFilePath={currentRow.attachmentFilePath}
 				allowUpload={true}
 				onSave={onSaveAttachment}
 			/>

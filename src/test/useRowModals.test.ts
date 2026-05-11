@@ -88,16 +88,15 @@ describe("useRowModals Stage Routing", () => {
 		});
 
 		await act(async () => {
-			await result.current.saveAttachment({
-				attachmentFilePath: "orders/test-row-123/file.pdf",
-			});
+			await result.current.saveAttachment(["orders/test-row-123/file.pdf"], "");
 		});
 
 		expect(mockOnUpdate).toHaveBeenCalledWith(
 			"test-row-123",
 			{
-				attachmentLink: undefined,
-				attachmentFilePath: "orders/test-row-123/file.pdf",
+				attachmentFilePaths: ["orders/test-row-123/file.pdf"],
+				attachmentFilePath: "",
+				attachmentLink: "",
 				hasAttachment: true,
 			},
 			"call",

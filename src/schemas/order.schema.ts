@@ -133,6 +133,7 @@ export const PendingRowSchema = z
 		hasAttachment: z.boolean().optional(),
 		attachmentLink: z.string().optional(),
 		attachmentFilePath: z.string().optional(),
+		attachmentFilePaths: z.array(z.string()).optional(),
 		reminder: ReminderSchema.optional(),
 		archiveReason: z.string().optional(),
 		archivedAt: z.string().optional(),

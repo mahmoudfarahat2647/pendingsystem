@@ -1,0 +1,129 @@
+<h2>Multi-Attachment Modal — Layout Options</h2>
+<p class="subtitle">Up to 5 files per order · shadcn/ui components · Pick the layout that feels right</p>
+
+<div class="cards">
+
+  <!-- Option A: Stacked List -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#fafafa;border-bottom:1px solid #e5e7eb;">
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;font-family:sans-serif;font-size:12px;max-width:340px;margin:0 auto;">
+        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:#111;">Attachments <span style="font-weight:400;color:#6b7280;font-size:11px;">2 / 5</span></div>
+
+        <!-- File list -->
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;">
+            <span style="font-size:16px;">📄</span>
+            <span style="flex:1;color:#374151;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">invoice_march.pdf</span>
+            <span style="color:#9ca3af;font-size:10px;">1.2 MB</span>
+            <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:12px;padding:0 2px;">✕</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;">
+            <span style="font-size:16px;">🖼️</span>
+            <span style="flex:1;color:#374151;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">damage_photo.jpg</span>
+            <span style="color:#9ca3af;font-size:10px;">840 KB</span>
+            <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:12px;padding:0 2px;">✕</button>
+          </div>
+        </div>
+
+        <!-- Drop zone -->
+        <div style="border:2px dashed #d1d5db;border-radius:6px;padding:16px;text-align:center;color:#9ca3af;font-size:11px;background:#fafafa;">
+          <div style="margin-bottom:4px;">📎 Drop files here or <span style="color:#6366f1;text-decoration:underline;cursor:pointer;">browse</span></div>
+          <div style="font-size:10px;color:#d1d5db;">PDF, JPG, PNG · max 5 MB each · 3 remaining</div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+          <button style="padding:5px 12px;font-size:11px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;cursor:pointer;color:#374151;">Cancel</button>
+          <button style="padding:5px 12px;font-size:11px;border:none;border-radius:5px;background:#111;color:#fff;cursor:pointer;">Save</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Stacked List</h3>
+      <p>Files listed vertically above the drop zone. Clean, scannable, works well with 1–5 files. Standard file manager feel.</p>
+    </div>
+  </div>
+
+  <!-- Option B: 2-Column Grid -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#fafafa;border-bottom:1px solid #e5e7eb;">
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;font-family:sans-serif;font-size:12px;max-width:340px;margin:0 auto;">
+        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:#111;">Attachments <span style="font-weight:400;color:#6b7280;font-size:11px;">2 / 5</span></div>
+
+        <!-- 2-col grid of file thumbnails -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div style="border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;position:relative;">
+            <div style="background:#fee2e2;height:56px;display:flex;align-items:center;justify-content:center;font-size:22px;">📄</div>
+            <div style="padding:6px 8px;background:#f9fafb;">
+              <div style="font-size:10px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">invoice_march.pdf</div>
+              <button style="font-size:10px;color:#ef4444;background:none;border:none;padding:0;cursor:pointer;margin-top:2px;">Remove</button>
+            </div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
+            <div style="background:#dbeafe;height:56px;display:flex;align-items:center;justify-content:center;font-size:22px;">🖼️</div>
+            <div style="padding:6px 8px;background:#f9fafb;">
+              <div style="font-size:10px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">damage_photo.jpg</div>
+              <button style="font-size:10px;color:#ef4444;background:none;border:none;padding:0;cursor:pointer;margin-top:2px;">Remove</button>
+            </div>
+          </div>
+          <!-- Add slot -->
+          <div style="border:2px dashed #d1d5db;border-radius:6px;height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#9ca3af;">
+            <div style="font-size:20px;">+</div>
+            <div style="font-size:10px;">Add file</div>
+          </div>
+        </div>
+
+        <div style="font-size:10px;color:#9ca3af;margin-bottom:10px;">PDF, JPG, PNG · max 5 MB each</div>
+
+        <!-- Actions -->
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button style="padding:5px 12px;font-size:11px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;cursor:pointer;color:#374151;">Cancel</button>
+          <button style="padding:5px 12px;font-size:11px;border:none;border-radius:5px;background:#111;color:#fff;cursor:pointer;">Save</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Thumbnail Grid</h3>
+      <p>Files shown as cards in a 2-column grid with a "+" add slot. More visual, especially nice when there are photos. Slightly more compact.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Inline Upload Badges -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#fafafa;border-bottom:1px solid #e5e7eb;">
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;font-family:sans-serif;font-size:12px;max-width:340px;margin:0 auto;">
+        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:#111;">Attachments <span style="font-weight:400;color:#6b7280;font-size:11px;">2 / 5</span></div>
+
+        <!-- Large drop zone at top -->
+        <div style="border:2px dashed #d1d5db;border-radius:6px;padding:20px;text-align:center;color:#9ca3af;font-size:11px;background:#fafafa;margin-bottom:12px;">
+          <div style="font-size:22px;margin-bottom:6px;">📎</div>
+          <div style="font-weight:500;color:#374151;margin-bottom:2px;">Drop files here or browse</div>
+          <div style="font-size:10px;color:#d1d5db;">PDF, JPG, PNG · max 5 MB · up to 5 files</div>
+        </div>
+
+        <!-- Attached files as pill badges -->
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+          <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:#ede9fe;border:1px solid #c4b5fd;border-radius:9999px;font-size:11px;color:#5b21b6;">
+            <span>📄</span> invoice_march.pdf
+            <button style="background:none;border:none;cursor:pointer;color:#7c3aed;font-size:11px;margin-left:2px;">✕</button>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:#ede9fe;border:1px solid #c4b5fd;border-radius:9999px;font-size:11px;color:#5b21b6;">
+            <span>🖼️</span> damage_photo.jpg
+            <button style="background:none;border:none;cursor:pointer;color:#7c3aed;font-size:11px;margin-left:2px;">✕</button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button style="padding:5px 12px;font-size:11px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;cursor:pointer;color:#374151;">Cancel</button>
+          <button style="padding:5px 12px;font-size:11px;border:none;border-radius:5px;background:#111;color:#fff;cursor:pointer;">Save</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Drop Zone + Pill Badges</h3>
+      <p>Prominent drop zone at the top, uploaded files appear as removable pill tags below. Very clean for rapid multi-upload workflows.</p>
+    </div>
+  </div>
+
+</div>

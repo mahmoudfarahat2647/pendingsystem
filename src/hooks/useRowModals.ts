@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
-import { type AttachmentValue, hasAttachment } from "@/lib/attachment";
+import { hasAttachment } from "@/lib/attachment";
 import { normalizeOrderStage } from "@/lib/orderStage";
 import type { PendingRow } from "@/types";
 
@@ -105,15 +105,19 @@ export const useRowModals = (
 	);
 
 	const saveAttachment = useCallback(
-		async (value: AttachmentValue) => {
+		async (filePaths: string[], link: string) => {
 			if (currentRow) {
 				try {
 					await onUpdate(
 						currentRow.id,
 						{
-							attachmentLink: value.attachmentLink || undefined,
-							attachmentFilePath: value.attachmentFilePath || undefined,
-							hasAttachment: hasAttachment(value),
+							attachmentFilePaths: filePaths,
+							attachmentFilePath: "",
+							attachmentLink: link,
+							hasAttachment: hasAttachment({
+								attachmentFilePaths: filePaths,
+								attachmentLink: link,
+							}),
 						},
 						resolveRowStage(currentRow),
 					);

@@ -8,7 +8,7 @@ import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
-import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
+import { hasAttachment } from "@/lib/attachment";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import {
 	appendTaggedUserNote,
@@ -373,29 +373,25 @@ export const useOrdersPageHandlers = () => {
 		toast.success(`Part status updated to "${status}"`);
 	};
 
-	const handleSaveBulkAttachment = async ({
-		attachmentLink,
-	}: {
-		attachmentLink?: string;
-	}) => {
+	const handleSaveBulkAttachment = async (
+		_filePaths: string[],
+		link: string,
+	) => {
 		if (selectedRows.length === 0) return;
-		const sanitizedLink = attachmentLink
-			? sanitizeAttachmentLink(attachmentLink)
-			: undefined;
 
 		await Promise.all(
 			selectedRows.map((row) =>
 				handleUpdateOrder(row.id, {
-					attachmentLink: sanitizedLink,
+					attachmentLink: link,
 					hasAttachment: hasAttachment({
-						attachmentLink: sanitizedLink,
-						attachmentFilePath: row.attachmentFilePath,
+						attachmentLink: link,
+						attachmentFilePaths: row.attachmentFilePaths,
 					}),
 				}),
 			),
 		);
 
-		if (sanitizedLink) {
+		if (link) {
 			toast.success("Bulk attachment link updated");
 		} else {
 			toast.success("Bulk attachment link cleared");
