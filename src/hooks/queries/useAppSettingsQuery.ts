@@ -16,6 +16,7 @@ const DEFAULT_APP_SETTINGS: AppSettings = {
 		"Talisman",
 	],
 	repairSystems: ["Mechanical", "Electrical", "Body", "ضمان"],
+	requesters: [],
 };
 
 export function useAppSettingsQuery() {
