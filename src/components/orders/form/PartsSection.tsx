@@ -13,10 +13,13 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { EditableSelect } from "@/components/shared/EditableSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useUpdateAppSettingsMutation } from "@/hooks/mutations/useUpdateAppSettingsMutation";
+import { useAppSettingsQuery } from "@/hooks/queries/useAppSettingsQuery";
 import { cn, generateId } from "@/lib/utils";
 import type { PartEntry } from "@/types";
 import type { FormData, PartWarning } from "./types";
@@ -62,6 +65,11 @@ export const PartsSection = ({
 	// Parts bulk import state — owned here, not in the hook
 	const [isBulkMode, setIsBulkMode] = useState(false);
 	const [bulkText, setBulkText] = useState("");
+
+	const { data: appSettings, isPlaceholderData: settingsLoading } =
+		useAppSettingsQuery();
+	const updateAppSettings = useUpdateAppSettingsMutation();
+	const requesters = appSettings?.requesters ?? [];
 
 	const handleBulkImport = () => {
 		if (!bulkText.trim()) return;
@@ -328,19 +336,36 @@ export const PartsSection = ({
 							<User className="h-3 w-3" aria-label="Requester" />
 							Requester
 						</Label>
-						<Input
-							placeholder="Requester Name"
-							value={formData.requester}
-							onChange={(e) => onFieldChange({ requester: e.target.value })}
+						<div
 							className={cn(
-								"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+								"rounded-lg transition-all",
 								validationMode === "beast" &&
 									!formData.requester?.trim() &&
-									"border-red-500/50 ring-1 ring-red-500/20",
+									"ring-1 ring-red-500/50",
 								isEditMode ? "premium-glow-amber" : "premium-glow-indigo",
 							)}
-							aria-label="Requester name"
-						/>
+						>
+							<EditableSelect
+								options={requesters}
+								value={formData.requester}
+								onChange={(val) => onFieldChange({ requester: val })}
+								onAdd={(option) => {
+									if (!settingsLoading && !requesters.includes(option)) {
+										updateAppSettings.mutate({
+											requesters: [...requesters, option],
+										});
+									}
+								}}
+								onRemove={(option) => {
+									if (!settingsLoading) {
+										updateAppSettings.mutate({
+											requesters: requesters.filter((r) => r !== option),
+										});
+									}
+								}}
+								placeholder="Requester Name"
+							/>
+						</div>
 					</div>
 				</div>
 			</div>

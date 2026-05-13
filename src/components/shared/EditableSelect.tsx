@@ -44,6 +44,23 @@ export function EditableSelect({
 }: EditableSelectProps) {
 	const [open, setOpen] = React.useState(false);
 	const [newItem, setNewItem] = React.useState("");
+	const [hoveredOption, setHoveredOption] = React.useState<string | null>(null);
+
+	React.useEffect(() => {
+		if (!open) return;
+		const handler = (e: KeyboardEvent) => {
+			if (
+				e.key === "Delete" &&
+				hoveredOption &&
+				!protectedOptions.includes(hoveredOption)
+			) {
+				onRemove(hoveredOption);
+				if (value === hoveredOption) onChange("");
+			}
+		};
+		document.addEventListener("keydown", handler);
+		return () => document.removeEventListener("keydown", handler);
+	}, [open, hoveredOption, onRemove, protectedOptions, value, onChange]);
 
 	const handleAdd = () => {
 		if (newItem.trim()) {
@@ -113,6 +130,8 @@ export function EditableSelect({
 										onChange(option);
 										setOpen(false);
 									}}
+									onMouseEnter={() => setHoveredOption(option)}
+									onMouseLeave={() => setHoveredOption(null)}
 									className="group flex items-center justify-between"
 								>
 									<div className="flex items-center">
