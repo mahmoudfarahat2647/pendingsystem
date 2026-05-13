@@ -6,6 +6,7 @@ import type { PendingRow } from "@/types";
 interface UseBookingCalendarOptions {
 	open: boolean;
 	initialSearchTerm: string;
+	skipAutoSelect?: boolean;
 }
 
 /**
@@ -30,6 +31,7 @@ function parseLocalDate(dateStr: string | undefined): Date {
 export function useBookingCalendar({
 	open,
 	initialSearchTerm,
+	skipAutoSelect = false,
 }: UseBookingCalendarOptions) {
 	// Directly fetch the required data inside the hook to prevent prop-drilling
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
@@ -131,6 +133,7 @@ export function useBookingCalendar({
 	}, [filteredBookings, searchQuery, selectedDateKey, bookingsByDateMap]);
 
 	useEffect(() => {
+		if (skipAutoSelect) return;
 		if (
 			sidebarGroupedBookings.length > 0 &&
 			(!selectedBookingId ||
@@ -138,7 +141,7 @@ export function useBookingCalendar({
 		) {
 			setSelectedBookingId(sidebarGroupedBookings[0].id);
 		} else if (sidebarGroupedBookings.length === 0) setSelectedBookingId(null);
-	}, [sidebarGroupedBookings, selectedBookingId]);
+	}, [sidebarGroupedBookings, selectedBookingId, skipAutoSelect]);
 
 	const activeCustomerBookings = useMemo(() => {
 		const selectedRep = allBookings.find((b) => b.id === selectedBookingId);
