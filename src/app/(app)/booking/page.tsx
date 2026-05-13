@@ -3,6 +3,7 @@
 import type { GridApi } from "ag-grid-community";
 import {
 	Archive,
+	Calendar,
 	CheckCircle,
 	Download,
 	Filter,
@@ -70,6 +71,7 @@ export default function BookingPage() {
 		workingRows: draftWorkingRows,
 		applyCommand,
 		saving: draftSaving,
+		dirty: draftDirty,
 	} = useDraftSession("booking");
 
 	// Use draft working rows if available, fallback to query data
@@ -153,7 +155,6 @@ export default function BookingPage() {
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
 	const [isRebookingModalOpen, setIsRebookingModalOpen] = useState(false);
-	const [rebookingSearchTerm] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 	const [scrollDir, setScrollDir] = useState<"vertical" | "horizontal">(
@@ -414,6 +415,23 @@ export default function BookingPage() {
 								<Button
 									size="icon"
 									variant="ghost"
+									className="text-green-500/80 hover:text-green-500 h-8 w-8"
+									onClick={() => setIsRebookingModalOpen(true)}
+									disabled={selectedRows.length === 0 || draftDirty}
+								>
+									<Calendar className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								{draftDirty ? "Save draft first" : "Reschedule Booking"}
+							</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
 									className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
 									onClick={() => setIsReorderModalOpen(true)}
 									disabled={selectedRows.length === 0}
@@ -528,7 +546,7 @@ export default function BookingPage() {
 					open={isRebookingModalOpen}
 					onOpenChange={setIsRebookingModalOpen}
 					selectedRows={selectedRows}
-					initialSearchTerm={rebookingSearchTerm}
+					initialSearchTerm={selectedRows[0]?.vin || ""}
 					onConfirm={handleConfirmRebooking}
 				/>
 
