@@ -52,7 +52,11 @@ export const BookingCalendarModal = ({
 		activeCustomerHistoryDates,
 		handleDateSelect,
 		isDateInPast,
-	} = useBookingCalendar({ open, initialSearchTerm });
+	} = useBookingCalendar({
+		open,
+		initialSearchTerm,
+		skipAutoSelect: selectedRows.length > 0,
+	});
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
