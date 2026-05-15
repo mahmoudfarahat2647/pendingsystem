@@ -107,10 +107,6 @@ public/               Static assets
 ## Documentation
 - [`FEATURES.md`](FEATURES.md) - Product behavior and current workflow rules
 - [`ENGINEERING.md`](ENGINEERING.md) - Architecture, services, state, operations, and troubleshooting
-- [`docs/attachment-system-reference.md`](docs/attachment-system-reference.md) - Stable attachment behavior reference
-- [`docs/order-form-reference.md`](docs/order-form-reference.md) - Stable order form behavior reference
-- [`docs/reminder-system-reference.md`](docs/reminder-system-reference.md) - Stable reminder behavior reference
-
 Files under `docs/` are treated as protected reference material. Update them intentionally and explicitly rather than as part of routine wording cleanup.
 
 ## Contributing
