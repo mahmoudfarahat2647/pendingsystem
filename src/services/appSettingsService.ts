@@ -22,26 +22,17 @@ export const appSettingsService = {
 	},
 
 	async updateAppSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
-		const updatePayload: Record<string, unknown> = {
-			updated_at: new Date().toISOString(),
-		};
-		if (patch.models !== undefined) updatePayload.models = patch.models;
-		if (patch.repairSystems !== undefined)
-			updatePayload.repair_systems = patch.repairSystems;
-		if (patch.requesters !== undefined)
-			updatePayload.requesters = patch.requesters;
-
-		const { data, error } = await supabase
-			.from("app_settings")
-			.update(updatePayload)
-			.eq("id", 1)
-			.select("models, repair_systems, requesters")
-			.single();
-		if (error) throw error;
-		return {
-			models: data.models as string[],
-			repairSystems: data.repair_systems as string[],
-			requesters: data.requesters as string[],
-		};
+		const response = await fetch("/api/app-settings", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(patch),
+		});
+		if (!response.ok) {
+			const errorData = (await response.json().catch(() => ({}))) as {
+				error?: string;
+			};
+			throw new Error(errorData.error ?? `Server error: ${response.status}`);
+		}
+		return (await response.json()) as AppSettings;
 	},
 };
