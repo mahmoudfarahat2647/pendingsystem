@@ -175,9 +175,17 @@ export const orderService = {
 		order: Partial<PendingRow> & {
 			stage: OrderStage;
 			expectedCurrentStage?: OrderStage;
+			idempotencyKey?: string;
 		},
 	) {
-		const { id, stage, reminder, expectedCurrentStage, ...rest } = order;
+		const {
+			id,
+			stage,
+			reminder,
+			expectedCurrentStage,
+			idempotencyKey,
+			...rest
+		} = order;
 
 		// 1. Prepare Metadata Merge
 		let currentMetadata: Record<string, unknown> = {};
@@ -298,22 +306,76 @@ export const orderService = {
 				resultData = data;
 			}
 		} else {
-			const { data, error } = await supabase
-				.from("orders")
-				.insert([supabaseOrder])
-				.select()
-				.single();
-			if (error && isMissingAttachmentColumnError(error)) {
-				const { data: fallbackData, error: fallbackError } = await supabase
+			const insertOrder = idempotencyKey
+				? { ...supabaseOrder, idempotency_key: idempotencyKey }
+				: supabaseOrder;
+			const insertFallback = idempotencyKey
+				? { ...fallbackSupabaseOrder, idempotency_key: idempotencyKey }
+				: fallbackSupabaseOrder;
+
+			const insertQuery = idempotencyKey
+				? supabase
+						.from("orders")
+						.upsert([insertOrder], {
+							onConflict: "idempotency_key",
+							ignoreDuplicates: true,
+						})
+				: supabase.from("orders").insert([insertOrder]);
+
+			// ignoreDuplicates: true → ON CONFLICT DO NOTHING returns no row; use maybeSingle to handle that
+			const primaryResult = idempotencyKey
+				? await insertQuery.select().maybeSingle()
+				: await insertQuery.select().single();
+			let { data, error } = primaryResult;
+
+			// ON CONFLICT DO NOTHING returned null — fetch the existing row without overwriting it
+			if (!data && !error && idempotencyKey) {
+				const { data: existing, error: existingError } = await supabase
 					.from("orders")
-					.insert([fallbackSupabaseOrder])
-					.select()
+					.select(ORDERS_SELECT_WITH_ATTACHMENTS)
+					.eq("idempotency_key", idempotencyKey)
 					.single();
+				if (existingError) handleSupabaseError(existingError);
+				data = existing;
+			}
+
+			if (error && isMissingAttachmentColumnError(error)) {
+				const fallbackQuery = idempotencyKey
+					? supabase
+							.from("orders")
+							.upsert([insertFallback], {
+								onConflict: "idempotency_key",
+								ignoreDuplicates: true,
+							})
+					: supabase.from("orders").insert([insertFallback]);
+				const fallbackResult = idempotencyKey
+					? await fallbackQuery.select().maybeSingle()
+					: await fallbackQuery.select().single();
+				let { data: fallbackData, error: fallbackError } = fallbackResult;
+				if (!fallbackData && !fallbackError && idempotencyKey) {
+					const { data: existing, error: existingError } = await supabase
+						.from("orders")
+						.select(ORDERS_SELECT_BASE)
+						.eq("idempotency_key", idempotencyKey)
+						.single();
+					if (existingError) handleSupabaseError(existingError);
+					fallbackData = existing;
+				}
 				if (fallbackError) handleSupabaseError(fallbackError);
+				if (!fallbackData)
+					throw new ServiceError(
+						"INSERT_FAILED",
+						"Idempotent insert returned no data",
+					);
 				orderId = fallbackData.id;
 				resultData = fallbackData;
 			} else {
 				if (error) handleSupabaseError(error);
+				if (!data)
+					throw new ServiceError(
+						"INSERT_FAILED",
+						"Idempotent insert returned no data",
+					);
 				orderId = data.id;
 				resultData = data;
 			}

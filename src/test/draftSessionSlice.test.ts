@@ -86,6 +86,7 @@ function resetDraftSession() {
 			touchedStages: new Set<OrderStage>(),
 			lastTouchedAt: null,
 			workspaceId,
+			saveCheckpoint: null,
 		},
 	});
 }
@@ -443,6 +444,172 @@ describe("draftSessionSlice", () => {
 		expect(useAppStore.getState().draftSession.dirty).toBe(false);
 		expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(0);
 		expect(saveOrder).toHaveBeenCalledTimes(2);
+	});
+
+	it("does not re-execute already-succeeded commands when retrying after a partial failure", async () => {
+		const REAL_UUID = "cccccccc-dddd-4eee-8fff-000000000001";
+		const TEMP_ID = "temp-cccc-dddd-eeee-ffff-000000000001";
+
+		seedStageData({ orders: [] });
+
+		const tempRow = createRow(TEMP_ID, "orders");
+		useAppStore.getState().applyCommand({
+			type: "createRows",
+			stage: "orders",
+			rows: [tempRow],
+		});
+		useAppStore.getState().applyCommand({
+			type: "patchRow",
+			id: TEMP_ID,
+			sourceStage: "orders",
+			destinationStage: "orders",
+			updates: { status: "Arrived" },
+			previousValues: { status: "Pending" },
+		});
+
+		// createRows succeeds, patchRow fails on first attempt
+		const saveOrder = vi
+			.fn()
+			.mockResolvedValueOnce({ id: REAL_UUID }) // createRows succeeds
+			.mockRejectedValueOnce(new Error("network down")) // patchRow fails
+			.mockResolvedValue({ id: REAL_UUID }); // patchRow succeeds on retry
+		const bulkUpdateStage = vi.fn().mockResolvedValue(undefined);
+		const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+		await useAppStore
+			.getState()
+			.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+		expect(useAppStore.getState().draftSession.saveError).toBe("network down");
+		expect(useAppStore.getState().draftSession.saveCheckpoint).toEqual({
+			nextIndex: 1,
+			idMapEntries: [[TEMP_ID, REAL_UUID]],
+		});
+
+		// Retry
+		await useAppStore
+			.getState()
+			.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+		// createRows must NOT be re-executed on retry: saveOrder called 3 times total
+		// (1 createRows on first attempt + 1 failed patchRow + 1 retry patchRow).
+		// If createRows had duplicated we'd see 4 calls with two id:"" calls.
+		expect(saveOrder).toHaveBeenCalledTimes(3);
+		const insertCalls = saveOrder.mock.calls.filter(([v]) => v.id === "");
+		expect(insertCalls).toHaveLength(1);
+		// patchRow on retry must use the real ID (idMap restored from checkpoint)
+		expect(saveOrder).toHaveBeenLastCalledWith(
+			expect.objectContaining({ id: REAL_UUID }),
+		);
+		// Session cleared after successful retry
+		expect(useAppStore.getState().draftSession.dirty).toBe(false);
+		expect(useAppStore.getState().draftSession.saveCheckpoint).toBeNull();
+	});
+
+	it("clears saveCheckpoint after a fully successful save", async () => {
+		const REAL_UUID = "cccccccc-dddd-4eee-8fff-000000000002";
+		const TEMP_ID = "temp-cccc-dddd-eeee-ffff-000000000002";
+
+		seedStageData({ orders: [] });
+
+		const tempRow = createRow(TEMP_ID, "orders");
+		useAppStore.getState().applyCommand({
+			type: "createRows",
+			stage: "orders",
+			rows: [tempRow],
+		});
+		useAppStore.getState().applyCommand({
+			type: "patchRow",
+			id: TEMP_ID,
+			sourceStage: "orders",
+			destinationStage: "orders",
+			updates: { status: "Arrived" },
+			previousValues: { status: "Pending" },
+		});
+
+		const saveOrder = vi.fn().mockResolvedValue({ id: REAL_UUID });
+		const bulkUpdateStage = vi.fn().mockResolvedValue(undefined);
+		const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+		await useAppStore
+			.getState()
+			.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+		expect(useAppStore.getState().draftSession.dirty).toBe(false);
+		expect(useAppStore.getState().draftSession.saveCheckpoint).toBeNull();
+		expect(saveOrder).toHaveBeenCalledTimes(2);
+	});
+
+	it("clears saveCheckpoint on undo so retry executes all remaining commands", async () => {
+		const REAL_UUID_A = "aaaaaaaa-1111-4000-8000-000000000010";
+		const REAL_UUID_B = "bbbbbbbb-2222-4000-8000-000000000010";
+		const TEMP_ID_A = "temp-aaaa-1111-2222-3333-000000000010";
+		const TEMP_ID_B = "temp-bbbb-1111-2222-3333-000000000010";
+
+		seedStageData({ orders: [] });
+
+		const tempRowA = createRow(TEMP_ID_A, "orders");
+		useAppStore.getState().applyCommand({
+			type: "createRows",
+			stage: "orders",
+			rows: [tempRowA],
+		});
+		useAppStore.getState().applyCommand({
+			type: "patchRow",
+			id: TEMP_ID_A,
+			sourceStage: "orders",
+			destinationStage: "orders",
+			updates: { status: "Arrived" },
+			previousValues: { status: "Pending" },
+		});
+
+		// createRows(A) succeeds, patchRow fails on first attempt
+		const saveOrder = vi
+			.fn()
+			.mockResolvedValueOnce({ id: REAL_UUID_A }) // createRows(A) — 1st attempt
+			.mockRejectedValueOnce(new Error("network down")) // patchRow — fails
+			.mockResolvedValueOnce({ id: REAL_UUID_A }) // createRows(A) — retry (upsert returns existing)
+			.mockResolvedValueOnce({ id: REAL_UUID_B }); // createRows(B) — retry
+		const bulkUpdateStage = vi.fn().mockResolvedValue(undefined);
+		const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+		// First save: partial failure after createRows(A) succeeds
+		await useAppStore
+			.getState()
+			.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+		expect(useAppStore.getState().draftSession.saveError).toBe("network down");
+		expect(useAppStore.getState().draftSession.saveCheckpoint).toEqual({
+			nextIndex: 1,
+			idMapEntries: [[TEMP_ID_A, REAL_UUID_A]],
+		});
+
+		// Undo the failed patchRow — checkpoint must be cleared
+		useAppStore.getState().undoDraft();
+		expect(useAppStore.getState().draftSession.saveCheckpoint).toBeNull();
+		expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(1);
+
+		// Add new command that would be silently lost without the fix
+		const tempRowB = createRow(TEMP_ID_B, "orders");
+		useAppStore.getState().applyCommand({
+			type: "createRows",
+			stage: "orders",
+			rows: [tempRowB],
+		});
+		expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(2);
+
+		// Retry: checkpoint is null so both commands must execute from index 0
+		await useAppStore
+			.getState()
+			.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+		// 4 total calls: createRows(A) x2 + patchRow fail + createRows(B)
+		expect(saveOrder).toHaveBeenCalledTimes(4);
+		// 3 insert calls (id==""): createRows(A) first attempt + createRows(A) retry + createRows(B)
+		const insertCalls = saveOrder.mock.calls.filter(([v]) => v.id === "");
+		expect(insertCalls).toHaveLength(3);
+		// Session fully cleared
+		expect(useAppStore.getState().draftSession.dirty).toBe(false);
+		expect(useAppStore.getState().draftSession.saveCheckpoint).toBeNull();
 	});
 
 	it("preserves all pending commands beyond COMMAND_LIMIT (30) but caps the past stack", async () => {

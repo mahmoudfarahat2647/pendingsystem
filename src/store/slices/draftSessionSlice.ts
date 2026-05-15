@@ -71,6 +71,7 @@ interface SaveOrderDraftMutationVars {
 	updates: Partial<PendingRow>;
 	stage: OrderStage;
 	sourceStage?: OrderStage;
+	idempotencyKey?: string;
 }
 
 interface BulkUpdateStageDraftMutationVars {
@@ -100,6 +101,10 @@ export interface DraftSession {
 	touchedStages: Set<OrderStage>;
 	lastTouchedAt: number | null;
 	workspaceId: string;
+	saveCheckpoint: {
+		nextIndex: number;
+		idMapEntries: [string, string][];
+	} | null;
 }
 
 // --- Recovery Snapshot ---
@@ -191,6 +196,7 @@ export const createDraftSessionSlice: StateCreator<
 		touchedStages: new Set(),
 		lastTouchedAt: null,
 		workspaceId: getOrCreateWorkspaceId(),
+		saveCheckpoint: null,
 	};
 
 	return {
@@ -410,6 +416,7 @@ export const createDraftSessionSlice: StateCreator<
 					future: [...state.draftSession.future, cmd],
 					derivedRowsRevision: allocateDerivedRowsRevision(),
 					dirty: state.draftSession.pendingCommands.length > 1,
+					saveCheckpoint: null,
 				},
 			}));
 
@@ -430,6 +437,7 @@ export const createDraftSessionSlice: StateCreator<
 					future: state.draftSession.future.slice(0, -1),
 					derivedRowsRevision: allocateDerivedRowsRevision(),
 					dirty: true,
+					saveCheckpoint: null,
 				},
 			}));
 
@@ -447,9 +455,24 @@ export const createDraftSessionSlice: StateCreator<
 			try {
 				// Execute all pending commands in order, tracking temp→real ID mappings
 				// so that post-create commands (delete/move/patch) target the right Supabase rows.
-				const idMap = new Map<string, string>();
-				for (const cmd of state.pendingCommands) {
-					await executeCommand(cmd, mutations, idMap);
+				// On retry after partial failure, restore idMap and skip already-executed commands.
+				const savedCheckpoint = state.saveCheckpoint;
+				const idMap = new Map<string, string>(
+					savedCheckpoint?.idMapEntries ?? [],
+				);
+				const startIndex = savedCheckpoint?.nextIndex ?? 0;
+
+				for (let i = startIndex; i < state.pendingCommands.length; i++) {
+					await executeCommand(state.pendingCommands[i], mutations, idMap);
+					set((s) => ({
+						draftSession: {
+							...s.draftSession,
+							saveCheckpoint: {
+								nextIndex: i + 1,
+								idMapEntries: [...idMap.entries()],
+							},
+						},
+					}));
 				}
 
 				// On success: clear session
@@ -627,6 +650,7 @@ async function executeCommand(
 				id: "",
 				updates: row,
 				stage: remapped.stage,
+				idempotencyKey: isTempId(row.id) ? row.id : undefined,
 			});
 			// Capture temp→real ID so subsequent commands can reference this row
 			const realId = (result as Record<string, unknown>)?.id;

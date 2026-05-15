@@ -24,17 +24,20 @@ export function useSaveOrderMutation() {
 			updates,
 			stage,
 			sourceStage,
+			idempotencyKey,
 		}: {
 			id: string;
 			updates: Partial<PendingRow>;
 			stage: OrderStage;
 			sourceStage?: OrderStage;
+			idempotencyKey?: string;
 		}) =>
 			orderService.saveOrder({
 				id,
 				...updates,
 				stage,
 				expectedCurrentStage: sourceStage,
+				idempotencyKey,
 			}),
 		onMutate: async ({ id, updates, stage }) => {
 			await queryClient.cancelQueries({ queryKey: ["orders"] });
