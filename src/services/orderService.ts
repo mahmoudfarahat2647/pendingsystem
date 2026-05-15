@@ -314,12 +314,10 @@ export const orderService = {
 				: fallbackSupabaseOrder;
 
 			const insertQuery = idempotencyKey
-				? supabase
-						.from("orders")
-						.upsert([insertOrder], {
-							onConflict: "idempotency_key",
-							ignoreDuplicates: true,
-						})
+				? supabase.from("orders").upsert([insertOrder], {
+						onConflict: "idempotency_key",
+						ignoreDuplicates: true,
+					})
 				: supabase.from("orders").insert([insertOrder]);
 
 			// ignoreDuplicates: true → ON CONFLICT DO NOTHING returns no row; use maybeSingle to handle that
@@ -341,12 +339,10 @@ export const orderService = {
 
 			if (error && isMissingAttachmentColumnError(error)) {
 				const fallbackQuery = idempotencyKey
-					? supabase
-							.from("orders")
-							.upsert([insertFallback], {
-								onConflict: "idempotency_key",
-								ignoreDuplicates: true,
-							})
+					? supabase.from("orders").upsert([insertFallback], {
+							onConflict: "idempotency_key",
+							ignoreDuplicates: true,
+						})
 					: supabase.from("orders").insert([insertFallback]);
 				const fallbackResult = idempotencyKey
 					? await fallbackQuery.select().maybeSingle()
