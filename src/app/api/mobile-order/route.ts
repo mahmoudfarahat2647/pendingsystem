@@ -65,7 +65,9 @@ export async function POST(req: NextRequest) {
 		req.headers.get("x-real-ip") ??
 		"unknown";
 
-	if (isRateLimited(ip)) {
+	const supabase = createServiceClient();
+
+	if (await isRateLimited(supabase, ip)) {
 		return NextResponse.json(
 			{ error: "Too many requests. Try again later." },
 			{ status: 429 },
@@ -121,7 +123,6 @@ export async function POST(req: NextRequest) {
 	const rowsToInsert =
 		parts.length === 0 ? [{ partNumber: "", description: "" }] : parts;
 
-	const supabase = createServiceClient();
 	await mergeAppSettings(supabase, model, repairSystem);
 	const errors: string[] = [];
 
