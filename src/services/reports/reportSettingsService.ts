@@ -1,63 +1,34 @@
 import type { ApiResponse } from "@/lib/apiResponse";
-import { supabase } from "@/lib/supabase";
 import type { ReportSettings } from "@/store/types";
-
-const DEFAULT_REPORT_SETTINGS = {
-	emails: [],
-	frequency: "Weekly",
-	is_enabled: false,
-} as const;
 
 export const reportSettingsService = {
 	async getReportSettings(): Promise<ReportSettings> {
-		const { data, error } = await supabase
-			.from("report_settings")
-			.select("*")
-			.order("updated_at", { ascending: false })
-			.limit(1)
-			.maybeSingle();
-
-		if (error && error.code !== "PGRST116") {
-			throw new Error(error.message);
+		const response = await fetch("/api/report-settings");
+		if (!response.ok) {
+			const errorData = (await response.json().catch(() => ({}))) as {
+				error?: string;
+			};
+			throw new Error(errorData.error ?? `Server error: ${response.status}`);
 		}
-
-		if (data) {
-			return data;
-		}
-
-		// No settings row found — auto-create the default on first access
-		console.info(
-			"[reportSettingsService] No settings row found. Creating defaults.",
-		);
-		const { data: newData, error: createError } = await supabase
-			.from("report_settings")
-			.insert([DEFAULT_REPORT_SETTINGS])
-			.select()
-			.single();
-
-		if (createError) {
-			throw new Error(createError.message);
-		}
-
-		return newData;
+		return (await response.json()) as ReportSettings;
 	},
 
 	async updateReportSettings(
 		id: string,
 		settings: Partial<ReportSettings>,
 	): Promise<ReportSettings> {
-		const { data, error } = await supabase
-			.from("report_settings")
-			.update(settings)
-			.eq("id", id)
-			.select()
-			.single();
-
-		if (error) {
-			throw new Error(error.message);
+		const response = await fetch("/api/report-settings", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ id, ...settings }),
+		});
+		if (!response.ok) {
+			const errorData = (await response.json().catch(() => ({}))) as {
+				error?: string;
+			};
+			throw new Error(errorData.error ?? `Server error: ${response.status}`);
 		}
-
-		return data;
+		return (await response.json()) as ReportSettings;
 	},
 
 	async triggerManualBackup(): Promise<ApiResponse> {
