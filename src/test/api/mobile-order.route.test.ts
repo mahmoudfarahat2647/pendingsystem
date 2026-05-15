@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// We test the handler logic by mocking Supabase inserts.
+// We test the handler logic by mocking Supabase inserts and the rate-limit RPC.
 // The handler is imported after mocks are set up.
 
 const mockInsert = vi.fn();
 const mockSelect = vi.fn();
 const mockSingle = vi.fn();
+// mockRpc simulates the check_rate_limit / prune_rate_limits RPCs.
+// Default: not rate-limited.
+const mockRpc = vi.fn().mockResolvedValue({ data: false, error: null });
+
 // biome-ignore lint/suspicious/noExplicitAny: test mock needs flexible return type for multi-table mocking
 const mockFrom = vi.fn((_table: string): any => ({
 	insert: mockInsert.mockReturnThis(),
@@ -16,14 +20,13 @@ const mockFrom = vi.fn((_table: string): any => ({
 vi.mock("@supabase/supabase-js", () => ({
 	createClient: vi.fn(() => ({
 		from: mockFrom,
+		rpc: mockRpc,
 	})),
 }));
 
 // Import after mocks
 const { POST } = await import("@/app/api/mobile-order/route");
-const { _rateLimitMap, RATE_LIMIT_MAX } = await import(
-	"@/app/api/mobile-order/rateLimiter"
-);
+const { RATE_LIMIT_MAX } = await import("@/app/api/mobile-order/rateLimiter");
 
 function makeRequest(body: unknown) {
 	return new Request("http://localhost/api/mobile-order", {
@@ -37,8 +40,9 @@ describe("POST /api/mobile-order", () => {
 	beforeEach(() => {
 		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
-		_rateLimitMap.clear();
 		vi.clearAllMocks();
+		// Default: not rate-limited
+		mockRpc.mockResolvedValue({ data: false, error: null });
 		mockSingle.mockResolvedValue({
 			data: { id: "uuid-1", stage: "orders" },
 			error: null,
@@ -82,14 +86,14 @@ describe("POST /api/mobile-order", () => {
 			company: "Zeekr",
 			parts: [{ partNumber: "X", description: "Y" }],
 		});
-		const res = await POST(req as never);
+		await POST(req as never);
 		const insertArg = mockInsert.mock.calls[0][0][0];
 		expect(insertArg.metadata.requester).toBe("mobile");
 	});
 
 	it("sets rDate to today if not provided", async () => {
 		const req = makeRequest({ company: "Zeekr", parts: [] });
-		const res = await POST(req as never);
+		await POST(req as never);
 		const insertArg = mockInsert.mock.calls[0][0][0];
 		// rDate stored in metadata
 		expect(typeof insertArg.metadata.rDate).toBe("string");
@@ -107,7 +111,7 @@ describe("POST /api/mobile-order", () => {
 				{ partNumber: "B", description: "desc B" },
 			],
 		});
-		const res = await POST(req as never);
+		await POST(req as never);
 		for (const call of mockInsert.mock.calls) {
 			const row = call[0][0];
 			expect(row.customer_name).toBe("Alice");
@@ -147,8 +151,8 @@ describe("POST /api/mobile-order — app_settings merge", () => {
 	beforeEach(() => {
 		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
-		_rateLimitMap.clear();
 		vi.clearAllMocks();
+		mockRpc.mockResolvedValue({ data: false, error: null });
 		mockSingle.mockResolvedValue({
 			data: { id: "uuid-1", stage: "orders" },
 			error: null,
@@ -190,8 +194,6 @@ describe("POST /api/mobile-order — app_settings merge", () => {
 });
 
 describe("POST /api/mobile-order — rate limiting", () => {
-	const RATE_LIMIT_IP = "10.0.0.1";
-
 	function makeRequestWithIp(ip: string) {
 		return new Request("http://localhost/api/mobile-order", {
 			method: "POST",
@@ -206,7 +208,6 @@ describe("POST /api/mobile-order — rate limiting", () => {
 	beforeEach(() => {
 		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
-		_rateLimitMap.clear();
 		vi.clearAllMocks();
 		mockSingle.mockResolvedValue({
 			data: { id: "uuid-1", stage: "orders" },
@@ -214,28 +215,47 @@ describe("POST /api/mobile-order — rate limiting", () => {
 		});
 	});
 
-	it("allows requests up to the rate limit", async () => {
-		for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-			const res = await POST(makeRequestWithIp(RATE_LIMIT_IP) as never);
-			expect(res.status).not.toBe(429);
-		}
+	it("passes the caller IP to the rate-limit RPC", async () => {
+		mockRpc.mockResolvedValue({ data: false, error: null });
+		await POST(makeRequestWithIp("10.0.0.1") as never);
+		expect(mockRpc).toHaveBeenCalledWith(
+			"check_rate_limit",
+			expect.objectContaining({
+				p_ip: "10.0.0.1",
+				p_max_requests: RATE_LIMIT_MAX,
+			}),
+		);
 	});
 
-	it("returns 429 after exceeding the rate limit", async () => {
-		for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-			await POST(makeRequestWithIp(RATE_LIMIT_IP) as never);
-		}
-		const res = await POST(makeRequestWithIp(RATE_LIMIT_IP) as never);
+	it("allows request when RPC returns false (under limit)", async () => {
+		mockRpc.mockResolvedValue({ data: false, error: null });
+		const res = await POST(makeRequestWithIp("10.0.0.1") as never);
+		expect(res.status).not.toBe(429);
+	});
+
+	it("returns 429 when RPC returns true (limit reached)", async () => {
+		mockRpc.mockResolvedValue({ data: true, error: null });
+		const res = await POST(makeRequestWithIp("10.0.0.1") as never);
 		expect(res.status).toBe(429);
 		const json = await res.json();
 		expect(json.error).toMatch(/too many requests/i);
 	});
 
-	it("does not rate-limit a different IP", async () => {
-		for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-			await POST(makeRequestWithIp(RATE_LIMIT_IP) as never);
-		}
-		const res = await POST(makeRequestWithIp("10.0.0.2") as never);
+	it("fails open (allows request) when RPC errors", async () => {
+		mockRpc.mockResolvedValue({ data: null, error: { message: "DB error" } });
+		const res = await POST(makeRequestWithIp("10.0.0.1") as never);
 		expect(res.status).not.toBe(429);
+	});
+
+	it(`passes RATE_LIMIT_MAX (${RATE_LIMIT_MAX}) to the RPC`, async () => {
+		mockRpc.mockResolvedValue({ data: false, error: null });
+		await POST(makeRequestWithIp("10.0.0.1") as never);
+		expect(mockRpc).toHaveBeenCalledWith(
+			"check_rate_limit",
+			expect.objectContaining({
+				p_ip: "10.0.0.1",
+				p_max_requests: RATE_LIMIT_MAX,
+			}),
+		);
 	});
 });
