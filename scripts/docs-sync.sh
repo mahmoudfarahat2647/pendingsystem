@@ -17,6 +17,12 @@ if [ -z "$CHANGED_SRC" ]; then
   exit 0
 fi
 
+# Guard: docs vault is gitignored and may not be present on clean checkouts
+if [ ! -d "$ROOT_DIR/docs/features/" ]; then
+  echo "[docs-sync] docs/features/ not found — skipping (vault not present)."
+  exit 0
+fi
+
 echo "[docs-sync] src/ changes detected:"
 echo "$CHANGED_SRC"
 
@@ -114,6 +120,10 @@ echo "$INGEST_RAW" | awk -v root="$ROOT_DIR" '
     outfile = substr($0, 10)
     gsub(/===[ \t]*$/, "", outfile)
     gsub(/^[ \t]+|[ \t]+$/, "", outfile)
+    if (outfile !~ /^docs\// || outfile ~ /\.\./) {
+      print "[docs-sync] BLOCKED unsafe path: " outfile > "/dev/stderr"
+      outfile = ""
+    }
     next
   }
   /^===END===/ {
