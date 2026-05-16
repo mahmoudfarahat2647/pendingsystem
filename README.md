@@ -105,13 +105,10 @@ public/               Static assets
 5. `archive` - Historical records and reorder recovery.
 
 ## Documentation
-- [`FEATURES.md`](FEATURES.md) - Product behavior and current workflow rules
-- [`ENGINEERING.md`](ENGINEERING.md) - Architecture, services, state, operations, and troubleshooting
 Files under `docs/` are treated as protected reference material. Update them intentionally and explicitly rather than as part of routine wording cleanup.
 
 ## Contributing
-- Follow the implementation guidance in [`ENGINEERING.md`](ENGINEERING.md).
-- Keep [`README.md`](README.md), [`FEATURES.md`](FEATURES.md), and [`ENGINEERING.md`](ENGINEERING.md) aligned with the code whenever behavior changes.
+- Keep [`README.md`](README.md) aligned with the code whenever behavior changes.
 - Run the normal quality gates before opening a PR:
 
   ```bash

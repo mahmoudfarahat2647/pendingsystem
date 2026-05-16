@@ -73,8 +73,13 @@ e2e/.auth/
 # documentation
 /docs/
 
-# scripts
-/scripts/
+# scripts (utility scripts ignored, but docs-sync infrastructure is tracked)
+/scripts/*
+!/scripts/docs-sync.sh
+!/scripts/prompts
+/scripts/prompts/*
+!/scripts/prompts/docs-triage.md
+!/scripts/prompts/docs-ingest.md
 
 # CLAUDE.md
 CLAUDE.md

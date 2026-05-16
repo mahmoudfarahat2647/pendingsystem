@@ -14,16 +14,15 @@ npm run lint:fix:staged:unsafe # Retry staged fixes with unsafe fixes
 npm run type-check   # TypeScript validation (no emit)
 npm run test         # Vitest unit tests
 npm run test:watch   # Vitest watch mode
-npm run docs:validate # Validate markdown docs structure
 ```
 
-**Quality gates before merging:** `lint` -> `type-check` -> `test` -> `build`. Add `docs:validate` when documentation changes.
+**Quality gates before merging:** `lint` -> `type-check` -> `test` -> `build`.
 
 `git commit` triggers a Husky pre-commit hook that runs Biome safe fixes on staged files first, then retries with unsafe fixes if the safe pass still reports issues.
 
 ## Architecture
 
-**pendingsystem** is a Next.js 15 App Router logistics platform for managing automotive parts across five workflow stages: `orders` -> `main` -> `call` -> `booking` -> `archive`.
+**pendingsystem** is a Next.js 15 App Router logistics platform for managing automotive parts across five workflow stages: `orders` -> `main` -> `call` -> `booking` -> `archive` (route folders: `orders`, `main-sheet`, `call-list`, `booking`, `archive`).
 
 ### Data Ownership
 - **React Query** is the source of truth for all live operational stage data.
@@ -74,7 +73,7 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 - **Route handler**: `src/app/api/auth/[...all]/route.ts` — Better Auth catch-all
 - **Protection**: Middleware (optimistic cookie check) + `(app)/layout.tsx` (authoritative DB check)
 - **Admin setup**: Run `npm run auth:seed-admin` after setting `AUTH_ADMIN_*` env vars in `.env.local`
-- **Session expiry**: 1 hour, no refresh (`session.expiresIn: 3600`, `session.disableSessionRefresh: true`)
+- **Session expiry**: 8 hours, 5-minute rolling refresh (`session.expiresIn: 60 * 60 * 8`, `session.updateAge: 60 * 5`)
 
 ### Key Cross-Cutting Components
 - **`BookingCalendarModal`** - shared booking workflow modal used across multiple stages
@@ -90,28 +89,6 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 - Use selector-based subscriptions with `useAppStore`, never the bare store without a selector.
 - Booking and Call List actions require part number and description. Commit to Main Sheet also requires an attachment path and Beast Mode validation.
 - Stage pages should mutate operational rows through `useDraftSession()` commands, then persist with `saveDraft()` instead of calling stage mutations directly from the page body.
-
-## Documentation
-
-When making changes, update accordingly:
-- **`FEATURES.md`** - when product behavior changes
-- **`ENGINEERING.md`** - when architecture, data flow, env requirements, or operations change
-
-### Obsidian Docs Workflow
-
-The `docs/` folder is an Obsidian vault. Follow this convention:
-
-| Folder | Purpose | Who writes |
-|--------|---------|-----------|
-| `docs/superpowers/specs/` | Design specs (intent, behavior, acceptance criteria) | User writes in Obsidian |
-| `docs/superpowers/plans/` | Implementation plans | Claude writes via writing-plans skill |
-| `docs/` root | Stable reference docs (post-implementation) | Claude writes after implementing |
-| `docs/_templates/` | Obsidian templates for specs and references | — |
-
-**Spec lifecycle:** `draft` → `approved` → `implemented`
-Update the `status:` frontmatter field in the spec file when its lifecycle stage changes.
-
-**When implementing from a spec:** Read the spec file first, implement, then update the spec `status` to `implemented` and update relevant reference docs.
 
 ## Supabase & Database
 
@@ -174,9 +151,12 @@ If `SELECT 1` passes but auth still fails, the issue is in `auth.ts` config — 
 | `order_reminders` | Per-row reminder records |
 | `report_settings` | Report config per user |
 | `auth_users` | Better Auth users |
-| `auth_sessions` | Sessions (1h expiry, no refresh) |
+| `auth_sessions` | Sessions (8h expiry, 5-min refresh) |
 | `auth_accounts` | Auth accounts |
 | `auth_verifications` | Auth verifications |
+| `recent_activity` | Activity log records |
+| `app_settings` | Application-level settings |
+| `rate_limits` | Rate-limiting records |
 
 ### Supabase MCP
 
@@ -186,9 +166,8 @@ The Supabase MCP server is active in this project. Claude can directly query tab
 
 ## Known Constraints
 
-- Authentication uses Better Auth (username+password only, admin-only, 1-hour sessions).
+- Authentication uses Better Auth (username+password only, admin-only, 8-hour sessions).
 - Theme customization tab in Settings is a placeholder only.
-- `CloudSync` is a legacy migration utility (Zustand -> Supabase), not the live sync path.
 - Some legacy Zustand stage arrays remain in the store for compatibility; do not expand that pattern.
 
 ## Refactor Safety Rules
@@ -206,9 +185,9 @@ When performing any refactor, optimization, or code cleanup:
 
 - This warning is mandatory whether the change is proposed in a plan, a code edit, or a code review suggestion.
 
-## important note
+## Important Note
 
-- after major changes please update this file (CLAUDE.md) . keep this file up-to-date with the project's status .
+After major changes, update this file (`CLAUDE.md`). Keep it up-to-date with the project's current status.
 
 ## Workflow Conventions
 
@@ -222,15 +201,19 @@ When performing any refactor, optimization, or code cleanup:
 - When presenting multiple approaches, offer 2–3 concise options with trade-offs and wait for the user to select before deep-diving into the chosen path.
 - If asked to "save a plan", write it to a `.md` file in the **project root** and exit plan mode before beginning implementation. This makes the plan accessible from other sessions.
 
-## Deprecated Commands
-
-The following slash commands are deprecated — do NOT suggest or invoke them:
-
-- `/superpowers:write-plan` — replaced by the `superpowers:writing-plans` skill
-- `/superpowers:execute-plan` — replaced by the `superpowers:executing-plans` skill
-
 ## Build & Long-Running Tasks
 
 - `npm run build` can take several minutes. Before starting, announce what you are running and the expected wait time.
 - Prefer `npm run type-check` (`tsc --noEmit`) for fast type validation unless production output is the explicit goal.
 - For lint validation prefer `npm run lint` (read-only Biome check) over `npm run lint:fix` unless the task is specifically to auto-fix.
+
+## Documentation Structure
+
+- `/docs/features/` → feature-level docs
+- `/docs/architecture.md` → system patterns
+- `/docs/api.md` → API reference
+
+## Rules
+
+- Before implementing any feature, check `/docs/features/` for existing context
+- After completing a feature, update the relevant doc file

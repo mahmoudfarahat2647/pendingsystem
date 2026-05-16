@@ -23,7 +23,8 @@
 		"commit": "pwsh scripts/quick-commit.ps1",
 		"auth:seed-admin": "node scripts/seed-admin-user.mjs",
 		"import:sheet": "node scripts/import-sheet.mjs",
-		"db:verify": "node scripts/verify-db.mjs"
+		"db:verify": "node scripts/verify-db.mjs",
+		"docs:sync": "bash scripts/docs-sync.sh"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.4.1",
