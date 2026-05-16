@@ -60,3 +60,71 @@ fi
 echo "[docs-sync] Affected features: $AFFECTED_FEATURES"
 [ "$AFFECTED_ARCH" = "true" ] && echo "[docs-sync] + architecture.md"
 [ "$AFFECTED_API"  = "true" ] && echo "[docs-sync] + api.md"
+
+# ── Phase 2: Cascade ─────────────────────────────────────────────────────────
+
+echo "[docs-sync] Building ingest context..."
+
+COMMIT_HASH=$(git rev-parse --short "${RANGE##*..}")
+TODAY=$(date +%Y-%m-%d)
+FEATURE_LABEL=$(echo "$AFFECTED_FEATURES" | tr '\n' '+' | sed 's/+$//')
+
+AFFECTED_TARGETS=""
+CURRENT_FILE_CONTENTS=""
+
+collect_file() {
+  local rel="$1"
+  local abs="$ROOT_DIR/$rel"
+  if [ -f "$abs" ]; then
+    AFFECTED_TARGETS="$AFFECTED_TARGETS\n- $rel"
+    CURRENT_FILE_CONTENTS="$CURRENT_FILE_CONTENTS\n\n===CURRENT: $rel===\n$(cat "$abs")\n===END==="
+  fi
+}
+
+for feature in $AFFECTED_FEATURES; do
+  collect_file "docs/features/$feature.md"
+  wiki_source=$(ls "$ROOT_DIR/docs/wiki/sources/"*"$feature"* 2>/dev/null | head -1 || true)
+  if [ -n "$wiki_source" ]; then
+    collect_file "${wiki_source#$ROOT_DIR/}"
+  fi
+done
+
+[ "$AFFECTED_ARCH" = "true" ] && collect_file "docs/architecture.md"
+[ "$AFFECTED_API"  = "true" ] && collect_file "docs/api.md"
+
+collect_file "docs/wiki/log.md"
+
+SCHEMA_CONTENT=$(cat "$ROOT_DIR/docs/wiki/SCHEMA.md")
+INGEST_PROMPT=$(cat "$ROOT_DIR/scripts/prompts/docs-ingest.md")
+INGEST_PROMPT="${INGEST_PROMPT//\{\{DIFF\}\}/$DIFF}"
+INGEST_PROMPT="${INGEST_PROMPT//\{\{AFFECTED_TARGETS\}\}/$AFFECTED_TARGETS}"
+INGEST_PROMPT="${INGEST_PROMPT//\{\{SCHEMA_CONTENT\}\}/$SCHEMA_CONTENT}"
+INGEST_PROMPT="${INGEST_PROMPT//\{\{CURRENT_FILE_CONTENTS\}\}/$CURRENT_FILE_CONTENTS}"
+INGEST_PROMPT="${INGEST_PROMPT//\{\{DATE\}\}/$TODAY}"
+INGEST_PROMPT="${INGEST_PROMPT//\{\{COMMIT_HASH\}\}/$COMMIT_HASH}"
+INGEST_PROMPT="${INGEST_PROMPT//\{\{FEATURE\}\}/$FEATURE_LABEL}"
+
+echo "[docs-sync] Running cascade (this may take ~30s)..."
+INGEST_RAW=$(claude -p "$INGEST_PROMPT" 2>/dev/null)
+
+# ── awk parser: write each ===FILE:=== block to disk ─────────────────────────
+echo "$INGEST_RAW" | awk -v root="$ROOT_DIR" '
+  /^===FILE: / {
+    if (outfile != "") close(outfile)
+    outfile = substr($0, 10)
+    gsub(/===[ \t]*$/, "", outfile)
+    gsub(/^[ \t]+|[ \t]+$/, "", outfile)
+    next
+  }
+  /^===END===/ {
+    if (outfile != "") {
+      close(outfile)
+      print "[docs-sync] Written: " outfile
+    }
+    outfile = ""
+    next
+  }
+  outfile != "" { print > (root "/" outfile) }
+'
+
+echo "[docs-sync] Cascade complete. Review unstaged changes before committing."
