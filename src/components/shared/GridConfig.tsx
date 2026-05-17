@@ -152,6 +152,19 @@ export const getBaseColumns = (
 		width: 100,
 	},
 	{
+		headerName: "ICM DATE",
+		field: "startWarranty",
+		width: 110,
+		valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
+			if (!params.value) return "";
+			try {
+				return format(new Date(params.value as string), "MMM d, yyyy");
+			} catch {
+				return params.value as string;
+			}
+		},
+	},
+	{
 		headerName: "WARRANTY",
 		field: "remainTime",
 		cellRenderer: WarrantyRenderer,

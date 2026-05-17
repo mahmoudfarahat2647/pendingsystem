@@ -78,6 +78,15 @@ describe("Grid Column Configuration Selection Fix", () => {
 			// 5. Case-insensitive equivalence (mixed case treated as equal)
 			expect(compare("renault", "Renault")).toBe(0);
 		});
+
+		it("should include ICM DATE column for the startWarranty field", () => {
+			const columns = getBaseColumns();
+			const icmDateCol = columns.find((c) => c.headerName === "ICM DATE");
+			expect(icmDateCol).toBeDefined();
+			expect(icmDateCol?.field).toBe("startWarranty");
+			expect(icmDateCol?.width).toBe(110);
+			expect(typeof icmDateCol?.valueFormatter).toBe("function");
+		});
 	});
 
 	describe("useColumnDefs hook", () => {
