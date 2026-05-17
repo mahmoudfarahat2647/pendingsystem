@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import React from "react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -8,7 +9,6 @@ interface InfoLabelProps {
 }
 
 export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
-	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const {
 		customerName = "-",
@@ -19,14 +19,9 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 		description = "-",
 		repairSystem = "-",
 		remainTime = "-",
-		status = "-",
-		bookingStatus,
+		startWarranty = "",
+		endWarranty = "",
 	} = data || {};
-
-	const statusDef = bookingStatus
-		? bookingStatuses.find((s) => s.label === bookingStatus)
-		: null;
-	const statsColor = statusDef?.color || "bg-renault-yellow";
 
 	const partStatusDef = data?.status
 		? partStatuses.find((s) => s.label === data.status)
@@ -37,6 +32,15 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 	if (!partStatsColor.startsWith("#") && partStatsColor.startsWith("text-")) {
 		partStatsColor = partStatsColor.replace("text-", "bg-");
 	}
+
+	const fmtDate = (d: string) => {
+		if (!d) return "—";
+		try {
+			return format(new Date(d), "MMM d, yyyy");
+		} catch {
+			return d;
+		}
+	};
 
 	return (
 		<div className="w-full relative group">
@@ -106,22 +110,32 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								{partNumber}
 							</span>
 						</div>
-						<div className="flex items-center gap-2" suppressHydrationWarning>
-							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
-								order stats :
-							</span>
-							<span
-								className={cn(
-									"px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest transition-all duration-300",
-									`${statsColor.replace("bg-", "border-").split(" ")[0]}/20`,
-									statsColor.replace("bg-", "text-").split(" ")[0],
-									statsColor.includes("/") ? statsColor : `${statsColor}/10`,
-									"bg-opacity-10",
-								)}
-							>
-								{bookingStatus || status}
-							</span>
-						</div>
+						{repairSystem === "ضمان" && (
+							<>
+								<div
+									className="flex items-baseline gap-2"
+									suppressHydrationWarning
+								>
+									<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
+										icm start :
+									</span>
+									<span className="text-sm font-mono text-cyan-400 tracking-wide truncate">
+										{fmtDate(startWarranty)}
+									</span>
+								</div>
+								<div
+									className="flex items-baseline gap-2"
+									suppressHydrationWarning
+								>
+									<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
+										icm end :
+									</span>
+									<span className="text-sm font-mono text-cyan-400 tracking-wide truncate">
+										{fmtDate(endWarranty)}
+									</span>
+								</div>
+							</>
+						)}
 					</div>
 
 					{/* Column 3: Warranty & Part State */}
