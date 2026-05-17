@@ -158,7 +158,9 @@ export const getBaseColumns = (
 		valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
 			if (!params.value) return "";
 			try {
-				return format(new Date(params.value as string), "MMM d, yyyy");
+				const s = params.value as string;
+				const d = s.includes("T") ? new Date(s) : new Date(`${s}T00:00:00`);
+				return format(d, "MMM d, yyyy");
 			} catch {
 				return params.value as string;
 			}
@@ -381,6 +383,7 @@ export const getGlobalSearchWorkspaceColumns = (
 	const partNumberCol = baseCols.find((c) => c.field === "partNumber");
 	const descriptionCol = baseCols.find((c) => c.field === "description");
 	const repairSystemCol = baseCols.find((c) => c.field === "repairSystem");
+	const icmDateCol = baseCols.find((c) => c.field === "startWarranty");
 	const warrantyCol = baseCols.find((c) => c.field === "remainTime");
 	const actionsCol = baseCols.find((c) => c.colId === "row-actions");
 
@@ -492,6 +495,7 @@ export const getGlobalSearchWorkspaceColumns = (
 		{ ...(partNumberCol || {}), minWidth: 120 },
 		{ ...(descriptionCol || {}), minWidth: 180, flex: 2 },
 		{ ...(repairSystemCol || {}), width: 100 },
+		{ ...(icmDateCol || {}), width: 110 },
 		{ ...(warrantyCol || {}), width: 100 },
 		// 5. REQUESTER
 		{

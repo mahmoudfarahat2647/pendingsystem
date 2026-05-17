@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import React from "react";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 interface InfoLabelProps {
@@ -8,6 +9,7 @@ interface InfoLabelProps {
 }
 
 export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
+	const partStatuses = useAppStore((state) => state.partStatuses);
 	const {
 		customerName = "-",
 		vin = "-",
@@ -21,10 +23,19 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 		endWarranty = "",
 	} = data || {};
 
+	const partStatusDef = data?.status
+		? partStatuses.find((s) => s.label === data.status)
+		: null;
+	let partStatsColor = partStatusDef?.color || "#06b6d4";
+	if (!partStatsColor.startsWith("#") && partStatsColor.startsWith("text-")) {
+		partStatsColor = partStatsColor.replace("text-", "bg-");
+	}
+
 	const fmtDate = (d: string) => {
 		if (!d) return "—";
 		try {
-			return format(new Date(d), "MMM d, yyyy");
+			const parsed = d.includes("T") ? new Date(d) : new Date(`${d}T00:00:00`);
+			return format(parsed, "MMM d, yyyy");
 		} catch {
 			return d;
 		}
@@ -98,32 +109,6 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								{partNumber}
 							</span>
 						</div>
-						{repairSystem === "ضمان" && (
-							<>
-								<div
-									className="flex items-baseline gap-2"
-									suppressHydrationWarning
-								>
-									<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
-										icm start :
-									</span>
-									<span className="text-sm font-mono text-cyan-400 tracking-wide truncate">
-										{fmtDate(startWarranty)}
-									</span>
-								</div>
-								<div
-									className="flex items-baseline gap-2"
-									suppressHydrationWarning
-								>
-									<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
-										icm end :
-									</span>
-									<span className="text-sm font-mono text-cyan-400 tracking-wide truncate">
-										{fmtDate(endWarranty)}
-									</span>
-								</div>
-							</>
-						)}
 					</div>
 
 					{/* Column 3: Warranty & Part State */}
@@ -151,6 +136,66 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								{repairSystem}
 							</span>
 						</div>
+						<div className="flex items-center gap-2" suppressHydrationWarning>
+							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
+								part state :
+							</span>
+							{data?.status ? (
+								<span
+									className={cn(
+										"px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+										!partStatsColor.startsWith("#") &&
+											!partStatsColor.includes(" ") && [
+												`${partStatsColor.replace("bg-", "border-").split(" ")[0]}/20`,
+												partStatsColor.replace("bg-", "text-").split(" ")[0],
+												partStatsColor.includes("/")
+													? partStatsColor
+													: `${partStatsColor}/10`,
+											],
+										partStatsColor.includes(" ") && partStatsColor,
+									)}
+									style={
+										partStatsColor.startsWith("#")
+											? {
+													backgroundColor: `${partStatsColor}1A`,
+													borderColor: `${partStatsColor}33`,
+													color: partStatsColor,
+												}
+											: undefined
+									}
+								>
+									{data.status}
+								</span>
+							) : (
+								<span className="text-xs text-gray-600 italic">No Status</span>
+							)}
+						</div>
+						{repairSystem === "ضمان" && (
+							<>
+								<div
+									className="flex items-baseline gap-2"
+									suppressHydrationWarning
+								>
+									<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
+										icm start :
+									</span>
+									<span className="text-sm font-mono text-cyan-400 tracking-wide truncate">
+										{fmtDate(startWarranty)}
+									</span>
+								</div>
+								<div
+									className="flex items-baseline gap-2"
+									suppressHydrationWarning
+								>
+									<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
+										icm end :
+									</span>
+									<span className="text-sm font-mono text-cyan-400 tracking-wide truncate">
+										{fmtDate(endWarranty)}
+									</span>
+								</div>
+							</>
+						)}
 					</div>
 				</div>
 
