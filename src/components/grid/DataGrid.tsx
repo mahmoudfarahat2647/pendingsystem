@@ -10,6 +10,7 @@ import type {
 import { AgGridReact } from "ag-grid-react";
 import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
 import { toast } from "sonner";
+import { usePendingSearchSelection } from "@/hooks/usePendingSearchSelection";
 import { tryJumpToRow } from "@/lib/ag-grid-helpers";
 import { gridTheme } from "@/lib/ag-grid-setup";
 import { useLiveGridStore } from "@/store/useLiveGridStore";
@@ -33,6 +34,7 @@ export interface DataGridProps<T extends { id?: string; vin?: string }> {
 	height?: string | number;
 	showFloatingFilters?: boolean;
 	gridStateKey?: string;
+	stage?: string;
 }
 
 function DataGridInner<T extends { id?: string; vin?: string }>({
@@ -49,6 +51,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	height = "100%",
 	showFloatingFilters = false,
 	gridStateKey,
+	stage,
 }: DataGridProps<T>) {
 	const gridId = useId();
 	const rowIdMapRef = useRef(new WeakMap<object, string>());
@@ -177,6 +180,9 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 
 		return () => clearTimeout(timeout);
 	}, [highlightedRowId, setHighlightedRowId]);
+
+	// Wire search badge navigation for this stage
+	usePendingSearchSelection(stage ?? "", gridApiRef, rowData);
 
 	// [CRITICAL] PERSISTENCE RESTORATION
 	// Restore saved state when grid is ready
