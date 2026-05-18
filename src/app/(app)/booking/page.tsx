@@ -491,6 +491,7 @@ export default function BookingPage() {
 						rowData={effectiveBookingData}
 						columnDefs={columns}
 						gridStateKey="booking"
+						stage="booking"
 						readOnly={draftSaving}
 						onSelectionChange={setSelectedRows}
 						onCellValueChanged={async (params) => {

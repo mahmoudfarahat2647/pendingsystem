@@ -474,6 +474,7 @@ export default function CallListPage() {
 						rowData={filteredEffectiveData}
 						columnDefs={columns}
 						gridStateKey="call-list"
+						stage="call"
 						readOnly={draftSaving}
 						onSelectionChange={setSelectedRows}
 						onCellValueChanged={async (params) => {

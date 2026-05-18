@@ -177,6 +177,7 @@ export default function OrdersPage() {
 								rowData={ordersRowData}
 								columnDefs={columns}
 								gridStateKey="orders"
+								stage="orders"
 								readOnly={draftSaving}
 								onSelectionChange={setSelectedRows}
 								onCellValueChanged={async (params) => {

@@ -406,6 +406,7 @@ export default function ArchivePage() {
 						rowData={effectiveData}
 						columnDefs={columns}
 						gridStateKey="archive"
+						stage="archive"
 						readOnly={draftSaving}
 						onSelectionChange={setSelectedRows}
 						onCellValueChanged={async (params) => {
