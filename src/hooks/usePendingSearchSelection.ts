@@ -56,7 +56,7 @@ export function usePendingSearchSelection(
 	}, [pendingSearchSelection, stage, attemptSelect]);
 
 	// Retry when rowData changes — covers the async data-load timing after navigation
-	// biome-ignore lint/correctness/useExhaustiveDependencies: rowData identity is the trigger
+	// rowData identity change is the intentional trigger for retry — not a missing dep
 	useEffect(() => {
 		if (!pendingIdsRef.current) return;
 		attemptSelect();
