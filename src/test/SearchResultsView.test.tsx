@@ -62,6 +62,15 @@ type MockArchiveModalProps = {
 	onSave: (reason: string) => void;
 };
 
+type MockSearchResultsHeaderProps = {
+	searchTerm: string;
+	resultsCount: number;
+	counts: Record<string, number>;
+	selectedCount: number;
+	onClearSearch: () => void;
+	onBadgeClick: (source: string) => void;
+};
+
 const mocks = vi.hoisted(() => ({
 	toastSuccess: vi.fn(),
 	toastError: vi.fn(),
@@ -76,6 +85,8 @@ const mocks = vi.hoisted(() => ({
 		call: vi.fn(),
 		archive: vi.fn(),
 	},
+	searchResultsHeaderProps: null as MockSearchResultsHeaderProps | null,
+	routerPush: vi.fn(),
 	gridProps: null as MockGridProps | null,
 	gridRowData: null as PendingRow[] | null,
 	gridColumnsArgs: null as unknown[] | null,
@@ -97,6 +108,7 @@ const mocks = vi.hoisted(() => ({
 		setSearchTerm: vi.fn(),
 		partStatuses: [] as { id: string; label: string; color: string }[],
 		bookingStatuses: [] as { id: string; label: string; color: string }[],
+		setPendingSearchSelection: vi.fn(),
 	},
 	queryData: {
 		main: [] as PendingRow[],
@@ -126,6 +138,10 @@ vi.mock("sonner", () => ({
 		error: mocks.toastError,
 		warning: mocks.toastWarning,
 	},
+}));
+
+vi.mock("next/navigation", () => ({
+	useRouter: () => ({ push: mocks.routerPush }),
 }));
 
 vi.mock("@/lib/printing/reservationLabels", () => ({
@@ -190,7 +206,10 @@ vi.mock("@/components/shared/search/SearchResultsGrid", () => ({
 }));
 
 vi.mock("@/components/shared/search/SearchResultsHeader", () => ({
-	SearchResultsHeader: () => <div data-testid="search-results-header" />,
+	SearchResultsHeader: (props: MockSearchResultsHeaderProps) => {
+		mocks.searchResultsHeaderProps = props;
+		return <div data-testid="search-results-header" />;
+	},
 }));
 
 vi.mock("@/components/shared/search/SearchToolbar", () => ({
@@ -428,6 +447,9 @@ const openArchiveModal = async (rows: PendingRow[]) => {
 describe("SearchResultsView", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mocks.searchResultsHeaderProps = null;
+		mocks.routerPush.mockReset();
+		mocks.storeState.setPendingSearchSelection.mockReset();
 		mocks.gridProps = null;
 		mocks.gridRowData = null;
 		mocks.gridColumnsArgs = null;
@@ -1571,6 +1593,144 @@ describe("SearchResultsView", () => {
 
 			expect(mocks.toastError).not.toHaveBeenCalled();
 			expect(mocks.bulkMutations.main).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("badge navigation", () => {
+		it("calls setPendingSearchSelection, clears search, and navigates when a badge is clicked with no rows selected", async () => {
+			const row = createRow({
+				id: "main-1",
+				stage: "main",
+				sourceType: "Main Sheet",
+			});
+			mocks.queryData.main = [row];
+			renderView();
+
+			act(() => {
+				mocks.searchResultsHeaderProps?.onBadgeClick("Main Sheet");
+			});
+
+			expect(mocks.storeState.setPendingSearchSelection).toHaveBeenCalledWith({
+				stage: "main",
+				ids: ["main-1"],
+			});
+			expect(mocks.storeState.setSearchTerm).toHaveBeenCalledWith("");
+			expect(mocks.routerPush).toHaveBeenCalledWith("/main-sheet");
+		});
+
+		it("navigates with only selected rows for the clicked source when selection is active", async () => {
+			const mainRow = createRow({
+				id: "main-1",
+				stage: "main",
+				sourceType: "Main Sheet",
+			});
+			const ordersRow = createRow({
+				id: "orders-1",
+				stage: "orders",
+				sourceType: "Orders",
+			});
+			mocks.queryData.main = [mainRow];
+			mocks.queryData.orders = [ordersRow];
+			renderView();
+
+			await triggerSelectionChanged([mainRow]);
+
+			act(() => {
+				mocks.searchResultsHeaderProps?.onBadgeClick("Main Sheet");
+			});
+
+			expect(mocks.storeState.setPendingSearchSelection).toHaveBeenCalledWith({
+				stage: "main",
+				ids: ["main-1"],
+			});
+			expect(mocks.routerPush).toHaveBeenCalledWith("/main-sheet");
+		});
+
+		it("does nothing when the clicked source has 0 matching IDs", async () => {
+			const ordersRow = createRow({
+				id: "orders-1",
+				stage: "orders",
+				sourceType: "Orders",
+			});
+			mocks.queryData.orders = [ordersRow];
+			renderView();
+
+			// Select the orders row so Main Sheet has 0 selected
+			await triggerSelectionChanged([ordersRow]);
+
+			act(() => {
+				mocks.searchResultsHeaderProps?.onBadgeClick("Main Sheet");
+			});
+
+			expect(mocks.storeState.setPendingSearchSelection).not.toHaveBeenCalled();
+			expect(mocks.routerPush).not.toHaveBeenCalled();
+		});
+
+		it.each([
+			{ sourceType: "Orders", stage: "orders", route: "/orders" },
+			{ sourceType: "Booking", stage: "booking", route: "/booking" },
+			{ sourceType: "Call", stage: "call", route: "/call-list" },
+			{ sourceType: "Archive", stage: "archive", route: "/archive" },
+		] as const)("routes to $route when clicking the $sourceType badge", async ({
+			sourceType,
+			stage,
+			route,
+		}) => {
+			vi.clearAllMocks();
+			mocks.searchResultsHeaderProps = null;
+			mocks.storeState.searchTerm = "VIN123";
+			const row = createRow({ id: `${stage}-1`, stage, sourceType });
+			mocks.queryData[stage] = [row];
+			renderView();
+
+			act(() => {
+				mocks.searchResultsHeaderProps?.onBadgeClick(sourceType);
+			});
+
+			expect(mocks.routerPush).toHaveBeenCalledWith(route);
+			mocks.queryData[stage] = [];
+		});
+	});
+
+	describe("badge counts", () => {
+		it("shows total results per source when no rows are selected", () => {
+			const main1 = createRow({ id: "main-1", sourceType: "Main Sheet" });
+			const main2 = createRow({ id: "main-2", sourceType: "Main Sheet" });
+			const ordersRow = createRow({
+				id: "orders-1",
+				sourceType: "Orders",
+				stage: "orders",
+			});
+			mocks.queryData.main = [main1, main2];
+			mocks.queryData.orders = [ordersRow];
+			renderView();
+
+			expect(mocks.searchResultsHeaderProps?.counts).toEqual({
+				"Main Sheet": 2,
+				Orders: 1,
+			});
+			expect(mocks.searchResultsHeaderProps?.selectedCount).toBe(0);
+		});
+
+		it("shows selected count per source, 0 for unselected sources, when selection is active", async () => {
+			const main1 = createRow({ id: "main-1", sourceType: "Main Sheet" });
+			const main2 = createRow({ id: "main-2", sourceType: "Main Sheet" });
+			const ordersRow = createRow({
+				id: "orders-1",
+				sourceType: "Orders",
+				stage: "orders",
+			});
+			mocks.queryData.main = [main1, main2];
+			mocks.queryData.orders = [ordersRow];
+			renderView();
+
+			await triggerSelectionChanged([main1]);
+
+			expect(mocks.searchResultsHeaderProps?.counts).toEqual({
+				"Main Sheet": 1,
+				Orders: 0,
+			});
+			expect(mocks.searchResultsHeaderProps?.selectedCount).toBe(1);
 		});
 	});
 

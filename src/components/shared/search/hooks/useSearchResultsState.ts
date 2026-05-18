@@ -5,6 +5,7 @@ import type {
 	GridApi,
 	SelectionChangedEvent,
 } from "ag-grid-community";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -35,9 +36,29 @@ import type { OrderStage } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
+const SOURCE_TO_STAGE: Record<string, string> = {
+	"Main Sheet": "main",
+	Orders: "orders",
+	Booking: "booking",
+	Call: "call",
+	Archive: "archive",
+};
+
+const SOURCE_TO_ROUTE: Record<string, string> = {
+	"Main Sheet": "/main-sheet",
+	Orders: "/orders",
+	Booking: "/booking",
+	Call: "/call-list",
+	Archive: "/archive",
+};
+
 export const useSearchResultsState = () => {
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
+	const setPendingSearchSelection = useAppStore(
+		(state) => state.setPendingSearchSelection,
+	);
+	const router = useRouter();
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
 	// Grid & Selection State
@@ -531,6 +552,32 @@ export const useSearchResultsState = () => {
 		});
 	}, [searchResults]);
 
+	const onBadgeNavigate = useCallback(
+		(source: string) => {
+			const targetIds =
+				selectedRows.length > 0
+					? selectedRows.filter((r) => r.sourceType === source).map((r) => r.id)
+					: searchResults
+							.filter((r) => r.sourceType === source)
+							.map((r) => r.id);
+
+			const stage = SOURCE_TO_STAGE[source];
+			const route = SOURCE_TO_ROUTE[source];
+			if (!stage || !route || targetIds.length === 0) return;
+
+			setPendingSearchSelection({ stage, ids: targetIds });
+			setSearchTerm("");
+			router.push(route);
+		},
+		[
+			selectedRows,
+			searchResults,
+			setPendingSearchSelection,
+			setSearchTerm,
+			router,
+		],
+	);
+
 	const onCellValueChanged = useCallback(
 		async (event: CellValueChangedEvent<PendingRow>) => {
 			if (
@@ -602,14 +649,36 @@ export const useSearchResultsState = () => {
 		[bulkStageMutations, handleUpdateOrder, mainData, ordersData],
 	);
 
-	const counts = searchResults.reduce(
-		(acc, curr) => {
-			const source = curr.sourceType || "Unknown";
-			acc[source] = (acc[source] || 0) + 1;
+	const counts = useMemo(() => {
+		if (selectedRows.length === 0) {
+			return searchResults.reduce(
+				(acc, row) => {
+					const source = row.sourceType || "Unknown";
+					acc[source] = (acc[source] || 0) + 1;
+					return acc;
+				},
+				{} as Record<string, number>,
+			);
+		}
+
+		// Seed every source present in searchResults with 0, then accumulate
+		// only from selectedRows. This ensures sources with 0 selected rows
+		// still appear in the map so their badge renders as "0" and is disabled.
+		const base = searchResults.reduce(
+			(acc, row) => {
+				const source = row.sourceType || "Unknown";
+				acc[source] = 0;
+				return acc;
+			},
+			{} as Record<string, number>,
+		);
+
+		return selectedRows.reduce((acc, row) => {
+			const source = row.sourceType || "Unknown";
+			if (source in acc) acc[source] += 1;
 			return acc;
-		},
-		{} as Record<string, number>,
-	);
+		}, base);
+	}, [searchResults, selectedRows]);
 
 	return {
 		searchTerm,
@@ -641,6 +710,7 @@ export const useSearchResultsState = () => {
 		handleDeleteConfirm,
 		handleBulkStatusUpdate,
 		handleExtract,
+		onBadgeNavigate,
 		onCellValueChanged,
 		handleSelectionChanged,
 		handleGridApiReady,
