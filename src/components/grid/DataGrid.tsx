@@ -182,7 +182,11 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	}, [highlightedRowId, setHighlightedRowId]);
 
 	// Wire search badge navigation for this stage
-	usePendingSearchSelection(stage ?? "", gridApiRef, rowData);
+	const attemptPendingSelect = usePendingSearchSelection(
+		stage ?? "",
+		gridApiRef,
+		rowData,
+	);
 
 	// [CRITICAL] PERSISTENCE RESTORATION
 	// Restore saved state when grid is ready
@@ -191,8 +195,9 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 			// Call external onGridReady if provided
 			handleGridReady(params);
 
-			// First opportunity to retry the jump
+			// First opportunity to retry the jump and pending search selection
 			attemptJump();
+			attemptPendingSelect();
 
 			// Mark grid as initialized after a short delay to ensure restoration is complete
 			setTimeout(() => {
@@ -202,21 +207,34 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				gridInitializedRef.current = true;
 			}, 100);
 		},
-		[gridStateKey, handleGridReady, attemptJump, setLiveGridState],
+		[
+			gridStateKey,
+			handleGridReady,
+			attemptJump,
+			attemptPendingSelect,
+			setLiveGridState,
+		],
 	);
 
 	const onFirstDataRenderedInternal = useCallback(
 		(params: FirstDataRenderedEvent) => {
 			handleFirstDataRendered(params);
 
-			// Second opportunity to retry the jump
+			// Second opportunity to retry the jump and pending search selection
 			attemptJump();
+			attemptPendingSelect();
 
 			if (gridStateKey && !params.api.isDestroyed()) {
 				setLiveGridState(gridStateKey, params.api.getState());
 			}
 		},
-		[gridStateKey, handleFirstDataRendered, attemptJump, setLiveGridState],
+		[
+			gridStateKey,
+			handleFirstDataRendered,
+			attemptJump,
+			attemptPendingSelect,
+			setLiveGridState,
+		],
 	);
 
 	// Cleanup timer on unmount

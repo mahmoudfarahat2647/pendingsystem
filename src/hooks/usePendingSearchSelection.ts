@@ -5,6 +5,8 @@ import type React from "react";
 import { useCallback, useEffect, useRef } from "react";
 import { useAppStore } from "@/store/useStore";
 
+const SELECTION_FALLBACK_TIMEOUT_MS = 8000;
+
 export function usePendingSearchSelection(
 	stage: string,
 	gridApiRef: React.RefObject<GridApi | null>,
@@ -41,10 +43,9 @@ export function usePendingSearchSelection(
 
 		if (firstFoundNode) {
 			api.ensureNodeVisible(firstFoundNode, "middle");
+			pendingIdsRef.current = null;
+			setPendingSearchSelection(null);
 		}
-
-		pendingIdsRef.current = null;
-		setPendingSearchSelection(null);
 	}, [gridApiRef, setPendingSearchSelection]);
 
 	// Register intent when a matching pending selection arrives and attempt immediately
@@ -72,8 +73,10 @@ export function usePendingSearchSelection(
 				pendingIdsRef.current = null;
 				setPendingSearchSelection(null);
 			}
-		}, 8000);
+		}, SELECTION_FALLBACK_TIMEOUT_MS);
 
 		return () => clearTimeout(timeout);
 	}, [pendingSearchSelection, stage, setPendingSearchSelection]);
+
+	return attemptSelect;
 }
