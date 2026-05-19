@@ -83,6 +83,7 @@ export interface UIState {
 	beastModeTriggers: Record<string, number>;
 	currentEditVin: string | null;
 	currentEditId: string | null;
+	pendingSearchSelection: { stage: string; ids: string[] } | null;
 }
 
 export interface UIActions {
@@ -108,6 +109,9 @@ export interface UIActions {
 	clearBeastMode: (id: string) => void;
 	setCurrentEditVin: (vin: string | null, editId: string | null) => void;
 	clearCurrentEditVin: () => void;
+	setPendingSearchSelection: (
+		val: { stage: string; ids: string[] } | null,
+	) => void;
 }
 
 interface GridSliceState {

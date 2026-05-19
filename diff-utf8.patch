@@ -1,0 +1,720 @@
+﻿diff --git a/src/app/(app)/archive/page.tsx b/src/app/(app)/archive/page.tsx
+index e0235f3..8db2a3e 100644
+--- a/src/app/(app)/archive/page.tsx
++++ b/src/app/(app)/archive/page.tsx
+@@ -406,6 +406,7 @@ export default function ArchivePage() {
+ 						rowData={effectiveData}
+ 						columnDefs={columns}
+ 						gridStateKey="archive"
++						stage="archive"
+ 						readOnly={draftSaving}
+ 						onSelectionChange={setSelectedRows}
+ 						onCellValueChanged={async (params) => {
+diff --git a/src/app/(app)/booking/page.tsx b/src/app/(app)/booking/page.tsx
+index 9e28867..133b1cd 100644
+--- a/src/app/(app)/booking/page.tsx
++++ b/src/app/(app)/booking/page.tsx
+@@ -491,6 +491,7 @@ export default function BookingPage() {
+ 						rowData={effectiveBookingData}
+ 						columnDefs={columns}
+ 						gridStateKey="booking"
++						stage="booking"
+ 						readOnly={draftSaving}
+ 						onSelectionChange={setSelectedRows}
+ 						onCellValueChanged={async (params) => {
+diff --git a/src/app/(app)/call-list/page.tsx b/src/app/(app)/call-list/page.tsx
+index ca81958..efafd9f 100644
+--- a/src/app/(app)/call-list/page.tsx
++++ b/src/app/(app)/call-list/page.tsx
+@@ -474,6 +474,7 @@ export default function CallListPage() {
+ 						rowData={filteredEffectiveData}
+ 						columnDefs={columns}
+ 						gridStateKey="call-list"
++						stage="call"
+ 						readOnly={draftSaving}
+ 						onSelectionChange={setSelectedRows}
+ 						onCellValueChanged={async (params) => {
+diff --git a/src/app/(app)/main-sheet/page.tsx b/src/app/(app)/main-sheet/page.tsx
+index b45f39f..ca04713 100644
+--- a/src/app/(app)/main-sheet/page.tsx
++++ b/src/app/(app)/main-sheet/page.tsx
+@@ -398,6 +398,7 @@ export default function MainSheetPage() {
+ 								rowData={filteredRowData}
+ 								columnDefs={columns}
+ 								gridStateKey="main-sheet"
++								stage="main"
+ 								onSelectionChange={setSelectedRows}
+ 								onCellValueChanged={async (params) => {
+ 									if (
+diff --git a/src/app/(app)/orders/page.tsx b/src/app/(app)/orders/page.tsx
+index 9aad5a4..c5175d2 100644
+--- a/src/app/(app)/orders/page.tsx
++++ b/src/app/(app)/orders/page.tsx
+@@ -177,6 +177,7 @@ export default function OrdersPage() {
+ 								rowData={ordersRowData}
+ 								columnDefs={columns}
+ 								gridStateKey="orders"
++								stage="orders"
+ 								readOnly={draftSaving}
+ 								onSelectionChange={setSelectedRows}
+ 								onCellValueChanged={async (params) => {
+diff --git a/src/components/grid/DataGrid.tsx b/src/components/grid/DataGrid.tsx
+index 4c7fd2f..2e8650f 100644
+--- a/src/components/grid/DataGrid.tsx
++++ b/src/components/grid/DataGrid.tsx
+@@ -10,6 +10,7 @@ import type {
+ import { AgGridReact } from "ag-grid-react";
+ import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
+ import { toast } from "sonner";
++import { usePendingSearchSelection } from "@/hooks/usePendingSearchSelection";
+ import { tryJumpToRow } from "@/lib/ag-grid-helpers";
+ import { gridTheme } from "@/lib/ag-grid-setup";
+ import { useLiveGridStore } from "@/store/useLiveGridStore";
+@@ -33,6 +34,7 @@ export interface DataGridProps<T extends { id?: string; vin?: string }> {
+ 	height?: string | number;
+ 	showFloatingFilters?: boolean;
+ 	gridStateKey?: string;
++	stage?: string;
+ }
+ 
+ function DataGridInner<T extends { id?: string; vin?: string }>({
+@@ -49,6 +51,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
+ 	height = "100%",
+ 	showFloatingFilters = false,
+ 	gridStateKey,
++	stage,
+ }: DataGridProps<T>) {
+ 	const gridId = useId();
+ 	const rowIdMapRef = useRef(new WeakMap<object, string>());
+@@ -178,6 +181,13 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
+ 		return () => clearTimeout(timeout);
+ 	}, [highlightedRowId, setHighlightedRowId]);
+ 
++	// Wire search badge navigation for this stage
++	const attemptPendingSelect = usePendingSearchSelection(
++		stage ?? "",
++		gridApiRef,
++		rowData,
++	);
++
+ 	// [CRITICAL] PERSISTENCE RESTORATION
+ 	// Restore saved state when grid is ready
+ 	const onGridReadyInternal = useCallback(
+@@ -185,8 +195,9 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
+ 			// Call external onGridReady if provided
+ 			handleGridReady(params);
+ 
+-			// First opportunity to retry the jump
++			// First opportunity to retry the jump and pending search selection
+ 			attemptJump();
++			attemptPendingSelect();
+ 
+ 			// Mark grid as initialized after a short delay to ensure restoration is complete
+ 			setTimeout(() => {
+@@ -196,21 +207,34 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
+ 				gridInitializedRef.current = true;
+ 			}, 100);
+ 		},
+-		[gridStateKey, handleGridReady, attemptJump, setLiveGridState],
++		[
++			gridStateKey,
++			handleGridReady,
++			attemptJump,
++			attemptPendingSelect,
++			setLiveGridState,
++		],
+ 	);
+ 
+ 	const onFirstDataRenderedInternal = useCallback(
+ 		(params: FirstDataRenderedEvent) => {
+ 			handleFirstDataRendered(params);
+ 
+-			// Second opportunity to retry the jump
++			// Second opportunity to retry the jump and pending search selection
+ 			attemptJump();
++			attemptPendingSelect();
+ 
+ 			if (gridStateKey && !params.api.isDestroyed()) {
+ 				setLiveGridState(gridStateKey, params.api.getState());
+ 			}
+ 		},
+-		[gridStateKey, handleFirstDataRendered, attemptJump, setLiveGridState],
++		[
++			gridStateKey,
++			handleFirstDataRendered,
++			attemptJump,
++			attemptPendingSelect,
++			setLiveGridState,
++		],
+ 	);
+ 
+ 	// Cleanup timer on unmount
+diff --git a/src/components/shared/SearchResultsView.tsx b/src/components/shared/SearchResultsView.tsx
+index 4e934f9..b3023f3 100644
+--- a/src/components/shared/SearchResultsView.tsx
++++ b/src/components/shared/SearchResultsView.tsx
+@@ -51,6 +51,7 @@ export const SearchResultsView = () => {
+ 		handleDeleteConfirm,
+ 		handleBulkStatusUpdate,
+ 		handleExtract,
++		onBadgeNavigate,
+ 		onCellValueChanged,
+ 		handleSelectionChanged,
+ 		handleGridApiReady,
+@@ -74,7 +75,9 @@ export const SearchResultsView = () => {
+ 				searchTerm={searchTerm}
+ 				resultsCount={searchResults.length}
+ 				counts={counts}
++				selectedCount={selectedRows.length}
+ 				onClearSearch={() => setSearchTerm("")}
++				onBadgeClick={onBadgeNavigate}
+ 			/>
+ 
+ 			<SearchToolbar
+diff --git a/src/components/shared/search/SearchResultsHeader.tsx b/src/components/shared/search/SearchResultsHeader.tsx
+index 69e8d80..4414e88 100644
+--- a/src/components/shared/search/SearchResultsHeader.tsx
++++ b/src/components/shared/search/SearchResultsHeader.tsx
+@@ -8,14 +8,18 @@ interface SearchResultsHeaderProps {
+ 	searchTerm: string;
+ 	resultsCount: number;
+ 	counts: Record<string, number>;
++	selectedCount: number;
+ 	onClearSearch: () => void;
++	onBadgeClick: (source: string) => void;
+ }
+ 
+ export const SearchResultsHeader = ({
+ 	searchTerm,
+ 	resultsCount,
+ 	counts,
++	selectedCount,
+ 	onClearSearch,
++	onBadgeClick,
+ }: SearchResultsHeaderProps) => {
+ 	return (
+ 		<div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0a0a0b]/50 backdrop-blur-xl">
+@@ -38,24 +42,35 @@ export const SearchResultsHeader = ({
+ 			</div>
+ 
+ 			<div className="flex items-center gap-2">
+-				{Object.entries(counts).map(([source, count]) => (
+-					<div
+-						key={source}
+-						className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-300"
+-					>
+-						<span
+-							className={cn("w-1.5 h-1.5 rounded-full", {
+-								"bg-indigo-500": source === "Main Sheet",
+-								"bg-orange-500": source === "Orders",
+-								"bg-purple-500": source === "Booking",
+-								"bg-blue-500": source === "Call",
+-								"bg-slate-500": source === "Archive",
+-							})}
+-						/>
+-						<span>{source}</span>
+-						<span className="text-gray-500 ml-1 font-mono">{count}</span>
+-					</div>
+-				))}
++				{Object.entries(counts).map(([source, count]) => {
++					const isDisabled = selectedCount > 0 && count === 0;
++					return (
++						<button
++							key={source}
++							type="button"
++							onClick={() => onBadgeClick(source)}
++							disabled={isDisabled}
++							className={cn(
++								"flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-300",
++								isDisabled
++									? "cursor-default opacity-50"
++									: "cursor-pointer hover:bg-white/10 transition-colors",
++							)}
++						>
++							<span
++								className={cn("w-1.5 h-1.5 rounded-full", {
++									"bg-indigo-500": source === "Main Sheet",
++									"bg-orange-500": source === "Orders",
++									"bg-purple-500": source === "Booking",
++									"bg-blue-500": source === "Call",
++									"bg-slate-500": source === "Archive",
++								})}
++							/>
++							<span>{source}</span>
++							<span className="text-gray-500 ml-1 font-mono">{count}</span>
++						</button>
++					);
++				})}
+ 				<div className="w-px h-6 bg-white/10 mx-2" />
+ 				<Button
+ 					onClick={onClearSearch}
+diff --git a/src/components/shared/search/hooks/useSearchResultsState.ts b/src/components/shared/search/hooks/useSearchResultsState.ts
+index ae87e87..c7d4f05 100644
+--- a/src/components/shared/search/hooks/useSearchResultsState.ts
++++ b/src/components/shared/search/hooks/useSearchResultsState.ts
+@@ -5,6 +5,7 @@ import type {
+ 	GridApi,
+ 	SelectionChangedEvent,
+ } from "ag-grid-community";
++import { useRouter } from "next/navigation";
+ import { useCallback, useMemo, useRef, useState } from "react";
+ import { toast } from "sonner";
+ import {
+@@ -35,9 +36,29 @@ import type { OrderStage } from "@/services/orderService";
+ import { useAppStore } from "@/store/useStore";
+ import type { PendingRow } from "@/types";
+ 
++const SOURCE_TO_STAGE: Record<string, string> = {
++	"Main Sheet": "main",
++	Orders: "orders",
++	Booking: "booking",
++	Call: "call",
++	Archive: "archive",
++};
++
++const SOURCE_TO_ROUTE: Record<string, string> = {
++	"Main Sheet": "/main-sheet",
++	Orders: "/orders",
++	Booking: "/booking",
++	Call: "/call-list",
++	Archive: "/archive",
++};
++
+ export const useSearchResultsState = () => {
+ 	const searchTerm = useAppStore((state) => state.searchTerm);
+ 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
++	const setPendingSearchSelection = useAppStore(
++		(state) => state.setPendingSearchSelection,
++	);
++	const router = useRouter();
+ 	const partStatuses = useAppStore((state) => state.partStatuses);
+ 
+ 	// Grid & Selection State
+@@ -531,6 +552,32 @@ export const useSearchResultsState = () => {
+ 		});
+ 	}, [searchResults]);
+ 
++	const onBadgeNavigate = useCallback(
++		(source: string) => {
++			const targetIds =
++				selectedRows.length > 0
++					? selectedRows.filter((r) => r.sourceType === source).map((r) => r.id)
++					: searchResults
++							.filter((r) => r.sourceType === source)
++							.map((r) => r.id);
++
++			const stage = SOURCE_TO_STAGE[source];
++			const route = SOURCE_TO_ROUTE[source];
++			if (!stage || !route || targetIds.length === 0) return;
++
++			setPendingSearchSelection({ stage, ids: targetIds });
++			setSearchTerm("");
++			router.push(route);
++		},
++		[
++			selectedRows,
++			searchResults,
++			setPendingSearchSelection,
++			setSearchTerm,
++			router,
++		],
++	);
++
+ 	const onCellValueChanged = useCallback(
+ 		async (event: CellValueChangedEvent<PendingRow>) => {
+ 			if (
+@@ -602,14 +649,36 @@ export const useSearchResultsState = () => {
+ 		[bulkStageMutations, handleUpdateOrder, mainData, ordersData],
+ 	);
+ 
+-	const counts = searchResults.reduce(
+-		(acc, curr) => {
+-			const source = curr.sourceType || "Unknown";
+-			acc[source] = (acc[source] || 0) + 1;
++	const counts = useMemo(() => {
++		if (selectedRows.length === 0) {
++			return searchResults.reduce(
++				(acc, row) => {
++					const source = row.sourceType || "Unknown";
++					acc[source] = (acc[source] || 0) + 1;
++					return acc;
++				},
++				{} as Record<string, number>,
++			);
++		}
++
++		// Seed every source present in searchResults with 0, then accumulate
++		// only from selectedRows. This ensures sources with 0 selected rows
++		// still appear in the map so their badge renders as "0" and is disabled.
++		const base = searchResults.reduce(
++			(acc, row) => {
++				const source = row.sourceType || "Unknown";
++				acc[source] = 0;
++				return acc;
++			},
++			{} as Record<string, number>,
++		);
++
++		return selectedRows.reduce((acc, row) => {
++			const source = row.sourceType || "Unknown";
++			if (source in acc) acc[source] += 1;
+ 			return acc;
+-		},
+-		{} as Record<string, number>,
+-	);
++		}, base);
++	}, [searchResults, selectedRows]);
+ 
+ 	return {
+ 		searchTerm,
+@@ -641,6 +710,7 @@ export const useSearchResultsState = () => {
+ 		handleDeleteConfirm,
+ 		handleBulkStatusUpdate,
+ 		handleExtract,
++		onBadgeNavigate,
+ 		onCellValueChanged,
+ 		handleSelectionChanged,
+ 		handleGridApiReady,
+diff --git a/src/hooks/usePendingSearchSelection.ts b/src/hooks/usePendingSearchSelection.ts
+new file mode 100644
+index 0000000..5bd96b5
+--- /dev/null
++++ b/src/hooks/usePendingSearchSelection.ts
+@@ -0,0 +1,81 @@
++"use client";
++
++import type { GridApi, IRowNode } from "ag-grid-community";
++import type React from "react";
++import { useCallback, useEffect, useRef } from "react";
++import { useAppStore } from "@/store/useStore";
++
++export function usePendingSearchSelection(
++	stage: string,
++	gridApiRef: React.RefObject<GridApi | null>,
++	rowData: unknown[],
++) {
++	const pendingSearchSelection = useAppStore((s) => s.pendingSearchSelection);
++	const setPendingSearchSelection = useAppStore(
++		(s) => s.setPendingSearchSelection,
++	);
++	const pendingIdsRef = useRef<string[] | null>(null);
++
++	const attemptSelect = useCallback(() => {
++		const ids = pendingIdsRef.current;
++		if (!ids || ids.length === 0) return;
++
++		const api = gridApiRef.current;
++		if (!api) return;
++		try {
++			if (api.isDestroyed()) return;
++		} catch {
++			return;
++		}
++
++		let firstFoundNode: IRowNode | undefined;
++
++		api.deselectAll();
++		for (const id of ids) {
++			const node = api.getRowNode(id);
++			if (node) {
++				node.setSelected(true, false, "api");
++				if (!firstFoundNode) firstFoundNode = node;
++			}
++		}
++
++		if (firstFoundNode) {
++			api.ensureNodeVisible(firstFoundNode, "middle");
++		}
++
++		pendingIdsRef.current = null;
++		setPendingSearchSelection(null);
++	}, [gridApiRef, setPendingSearchSelection]);
++
++	// Register intent when a matching pending selection arrives and attempt immediately
++	useEffect(() => {
++		if (!pendingSearchSelection || pendingSearchSelection.stage !== stage)
++			return;
++		pendingIdsRef.current = pendingSearchSelection.ids;
++		attemptSelect();
++	}, [pendingSearchSelection, stage, attemptSelect]);
++
++	// Retry when rowData changes ΓÇö covers the async data-load timing after navigation
++	// rowData identity change is the intentional trigger for retry ΓÇö not a missing dep
++	useEffect(() => {
++		if (!pendingIdsRef.current) return;
++		attemptSelect();
++	}, [rowData, attemptSelect]);
++
++	// 8-second fallback ΓÇö clears stale pending selection if rows never appear in the grid
++	useEffect(() => {
++		if (!pendingSearchSelection || pendingSearchSelection.stage !== stage)
++			return;
++
++		const timeout = setTimeout(() => {
++			if (pendingIdsRef.current) {
++				pendingIdsRef.current = null;
++				setPendingSearchSelection(null);
++			}
++		}, 8000);
++
++		return () => clearTimeout(timeout);
++	}, [pendingSearchSelection, stage, setPendingSearchSelection]);
++
++	return attemptSelect;
++}
+diff --git a/src/store/slices/uiSlice.ts b/src/store/slices/uiSlice.ts
+index 6f4203f..6dbfabb 100644
+--- a/src/store/slices/uiSlice.ts
++++ b/src/store/slices/uiSlice.ts
+@@ -44,6 +44,7 @@ const initialState: UIState = {
+ 	beastModeTriggers: {},
+ 	currentEditVin: null,
+ 	currentEditId: null,
++	pendingSearchSelection: null,
+ };
+ 
+ export const createUISlice: StateCreator<
+@@ -210,4 +211,6 @@ export const createUISlice: StateCreator<
+ 	clearCurrentEditVin: () => {
+ 		set({ currentEditVin: null, currentEditId: null });
+ 	},
++
++	setPendingSearchSelection: (val) => set({ pendingSearchSelection: val }),
+ });
+diff --git a/src/store/types.ts b/src/store/types.ts
+index 721c7c2..1e8de6b 100644
+--- a/src/store/types.ts
++++ b/src/store/types.ts
+@@ -83,6 +83,7 @@ export interface UIState {
+ 	beastModeTriggers: Record<string, number>;
+ 	currentEditVin: string | null;
+ 	currentEditId: string | null;
++	pendingSearchSelection: { stage: string; ids: string[] } | null;
+ }
+ 
+ export interface UIActions {
+@@ -108,6 +109,9 @@ export interface UIActions {
+ 	clearBeastMode: (id: string) => void;
+ 	setCurrentEditVin: (vin: string | null, editId: string | null) => void;
+ 	clearCurrentEditVin: () => void;
++	setPendingSearchSelection: (
++		val: { stage: string; ids: string[] } | null,
++	) => void;
+ }
+ 
+ interface GridSliceState {
+diff --git a/src/test/SearchResultsView.test.tsx b/src/test/SearchResultsView.test.tsx
+index 82a1515..a9e0614 100644
+--- a/src/test/SearchResultsView.test.tsx
++++ b/src/test/SearchResultsView.test.tsx
+@@ -62,6 +62,15 @@ type MockArchiveModalProps = {
+ 	onSave: (reason: string) => void;
+ };
+ 
++type MockSearchResultsHeaderProps = {
++	searchTerm: string;
++	resultsCount: number;
++	counts: Record<string, number>;
++	selectedCount: number;
++	onClearSearch: () => void;
++	onBadgeClick: (source: string) => void;
++};
++
+ const mocks = vi.hoisted(() => ({
+ 	toastSuccess: vi.fn(),
+ 	toastError: vi.fn(),
+@@ -76,6 +85,8 @@ const mocks = vi.hoisted(() => ({
+ 		call: vi.fn(),
+ 		archive: vi.fn(),
+ 	},
++	searchResultsHeaderProps: null as MockSearchResultsHeaderProps | null,
++	routerPush: vi.fn(),
+ 	gridProps: null as MockGridProps | null,
+ 	gridRowData: null as PendingRow[] | null,
+ 	gridColumnsArgs: null as unknown[] | null,
+@@ -97,6 +108,7 @@ const mocks = vi.hoisted(() => ({
+ 		setSearchTerm: vi.fn(),
+ 		partStatuses: [] as { id: string; label: string; color: string }[],
+ 		bookingStatuses: [] as { id: string; label: string; color: string }[],
++		setPendingSearchSelection: vi.fn(),
+ 	},
+ 	queryData: {
+ 		main: [] as PendingRow[],
+@@ -128,6 +140,10 @@ vi.mock("sonner", () => ({
+ 	},
+ }));
+ 
++vi.mock("next/navigation", () => ({
++	useRouter: () => ({ push: mocks.routerPush }),
++}));
++
+ vi.mock("@/lib/printing/reservationLabels", () => ({
+ 	printReservationLabels: mocks.printReservationLabels,
+ }));
+@@ -190,7 +206,10 @@ vi.mock("@/components/shared/search/SearchResultsGrid", () => ({
+ }));
+ 
+ vi.mock("@/components/shared/search/SearchResultsHeader", () => ({
+-	SearchResultsHeader: () => <div data-testid="search-results-header" />,
++	SearchResultsHeader: (props: MockSearchResultsHeaderProps) => {
++		mocks.searchResultsHeaderProps = props;
++		return <div data-testid="search-results-header" />;
++	},
+ }));
+ 
+ vi.mock("@/components/shared/search/SearchToolbar", () => ({
+@@ -428,6 +447,9 @@ const openArchiveModal = async (rows: PendingRow[]) => {
+ describe("SearchResultsView", () => {
+ 	beforeEach(() => {
+ 		vi.clearAllMocks();
++		mocks.searchResultsHeaderProps = null;
++		mocks.routerPush.mockReset();
++		mocks.storeState.setPendingSearchSelection.mockReset();
+ 		mocks.gridProps = null;
+ 		mocks.gridRowData = null;
+ 		mocks.gridColumnsArgs = null;
+@@ -1574,6 +1596,144 @@ describe("SearchResultsView", () => {
+ 		});
+ 	});
+ 
++	describe("badge navigation", () => {
++		it("calls setPendingSearchSelection, clears search, and navigates when a badge is clicked with no rows selected", async () => {
++			const row = createRow({
++				id: "main-1",
++				stage: "main",
++				sourceType: "Main Sheet",
++			});
++			mocks.queryData.main = [row];
++			renderView();
++
++			act(() => {
++				mocks.searchResultsHeaderProps?.onBadgeClick("Main Sheet");
++			});
++
++			expect(mocks.storeState.setPendingSearchSelection).toHaveBeenCalledWith({
++				stage: "main",
++				ids: ["main-1"],
++			});
++			expect(mocks.storeState.setSearchTerm).toHaveBeenCalledWith("");
++			expect(mocks.routerPush).toHaveBeenCalledWith("/main-sheet");
++		});
++
++		it("navigates with only selected rows for the clicked source when selection is active", async () => {
++			const mainRow = createRow({
++				id: "main-1",
++				stage: "main",
++				sourceType: "Main Sheet",
++			});
++			const ordersRow = createRow({
++				id: "orders-1",
++				stage: "orders",
++				sourceType: "Orders",
++			});
++			mocks.queryData.main = [mainRow];
++			mocks.queryData.orders = [ordersRow];
++			renderView();
++
++			await triggerSelectionChanged([mainRow]);
++
++			act(() => {
++				mocks.searchResultsHeaderProps?.onBadgeClick("Main Sheet");
++			});
++
++			expect(mocks.storeState.setPendingSearchSelection).toHaveBeenCalledWith({
++				stage: "main",
++				ids: ["main-1"],
++			});
++			expect(mocks.routerPush).toHaveBeenCalledWith("/main-sheet");
++		});
++
++		it("does nothing when the clicked source has 0 matching IDs", async () => {
++			const ordersRow = createRow({
++				id: "orders-1",
++				stage: "orders",
++				sourceType: "Orders",
++			});
++			mocks.queryData.orders = [ordersRow];
++			renderView();
++
++			// Select the orders row so Main Sheet has 0 selected
++			await triggerSelectionChanged([ordersRow]);
++
++			act(() => {
++				mocks.searchResultsHeaderProps?.onBadgeClick("Main Sheet");
++			});
++
++			expect(mocks.storeState.setPendingSearchSelection).not.toHaveBeenCalled();
++			expect(mocks.routerPush).not.toHaveBeenCalled();
++		});
++
++		it.each([
++			{ sourceType: "Orders", stage: "orders", route: "/orders" },
++			{ sourceType: "Booking", stage: "booking", route: "/booking" },
++			{ sourceType: "Call", stage: "call", route: "/call-list" },
++			{ sourceType: "Archive", stage: "archive", route: "/archive" },
++		] as const)("routes to $route when clicking the $sourceType badge", async ({
++			sourceType,
++			stage,
++			route,
++		}) => {
++			vi.clearAllMocks();
++			mocks.searchResultsHeaderProps = null;
++			mocks.storeState.searchTerm = "VIN123";
++			const row = createRow({ id: `${stage}-1`, stage, sourceType });
++			mocks.queryData[stage] = [row];
++			renderView();
++
++			act(() => {
++				mocks.searchResultsHeaderProps?.onBadgeClick(sourceType);
++			});
++
++			expect(mocks.routerPush).toHaveBeenCalledWith(route);
++			mocks.queryData[stage] = [];
++		});
++	});
++
++	describe("badge counts", () => {
++		it("shows total results per source when no rows are selected", () => {
++			const main1 = createRow({ id: "main-1", sourceType: "Main Sheet" });
++			const main2 = createRow({ id: "main-2", sourceType: "Main Sheet" });
++			const ordersRow = createRow({
++				id: "orders-1",
++				sourceType: "Orders",
++				stage: "orders",
++			});
++			mocks.queryData.main = [main1, main2];
++			mocks.queryData.orders = [ordersRow];
++			renderView();
++
++			expect(mocks.searchResultsHeaderProps?.counts).toEqual({
++				"Main Sheet": 2,
++				Orders: 1,
++			});
++			expect(mocks.searchResultsHeaderProps?.selectedCount).toBe(0);
++		});
++
++		it("shows selected count per source, 0 for unselected sources, when selection is active", async () => {
++			const main1 = createRow({ id: "main-1", sourceType: "Main Sheet" });
++			const main2 = createRow({ id: "main-2", sourceType: "Main Sheet" });
++			const ordersRow = createRow({
++				id: "orders-1",
++				sourceType: "Orders",
++				stage: "orders",
++			});
++			mocks.queryData.main = [main1, main2];
++			mocks.queryData.orders = [ordersRow];
++			renderView();
++
++			await triggerSelectionChanged([main1]);
++
++			expect(mocks.searchResultsHeaderProps?.counts).toEqual({
++				"Main Sheet": 1,
++				Orders: 0,
++			});
++			expect(mocks.searchResultsHeaderProps?.selectedCount).toBe(1);
++		});
++	});
++
+ 	describe("reorder flow", () => {
+ 		const openReorderModal = async (rows: PendingRow[]) => {
+ 			await triggerSelectionChanged(rows);

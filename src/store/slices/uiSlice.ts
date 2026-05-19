@@ -44,6 +44,7 @@ const initialState: UIState = {
 	beastModeTriggers: {},
 	currentEditVin: null,
 	currentEditId: null,
+	pendingSearchSelection: null,
 };
 
 export const createUISlice: StateCreator<
@@ -210,4 +211,6 @@ export const createUISlice: StateCreator<
 	clearCurrentEditVin: () => {
 		set({ currentEditVin: null, currentEditId: null });
 	},
+
+	setPendingSearchSelection: (val) => set({ pendingSearchSelection: val }),
 });

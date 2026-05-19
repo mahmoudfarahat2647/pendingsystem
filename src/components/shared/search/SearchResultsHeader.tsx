@@ -8,14 +8,18 @@ interface SearchResultsHeaderProps {
 	searchTerm: string;
 	resultsCount: number;
 	counts: Record<string, number>;
+	selectedCount: number;
 	onClearSearch: () => void;
+	onBadgeClick: (source: string) => void;
 }
 
 export const SearchResultsHeader = ({
 	searchTerm,
 	resultsCount,
 	counts,
+	selectedCount,
 	onClearSearch,
+	onBadgeClick,
 }: SearchResultsHeaderProps) => {
 	return (
 		<div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0a0a0b]/50 backdrop-blur-xl">
@@ -38,24 +42,35 @@ export const SearchResultsHeader = ({
 			</div>
 
 			<div className="flex items-center gap-2">
-				{Object.entries(counts).map(([source, count]) => (
-					<div
-						key={source}
-						className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-300"
-					>
-						<span
-							className={cn("w-1.5 h-1.5 rounded-full", {
-								"bg-indigo-500": source === "Main Sheet",
-								"bg-orange-500": source === "Orders",
-								"bg-purple-500": source === "Booking",
-								"bg-blue-500": source === "Call",
-								"bg-slate-500": source === "Archive",
-							})}
-						/>
-						<span>{source}</span>
-						<span className="text-gray-500 ml-1 font-mono">{count}</span>
-					</div>
-				))}
+				{Object.entries(counts).map(([source, count]) => {
+					const isDisabled = selectedCount > 0 && count === 0;
+					return (
+						<button
+							key={source}
+							type="button"
+							onClick={() => onBadgeClick(source)}
+							disabled={isDisabled}
+							className={cn(
+								"flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-300",
+								isDisabled
+									? "cursor-default opacity-50"
+									: "cursor-pointer hover:bg-white/10 transition-colors",
+							)}
+						>
+							<span
+								className={cn("w-1.5 h-1.5 rounded-full", {
+									"bg-indigo-500": source === "Main Sheet",
+									"bg-orange-500": source === "Orders",
+									"bg-purple-500": source === "Booking",
+									"bg-blue-500": source === "Call",
+									"bg-slate-500": source === "Archive",
+								})}
+							/>
+							<span>{source}</span>
+							<span className="text-gray-500 ml-1 font-mono">{count}</span>
+						</button>
+					);
+				})}
 				<div className="w-px h-6 bg-white/10 mx-2" />
 				<Button
 					onClick={onClearSearch}

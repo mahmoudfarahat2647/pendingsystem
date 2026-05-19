@@ -51,6 +51,7 @@ export const SearchResultsView = () => {
 		handleDeleteConfirm,
 		handleBulkStatusUpdate,
 		handleExtract,
+		onBadgeNavigate,
 		onCellValueChanged,
 		handleSelectionChanged,
 		handleGridApiReady,
@@ -74,7 +75,9 @@ export const SearchResultsView = () => {
 				searchTerm={searchTerm}
 				resultsCount={searchResults.length}
 				counts={counts}
+				selectedCount={selectedRows.length}
 				onClearSearch={() => setSearchTerm("")}
+				onBadgeClick={onBadgeNavigate}
 			/>
 
 			<SearchToolbar

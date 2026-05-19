@@ -398,6 +398,7 @@ export default function MainSheetPage() {
 								rowData={filteredRowData}
 								columnDefs={columns}
 								gridStateKey="main-sheet"
+								stage="main"
 								onSelectionChange={setSelectedRows}
 								onCellValueChanged={async (params) => {
 									if (
