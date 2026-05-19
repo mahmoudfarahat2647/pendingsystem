@@ -3,17 +3,36 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode, TextareaHTMLAttributes } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EditNoteModal } from "@/components/shared/EditNoteModal";
+import type { QuickTemplate } from "@/services/quickTemplatesService";
 
-const storeState = {
-	noteTemplates: ["Template A", "Template B"],
-	addNoteTemplate: vi.fn(),
-	removeNoteTemplate: vi.fn(),
+const mockAddMutate = vi.fn();
+const mockRemoveMutate = vi.fn();
+
+const hookState = {
+	data: [
+		{
+			id: "1",
+			category: "note",
+			text: "Template A",
+			sortOrder: 0,
+			createdAt: "",
+			updatedAt: "",
+		},
+		{
+			id: "2",
+			category: "note",
+			text: "Template B",
+			sortOrder: 0,
+			createdAt: "",
+			updatedAt: "",
+		},
+	] as QuickTemplate[],
 };
 
-vi.mock("@/store/useStore", () => ({
-	useAppStore: (
-		selector: (state: typeof storeState) => typeof storeState.noteTemplates,
-	) => selector(storeState),
+vi.mock("@/hooks/queries/useQuickTemplatesQuery", () => ({
+	useQuickTemplatesQuery: () => hookState,
+	useAddQuickTemplateMutation: () => ({ mutate: mockAddMutate }),
+	useRemoveQuickTemplateMutation: () => ({ mutate: mockRemoveMutate }),
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
@@ -97,9 +116,8 @@ vi.mock("@/components/ui/textarea", () => ({
 
 describe("EditNoteModal", () => {
 	beforeEach(() => {
-		storeState.noteTemplates = ["Template A", "Template B"];
-		storeState.addNoteTemplate.mockReset();
-		storeState.removeNoteTemplate.mockReset();
+		mockAddMutate.mockReset();
+		mockRemoveMutate.mockReset();
 	});
 
 	it("composes multiple templates without inline tags and saves with one trailing tag", async () => {
@@ -155,5 +173,27 @@ describe("EditNoteModal", () => {
 		await user.click(screen.getByRole("button", { name: "SAVE NOTES" }));
 
 		expect(onSave).toHaveBeenCalledWith("Call customer #note");
+	});
+
+	it("calls addMutation.mutate with trimmed text when Add button clicked", async () => {
+		const user = userEvent.setup();
+
+		render(
+			<EditNoteModal
+				open={true}
+				onOpenChange={vi.fn()}
+				initialContent=""
+				onSave={vi.fn()}
+			/>,
+		);
+
+		await user.click(screen.getByRole("button", { name: "ADD NEW" }));
+		await user.type(
+			screen.getByPlaceholderText("Template text..."),
+			"My template",
+		);
+		await user.click(screen.getByRole("button", { name: "ADD" }));
+
+		expect(mockAddMutate).toHaveBeenCalledWith("My template");
 	});
 });
