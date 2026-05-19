@@ -33,10 +33,6 @@ const initialState: UIState = {
 	searchTerm: "",
 	highlightedRowId: null,
 	pendingVinSelection: null,
-	noteTemplates: ["Customer not available", "Wrong number", "Will call back"],
-	reminderTemplates: ["Follow up call", "Check part status", "Confirm booking"],
-	bookingTemplates: ["Morning slot", "Afternoon slot", "Next available"],
-	reasonTemplates: ["Wrong part", "Customer cancelled", "Part damaged"],
 	notes: [],
 	partStatuses: defaultPartStatuses,
 	bookingStatuses: defaultBookingStatuses,
@@ -91,42 +87,6 @@ export const createUISlice: StateCreator<
 		// NOTE: Sticky notes are UI-only, not included in draft session undo
 		set((state) => ({
 			notes: state.notes.filter((note) => note.id !== id),
-		}));
-	},
-
-	addNoteTemplate: (template) => {
-		set((state) => ({
-			noteTemplates: [...state.noteTemplates, template],
-		}));
-	},
-
-	removeNoteTemplate: (template) => {
-		set((state) => ({
-			noteTemplates: state.noteTemplates.filter((t) => t !== template),
-		}));
-	},
-
-	addReminderTemplate: (template) => {
-		set((state) => ({
-			reminderTemplates: [...state.reminderTemplates, template],
-		}));
-	},
-
-	removeReminderTemplate: (template) => {
-		set((state) => ({
-			reminderTemplates: state.reminderTemplates.filter((t) => t !== template),
-		}));
-	},
-
-	addReasonTemplate: (template) => {
-		set((state) => ({
-			reasonTemplates: [...state.reasonTemplates, template],
-		}));
-	},
-
-	removeReasonTemplate: (template) => {
-		set((state) => ({
-			reasonTemplates: state.reasonTemplates.filter((t) => t !== template),
 		}));
 	},
 

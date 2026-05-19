@@ -24,8 +24,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+	useAddQuickTemplateMutation,
+	useQuickTemplatesQuery,
+	useRemoveQuickTemplateMutation,
+} from "@/hooks/queries/useQuickTemplatesQuery";
 import { appendTaggedUserNote } from "@/lib/orderWorkflow";
-import { useAppStore } from "@/store/useStore";
 
 interface EditNoteModalProps {
 	open: boolean;
@@ -42,9 +46,9 @@ export const EditNoteModal = ({
 	onSave,
 	sourceTag,
 }: EditNoteModalProps) => {
-	const noteTemplates = useAppStore((state) => state.noteTemplates);
-	const addNoteTemplate = useAppStore((state) => state.addNoteTemplate);
-	const removeNoteTemplate = useAppStore((state) => state.removeNoteTemplate);
+	const { data: noteTemplates = [] } = useQuickTemplatesQuery("note");
+	const addMutation = useAddQuickTemplateMutation("note");
+	const removeMutation = useRemoveQuickTemplateMutation("note");
 	const [content, setContent] = useState("");
 	const [newNote, setNewNote] = useState("");
 	const [isAdding, setIsAdding] = useState(false);
@@ -79,7 +83,7 @@ export const EditNoteModal = ({
 
 	const handleAddTemplate = () => {
 		if (newTemplate.trim()) {
-			addNoteTemplate(newTemplate.trim());
+			addMutation.mutate(newTemplate.trim());
 			setNewTemplate("");
 			setIsAdding(false);
 		}
@@ -209,17 +213,17 @@ export const EditNoteModal = ({
 							)}
 
 							<div className="grid grid-cols-2 gap-2 max-h-[120px] overflow-y-auto pr-1 scrollbar-thin">
-								{noteTemplates.map((template, idx) => (
+								{noteTemplates.map((template) => (
 									<div
-										key={`${template}-${idx}`}
+										key={template.id}
 										className="group relative flex items-center"
 									>
 										<Button
 											variant="secondary"
 											className="w-full justify-start text-[11px] h-9 bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border border-transparent hover:border-white/10 truncate pr-8"
-											onClick={() => handleTemplateClick(template)}
+											onClick={() => handleTemplateClick(template.text)}
 										>
-											{template}
+											{template.text}
 										</Button>
 										<Button
 											variant="ghost"
@@ -227,7 +231,7 @@ export const EditNoteModal = ({
 											className="absolute right-1 h-6 w-6 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
 											onClick={(e) => {
 												e.stopPropagation();
-												removeNoteTemplate(template);
+												removeMutation.mutate(template.id);
 											}}
 										>
 											<Trash2 className="h-3 w-3" />

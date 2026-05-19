@@ -48,10 +48,6 @@ export const useAppStore = create<CombinedStore>()(
 			partialize: (state) => ({
 				partStatuses: state.partStatuses,
 				bookingStatuses: state.bookingStatuses,
-				noteTemplates: state.noteTemplates,
-				reminderTemplates: state.reminderTemplates,
-				bookingTemplates: state.bookingTemplates,
-				reasonTemplates: state.reasonTemplates,
 				isLocked: state.isLocked,
 				notes: state.notes,
 				gridStates: state.gridStates,

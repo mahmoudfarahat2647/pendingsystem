@@ -72,10 +72,6 @@ export interface UIState {
 	searchTerm: string;
 	highlightedRowId: string | null;
 	pendingVinSelection: { vin: string; bookingDate?: string } | string | null;
-	noteTemplates: string[];
-	reminderTemplates: string[];
-	bookingTemplates: string[];
-	reasonTemplates: string[];
 	notes: StickyNote[];
 	partStatuses: PartStatusDef[];
 	bookingStatuses: PartStatusDef[];
@@ -95,12 +91,6 @@ export interface UIActions {
 	addNote: (content: string, color: string) => void;
 	updateNote: (id: string, content: string) => void;
 	deleteNote: (id: string) => void;
-	addNoteTemplate: (template: string) => void;
-	removeNoteTemplate: (template: string) => void;
-	addReminderTemplate: (template: string) => void;
-	removeReminderTemplate: (template: string) => void;
-	addReasonTemplate: (template: string) => void;
-	removeReasonTemplate: (template: string) => void;
 	addPartStatusDef: (status: PartStatusDef) => void;
 	updatePartStatusDef: (id: string, updates: Partial<PartStatusDef>) => void;
 	removePartStatusDef: (id: string) => void;

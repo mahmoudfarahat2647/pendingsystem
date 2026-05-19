@@ -16,8 +16,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	useAddQuickTemplateMutation,
+	useQuickTemplatesQuery,
+	useRemoveQuickTemplateMutation,
+} from "@/hooks/queries/useQuickTemplatesQuery";
 import { ReminderInputSchema } from "@/schemas/order.schema";
-import { useAppStore } from "@/store/useStore";
 
 interface EditReminderModalProps {
 	open: boolean;
@@ -38,11 +42,9 @@ export const EditReminderModal = ({
 	initialData,
 	onSave,
 }: EditReminderModalProps) => {
-	const reminderTemplates = useAppStore((state) => state.reminderTemplates);
-	const addReminderTemplate = useAppStore((state) => state.addReminderTemplate);
-	const removeReminderTemplate = useAppStore(
-		(state) => state.removeReminderTemplate,
-	);
+	const { data: reminderTemplates = [] } = useQuickTemplatesQuery("reminder");
+	const addMutation = useAddQuickTemplateMutation("reminder");
+	const removeMutation = useRemoveQuickTemplateMutation("reminder");
 
 	const [dateTime, setDateTime] = useState<Date | undefined>();
 	const [subject, setSubject] = useState("");
@@ -110,7 +112,7 @@ export const EditReminderModal = ({
 
 	const handleAddTemplate = () => {
 		if (newTemplate.trim()) {
-			addReminderTemplate(newTemplate.trim());
+			addMutation.mutate(newTemplate.trim());
 			setNewTemplate("");
 			setIsAddingTemplate(false);
 		}
@@ -243,24 +245,24 @@ export const EditReminderModal = ({
 							)}
 
 							<div className="grid grid-cols-2 gap-2">
-								{reminderTemplates.map((template, idx) => (
+								{reminderTemplates.map((template) => (
 									<div
-										key={`${template}-${idx}`}
+										key={template.id}
 										className="group relative flex items-center"
 									>
 										<button
 											type="button"
 											className="w-full text-left px-3 py-2 rounded-md text-xs bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border border-transparent hover:border-white/10 truncate pr-8 transition-colors"
-											onClick={() => handleTemplateClick(template)}
+											onClick={() => handleTemplateClick(template.text)}
 										>
-											{template}
+											{template.text}
 										</button>
 										<button
 											type="button"
 											className="absolute right-1 p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
 											onClick={(e) => {
 												e.stopPropagation();
-												removeReminderTemplate(template);
+												removeMutation.mutate(template.id);
 											}}
 										>
 											<Trash2 className="h-3 w-3" />
