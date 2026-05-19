@@ -179,12 +179,10 @@ describe("POST /api/quick-templates", () => {
 		mockFrom.mockReturnValue({
 			insert: vi.fn().mockReturnValue({
 				select: vi.fn().mockReturnValue({
-					single: vi
-						.fn()
-						.mockResolvedValue({
-							data: null,
-							error: { code: "23505", message: "dup" },
-						}),
+					single: vi.fn().mockResolvedValue({
+						data: null,
+						error: { code: "23505", message: "dup" },
+					}),
 				}),
 			}),
 		});
@@ -197,7 +195,7 @@ describe("POST /api/quick-templates", () => {
 			}),
 		);
 		expect(res.status).toBe(409);
-		expect((res.body as { error: string }).error).toBe(
+		expect((res.body as unknown as { error: string }).error).toBe(
 			"Template already exists",
 		);
 	});
@@ -232,7 +230,7 @@ describe("POST /api/quick-templates", () => {
 			}),
 		);
 		expect(res.status).toBe(201);
-		expect((res.body as { id: string }).id).toBe("new");
+		expect((res.body as unknown as { id: string }).id).toBe("new");
 	});
 });
 
