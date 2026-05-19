@@ -12,7 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useAppStore } from "@/store/useStore";
+import {
+	useAddQuickTemplateMutation,
+	useQuickTemplatesQuery,
+	useRemoveQuickTemplateMutation,
+} from "@/hooks/queries/useQuickTemplatesQuery";
 
 interface ArchiveReasonModalProps {
 	open: boolean;
@@ -25,11 +29,9 @@ export const ArchiveReasonModal = ({
 	onOpenChange,
 	onSave,
 }: ArchiveReasonModalProps) => {
-	const reasonTemplates = useAppStore((state) => state.reasonTemplates);
-	const addReasonTemplate = useAppStore((state) => state.addReasonTemplate);
-	const removeReasonTemplate = useAppStore(
-		(state) => state.removeReasonTemplate,
-	);
+	const { data: reasonTemplates = [] } = useQuickTemplatesQuery("reason");
+	const addMutation = useAddQuickTemplateMutation("reason");
+	const removeMutation = useRemoveQuickTemplateMutation("reason");
 	const [reason, setReason] = useState("");
 	const [isAdding, setIsAdding] = useState(false);
 	const [newTemplate, setNewTemplate] = useState("");
@@ -56,7 +58,7 @@ export const ArchiveReasonModal = ({
 
 	const handleAddTemplate = () => {
 		if (newTemplate.trim()) {
-			addReasonTemplate(newTemplate.trim());
+			addMutation.mutate(newTemplate.trim());
 			setNewTemplate("");
 			setIsAdding(false);
 		}
@@ -140,17 +142,17 @@ export const ArchiveReasonModal = ({
 						)}
 
 						<div className="grid grid-cols-2 gap-2">
-							{reasonTemplates.map((template, idx) => (
+							{reasonTemplates.map((template) => (
 								<div
-									key={`${template}-${idx}`}
+									key={template.id}
 									className="group relative flex items-center"
 								>
 									<Button
 										variant="secondary"
 										className="w-full justify-start text-[11px] h-8 bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border border-transparent hover:border-white/10 truncate pr-7"
-										onClick={() => handleTemplateClick(template)}
+										onClick={() => handleTemplateClick(template.text)}
 									>
-										{template}
+										{template.text}
 									</Button>
 									<Button
 										variant="ghost"
@@ -158,7 +160,7 @@ export const ArchiveReasonModal = ({
 										className="absolute right-0.5 h-6 w-6 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
 										onClick={(e) => {
 											e.stopPropagation();
-											removeReasonTemplate(template);
+											removeMutation.mutate(template.id);
 										}}
 									>
 										<Trash2 className="h-3 w-3" />
