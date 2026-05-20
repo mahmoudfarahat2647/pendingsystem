@@ -16,7 +16,7 @@ export interface DescriptionConflictResult {
 
 export interface AppNotification {
 	id: string;
-	type: "reminder" | "warranty" | "booking_followup";
+	type: "reminder" | "warranty" | "booking_followup" | "cntr_rdg_warning";
 	title: string;
 	description: string;
 	timestamp: string;
@@ -29,9 +29,11 @@ export interface AppNotification {
 	path: string;
 	/**
 	 * Unique identifier for managing automated notifications to prevent duplicates.
-	 * Format: `reminder:{id}:{date}:{time}:{subject}` or `warranty:{id}:{date}`
+	 * Format: `reminder:{id}:{date}:{time}:{subject}` | `warranty:{id}:{date}` | `cntr_rdg_warning:{id}:{level}`
 	 */
 	managedKey?: string;
+	/** Only present for cntr_rdg_warning notifications */
+	cntrRdgLevel?: "high" | "early";
 }
 
 export interface StickyNote {
