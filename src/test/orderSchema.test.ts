@@ -251,3 +251,28 @@ describe("PendingRowSchema - Array Field Handling", () => {
 		}
 	});
 });
+
+describe("PendingRowSchema - createdAt field", () => {
+	it("preserves createdAt when provided", () => {
+		const result = PendingRowSchema.safeParse({
+			id: "row-1",
+			createdAt: "2026-01-15T09:00:00.000Z",
+			parts: [],
+		});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.createdAt).toBe("2026-01-15T09:00:00.000Z");
+		}
+	});
+
+	it("accepts rows without createdAt", () => {
+		const result = PendingRowSchema.safeParse({
+			id: "row-2",
+			parts: [],
+		});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.createdAt).toBeUndefined();
+		}
+	});
+});
