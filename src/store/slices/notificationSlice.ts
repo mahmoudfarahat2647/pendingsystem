@@ -219,6 +219,65 @@ export const createNotificationSlice: StateCreator<
 			}
 		}
 
+		// CNTR RDG Warning scan — Main Sheet warranty rows only
+		const HIGH_RISK_KM = 85_000;
+		const EARLY_WARNING_KM = 70_000;
+		const HIGH_RISK_DAYS = 10;
+		const EARLY_WARNING_DAYS = 14;
+		const WARRANTY_REPAIR_SYSTEM = "ضمان";
+		const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+		const currentlyDueCntrWarnings: Omit<
+			AppNotification,
+			"id" | "timestamp" | "isRead"
+		>[] = [];
+
+		const mainSheetSource = sources.find((s) => s.path === "/main-sheet");
+		if (mainSheetSource) {
+			for (const row of mainSheetSource.data) {
+				if (row.repairSystem !== WARRANTY_REPAIR_SYSTEM) continue;
+				if (!row.createdAt) continue;
+
+				const daysSinceCreation = Math.floor(
+					(now.getTime() - new Date(row.createdAt).getTime()) / MS_PER_DAY,
+				);
+
+				let level: "high" | "early" | null = null;
+				if (
+					row.cntrRdg >= HIGH_RISK_KM &&
+					daysSinceCreation >= HIGH_RISK_DAYS
+				) {
+					level = "high";
+				} else if (
+					row.cntrRdg >= EARLY_WARNING_KM &&
+					daysSinceCreation >= EARLY_WARNING_DAYS
+				) {
+					level = "early";
+				}
+
+				if (!level) continue;
+
+				const managedKey = `cntr_rdg_warning:${row.id}:${level}`;
+				activeManagedKeys.add(managedKey);
+
+				currentlyDueCntrWarnings.push({
+					type: "cntr_rdg_warning",
+					cntrRdgLevel: level,
+					title:
+						level === "high"
+							? "High Risk: CNTR RDG Warning"
+							: "Early Warning: CNTR RDG",
+					description: `${row.customerName} — ${row.cntrRdg.toLocaleString()} KM (VIN: ${row.vin})`,
+					referenceId: row.id,
+					vin: row.vin,
+					trackingId: row.trackingId,
+					tabName: "Main Sheet",
+					path: "/main-sheet",
+					managedKey,
+				});
+			}
+		}
+
 		// 2. Synchronize store state
 		set((state) => {
 			// Keep non-reminder AND non-warranty notifications
@@ -227,7 +286,8 @@ export const createNotificationSlice: StateCreator<
 				(n) =>
 					n.type !== "reminder" &&
 					n.type !== "warranty" &&
-					n.type !== "booking_followup",
+					n.type !== "booking_followup" &&
+					n.type !== "cntr_rdg_warning",
 			);
 
 			const newNotifications: AppNotification[] = [];
@@ -273,13 +333,15 @@ export const createNotificationSlice: StateCreator<
 			processDueItems(currentlyDueReminders, "reminder");
 			processDueItems(currentlyDueWarranties, "warranty");
 			processDueItems(currentlyDueFollowUps, "booking_followup");
+			processDueItems(currentlyDueCntrWarnings, "cntr_rdg_warning");
 
 			// Check if any old items were removed
 			const oldManagedCount = state.notifications.filter(
 				(n) =>
 					n.type === "reminder" ||
 					n.type === "warranty" ||
-					n.type === "booking_followup",
+					n.type === "booking_followup" ||
+					n.type === "cntr_rdg_warning",
 			).length;
 
 			if (newNotifications.length !== oldManagedCount) {
