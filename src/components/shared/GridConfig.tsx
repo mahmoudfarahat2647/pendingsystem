@@ -12,6 +12,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 import { ActionCellRenderer } from "../grid/renderers/ActionCellRenderer";
+import { CntrRdgCellRenderer } from "../grid/renderers/CntrRdgCellRenderer";
 import { CompanyLogoRenderer } from "../grid/renderers/CompanyLogoRenderer";
 import { MobileCellRenderer } from "../grid/renderers/MobileCellRenderer";
 import { PartStatusRenderer } from "../grid/renderers/PartStatusRenderer";
@@ -118,6 +119,7 @@ export const getBaseColumns = (
 		headerName: "CNTR RDG",
 		field: "cntrRdg",
 		width: 90,
+		cellRenderer: CntrRdgCellRenderer,
 	},
 	{
 		headerName: "SAB NO.",
