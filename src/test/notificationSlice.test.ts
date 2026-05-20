@@ -36,6 +36,17 @@ const createMockRow = (id: string, endWarranty?: string): PendingRow => ({
 	remainTime: "",
 });
 
+const createCntrWarrantyRow = (
+	id: string,
+	cntrRdg: number,
+	createdAt: string,
+): PendingRow => ({
+	...createMockRow(id),
+	repairSystem: "ضمان",
+	cntrRdg,
+	createdAt,
+});
+
 describe("notificationSlice", () => {
 	const createTestStore = (rows: PendingRow[]) => {
 		queryClient.setQueryData(getOrdersQueryKey("orders"), rows);
@@ -49,6 +60,27 @@ describe("notificationSlice", () => {
 					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
 					...createNotificationSlice(a[0], a[1], a[2] as any),
 					// Mock other slices/state required by checkNotifications
+					rowData: [],
+					ordersRowData: [],
+					bookingRowData: [],
+					callRowData: [],
+					archiveRowData: [],
+					notifications: [],
+				}) as unknown as any,
+		);
+	};
+
+	const createMainSheetStore = (mainRows: PendingRow[]) => {
+		queryClient.setQueryData(getOrdersQueryKey("orders"), []);
+		queryClient.setQueryData(getOrdersQueryKey("main"), mainRows);
+		queryClient.setQueryData(getOrdersQueryKey("booking"), []);
+		queryClient.setQueryData(getOrdersQueryKey("call"), []);
+
+		return create<CombinedStore>(
+			(...a) =>
+				({
+					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
+					...createNotificationSlice(a[0], a[1], a[2] as any),
 					rowData: [],
 					ordersRowData: [],
 					bookingRowData: [],
@@ -265,6 +297,159 @@ describe("notificationSlice", () => {
 			expect(
 				Object.keys(store.getState().dismissedManagedNotificationKeys),
 			).toHaveLength(1);
+		});
+	});
+
+	describe("CNTR RDG Warning", () => {
+		it("generates a high-risk warning for warranty row with cntrRdg >= 85000 after 10 days", () => {
+			const now = new Date("2026-05-20T12:00:00Z");
+			vi.setSystemTime(now);
+			// Created 11 days ago — past the 10-day threshold
+			const createdAt = new Date(
+				now.getTime() - 11 * 24 * 60 * 60 * 1000,
+			).toISOString();
+
+			const store = createMainSheetStore([
+				createCntrWarrantyRow("row-1", 90_000, createdAt),
+			]);
+
+			store.getState().checkNotifications();
+
+			const notifications = store.getState().notifications;
+			expect(notifications).toHaveLength(1);
+			expect(notifications[0].type).toBe("cntr_rdg_warning");
+			expect(notifications[0].cntrRdgLevel).toBe("high");
+			expect(notifications[0].referenceId).toBe("row-1");
+			expect(notifications[0].managedKey).toBe("cntr_rdg_warning:row-1:high");
+		});
+
+		it("generates an early-warning for warranty row with cntrRdg >= 70000 after 14 days", () => {
+			const now = new Date("2026-05-20T12:00:00Z");
+			vi.setSystemTime(now);
+			const createdAt = new Date(
+				now.getTime() - 15 * 24 * 60 * 60 * 1000,
+			).toISOString();
+
+			const store = createMainSheetStore([
+				createCntrWarrantyRow("row-2", 75_000, createdAt),
+			]);
+
+			store.getState().checkNotifications();
+
+			const notifications = store.getState().notifications;
+			expect(notifications).toHaveLength(1);
+			expect(notifications[0].type).toBe("cntr_rdg_warning");
+			expect(notifications[0].cntrRdgLevel).toBe("early");
+			expect(notifications[0].managedKey).toBe("cntr_rdg_warning:row-2:early");
+		});
+
+		it("generates only high-risk when row qualifies for both thresholds", () => {
+			const now = new Date("2026-05-20T12:00:00Z");
+			vi.setSystemTime(now);
+			const createdAt = new Date(
+				now.getTime() - 15 * 24 * 60 * 60 * 1000,
+			).toISOString();
+
+			const store = createMainSheetStore([
+				createCntrWarrantyRow("row-3", 90_000, createdAt),
+			]);
+
+			store.getState().checkNotifications();
+
+			const notifications = store.getState().notifications;
+			expect(notifications).toHaveLength(1);
+			expect(notifications[0].cntrRdgLevel).toBe("high");
+		});
+
+		it("does not alert when cntrRdg is below both thresholds", () => {
+			const now = new Date("2026-05-20T12:00:00Z");
+			vi.setSystemTime(now);
+			const createdAt = new Date(
+				now.getTime() - 20 * 24 * 60 * 60 * 1000,
+			).toISOString();
+
+			const store = createMainSheetStore([
+				createCntrWarrantyRow("row-4", 60_000, createdAt),
+			]);
+
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(0);
+		});
+
+		it("does not alert for non-warranty orders regardless of cntrRdg", () => {
+			const now = new Date("2026-05-20T12:00:00Z");
+			vi.setSystemTime(now);
+			const createdAt = new Date(
+				now.getTime() - 15 * 24 * 60 * 60 * 1000,
+			).toISOString();
+
+			const nonWarrantyRow: PendingRow = {
+				...createMockRow("row-5"),
+				repairSystem: "Other",
+				cntrRdg: 90_000,
+				createdAt,
+			};
+
+			const store = createMainSheetStore([nonWarrantyRow]);
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(0);
+		});
+
+		it("does not alert for high-risk row before the 10-day threshold", () => {
+			const now = new Date("2026-05-20T12:00:00Z");
+			vi.setSystemTime(now);
+			// Only 8 days ago — before the 10-day threshold
+			const createdAt = new Date(
+				now.getTime() - 8 * 24 * 60 * 60 * 1000,
+			).toISOString();
+
+			const store = createMainSheetStore([
+				createCntrWarrantyRow("row-6", 90_000, createdAt),
+			]);
+
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(0);
+		});
+
+		it("does not alert for early-warning row before the 14-day threshold", () => {
+			const now = new Date("2026-05-20T12:00:00Z");
+			vi.setSystemTime(now);
+			// 12 days ago — past 10-day threshold but cntrRdg only qualifies for early
+			const createdAt = new Date(
+				now.getTime() - 12 * 24 * 60 * 60 * 1000,
+			).toISOString();
+
+			const store = createMainSheetStore([
+				createCntrWarrantyRow("row-7", 75_000, createdAt),
+			]);
+
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(0);
+		});
+
+		it("dismissed cntr_rdg_warning does not respawn on next sync", () => {
+			const now = new Date("2026-05-20T12:00:00Z");
+			vi.setSystemTime(now);
+			const createdAt = new Date(
+				now.getTime() - 11 * 24 * 60 * 60 * 1000,
+			).toISOString();
+
+			const store = createMainSheetStore([
+				createCntrWarrantyRow("row-8", 90_000, createdAt),
+			]);
+
+			// First sync — warning appears
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(1);
+
+			// User dismisses it
+			const notifId = store.getState().notifications[0].id;
+			store.getState().removeNotification(notifId);
+			expect(store.getState().notifications).toHaveLength(0);
+
+			// Second sync — must NOT respawn
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(0);
 		});
 	});
 });

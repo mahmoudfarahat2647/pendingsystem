@@ -141,6 +141,7 @@ export const PendingRowSchema = z
 		reservedAt: z.string().optional(),
 		sourceType: z.string().optional(),
 		stage: z.string().optional(),
+		createdAt: z.string().optional(),
 	})
 	.transform((data) => {
 		// AUTO-SYNC: Legacy fields always reflect parts[0] if available

@@ -12,6 +12,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 import { ActionCellRenderer } from "../grid/renderers/ActionCellRenderer";
+import { CntrRdgCellRenderer } from "../grid/renderers/CntrRdgCellRenderer";
 import { CompanyLogoRenderer } from "../grid/renderers/CompanyLogoRenderer";
 import { MobileCellRenderer } from "../grid/renderers/MobileCellRenderer";
 import { PartStatusRenderer } from "../grid/renderers/PartStatusRenderer";
@@ -200,20 +201,27 @@ export const getMainSheetColumns = (
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
 	isLocked?: boolean,
-): ColDef<PendingRow>[] => [
-	...getBaseColumns(
+): ColDef<PendingRow>[] => {
+	const base = getBaseColumns(
 		onNoteClick,
 		onReminderClick,
 		onAttachClick,
 		isLocked,
 		partStatuses,
-	),
-	{
-		headerName: "REQUESTER",
-		field: "requester",
-		width: 120,
-	},
-];
+	);
+	return [
+		...base.map((col) =>
+			col.field === "cntrRdg"
+				? { ...col, cellRenderer: CntrRdgCellRenderer }
+				: col,
+		),
+		{
+			headerName: "REQUESTER",
+			field: "requester",
+			width: 120,
+		},
+	];
+};
 
 export const getBookingColumns = (
 	partStatuses: PartStatusDef[] = [],
@@ -488,7 +496,7 @@ export const getGlobalSearchWorkspaceColumns = (
 			...(mobileCol || {}),
 			minWidth: 130,
 		},
-		{ ...(cntrRdgCol || {}), width: 90 },
+		{ ...(cntrRdgCol || {}), width: 90, cellRenderer: CntrRdgCellRenderer },
 		{ ...(sabCol || {}), width: 110 },
 		{ ...(acceptedByCol || {}), width: 120 },
 		{ ...(modelCol || {}), width: 100 },

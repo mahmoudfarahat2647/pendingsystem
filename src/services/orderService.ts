@@ -558,6 +558,7 @@ export const orderService = {
 			}),
 			reminder: reminder,
 			stage: row.stage,
+			createdAt: row.created_at as string | undefined,
 		};
 
 		// [CRITICAL] Strict Data Validation Mapping
