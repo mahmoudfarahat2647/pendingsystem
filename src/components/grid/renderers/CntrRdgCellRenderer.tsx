@@ -4,7 +4,6 @@ import type { ICellRendererParams } from "ag-grid-community";
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAppStore } from "@/store/useStore";
@@ -39,15 +38,13 @@ export const CntrRdgCellRenderer = (
 			: "Early Warning: CNTR RDG over 70,000 KM";
 
 	return (
-		<TooltipProvider>
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<span className={`px-1 ${pulseClass}`}>{displayValue}</span>
-				</TooltipTrigger>
-				<TooltipContent>
-					<p>{tooltipText}</p>
-				</TooltipContent>
-			</Tooltip>
-		</TooltipProvider>
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<span className={`px-1 ${pulseClass}`}>{displayValue}</span>
+			</TooltipTrigger>
+			<TooltipContent>
+				<p>{tooltipText}</p>
+			</TooltipContent>
+		</Tooltip>
 	);
 };

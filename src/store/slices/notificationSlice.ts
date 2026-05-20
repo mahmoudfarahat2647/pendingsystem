@@ -241,6 +241,7 @@ export const createNotificationSlice: StateCreator<
 				const daysSinceCreation = Math.floor(
 					(now.getTime() - new Date(row.createdAt).getTime()) / MS_PER_DAY,
 				);
+				if (Number.isNaN(daysSinceCreation)) continue;
 
 				let level: "high" | "early" | null = null;
 				if (

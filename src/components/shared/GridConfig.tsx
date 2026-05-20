@@ -119,7 +119,6 @@ export const getBaseColumns = (
 		headerName: "CNTR RDG",
 		field: "cntrRdg",
 		width: 90,
-		cellRenderer: CntrRdgCellRenderer,
 	},
 	{
 		headerName: "SAB NO.",
@@ -202,20 +201,27 @@ export const getMainSheetColumns = (
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
 	isLocked?: boolean,
-): ColDef<PendingRow>[] => [
-	...getBaseColumns(
+): ColDef<PendingRow>[] => {
+	const base = getBaseColumns(
 		onNoteClick,
 		onReminderClick,
 		onAttachClick,
 		isLocked,
 		partStatuses,
-	),
-	{
-		headerName: "REQUESTER",
-		field: "requester",
-		width: 120,
-	},
-];
+	);
+	return [
+		...base.map((col) =>
+			col.field === "cntrRdg"
+				? { ...col, cellRenderer: CntrRdgCellRenderer }
+				: col,
+		),
+		{
+			headerName: "REQUESTER",
+			field: "requester",
+			width: 120,
+		},
+	];
+};
 
 export const getBookingColumns = (
 	partStatuses: PartStatusDef[] = [],
@@ -490,7 +496,7 @@ export const getGlobalSearchWorkspaceColumns = (
 			...(mobileCol || {}),
 			minWidth: 130,
 		},
-		{ ...(cntrRdgCol || {}), width: 90 },
+		{ ...(cntrRdgCol || {}), width: 90, cellRenderer: CntrRdgCellRenderer },
 		{ ...(sabCol || {}), width: 110 },
 		{ ...(acceptedByCol || {}), width: 120 },
 		{ ...(modelCol || {}), width: 100 },
