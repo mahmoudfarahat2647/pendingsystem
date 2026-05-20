@@ -227,3 +227,34 @@
 ::-webkit-scrollbar-thumb:hover {
 	background: rgba(255, 255, 255, 0.2);
 }
+
+/* CNTR RDG warranty warning pulse animations */
+@keyframes cntr-pulse-red {
+	0%,
+	100% {
+		background-color: transparent;
+	}
+	50% {
+		background-color: rgba(239, 68, 68, 0.15);
+	}
+}
+
+@keyframes cntr-pulse-yellow {
+	0%,
+	100% {
+		background-color: transparent;
+	}
+	50% {
+		background-color: rgba(234, 179, 8, 0.15);
+	}
+}
+
+.cntr-pulse-red {
+	animation: cntr-pulse-red 2s ease-in-out infinite;
+	border-radius: 4px;
+}
+
+.cntr-pulse-yellow {
+	animation: cntr-pulse-yellow 2s ease-in-out infinite;
+	border-radius: 4px;
+}
