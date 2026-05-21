@@ -1,14 +1,11 @@
 import { toast } from "sonner";
 import type { StateCreator } from "zustand";
 import { hasAttachment } from "@/lib/attachment";
-import {
-	getOrdersQueryKey,
-	ORDER_STAGES,
-	queryClient,
-} from "@/lib/queryClient";
+import { ORDER_STAGES } from "@/lib/queryClient";
 import { BeastModeSchema } from "@/schemas/form.schema";
 import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";
+import { getOrdersQueryAdapter } from "../ordersQueryAdapter";
 import type { CombinedStore } from "../types";
 import { useAppStore } from "../useStore";
 
@@ -207,10 +204,9 @@ export const createDraftSessionSlice: StateCreator<
 				OrderStage,
 				PendingRow[]
 			>;
+			const adapter = getOrdersQueryAdapter();
 			for (const stage of ORDER_STAGES) {
-				baseline[stage] =
-					queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey(stage)) ??
-					[];
+				baseline[stage] = adapter.getStageRows(stage) ?? [];
 			}
 			set((state) => ({
 				draftSession: {
@@ -486,8 +482,9 @@ export const createDraftSessionSlice: StateCreator<
 
 				// Invalidate touched stages
 				const prevSession = state;
+				const adapter = getOrdersQueryAdapter();
 				for (const stage of prevSession.touchedStages) {
-					queryClient.invalidateQueries({ queryKey: getOrdersQueryKey(stage) });
+					adapter.invalidateStage(stage);
 				}
 
 				get()._clearRecovery();
@@ -508,8 +505,9 @@ export const createDraftSessionSlice: StateCreator<
 			const state = get().draftSession;
 
 			// Invalidate touched stages
+			const adapter = getOrdersQueryAdapter();
 			for (const stage of state.touchedStages) {
-				queryClient.invalidateQueries({ queryKey: getOrdersQueryKey(stage) });
+				adapter.invalidateStage(stage);
 			}
 
 			set((state) => ({
@@ -546,7 +544,7 @@ export const createDraftSessionSlice: StateCreator<
 		getWorkingRows: (stage: OrderStage) => {
 			const state = get().draftSession;
 			if (!state.isActive || state.pendingCommands.length === 0) {
-				return queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey(stage));
+				return getOrdersQueryAdapter().getStageRows(stage);
 			}
 			return get()._deriveWorkingRows()[stage];
 		},
