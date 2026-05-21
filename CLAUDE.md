@@ -213,6 +213,24 @@ After major changes, update this file (`CLAUDE.md`). Keep it up-to-date with the
 - `/docs/architecture.md` → system patterns
 - `/docs/api.md` → API reference
 
+## Obsidian Vault & pendingsystem-vault Skill
+
+The project has an Obsidian vault at `docs/` (gitignored, local only) connected via the `obsidian` MCP server (`@bitbonsai/mcpvault`).
+
+Use the **`pendingsystem-vault` skill** automatically at these moments:
+
+| Moment | Action |
+|--------|--------|
+| Before implementing any feature | Search vault for existing docs on that feature, read them |
+| After completing a feature or significant fix | Patch or create the relevant `docs/features/<name>.md` |
+| User asks "how does X work" about this project | Search vault first, answer from docs + code |
+| Before architectural decisions | Read `docs/architecture.md` |
+| User mentions a named feature (booking, beast-mode, auth, etc.) | Read `docs/features/<name>.md` |
+
+The vault MCP tools to use: `mcp__obsidian__search_notes`, `mcp__obsidian__read_note`, `mcp__obsidian__write_note`, `mcp__obsidian__patch_note`, `mcp__obsidian__list_directory`.
+
+Do not write to `docs/.obsidian/`. Do not invent doc content — only document what was actually built.
+
 ## Rules
 
 - Before implementing any feature, check `/docs/features/` for existing context
