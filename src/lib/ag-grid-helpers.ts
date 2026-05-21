@@ -1,5 +1,14 @@
 import type { GridApi, IRowNode } from "ag-grid-community";
 
+export function ensurePagedRowVisible(api: GridApi, node: IRowNode): void {
+	if (api.paginationGetTotalPages() > 1) {
+		const pageSize = api.paginationGetPageSize();
+		const targetPage = Math.floor((node.rowIndex ?? 0) / pageSize);
+		api.paginationGoToPage(targetPage);
+	}
+	api.ensureNodeVisible(node, "middle");
+}
+
 /**
  * Represents the outcome of an attempt to jump to a specific row in the AG Grid.
  * The `reason` property is only populated when `success` is `false`.
@@ -50,7 +59,7 @@ export function tryJumpToRow(
 	rowNode.setSelected(true, true, "api");
 
 	// 3. Ensure the node is visible in the viewport
-	gridApi.ensureNodeVisible(rowNode, "middle");
+	ensurePagedRowVisible(gridApi, rowNode);
 
 	// 4. Flash the cells to draw attention
 	gridApi.flashCells({
@@ -88,7 +97,7 @@ export function trySelectRowsByVin(
 	});
 
 	if (matchingNodes.length > 0) {
-		gridApi.ensureNodeVisible(matchingNodes[0], "middle");
+		ensurePagedRowVisible(gridApi, matchingNodes[0]);
 		gridApi.flashCells({
 			rowNodes: matchingNodes,
 			flashDuration: 500,

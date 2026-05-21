@@ -3,6 +3,7 @@
 import type { GridApi, IRowNode } from "ag-grid-community";
 import type React from "react";
 import { useCallback, useEffect, useRef } from "react";
+import { ensurePagedRowVisible } from "@/lib/ag-grid-helpers";
 import { useAppStore } from "@/store/useStore";
 
 const SELECTION_FALLBACK_TIMEOUT_MS = 8000;
@@ -42,7 +43,7 @@ export function usePendingSearchSelection(
 		}
 
 		if (firstFoundNode) {
-			api.ensureNodeVisible(firstFoundNode, "middle");
+			ensurePagedRowVisible(api, firstFoundNode);
 			pendingIdsRef.current = null;
 			setPendingSearchSelection(null);
 		}
