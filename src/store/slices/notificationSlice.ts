@@ -1,10 +1,7 @@
 import type { StateCreator } from "zustand";
-import {
-	getOrdersByStageFromCache,
-	isStageCacheLoaded,
-} from "@/lib/queryClient";
 import { generateId } from "@/lib/utils";
 import type { AppNotification } from "@/types";
+import { getOrdersQueryAdapter } from "../ordersQueryAdapter";
 import type {
 	CombinedStore,
 	NotificationActions,
@@ -95,28 +92,29 @@ export const createNotificationSlice: StateCreator<
 			"id" | "timestamp" | "isRead"
 		>[] = [];
 
+		const adapter = getOrdersQueryAdapter();
 		const sources = [
 			{
-				data: getOrdersByStageFromCache("main"),
-				isLoaded: isStageCacheLoaded("main"),
+				data: adapter.getStageRows("main") ?? [],
+				isLoaded: adapter.isStageLoaded("main"),
 				name: "Main Sheet",
 				path: "/main-sheet",
 			},
 			{
-				data: getOrdersByStageFromCache("orders"),
-				isLoaded: isStageCacheLoaded("orders"),
+				data: adapter.getStageRows("orders") ?? [],
+				isLoaded: adapter.isStageLoaded("orders"),
 				name: "Orders",
 				path: "/orders",
 			},
 			{
-				data: getOrdersByStageFromCache("booking"),
-				isLoaded: isStageCacheLoaded("booking"),
+				data: adapter.getStageRows("booking") ?? [],
+				isLoaded: adapter.isStageLoaded("booking"),
 				name: "Booking",
 				path: "/booking",
 			},
 			{
-				data: getOrdersByStageFromCache("call"),
-				isLoaded: isStageCacheLoaded("call"),
+				data: adapter.getStageRows("call") ?? [],
+				isLoaded: adapter.isStageLoaded("call"),
 				name: "Call List",
 				path: "/call-list",
 			},
