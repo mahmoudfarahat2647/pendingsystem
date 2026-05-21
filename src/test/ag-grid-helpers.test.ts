@@ -18,6 +18,9 @@ describe("tryJumpToRow", () => {
 			deselectAll: vi.fn(),
 			ensureNodeVisible: vi.fn(),
 			flashCells: vi.fn(),
+			paginationGetTotalPages: vi.fn().mockReturnValue(1),
+			paginationGetPageSize: vi.fn().mockReturnValue(100),
+			paginationGoToPage: vi.fn(),
 		};
 	});
 
