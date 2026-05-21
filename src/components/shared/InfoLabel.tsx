@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import React from "react";
-import { cn } from "@/lib/utils";
+import { calculateRemainingTime, cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 
 interface InfoLabelProps {
@@ -16,10 +16,11 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 		partNumber = "-",
 		description = "-",
 		repairSystem = "-",
-		remainTime = "-",
 		startWarranty = "",
 		endWarranty = "",
 	} = data || {};
+
+	const remainTime = endWarranty ? calculateRemainingTime(endWarranty) : "-";
 
 	const fmtDate = (d: string) => {
 		if (!d) return "—";

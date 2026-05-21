@@ -1,6 +1,7 @@
 import type { PendingRow } from "@/types";
 import type { AllowedCompany } from "./ordersValidationConstants";
 import { getEffectiveNoteHistory } from "./orderWorkflow";
+import { calculateRemainingTime } from "./utils";
 
 /**
  * Exports selected orders to an XLSX format optimized for logistics.
@@ -99,6 +100,7 @@ export const exportAllSystemDataCSV = (
 	const allData = filteredRows.map((r) => ({
 		...r,
 		source: stageMap[r.stage as string] || r.stage || "Unknown",
+		remainTime: calculateRemainingTime(r.endWarranty),
 		reminderText: formatReminder(r.reminder),
 		noteHistory: getEffectiveNoteHistory(r),
 	}));
