@@ -40,9 +40,12 @@ import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import {
-	appendTaggedUserNote,
+	buildBookingCommands,
+	buildReorderCommands,
+	buildSendToArchiveCommands,
+} from "@/lib/orderStageTransitions";
+import {
 	filterReservedRows,
-	getEffectiveNoteHistory,
 	getSelectedIds,
 	getVinAutoMoveIds,
 } from "@/lib/orderWorkflow";
@@ -91,24 +94,12 @@ export default function MainSheetPage() {
 
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
-			for (const id of ids) {
+			const rows = ids.flatMap((id) => {
 				const row = effectiveRowData.find((r) => r.id === id);
-				if (row) {
-					const newNoteHistory = appendTaggedUserNote(
-						getEffectiveNoteHistory(row),
-						reason,
-						"archive",
-					);
-
-					applyCommand({
-						type: "patchRow",
-						id,
-						sourceStage: "main",
-						destinationStage: "archive",
-						updates: { archiveReason: reason, noteHistory: newNoteHistory },
-						previousValues: {},
-					});
-				}
+				return row ? [row] : [];
+			});
+			for (const cmd of buildSendToArchiveCommands(rows, reason, "main")) {
+				applyCommand(cmd);
 			}
 		},
 		[effectiveRowData, applyCommand],
@@ -254,23 +245,12 @@ export default function MainSheetPage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		for (const row of selectedRows) {
-			const newNoteHistory = appendTaggedUserNote(
-				getEffectiveNoteHistory(row),
-				`Reorder Reason: ${reorderReason}`,
-				"reorder",
-			);
-			applyCommand({
-				type: "patchRow",
-				id: row.id,
-				sourceStage: "main",
-				destinationStage: "orders",
-				updates: {
-					noteHistory: newNoteHistory,
-					status: "Reorder",
-				},
-				previousValues: {},
-			});
+		for (const cmd of buildReorderCommands(
+			selectedRows,
+			"main",
+			reorderReason,
+		)) {
+			applyCommand(cmd);
 		}
 		const count = selectedRows.length;
 		setSelectedRows([]);
@@ -284,26 +264,14 @@ export default function MainSheetPage() {
 		note: string,
 		status?: string,
 	) => {
-		for (const row of selectedRows) {
-			const newNoteHistory = appendTaggedUserNote(
-				getEffectiveNoteHistory(row),
-				note,
-				"booking",
-			);
-
-			applyCommand({
-				type: "patchRow",
-				id: row.id,
-				sourceStage: "main",
-				destinationStage: "booking",
-				updates: {
-					bookingDate: date,
-					bookingNote: note,
-					noteHistory: newNoteHistory,
-					...(status ? { bookingStatus: status } : {}),
-				},
-				previousValues: {},
-			});
+		for (const cmd of buildBookingCommands(
+			selectedRows,
+			"main",
+			date,
+			note,
+			status,
+		)) {
+			applyCommand(cmd);
 		}
 		setSelectedRows([]);
 		toast.success(`${selectedRows.length} row(s) sent to Booking`);
