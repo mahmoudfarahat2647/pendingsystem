@@ -7,9 +7,9 @@ import type { FormData } from "@/components/orders/form";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
-import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { hasAttachment } from "@/lib/attachment";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
+import { buildSendToArchiveCommands } from "@/lib/orderStageTransitions";
 import {
 	appendTaggedUserNote,
 	filterReservedRows,
@@ -95,18 +95,12 @@ export const useOrdersPageHandlers = () => {
 
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
-			for (const id of ids) {
+			const rows = ids.flatMap((id) => {
 				const row = effectiveOrdersData.find((r) => r.id === id);
-				if (!row) continue;
-
-				applyCommand({
-					type: "patchRow",
-					id,
-					sourceStage: "orders",
-					destinationStage: "archive",
-					updates: buildArchivePayload(row, reason),
-					previousValues: {},
-				});
+				return row ? [row] : [];
+			});
+			for (const cmd of buildSendToArchiveCommands(rows, reason, "orders")) {
+				applyCommand(cmd);
 			}
 		},
 		[effectiveOrdersData, applyCommand],
