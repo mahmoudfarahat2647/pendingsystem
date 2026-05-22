@@ -37,7 +37,7 @@ Severity counts: **High: 6 · Medium: 7 · Low: 5**.
 | L2 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | Back-compat re-exports removed from `useOrdersQuery.ts` |
 | L5 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | `PendingRow.stage` now `z.enum(["orders","main","call","booking","archive"])` |
 
-*H5 partial: `src/lib/orderStageTransitions.ts` extracted but page hooks not yet wired to use it.*
+| H5 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | All 5 page hooks already call `buildSendToArchiveCommands`, `buildReorderCommands`, `buildBookingCommands`, `buildRebookingCommands` from `src/lib/orderStageTransitions.ts`. One inline booking command in `useOrdersPageHandlers.handleConfirmBooking` is intentionally kept (populates per-row `previousValues` for atomic undo — a caller concern). |
 
 ---
 
@@ -303,7 +303,7 @@ You don't have to adopt this layout wholesale. The two highest-leverage moves:
 | H2 | No Domain layer; schema = entity = persistence row | High | ⬜ Open |
 | H3 | Duplicate `createServiceClient` across 4+ API routes | High | ✅ Fixed |
 | H4 | `orderService.ts` is a 697-line god module | High | ⬜ Open |
-| H5 | 300-600-line page-level handler hooks contain business logic | High | 🔄 Partial |
+| H5 | 300-600-line page-level handler hooks contain business logic | High | ✅ Fixed |
 | H6 | Operational data lives in both React Query and Zustand | High | ⬜ Open |
 | M1 | Schemas import `lib/utils` and `lib/company` | Medium | ⬜ Open |
 | M2 | Snake/camel mapping repeated per endpoint | Medium | ⬜ Open |
