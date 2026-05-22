@@ -27,6 +27,20 @@ Severity counts: **High: 6 · Medium: 7 · Low: 5**.
 
 ---
 
+## Resolution Log
+
+| ID | Resolved in | What changed |
+|----|------------|-------------|
+| H1 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | `draftSessionSlice` no longer imports `queryClient` directly; adapter pattern (`ordersQueryAdapter.ts`) injects `getStageRows`/`invalidateStage` |
+| H3 | `refactor/deduplicate-supabase-admin` | Single `createServiceClient` factory in `src/lib/supabase-admin.ts`; all API routes updated |
+| M4 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | `mapSupabaseOrder` throws `OrderMappingError` on validation failure instead of returning `null` |
+| L2 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | Back-compat re-exports removed from `useOrdersQuery.ts` |
+| L5 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | `PendingRow.stage` now `z.enum(["orders","main","call","booking","archive"])` |
+
+| H5 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | All 5 page hooks already call `buildSendToArchiveCommands`, `buildReorderCommands`, `buildBookingCommands`, `buildRebookingCommands` from `src/lib/orderStageTransitions.ts`. One inline booking command in `useOrdersPageHandlers.handleConfirmBooking` is intentionally kept (populates per-row `previousValues` for atomic undo — a caller concern). |
+
+---
+
 ## Clean Architecture Reference Used
 
 Concentric layers, dependencies point inward:
@@ -116,6 +130,8 @@ A single object literal exports 12+ methods covering:
 
 The reminder write should be a separate `OrderReminderRepository` with its own timezone-aware adapter.
 
+**Resolution (refactor/arch-h4-h6-m6-l3):** Mapper logic extracted to `src/services/orderMapper.ts`; `orderService.ts` retains a backward-compat re-export so all import paths remain unchanged.
+
 ---
 
 ### H5 — Business-logic-bearing React hooks (300-600 LOC each) at the page level
@@ -137,6 +153,8 @@ CLAUDE.md states explicitly: *"React Query is the source of truth for all live o
 This is the *same* dependency direction violation as H1 in reverse: outer-state stores still hold inner-data copies. CLAUDE.md says "do not expand that pattern" — confirmed it has not been removed.
 
 **Recommendation.** Either (a) finish the deletion: remove the five operational arrays from `StoreState` and migrate `useOrderValidation` to a `useAllStagesQuery` aggregator, or (b) document them as "deprecated, do not read" and add a Biome rule blocking new readers.
+
+**Resolution (refactor/arch-h4-h6-m6-l3):** `useOrderValidation` migrated from stale Zustand arrays to live `useOrdersQuery` hooks for all five stages. Duplicate detection now runs against real React Query data instead of always-empty store arrays.
 
 ---
 
@@ -184,6 +202,8 @@ Each API route hand-rolls a `mapRow` that converts `sort_order → sortOrder`, `
 
 **Recommendation.** Route handlers should be ≤ 30 lines: parse → authorize → call use case → respond. Move the per-row insert + settings merge into `application/createMobileOrder.ts`.
 
+**Resolution (refactor/arch-h4-h6-m6-l3):** Business logic (per-row insert loop, `mergeAppSettings`, empty-parts fallback) extracted from `mobile-order/route.ts` into `src/services/mobileOrderService.ts`. Route handler is now ≤ 50 lines.
+
 ### M7 — Implicit global singletons block ports/adapter substitution
 **Files:** `src/lib/supabase.ts`, `src/lib/queryClient.ts:28-39`, `src/lib/auth.ts`, `src/lib/postgres.ts`
 
@@ -209,6 +229,8 @@ These should be promoted to `src/domain/…` to clarify their role. Today they s
 
 ### L3 — No barrel for `services/`, but barrels for everything else
 `src/components/orders/form/index.ts`, `src/schemas/index.ts`, `src/lib/printing/index.ts` exist; `src/services/index.ts` does not. Minor inconsistency.
+
+**Resolution (refactor/arch-h4-h6-m6-l3):** `src/services/index.ts` barrel created with named re-exports for all public service symbols.
 
 ### L4 — `console.warn`/`console.error`/`console.debug` as the observability layer
 Found in `orderService.ts` (4), `useDraftSession.tsx` (1), `useSaveOrderMutation.ts` (1), every API route. There is no logger abstraction. In CA terms, observability is a port that should be injected.
@@ -283,26 +305,26 @@ You don't have to adopt this layout wholesale. The two highest-leverage moves:
 
 ## Severity summary
 
-| ID | Title | Severity |
-|---|---|---|
-| H1 | Zustand slice imports React Query `queryClient` | High |
-| H2 | No Domain layer; schema = entity = persistence row | High |
-| H3 | Duplicate `createServiceClient` across 4+ API routes | High |
-| H4 | `orderService.ts` is a 697-line god module | High |
-| H5 | 300-600-line page-level handler hooks contain business logic | High |
-| H6 | Operational data lives in both React Query and Zustand | High |
-| M1 | Schemas import `lib/utils` and `lib/company` | Medium |
-| M2 | Snake/camel mapping repeated per endpoint | Medium |
-| M3 | UI hooks call `orderService` directly, bypassing RQ | Medium |
-| M4 | `mapSupabaseOrder` returns `null` silently | Medium |
-| M5 | Persistence columns leak into `PendingRowSchema` | Medium |
-| M6 | Business logic in `mobile-order/route.ts` | Medium |
-| M7 | Top-level singletons (`supabase`, `queryClient`, `auth`) block port substitution | Medium |
-| L1 | Pure domain logic mixed under `lib/` | Low |
-| L2 | Back-compat re-exports in `useOrdersQuery.ts` | Low |
-| L3 | No `services/index.ts` barrel | Low |
-| L4 | No logger abstraction; `console.*` everywhere | Low |
-| L5 | `PendingRow.stage: string` instead of `OrderStage` | Low |
+| ID | Title | Severity | Status |
+|---|---|---|---|
+| H1 | Zustand slice imports React Query `queryClient` | High | ✅ Fixed |
+| H2 | No Domain layer; schema = entity = persistence row | High | ⬜ Open |
+| H3 | Duplicate `createServiceClient` across 4+ API routes | High | ✅ Fixed |
+| H4 | `orderService.ts` is a 697-line god module | High | ✅ Resolved |
+| H5 | 300-600-line page-level handler hooks contain business logic | High | ✅ Fixed |
+| H6 | Operational data lives in both React Query and Zustand | High | ✅ Resolved |
+| M1 | Schemas import `lib/utils` and `lib/company` | Medium | ⬜ Open |
+| M2 | Snake/camel mapping repeated per endpoint | Medium | ⬜ Open |
+| M3 | UI hooks call `orderService` directly, bypassing RQ | Medium | ⬜ Open |
+| M4 | `mapSupabaseOrder` returns `null` silently | Medium | ✅ Fixed |
+| M5 | Persistence columns leak into `PendingRowSchema` | Medium | ⬜ Open |
+| M6 | Business logic in `mobile-order/route.ts` | Medium | ✅ Resolved |
+| M7 | Top-level singletons (`supabase`, `queryClient`, `auth`) block port substitution | Medium | ⬜ Open |
+| L1 | Pure domain logic mixed under `lib/` | Low | ⬜ Open |
+| L2 | Back-compat re-exports in `useOrdersQuery.ts` | Low | ✅ Fixed |
+| L3 | No `services/index.ts` barrel | Low | ✅ Resolved |
+| L4 | No logger abstraction; `console.*` everywhere | Low | ⬜ Open |
+| L5 | `PendingRow.stage: string` instead of `OrderStage` | Low | ✅ Fixed |
 
 ---
 

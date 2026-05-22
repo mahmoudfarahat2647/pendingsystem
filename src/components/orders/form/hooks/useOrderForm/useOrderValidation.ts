@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { ValidationMode } from "@/lib/ordersValidationConstants";
 import {
 	checkDescriptionConflict,
@@ -25,12 +26,14 @@ export function useOrderValidation({
 	isEditMode,
 	selectedRows: _selectedRows,
 }: UseOrderValidationProps) {
+	// React Query hooks for live stage data (replaces stale Zustand row arrays)
+	const { data: ordersData } = useOrdersQuery("orders");
+	const { data: mainData } = useOrdersQuery("main");
+	const { data: callData } = useOrdersQuery("call");
+	const { data: bookingData } = useOrdersQuery("booking");
+	const { data: archiveData } = useOrdersQuery("archive");
+
 	// Store selectors
-	const rowData = useAppStore((state) => state.rowData);
-	const ordersRowData = useAppStore((state) => state.ordersRowData);
-	const callRowData = useAppStore((state) => state.callRowData);
-	const bookingRowData = useAppStore((state) => state.bookingRowData);
-	const archiveRowData = useAppStore((state) => state.archiveRowData);
 	const beastModeTriggers = useAppStore((state) => state.beastModeTriggers);
 
 	// Basic errors state
@@ -212,12 +215,12 @@ export function useOrderValidation({
 			}
 		> = {};
 
-		const allRows = [
-			...rowData,
-			...ordersRowData,
-			...callRowData,
-			...bookingRowData,
-			...archiveRowData,
+		const allRows: PendingRow[] = [
+			...(ordersData ?? []),
+			...(mainData ?? []),
+			...(callData ?? []),
+			...(bookingData ?? []),
+			...(archiveData ?? []),
 		];
 
 		const duplicateIndices = findSameOrderDuplicateIndices(parts);
@@ -287,11 +290,11 @@ export function useOrderValidation({
 		return warnings;
 	}, [
 		parts,
-		rowData,
-		ordersRowData,
-		callRowData,
-		bookingRowData,
-		archiveRowData,
+		ordersData,
+		mainData,
+		callData,
+		bookingData,
+		archiveData,
 		formData.vin,
 		validationMode,
 		asyncDuplicateWarnings,
