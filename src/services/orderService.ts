@@ -117,11 +117,9 @@ export const orderService = {
 	async fetchMappedOrders(stage: OrderStage): Promise<PendingRow[]> {
 		const data = await orderService.getOrders(stage);
 		if (!data) return [];
-		return data
-			.map((row) =>
-				orderService.mapSupabaseOrder(row as Record<string, unknown>),
-			)
-			.filter((row): row is PendingRow => row !== null);
+		return data.map((row) =>
+			orderService.mapSupabaseOrder(row as Record<string, unknown>),
+		);
 	},
 
 	async getDashboardStats() {
@@ -478,7 +476,7 @@ export const orderService = {
 		if (error) handleSupabaseError(error);
 	},
 
-	mapSupabaseOrder(row: Record<string, unknown>): PendingRow | null {
+	mapSupabaseOrder(row: Record<string, unknown>): PendingRow {
 		// Map back the first active reminder if exists via the join
 		let reminder: { date: string; time: string; subject: string } | null = null;
 		if (
@@ -568,15 +566,9 @@ export const orderService = {
 		// This handles legacy field synchronization via the schema transform
 		const parseResult = PendingRowSchema.safeParse(resultObj);
 		if (!parseResult.success) {
-			const flattenedErrors = parseResult.error.flatten();
-			console.warn("[orderService.mapSupabaseOrder] validation_failed", {
-				orderId: row.id,
-				fieldErrors: flattenedErrors.fieldErrors,
-				formErrors: flattenedErrors.formErrors,
-				data: resultObj,
-				timestamp: new Date().toISOString(),
-			});
-			return null;
+			throw new Error(
+				`[orderService] Row mapping failed for id=${row.id}: ${parseResult.error.issues.map((i) => i.message).join(", ")}`,
+			);
 		}
 
 		return parseResult.data;

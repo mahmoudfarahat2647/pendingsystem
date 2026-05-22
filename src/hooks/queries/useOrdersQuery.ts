@@ -11,19 +11,12 @@ export function useOrdersQuery(
 		queryFn: async (): Promise<PendingRow[]> => {
 			const data = await orderService.getOrders(stage);
 			if (!data) return [];
-			return data
-				.map((row) =>
-					orderService.mapSupabaseOrder(row as Record<string, unknown>),
-				)
-				.filter((row): row is PendingRow => row !== null);
+			return data.map((row) =>
+				orderService.mapSupabaseOrder(row as Record<string, unknown>),
+			);
 		},
 		staleTime: 1000 * 60 * 5, // 5 minutes
 		gcTime: 1000 * 60 * 10, // 10 minutes
 		...(options || {}),
 	});
 }
-
-export { useBulkDeleteOrdersMutation } from "./useBulkDeleteOrdersMutation";
-// Re-export mutations for backwards compatibility with existing imports
-export { useBulkUpdateOrderStageMutation } from "./useBulkUpdateOrderStageMutation";
-export { useSaveOrderMutation } from "./useSaveOrderMutation";

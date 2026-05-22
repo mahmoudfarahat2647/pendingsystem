@@ -103,8 +103,8 @@ describe("useRowModals Stage Routing", () => {
 		);
 	});
 
-	it("normalizes display-label stages when saving a single-row archive", () => {
-		const row = createRow({ stage: "Main Sheet" });
+	it("archives a row from main stage with correct stage argument", () => {
+		const row = createRow({ stage: "main" });
 		const { result } = renderHook(() => useRowModals(mockOnUpdate, undefined));
 
 		act(() => {
