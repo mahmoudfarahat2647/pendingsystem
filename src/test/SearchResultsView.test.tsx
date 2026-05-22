@@ -162,12 +162,18 @@ vi.mock("@/hooks/queries/useOrdersQuery", () => ({
 	useOrdersQuery: vi.fn((stage?: keyof typeof mocks.queryData) => ({
 		data: stage ? mocks.queryData[stage] : [],
 	})),
+}));
+vi.mock("@/hooks/queries/useSaveOrderMutation", () => ({
 	useSaveOrderMutation: vi.fn(() => ({
 		mutateAsync: mocks.saveMutateAsync,
 	})),
+}));
+vi.mock("@/hooks/queries/useBulkDeleteOrdersMutation", () => ({
 	useBulkDeleteOrdersMutation: vi.fn(() => ({
 		mutateAsync: mocks.deleteMutateAsync,
 	})),
+}));
+vi.mock("@/hooks/queries/useBulkUpdateOrderStageMutation", () => ({
 	useBulkUpdateOrderStageMutation: vi.fn(
 		(stage: keyof typeof mocks.bulkMutations) => ({
 			mutateAsync: mocks.bulkMutations[stage],

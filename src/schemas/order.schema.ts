@@ -140,7 +140,7 @@ export const PendingRowSchema = z
 		reserved: z.boolean().optional(),
 		reservedAt: z.string().optional(),
 		sourceType: z.string().optional(),
-		stage: z.string().optional(),
+		stage: z.enum(["orders", "main", "call", "booking", "archive"]).optional(),
 		createdAt: z.string().optional(),
 	})
 	.transform((data) => {

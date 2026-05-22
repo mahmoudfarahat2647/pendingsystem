@@ -309,7 +309,7 @@ function createMockRow(
 		archiveReason: "",
 		archivedAt: "",
 		sourceType: "",
-		stage: "",
+		stage: undefined,
 		...overrides,
 	};
 }

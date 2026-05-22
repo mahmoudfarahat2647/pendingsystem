@@ -203,12 +203,9 @@ export const Header = React.memo(function Header() {
 			const rawData = await orderService.getOrders();
 			const mappedData: PendingRow[] = [];
 			for (const row of rawData) {
-				const mapped = orderService.mapSupabaseOrder(
-					row as Record<string, unknown>,
+				mappedData.push(
+					orderService.mapSupabaseOrder(row as Record<string, unknown>),
 				);
-				if (mapped) {
-					mappedData.push(mapped);
-				}
 			}
 
 			if (mappedData.length === 0) {

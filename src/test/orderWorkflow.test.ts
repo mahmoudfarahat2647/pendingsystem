@@ -40,7 +40,7 @@ const createMockRow = (overrides: Partial<PendingRow> = {}): PendingRow => ({
 	partNumber: "P1",
 	description: "Test Part",
 	vin: "VIN12345678901234",
-	stage: "Orders",
+	stage: "orders",
 	...overrides,
 });
 
@@ -112,13 +112,13 @@ describe("checkVinPartDuplicate", () => {
 			id: "1",
 			vin: "VIN111",
 			partNumber: "PART-A",
-			stage: "Orders",
+			stage: "orders",
 		}),
 		createMockRow({
 			id: "2",
 			vin: "VIN222",
 			partNumber: "PART-B",
-			stage: "Main Sheet",
+			stage: "main",
 		}),
 	];
 
@@ -131,7 +131,7 @@ describe("checkVinPartDuplicate", () => {
 		const result = checkVinPartDuplicate("VIN111", "PART-A", mockRows);
 		expect(result.isDuplicate).toBe(true);
 		expect(result.existingRow).toBeDefined();
-		expect(result.location).toBe("Orders");
+		expect(result.location).toBe("orders");
 	});
 
 	it("should not flag current row as duplicate", () => {
@@ -427,13 +427,13 @@ describe("getVinAutoMoveIds", () => {
 		const rows = [
 			createMockRow({
 				id: "1",
-				stage: " main ",
+				stage: "main",
 				vin: " vin111 ",
 				status: "not arrived",
 			}),
 			createMockRow({
 				id: "2",
-				stage: "MAIN",
+				stage: "main",
 				vin: "VIN111",
 				status: " arrived ",
 			}),

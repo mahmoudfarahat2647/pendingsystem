@@ -261,9 +261,7 @@ describe("orderService", () => {
 		expect(result?.hasAttachment).toBe(true);
 	});
 
-	it("should return null for invalid mapped row", () => {
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
+	it("should throw for invalid mapped row", () => {
 		const invalidRow = {
 			id: "", // Invalid because PendingRowSchema requires id.min(1)
 			order_number: "T2",
@@ -273,15 +271,9 @@ describe("orderService", () => {
 			metadata: {},
 		};
 
-		const result = orderService.mapSupabaseOrder(invalidRow);
-
-		expect(result).toBeNull();
-		expect(warnSpy).toHaveBeenCalledWith(
-			"[orderService.mapSupabaseOrder] validation_failed",
-			expect.objectContaining({ orderId: "" }),
+		expect(() => orderService.mapSupabaseOrder(invalidRow)).toThrow(
+			"[orderService] Row mapping failed for id=",
 		);
-
-		warnSpy.mockRestore();
 	});
 
 	describe("checkHistoricalVinPartDuplicate", () => {
