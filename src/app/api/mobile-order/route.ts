@@ -1,20 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { normalizeNullableCompanyName } from "@/lib/company";
+import { createServiceClient } from "@/lib/supabase-admin";
 import { MobileQuickOrderSchema } from "@/schemas/mobileOrder.schema";
 import { isRateLimited } from "./rateLimiter";
 
 export const runtime = "nodejs";
-
-function createServiceClient() {
-	const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-	const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-	if (!url || !key) throw new Error("Missing Supabase service config");
-	return createClient(url, key, {
-		auth: { persistSession: false, autoRefreshToken: false },
-	});
-}
 
 function todayString(): string {
 	const d = new Date();
@@ -25,7 +17,7 @@ function todayString(): string {
 }
 
 async function mergeAppSettings(
-	supabase: ReturnType<typeof createServiceClient>,
+	supabase: SupabaseClient,
 	model: string,
 	repairSystem: string,
 ): Promise<void> {

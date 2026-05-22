@@ -1,8 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { createServiceClient } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
@@ -11,15 +11,6 @@ const AddTemplateSchema = z.object({
 	category: CategorySchema,
 	text: z.string().trim().min(1).max(200),
 });
-
-function createServiceClient() {
-	const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-	const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-	if (!url || !key) throw new Error("Missing Supabase service configuration");
-	return createClient(url, key, {
-		auth: { persistSession: false, autoRefreshToken: false },
-	});
-}
 
 function mapRow(row: Record<string, unknown>) {
 	return {
