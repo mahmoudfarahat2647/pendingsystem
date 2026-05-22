@@ -1,19 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { createServiceClient } from "@/lib/supabase-admin";
 import type { AppSettings } from "@/services/appSettingsService";
 
 export const runtime = "nodejs";
-
-function createServiceClient() {
-	const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-	const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-	if (!url || !key) throw new Error("Missing Supabase service configuration");
-	return createClient(url, key, {
-		auth: { persistSession: false, autoRefreshToken: false },
-	});
-}
 
 const PROTECTED_REPAIR_SYSTEMS = ["ضمان"];
 

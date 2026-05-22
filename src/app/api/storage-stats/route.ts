@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
@@ -9,6 +8,7 @@ import {
 	DB_LIMIT_BYTES,
 	STORAGE_LIMIT_BYTES,
 } from "@/lib/storage-limits";
+import { createServiceClient } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
@@ -129,26 +129,8 @@ export async function GET(req: NextRequest) {
 	}
 
 	try {
-		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-		const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-		if (!supabaseUrl || !serviceRoleKey) {
-			console.error("Missing Supabase configuration for storage-stats API");
-			return NextResponse.json(
-				{ error: "Server configuration error" },
-				{ status: 500 },
-			);
-		}
-
-		// Create a service-role client to bypass RLS and access internal schemas
-		const supabase = createClient(supabaseUrl, serviceRoleKey, {
-			auth: {
-				persistSession: false,
-				autoRefreshToken: false,
-			},
-			global: {
-				fetch: createTimeoutFetch(SUPABASE_REQUEST_TIMEOUT_MS),
-			},
+		const supabase = createServiceClient({
+			fetch: createTimeoutFetch(SUPABASE_REQUEST_TIMEOUT_MS),
 		});
 
 		// 1. Get Database Size via RPC
