@@ -27,6 +27,20 @@ Severity counts: **High: 6 · Medium: 7 · Low: 5**.
 
 ---
 
+## Resolution Log
+
+| ID | Resolved in | What changed |
+|----|------------|-------------|
+| H1 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | `draftSessionSlice` no longer imports `queryClient` directly; adapter pattern (`ordersQueryAdapter.ts`) injects `getStageRows`/`invalidateStage` |
+| H3 | `refactor/deduplicate-supabase-admin` | Single `createServiceClient` factory in `src/lib/supabase-admin.ts`; all API routes updated |
+| M4 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | `mapSupabaseOrder` throws `OrderMappingError` on validation failure instead of returning `null` |
+| L2 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | Back-compat re-exports removed from `useOrdersQuery.ts` |
+| L5 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | `PendingRow.stage` now `z.enum(["orders","main","call","booking","archive"])` |
+
+*H5 partial: `src/lib/orderStageTransitions.ts` extracted but page hooks not yet wired to use it.*
+
+---
+
 ## Clean Architecture Reference Used
 
 Concentric layers, dependencies point inward:
@@ -283,26 +297,26 @@ You don't have to adopt this layout wholesale. The two highest-leverage moves:
 
 ## Severity summary
 
-| ID | Title | Severity |
-|---|---|---|
-| H1 | Zustand slice imports React Query `queryClient` | High |
-| H2 | No Domain layer; schema = entity = persistence row | High |
-| H3 | Duplicate `createServiceClient` across 4+ API routes | High |
-| H4 | `orderService.ts` is a 697-line god module | High |
-| H5 | 300-600-line page-level handler hooks contain business logic | High |
-| H6 | Operational data lives in both React Query and Zustand | High |
-| M1 | Schemas import `lib/utils` and `lib/company` | Medium |
-| M2 | Snake/camel mapping repeated per endpoint | Medium |
-| M3 | UI hooks call `orderService` directly, bypassing RQ | Medium |
-| M4 | `mapSupabaseOrder` returns `null` silently | Medium |
-| M5 | Persistence columns leak into `PendingRowSchema` | Medium |
-| M6 | Business logic in `mobile-order/route.ts` | Medium |
-| M7 | Top-level singletons (`supabase`, `queryClient`, `auth`) block port substitution | Medium |
-| L1 | Pure domain logic mixed under `lib/` | Low |
-| L2 | Back-compat re-exports in `useOrdersQuery.ts` | Low |
-| L3 | No `services/index.ts` barrel | Low |
-| L4 | No logger abstraction; `console.*` everywhere | Low |
-| L5 | `PendingRow.stage: string` instead of `OrderStage` | Low |
+| ID | Title | Severity | Status |
+|---|---|---|---|
+| H1 | Zustand slice imports React Query `queryClient` | High | ✅ Fixed |
+| H2 | No Domain layer; schema = entity = persistence row | High | ⬜ Open |
+| H3 | Duplicate `createServiceClient` across 4+ API routes | High | ✅ Fixed |
+| H4 | `orderService.ts` is a 697-line god module | High | ⬜ Open |
+| H5 | 300-600-line page-level handler hooks contain business logic | High | 🔄 Partial |
+| H6 | Operational data lives in both React Query and Zustand | High | ⬜ Open |
+| M1 | Schemas import `lib/utils` and `lib/company` | Medium | ⬜ Open |
+| M2 | Snake/camel mapping repeated per endpoint | Medium | ⬜ Open |
+| M3 | UI hooks call `orderService` directly, bypassing RQ | Medium | ⬜ Open |
+| M4 | `mapSupabaseOrder` returns `null` silently | Medium | ✅ Fixed |
+| M5 | Persistence columns leak into `PendingRowSchema` | Medium | ⬜ Open |
+| M6 | Business logic in `mobile-order/route.ts` | Medium | ⬜ Open |
+| M7 | Top-level singletons (`supabase`, `queryClient`, `auth`) block port substitution | Medium | ⬜ Open |
+| L1 | Pure domain logic mixed under `lib/` | Low | ⬜ Open |
+| L2 | Back-compat re-exports in `useOrdersQuery.ts` | Low | ✅ Fixed |
+| L3 | No `services/index.ts` barrel | Low | ⬜ Open |
+| L4 | No logger abstraction; `console.*` everywhere | Low | ⬜ Open |
+| L5 | `PendingRow.stage: string` instead of `OrderStage` | Low | ✅ Fixed |
 
 ---
 
