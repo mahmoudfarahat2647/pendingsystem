@@ -51,9 +51,12 @@ import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { trySelectRowsByVin } from "@/lib/ag-grid-helpers";
 import {
-	appendTaggedUserNote,
+	buildRebookingCommands,
+	buildReorderCommands,
+	buildSendToArchiveCommands,
+} from "@/lib/orderStageTransitions";
+import {
 	filterReservedRows,
-	getEffectiveNoteHistory,
 	getSelectedIds,
 	hasMixedVinSelection,
 } from "@/lib/orderWorkflow";
@@ -109,24 +112,12 @@ export default function BookingPage() {
 
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
-			for (const id of ids) {
+			const rows = ids.flatMap((id) => {
 				const row = effectiveBookingData.find((r: PendingRow) => r.id === id);
-				if (row) {
-					const newNoteHistory = appendTaggedUserNote(
-						getEffectiveNoteHistory(row),
-						reason,
-						"archive",
-					);
-
-					applyCommand({
-						type: "patchRow",
-						id,
-						sourceStage: "booking",
-						destinationStage: "archive",
-						updates: { archiveReason: reason, noteHistory: newNoteHistory },
-						previousValues: {},
-					});
-				}
+				return row ? [row] : [];
+			});
+			for (const cmd of buildSendToArchiveCommands(rows, reason, "booking")) {
+				applyCommand(cmd);
 			}
 		},
 		[effectiveBookingData, applyCommand],
@@ -201,25 +192,12 @@ export default function BookingPage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		// 1. Apply patchRow commands to send back to Orders with Reorder status
-		for (const row of selectedRows) {
-			const newNoteHistory = appendTaggedUserNote(
-				getEffectiveNoteHistory(row),
-				`Reorder Reason: ${reorderReason}`,
-				"reorder",
-			);
-
-			applyCommand({
-				type: "patchRow",
-				id: row.id,
-				sourceStage: "booking",
-				destinationStage: "orders",
-				updates: {
-					noteHistory: newNoteHistory,
-					status: "Reorder",
-				},
-				previousValues: {},
-			});
+		for (const cmd of buildReorderCommands(
+			selectedRows,
+			"booking",
+			reorderReason,
+		)) {
+			applyCommand(cmd);
 		}
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
@@ -235,35 +213,13 @@ export default function BookingPage() {
 		status?: string,
 	) => {
 		if (selectedRows.length === 0) return;
-		for (const row of selectedRows) {
-			const oldDate = row.bookingDate || "Unknown Date";
-			const historyLog = `Rescheduled from ${oldDate} to ${newDate}.`;
-			const fullNote = `${historyLog} ${newNote}`.trim();
-
-			const updatedBookingNote = row.bookingNote
-				? `${row.bookingNote}\n[System]: ${fullNote}`
-				: `[System]: ${fullNote}`;
-
-			// Append to noteHistory
-			const newNoteHistory = appendTaggedUserNote(
-				getEffectiveNoteHistory(row),
-				fullNote,
-				"rebooking",
-			);
-
-			applyCommand({
-				type: "patchRow",
-				id: row.id,
-				sourceStage: "booking",
-				destinationStage: "booking",
-				updates: {
-					bookingDate: newDate,
-					bookingNote: updatedBookingNote,
-					noteHistory: newNoteHistory,
-					...(status ? { bookingStatus: status } : {}),
-				},
-				previousValues: {},
-			});
+		for (const cmd of buildRebookingCommands(
+			selectedRows,
+			newDate,
+			newNote,
+			status,
+		)) {
+			applyCommand(cmd);
 		}
 		setIsRebookingModalOpen(false);
 		setSelectedRows([]);

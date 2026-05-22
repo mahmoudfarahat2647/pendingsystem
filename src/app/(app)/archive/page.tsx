@@ -51,12 +51,12 @@ import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
-import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import {
-	appendTaggedUserNote,
-	getEffectiveNoteHistory,
-	getSelectedIds,
-} from "@/lib/orderWorkflow";
+	buildBookingCommands,
+	buildReorderCommands,
+	buildSendToArchiveCommands,
+} from "@/lib/orderStageTransitions";
+import { getSelectedIds } from "@/lib/orderWorkflow";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -103,18 +103,12 @@ export default function ArchivePage() {
 
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
-			for (const id of ids) {
+			const rows = ids.flatMap((id) => {
 				const row = effectiveData.find((r) => r.id === id);
-				if (row) {
-					applyCommand({
-						type: "patchRow",
-						id,
-						sourceStage: "archive",
-						destinationStage: "archive",
-						updates: buildArchivePayload(row, reason),
-						previousValues: {},
-					});
-				}
+				return row ? [row] : [];
+			});
+			for (const cmd of buildSendToArchiveCommands(rows, reason, "archive")) {
+				applyCommand(cmd);
 			}
 		},
 		[effectiveData, applyCommand],
@@ -150,25 +144,12 @@ export default function ArchivePage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
-		// Update status/note and stage via applyCommand (atomic)
-		for (const row of selectedRows) {
-			const newNoteHistory = appendTaggedUserNote(
-				getEffectiveNoteHistory(row),
-				`Reorder Reason: ${reorderReason}`,
-				"reorder",
-			);
-
-			applyCommand({
-				type: "patchRow",
-				id: row.id,
-				sourceStage: "archive",
-				destinationStage: "orders",
-				updates: {
-					noteHistory: newNoteHistory,
-					status: "Reorder",
-				},
-				previousValues: {},
-			});
+		for (const cmd of buildReorderCommands(
+			selectedRows,
+			"archive",
+			reorderReason,
+		)) {
+			applyCommand(cmd);
 		}
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
@@ -191,25 +172,14 @@ export default function ArchivePage() {
 		note: string,
 		status?: string,
 	) => {
-		for (const row of selectedRows) {
-			const newNoteHistory = appendTaggedUserNote(
-				getEffectiveNoteHistory(row),
-				note,
-				"booking",
-			);
-			applyCommand({
-				type: "patchRow",
-				id: row.id,
-				sourceStage: "archive",
-				destinationStage: "booking",
-				updates: {
-					bookingDate: date,
-					bookingNote: note,
-					noteHistory: newNoteHistory,
-					...(status ? { bookingStatus: status } : {}),
-				},
-				previousValues: {},
-			});
+		for (const cmd of buildBookingCommands(
+			selectedRows,
+			"archive",
+			date,
+			note,
+			status,
+		)) {
+			applyCommand(cmd);
 		}
 		setSelectedRows([]);
 		toast.success(`${selectedRows.length} row(s) sent to Booking`);
