@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizeNullableCompanyName } from "@/lib/company";
+import type { MobileQuickOrderPayload } from "@/schemas/mobileOrder.schema";
 
 function todayString(): string {
 	const d = new Date();
@@ -44,17 +45,6 @@ async function mergeAppSettings(
 	}
 }
 
-export interface MobileOrderInput {
-	customerName: string;
-	company: string | null | undefined;
-	vin: string;
-	mobile: string;
-	sabNumber: string;
-	model: string;
-	repairSystem: string;
-	parts: { partNumber: string; description: string }[];
-}
-
 export interface CreateOrdersResult {
 	inserted: number;
 	errors: string[];
@@ -63,7 +53,7 @@ export interface CreateOrdersResult {
 export const mobileOrderService = {
 	async createOrders(
 		supabase: SupabaseClient,
-		input: MobileOrderInput,
+		input: MobileQuickOrderPayload,
 	): Promise<CreateOrdersResult> {
 		const {
 			customerName,

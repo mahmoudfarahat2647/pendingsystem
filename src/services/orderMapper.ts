@@ -96,7 +96,7 @@ export function mapSupabaseOrder(row: Record<string, unknown>): PendingRow {
 	const parseResult = PendingRowSchema.safeParse(resultObj);
 	if (!parseResult.success) {
 		throw new Error(
-			`[orderService] Row mapping failed for id=${row.id}: ${parseResult.error.issues.map((i) => i.message).join(", ")}`,
+			`[orderMapper] Row mapping failed for id=${row.id}: ${parseResult.error.issues.map((i) => i.message).join(", ")}`,
 		);
 	}
 
