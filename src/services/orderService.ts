@@ -567,7 +567,7 @@ export const orderService = {
 		const parseResult = PendingRowSchema.safeParse(resultObj);
 		if (!parseResult.success) {
 			throw new Error(
-				`[orderService] Row mapping failed for id=${row.id}: ${parseResult.error.message}`,
+				`[orderService] Row mapping failed for id=${row.id}: ${parseResult.error.issues.map((i) => i.message).join(", ")}`,
 			);
 		}
 

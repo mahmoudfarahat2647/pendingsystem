@@ -282,7 +282,7 @@ describe("orderService", () => {
 				{
 					id: "row-1",
 					vin: "VIN123456789",
-					stage: "Orders",
+					stage: "orders",
 					metadata: { partNumber: "PART-A" },
 				},
 			];
@@ -309,13 +309,13 @@ describe("orderService", () => {
 				{
 					id: "row-1",
 					vin: "VIN123456789",
-					stage: "Orders",
+					stage: "orders",
 					metadata: { partNumber: "PART-A" },
 				},
 				{
 					id: "row-2",
 					vin: "VIN123456789",
-					stage: "Main Sheet",
+					stage: "main",
 					metadata: { partNumber: "PART-B" },
 				},
 			];
@@ -343,7 +343,7 @@ describe("orderService", () => {
 				{
 					id: "row-1",
 					vin: "VIN123456789",
-					stage: "Orders",
+					stage: "orders",
 					metadata: { partNumber: "PART-A" },
 				},
 			];
@@ -370,7 +370,7 @@ describe("orderService", () => {
 				{
 					id: "row-1",
 					vin: "VIN123456789",
-					stage: "Orders",
+					stage: "orders",
 					metadata: { partNumber: "PART-A" },
 				},
 			];
