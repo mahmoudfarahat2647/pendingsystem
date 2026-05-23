@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { normalizeNullableCompanyName } from "@/lib/company";
-import { normalizeMileageAsNumber } from "@/lib/utils";
+import { normalizeNullableCompanyName } from "@/domain/company/company";
+import { normalizeMileageAsNumber } from "@/domain/order/mileage";
 
 // Status Schema — accepts any string; user-managed statuses (Arrived, Reserve, etc.)
 // are now stored here alongside workflow markers (Reorder) and stage defaults (Pending)
