@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { ALLOWED_COMPANIES } from "@/lib/ordersValidationConstants";
 
 /**
@@ -23,7 +24,7 @@ export const normalizeCompanyName = (value: unknown): string => {
 		normalized === "pendingsystem"
 	) {
 		if (normalized === "r") {
-			console.warn(
+			logger.warn(
 				'Short company alias "r" was matched to "Renault". Monitor for unintended collisions.',
 			);
 		}
