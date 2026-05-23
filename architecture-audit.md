@@ -42,6 +42,8 @@ Severity counts: **High: 6 · Medium: 7 · Low: 5**.
 | H6 | `refactor/arch-h4-h6-m6-l3` | `useOrderValidation` migrated from stale Zustand arrays to live `useOrdersQuery` hooks for all five stages. Duplicate detection now runs against real React Query data. |
 | M6 | `refactor/arch-h4-h6-m6-l3` | Business logic (per-row insert loop, `mergeAppSettings`, empty-parts fallback) extracted from `mobile-order/route.ts` into `src/services/mobileOrderService.ts`. Route handler is now ≤ 50 lines. |
 | L3 | `refactor/arch-h4-h6-m6-l3` | `src/services/index.ts` barrel created with explicit named re-exports for all public service symbols. |
+| L1 | `refactor/arch-l1-m1` | Pure domain logic promoted from `src/lib/` to `src/domain/`: `orderWorkflow.ts` → `domain/order/orderWorkflow.ts`; warranty/mileage utils → `domain/order/warranty.ts` and `domain/order/mileage.ts`; company utils → `domain/company/company.ts`. Lib files converted to re-export barrels — no call-sites broken. |
+| M1 | `refactor/arch-l1-m1` | `src/schemas/order.schema.ts` imports updated from `@/lib/company` → `@/domain/company/company` and `@/lib/utils` → `@/domain/order/mileage`. Schemas now pull from the domain layer directly. |
 
 ---
 

@@ -1,6 +1,15 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+export {
+	normalizeMileage,
+	normalizeMileageAsNumber,
+} from "@/domain/order/mileage";
+export {
+	calculateEndWarranty,
+	calculateRemainingTime,
+} from "@/domain/order/warranty";
+
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
@@ -147,71 +156,4 @@ export function getVinColor(vin: string): VinBadgeStyle {
  */
 export function generateId(): string {
 	return `row-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-}
-
-/**
- * Calculate the end date of a warranty (3 years from start)
- */
-export const calculateEndWarranty = (startDate: string): string => {
-	if (!startDate) return "";
-	const date = new Date(startDate);
-	if (Number.isNaN(date.getTime())) return ""; // Handle invalid date
-	date.setFullYear(date.getFullYear() + 3);
-	return date.toISOString().split("T")[0];
-};
-
-/**
- * Calculate remaining time in "Y y - M m - D d" format
- * Returns "Expired" if past end date
- */
-export const calculateRemainingTime = (endDate: string): string => {
-	if (!endDate) return "";
-	const end = new Date(endDate);
-	const now = new Date();
-	const diffTime = end.getTime() - now.getTime();
-
-	if (diffTime < 0) return "Expired";
-
-	const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-	const years = Math.floor(totalDays / 365);
-	const months = Math.floor((totalDays % 365) / 30);
-	const days = (totalDays % 365) % 30;
-
-	return `${years} y - ${months} m - ${days} d`;
-};
-
-/**
- * Normalize mileage input by stripping separators (commas, whitespace)
- * Used for form state - returns cleaned string or empty string
- */
-export function normalizeMileage(
-	input: string | number | null | undefined,
-): string {
-	if (input === null || input === undefined) {
-		return "";
-	}
-	const str = String(input).trim();
-	if (str === "") {
-		return "";
-	}
-	return str.replace(/[,\s]/g, "");
-}
-
-/**
- * Normalize mileage and return as number (for validation/persistence)
- * Returns NaN for invalid strings containing non-digits, and 0 for empty inputs
- */
-export function normalizeMileageAsNumber(
-	input: string | number | null | undefined,
-): number {
-	const normalized = normalizeMileage(input);
-	if (normalized === "") {
-		return 0;
-	}
-
-	if (!/^\d+$/.test(normalized)) {
-		return NaN;
-	}
-
-	return parseInt(normalized, 10);
 }
