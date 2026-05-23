@@ -181,13 +181,9 @@ export const ReminderInputSchema = z
 export type PartEntry = z.infer<typeof PartEntrySchema>;
 export type PendingRow = z.infer<typeof PendingRowSchema>;
 
-// Extends the base object with persistence-only attachment columns, then applies
-// the same transform. Use this schema only at the Supabase boundary (orderMapper.ts).
-const PersistedOrderRowBaseObject = PendingRowBaseObject.extend({
-	attachmentLink: z.string().optional(),
-	attachmentFilePath: z.string().optional(),
-	attachmentFilePaths: z.array(z.string()).optional(),
-});
+// Applies the same transform as PendingRowSchema but as a distinct schema for
+// the Supabase boundary. Use this schema only in orderMapper.ts.
+const PersistedOrderRowBaseObject = PendingRowBaseObject.extend({});
 export const PersistedOrderRowSchema =
 	PersistedOrderRowBaseObject.transform(pendingRowTransform);
 export type PersistedOrderRow = z.infer<typeof PersistedOrderRowSchema>;
