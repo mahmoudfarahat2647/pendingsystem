@@ -2,13 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 
-export const ORDER_STAGES: OrderStage[] = [
-	"orders",
-	"main",
-	"call",
-	"booking",
-	"archive",
-];
+export { ORDER_STAGES } from "@/lib/constants";
 
 export const getOrdersQueryKey = (stage: OrderStage) =>
 	["orders", stage] as const;

@@ -1,6 +1,7 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { processBatch } from "@/lib/batchUtils";
 import { normalizeNullableCompanyName } from "@/lib/company";
+import { OrderMappingError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { isUuid } from "@/lib/orderWorkflow";
 import { supabase as supabaseDefault } from "@/lib/supabase";
@@ -123,9 +124,16 @@ export function createOrderService(
 		async fetchMappedOrders(stage: OrderStage): Promise<PendingRow[]> {
 			const data = await service.getOrders(stage);
 			if (!data) return [];
-			return data.map((row) =>
-				service.mapSupabaseOrder(row as Record<string, unknown>),
-			);
+			try {
+				return data.map((row) =>
+					service.mapSupabaseOrder(row as Record<string, unknown>),
+				);
+			} catch (err) {
+				if (err instanceof OrderMappingError) throw err;
+				throw new OrderMappingError(
+					`Unexpected mapping failure in fetchMappedOrders: ${String(err)}`,
+				);
+			}
 		},
 
 		async getDashboardStats() {

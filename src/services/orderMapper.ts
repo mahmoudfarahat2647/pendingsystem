@@ -1,5 +1,6 @@
 import { hasAttachment } from "@/lib/attachment";
 import { normalizeNullableCompanyName } from "@/lib/company";
+import { OrderMappingError } from "@/lib/errors";
 import { PersistedOrderRowSchema } from "@/schemas/order.schema";
 import type { PendingRow } from "@/types";
 
@@ -95,7 +96,7 @@ export function mapSupabaseOrder(row: Record<string, unknown>): PendingRow {
 	// This handles legacy field synchronization via the schema transform
 	const parseResult = PersistedOrderRowSchema.safeParse(resultObj);
 	if (!parseResult.success) {
-		throw new Error(
+		throw new OrderMappingError(
 			`[orderMapper] Row mapping failed for id=${row.id}: ${parseResult.error.issues.map((i: { message: string }) => i.message).join(", ")}`,
 		);
 	}
