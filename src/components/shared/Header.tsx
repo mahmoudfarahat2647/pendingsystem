@@ -202,17 +202,13 @@ export const Header = React.memo(function Header() {
 		const toastId = toast.loading(`Preparing full ${company} system export...`);
 		try {
 			const rawData = await orderService.getOrders();
-			const mappedData: PendingRow[] = [];
-			for (const row of rawData) {
-				mappedData.push(
-					orderService.mapSupabaseOrder(row as Record<string, unknown>),
-				);
-			}
-
-			if (mappedData.length === 0) {
+			if (!rawData || rawData.length === 0) {
 				toast.warning("No data available to export", { id: toastId });
 				return;
 			}
+			const mappedData: PendingRow[] = rawData.map((row) =>
+				orderService.mapSupabaseOrder(row as Record<string, unknown>),
+			);
 
 			const exported = exportAllSystemDataCSV(mappedData, company);
 			if (!exported) {

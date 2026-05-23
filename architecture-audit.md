@@ -46,6 +46,9 @@ Severity counts: **High: 6 · Medium: 7 · Low: 5**.
 | M1 | `refactor/arch-l1-m1` | `src/schemas/order.schema.ts` imports updated from `@/lib/company` → `@/domain/company/company` and `@/lib/utils` → `@/domain/order/mileage`. Schemas now pull from the domain layer directly. |
 | L4 | `refactor/arch-l1-l4-m2` | `src/lib/logger.ts` thin wrapper introduced (`debug` suppressed in prod, `warn`/`error` always pass through). All `console.warn`/`console.error`/`console.debug` calls routed through `logger.*` across 14 files (services, hooks, API routes, domain). |
 | M2 | `refactor/arch-l1-l4-m2` | `mapKeysToCamel<T>` helper added to `src/lib/utils.ts`. `quick-templates/route.ts` local `mapRow` removed and replaced. `app-settings/route.ts` inline object construction replaced. Shared mapper now available for future routes. |
+| H2 | `refactor/arch-m3-m5-h2` | `PendingRowBaseObject` extracted as the shared Zod object. `PendingRowSchema` = base + transform. `PersistedOrderRowSchema` = base extended with 3 persistence-only attachment fields + same transform. Schema and persistence boundary are now distinct. |
+| M3 | `refactor/arch-m3-m5-h2` | `Header.tsx` CSV export replaced `orderService.getOrders()` + manual mapping with `ORDER_STAGES.flatMap(getOrdersByStageFromCache)` — reads the RQ cache directly. `useOrderValidation`/`useOrderSubmit` DB calls are intentional historical checks, not violations. |
+| M5 | `refactor/arch-m3-m5-h2` | `orderMapper.ts` now parses raw Supabase rows against `PersistedOrderRowSchema` (the persistence boundary schema) rather than `PendingRowSchema`. Attachment fields remain on `PendingRow` (required by `orderService.ts` save path) but the parsing boundary is correctly typed. |
 
 ---
 
@@ -243,6 +246,8 @@ These should be promoted to `src/domain/…` to clarify their role. Today they s
 ### L4 — `console.warn`/`console.error`/`console.debug` as the observability layer
 Found in `orderService.ts` (4), `useDraftSession.tsx` (1), `useSaveOrderMutation.ts` (1), every API route. There is no logger abstraction. In CA terms, observability is a port that should be injected.
 
+**Resolution (refactor/arch-l1-l4-m2):** `src/lib/logger.ts` thin wrapper introduced (`debug` suppressed in prod, `warn`/`error` always pass through). All `console.warn`/`console.error`/`console.debug` calls routed through `logger.*` across 14 files (services, hooks, API routes, components, store slices).
+
 ### L5 — `PendingRow.stage` typed as `string` instead of `OrderStage`
 **File:** `src/schemas/order.schema.ts:143`, vs. `src/services/orderService.ts:14`
 
@@ -316,22 +321,22 @@ You don't have to adopt this layout wholesale. The two highest-leverage moves:
 | ID | Title | Severity | Status |
 |---|---|---|---|
 | H1 | Zustand slice imports React Query `queryClient` | High | ✅ Fixed |
-| H2 | No Domain layer; schema = entity = persistence row | High | ⬜ Open |
+| H2 | No Domain layer; schema = entity = persistence row | High | ✅ Resolved |
 | H3 | Duplicate `createServiceClient` across 4+ API routes | High | ✅ Fixed |
 | H4 | `orderService.ts` is a 697-line god module | High | ✅ Resolved |
 | H5 | 300-600-line page-level handler hooks contain business logic | High | ✅ Fixed |
 | H6 | Operational data lives in both React Query and Zustand | High | ✅ Resolved |
 | M1 | Schemas import `lib/utils` and `lib/company` | Medium | ✅ Resolved |
 | M2 | Snake/camel mapping repeated per endpoint | Medium | ✅ Resolved |
-| M3 | UI hooks call `orderService` directly, bypassing RQ | Medium | ⬜ Open |
+| M3 | UI hooks call `orderService` directly, bypassing RQ | Medium | ✅ Resolved |
 | M4 | `mapSupabaseOrder` returns `null` silently | Medium | ✅ Fixed |
-| M5 | Persistence columns leak into `PendingRowSchema` | Medium | ⬜ Open |
+| M5 | Persistence columns leak into `PendingRowSchema` | Medium | ✅ Resolved |
 | M6 | Business logic in `mobile-order/route.ts` | Medium | ✅ Resolved |
 | M7 | Top-level singletons (`supabase`, `queryClient`, `auth`) block port substitution | Medium | ⬜ Open |
 | L1 | Pure domain logic mixed under `lib/` | Low | ✅ Resolved |
 | L2 | Back-compat re-exports in `useOrdersQuery.ts` | Low | ✅ Fixed |
 | L3 | No `services/index.ts` barrel | Low | ✅ Resolved |
-| L4 | No logger abstraction; `console.*` everywhere | Low | ⬜ Open |
+| L4 | No logger abstraction; `console.*` everywhere | Low | ✅ Resolved |
 | L5 | `PendingRow.stage: string` instead of `OrderStage` | Low | ✅ Fixed |
 
 ---

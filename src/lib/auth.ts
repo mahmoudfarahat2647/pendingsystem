@@ -13,6 +13,7 @@ export const auth = betterAuth({
 	database: { db, type: "postgres" },
 	secret: process.env.BETTER_AUTH_SECRET,
 	baseURL: process.env.BETTER_AUTH_URL,
+	trustedOrigins: ["https://*.vercel.app"],
 	emailAndPassword: {
 		enabled: true,
 		disableSignUp: true,
