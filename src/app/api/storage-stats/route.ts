@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { SUPABASE_REQUEST_TIMEOUT_MS } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 import {
 	COMBINED_LIMIT_BYTES,
 	DB_LIMIT_BYTES,
@@ -149,13 +150,13 @@ export async function GET(req: NextRequest) {
 		if (dbResult.status === "fulfilled") {
 			const { data: dbData, error: dbError } = dbResult.value;
 			if (dbError) {
-				console.error("Error fetching DB size via RPC:", dbError);
+				logger.error("Error fetching DB size via RPC:", dbError);
 			} else {
 				dbUsedBytes = dbData;
 				dbAvailable = true;
 			}
 		} else {
-			console.error("Error fetching DB size via RPC:", dbResult.reason);
+			logger.error("Error fetching DB size via RPC:", dbResult.reason);
 		}
 
 		if (bucketsResult.status === "fulfilled") {
@@ -177,7 +178,7 @@ export async function GET(req: NextRequest) {
 				if (hasBucketFailures) {
 					for (const result of bucketSizeResults) {
 						if (result.status === "rejected") {
-							console.error("Error computing storage usage:", result.reason);
+							logger.error("Error computing storage usage:", result.reason);
 						}
 					}
 				} else {
@@ -189,10 +190,10 @@ export async function GET(req: NextRequest) {
 					storageAvailable = true;
 				}
 			} else if (bucketError) {
-				console.error("Error listing storage buckets:", bucketError);
+				logger.error("Error listing storage buckets:", bucketError);
 			}
 		} else {
-			console.error("Error listing storage buckets:", bucketsResult.reason);
+			logger.error("Error listing storage buckets:", bucketsResult.reason);
 		}
 
 		const combinedUsedBytes =
@@ -216,10 +217,10 @@ export async function GET(req: NextRequest) {
 		return response;
 	} catch (error: unknown) {
 		if (error instanceof Error) {
-			console.error("Storage stats error:", error.message);
+			logger.error("Storage stats error:", error.message);
 			return NextResponse.json({ error: error.message }, { status: 500 });
 		}
-		console.error("Storage stats error:", error);
+		logger.error("Storage stats error:", error);
 		return NextResponse.json(
 			{ error: "Internal server error" },
 			{ status: 500 },

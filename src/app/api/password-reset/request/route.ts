@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { pool } from "@/lib/postgres";
 
 export const runtime = "nodejs";
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
 					body: { email, redirectTo },
 				});
 			} catch (error) {
-				console.error("Password reset email dispatch failed", {
+				logger.error("Password reset email dispatch failed", {
 					username,
 					email,
 					error: error instanceof Error ? error.message : String(error),

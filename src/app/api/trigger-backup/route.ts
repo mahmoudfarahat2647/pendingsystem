@@ -1,5 +1,6 @@
 import { errorResponse, successResponse } from "@/lib/apiResponse";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -24,14 +25,14 @@ export async function POST() {
 
 		// Warn about missing owner/repo but allow defaults
 		if (!process.env.GITHUB_OWNER) {
-			console.warn("GITHUB_OWNER not set, using default");
+			logger.warn("GITHUB_OWNER not set, using default");
 		}
 		if (!process.env.GITHUB_REPO) {
-			console.warn("GITHUB_REPO not set, using default");
+			logger.warn("GITHUB_REPO not set, using default");
 		}
 
 		if (missingVars.length > 0) {
-			console.error(
+			logger.error(
 				`Missing required environment variables: ${missingVars.join(", ")}`,
 			);
 			return errorResponse(
@@ -59,7 +60,10 @@ export async function POST() {
 
 		if (!response.ok) {
 			const errorText = await response.text();
-			console.error("GitHub API error:", response.status, errorText);
+			logger.error("GitHub API error:", {
+				status: response.status,
+				body: errorText,
+			});
 
 			// Helpful error for common issues
 			if (response.status === 404) {
@@ -91,14 +95,14 @@ export async function POST() {
 		);
 	} catch (error: unknown) {
 		if (error instanceof Error) {
-			console.error("Backup trigger error:", error.message);
+			logger.error("Backup trigger error:", error.message);
 			return errorResponse(
 				"SERVER_ERROR",
 				error.message || "An internal error occurred",
 				500,
 			);
 		} else {
-			console.error("Backup trigger error:", error);
+			logger.error("Backup trigger error:", error);
 			return errorResponse("SERVER_ERROR", "An internal error occurred", 500);
 		}
 	}
