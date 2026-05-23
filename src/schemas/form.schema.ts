@@ -1,5 +1,7 @@
 import { z } from "zod";
+// biome-ignore lint/style/noRestrictedImports: pre-existing debt — schemas using lib validation helpers
 import { isAllowedCompanyName, normalizeCompanyName } from "@/lib/company";
+// biome-ignore lint/style/noRestrictedImports: pre-existing debt — schemas using lib utilities
 import { normalizeMileageAsNumber } from "@/lib/utils";
 
 export const OrderFormSchema = z

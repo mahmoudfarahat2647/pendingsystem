@@ -67,5 +67,187 @@
 				"organizeImports": "on"
 			}
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["src/domain/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["@/lib", "@/lib/**"],
+										"message": "domain/ must not import lib/. Move to types/ or domain/ only."
+									},
+									{
+										"group": ["@/services", "@/services/**"],
+										"message": "domain/ must not import services/."
+									},
+									{
+										"group": ["@/store", "@/store/**"],
+										"message": "domain/ must not import store/."
+									},
+									{
+										"group": ["@/hooks", "@/hooks/**"],
+										"message": "domain/ must not import hooks/."
+									},
+									{
+										"group": ["@/components", "@/components/**"],
+										"message": "domain/ must not import components/."
+									},
+									{
+										"group": ["@/app", "@/app/**"],
+										"message": "domain/ must not import app/."
+									},
+									{
+										"group": ["@/schemas", "@/schemas/**"],
+										"message": "domain/ must not import schemas/."
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/schemas/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["@/lib", "@/lib/**"],
+										"message": "schemas/ must not import lib/."
+									},
+									{
+										"group": ["@/services", "@/services/**"],
+										"message": "schemas/ must not import services/."
+									},
+									{
+										"group": ["@/store", "@/store/**"],
+										"message": "schemas/ must not import store/."
+									},
+									{
+										"group": ["@/hooks", "@/hooks/**"],
+										"message": "schemas/ must not import hooks/."
+									},
+									{
+										"group": ["@/components", "@/components/**"],
+										"message": "schemas/ must not import components/."
+									},
+									{
+										"group": ["@/app", "@/app/**"],
+										"message": "schemas/ must not import app/."
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/services/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["@/store", "@/store/**"],
+										"message": "services/ must not import store/ at runtime. Use import type for type-only seams."
+									},
+									{
+										"group": ["@/hooks", "@/hooks/**"],
+										"message": "services/ must not import hooks/."
+									},
+									{
+										"group": ["@/components", "@/components/**"],
+										"message": "services/ must not import components/."
+									},
+									{
+										"group": ["@/app", "@/app/**"],
+										"message": "services/ must not import app/."
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/lib/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["@/services", "@/services/**"],
+										"message": "lib/ must not import services/."
+									},
+									{
+										"group": ["@/store", "@/store/**"],
+										"message": "lib/ must not import store/ at runtime. Use import type for type-only seams."
+									},
+									{
+										"group": ["@/hooks", "@/hooks/**"],
+										"message": "lib/ must not import hooks/."
+									},
+									{
+										"group": ["@/components", "@/components/**"],
+										"message": "lib/ must not import components/."
+									},
+									{
+										"group": ["@/app", "@/app/**"],
+										"message": "lib/ must not import app/."
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/store/slices/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["@/lib/queryClient", "@/lib/queryClient/**"],
+										"message": "store/ slices must not import queryClient at runtime. Use the ordersQueryAdapter port instead (H1)."
+									},
+									{
+										"group": ["@/components", "@/components/**"],
+										"message": "store/ slices must not import components/."
+									},
+									{
+										"group": ["@/app", "@/app/**"],
+										"message": "store/ slices must not import app/."
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		}
+	]
 }

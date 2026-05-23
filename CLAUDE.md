@@ -185,6 +185,39 @@ When performing any refactor, optimization, or code cleanup:
 
 - This warning is mandatory whether the change is proposed in a plan, a code edit, or a code review suggestion.
 
+## Architecture Standards
+
+> **RESTRICTED RULE — must not be broken.** Full reference: `.claude/rules/architecture.md`.
+
+### Dependency direction (one line per layer)
+- `domain/` → only `types/`. Pure; no React/Supabase/env/localStorage.
+- `schemas/` → `domain`, `types`. No `lib`/`services`/`store`/UI.
+- `services/` → `domain`, `schemas`, `lib`, `types`. No store/components/hooks.
+- `lib/` → `domain`, `schemas`, `types`. No `services`/`store`/UI.
+- `store/` → upward layers + types-only from services. No `lib/queryClient` runtime client; no React Query cache access from slices.
+- `hooks/` → everything above. No components/app.
+- `components/` → only via `hooks/`; no direct `services/*` runtime calls.
+- `app/` → routes only; handlers ≤50 LOC, delegate to services.
+
+### Top forbidden patterns (catalog: `.claude/rules/architecture.md` §c)
+- No `console.*` in `src/` — use `@/lib/logger`.
+- No inline `createServiceClient` in API routes — use `@/lib/supabase-admin`.
+- No `queryClient` import in `store/slices/`.
+- No operational stage rows in Zustand — React Query owns them.
+- No `null` returns on validation failure — throw a typed error.
+- No business logic in API route handlers, page-handler hooks, or schemas.
+- No new service file > 500 LOC; split into repo/mapper/use-case.
+- No back-compat re-exports; update call sites.
+
+### Required patterns for new work
+- Stage transitions → `@/lib/orderStageTransitions` command builders.
+- Mutations → existing optimistic hooks (`useSaveOrderMutation`, `useBulk*`).
+- Snake/camel mapping → `mapKeysToCamel<T>` from `@/lib/utils`.
+- Stage enum → `z.enum(["orders","main","call","booking","archive"])`.
+- New API route → `parse → authorize → service.call() → respond`, ≤50 LOC.
+
+If a planned change would break any of the above, **stop and warn** using the same RESTRICTED RULE format as the Refactor Safety Rules.
+
 ## Important Note
 
 After major changes, update this file (`CLAUDE.md`). Keep it up-to-date with the project's current status.
