@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { DRAFT_RECOVERY_MAX_AGE_MS } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 import type { OrderStage } from "@/services/orderService";
 import type { DraftRecoverySnapshot } from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
@@ -139,7 +140,7 @@ export function useDraftSession(stage?: OrderStage) {
 			);
 		} catch (error) {
 			clearRecoveryToastOffer();
-			console.warn("Failed to parse recovery snapshot:", error);
+			logger.warn("Failed to parse recovery snapshot:", error);
 		}
 
 		return () => {
