@@ -1,5 +1,7 @@
 import { z } from "zod";
+// biome-ignore lint/style/noRestrictedImports: pre-existing debt — schemas using lib helpers
 import { normalizeNullableCompanyName } from "@/lib/company";
+// biome-ignore lint/style/noRestrictedImports: pre-existing debt — schemas using lib constants
 import { ALLOWED_COMPANIES } from "@/lib/ordersValidationConstants";
 
 const MobilePartRowSchema = z.object({

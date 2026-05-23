@@ -3,7 +3,9 @@ import {
 	appendTaggedUserNote,
 	getEffectiveNoteHistory,
 } from "@/lib/orderWorkflow";
+// biome-ignore lint/style/noRestrictedImports: type-only seam — OrderStage pending re-home to @/types
 import type { OrderStage } from "@/services/orderService";
+// biome-ignore lint/style/noRestrictedImports: type-only seam — PatchRowCommand pending re-home to @/types
 import type { PatchRowCommand } from "@/store/slices/draftSessionSlice";
 import type { PendingRow } from "@/types";
 

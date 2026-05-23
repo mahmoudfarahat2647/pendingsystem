@@ -1,4 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
+// biome-ignore lint/style/noRestrictedImports: type-only seam — OrderStage pending re-home to @/types
 import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 

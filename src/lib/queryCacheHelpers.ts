@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { ERROR_MESSAGE_TRUNCATE_LENGTH } from "@/lib/constants";
 import { getOrdersQueryKey, ORDER_STAGES } from "@/lib/queryClient";
+// biome-ignore lint/style/noRestrictedImports: type-only seam — OrderStage pending re-home to @/types
 import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 

@@ -1,4 +1,6 @@
+// biome-ignore lint/style/noRestrictedImports: pre-existing debt — domain using lib logger
 import { logger } from "@/lib/logger";
+// biome-ignore lint/style/noRestrictedImports: pre-existing debt — domain using lib constants
 import { ALLOWED_COMPANIES } from "@/lib/ordersValidationConstants";
 
 /**
