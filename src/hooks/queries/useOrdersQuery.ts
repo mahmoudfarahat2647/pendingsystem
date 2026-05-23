@@ -1,4 +1,5 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import { OrderMappingError } from "@/lib/errors";
 import { type OrderStage, orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 
@@ -11,9 +12,16 @@ export function useOrdersQuery(
 		queryFn: async (): Promise<PendingRow[]> => {
 			const data = await orderService.getOrders(stage);
 			if (!data) return [];
-			return data.map((row) =>
-				orderService.mapSupabaseOrder(row as Record<string, unknown>),
-			);
+			try {
+				return data.map((row) =>
+					orderService.mapSupabaseOrder(row as Record<string, unknown>),
+				);
+			} catch (err) {
+				if (err instanceof OrderMappingError) throw err;
+				throw new OrderMappingError(
+					`Unexpected mapping failure: ${String(err)}`,
+				);
+			}
 		},
 		staleTime: 1000 * 60 * 5, // 5 minutes
 		gcTime: 1000 * 60 * 10, // 10 minutes

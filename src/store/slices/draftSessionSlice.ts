@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 import type { StateCreator } from "zustand";
 import { hasAttachment } from "@/lib/attachment";
-import { ORDER_STAGES } from "@/lib/queryClient";
+import { ORDER_STAGES } from "@/lib/constants";
 import { BeastModeSchema } from "@/schemas/form.schema";
 import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";

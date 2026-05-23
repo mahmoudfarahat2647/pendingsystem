@@ -22,9 +22,14 @@ import {
 	ALLOWED_COMPANIES,
 	type AllowedCompany,
 } from "@/lib/ordersValidationConstants";
-import { getOrdersQueryKey, queryClient } from "@/lib/queryClient";
+import {
+	getOrdersByStageFromCache,
+	getOrdersQueryKey,
+	ORDER_STAGES,
+	queryClient,
+} from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
-import { type OrderStage, orderService } from "@/services/orderService";
+import type { OrderStage } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import {
@@ -193,7 +198,7 @@ export const Header = React.memo(function Header() {
 		};
 	}, [isExportMenuOpen]);
 
-	const handleExport = async (company: AllowedCompany) => {
+	const handleExport = (company: AllowedCompany) => {
 		if (isExporting) return;
 
 		setIsExportMenuOpen(false);
@@ -201,14 +206,13 @@ export const Header = React.memo(function Header() {
 
 		const toastId = toast.loading(`Preparing full ${company} system export...`);
 		try {
-			const rawData = await orderService.getOrders();
-			if (!rawData || rawData.length === 0) {
+			const mappedData: PendingRow[] = ORDER_STAGES.flatMap((stage) =>
+				getOrdersByStageFromCache(stage),
+			);
+			if (mappedData.length === 0) {
 				toast.warning("No data available to export", { id: toastId });
 				return;
 			}
-			const mappedData: PendingRow[] = rawData.map((row) =>
-				orderService.mapSupabaseOrder(row as Record<string, unknown>),
-			);
 
 			const exported = exportAllSystemDataCSV(mappedData, company);
 			if (!exported) {

@@ -78,9 +78,15 @@ export function useSaveOrderMutation() {
 			}
 		},
 		onSuccess: (data, variables) => {
-			const mappedRow = orderService.mapSupabaseOrder(
-				data as Record<string, unknown>,
-			);
+			let mappedRow: PendingRow;
+			try {
+				mappedRow = orderService.mapSupabaseOrder(
+					data as Record<string, unknown>,
+				);
+			} catch {
+				// Bad row from DB — onSettled invalidation will refetch correct data
+				return;
+			}
 			// Handle multi-stage cache reconciliation
 			if (variables.sourceStage && variables.sourceStage !== variables.stage) {
 				const sourceCacheKey = getOrdersQueryKey(variables.sourceStage);

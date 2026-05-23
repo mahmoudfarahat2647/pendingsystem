@@ -1,3 +1,5 @@
+import type { OrderStage } from "@/services/orderService";
+
 /**
  * Application-wide timing and limit constants.
  * Centralised here to avoid magic numbers scattered across the codebase.
@@ -29,3 +31,12 @@ export const SUPABASE_REQUEST_TIMEOUT_MS = 30_000;
 
 /** Maximum length for truncated error/warning messages in the UI (chars). */
 export const ERROR_MESSAGE_TRUNCATE_LENGTH = 200;
+
+/** Ordered list of all workflow stages. */
+export const ORDER_STAGES: OrderStage[] = [
+	"orders",
+	"main",
+	"call",
+	"booking",
+	"archive",
+];
