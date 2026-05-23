@@ -22,6 +22,7 @@ import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useSaveOrderMutation } from "@/hooks/queries/useSaveOrderMutation";
 import { useRowModals } from "@/hooks/useRowModals";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
+import { logger } from "@/lib/logger";
 import { normalizeOrderStage } from "@/lib/orderStage";
 import {
 	appendTaggedUserNote,
@@ -267,7 +268,7 @@ export const useSearchResultsState = () => {
 			const resolvedStage: OrderStage = normalizedStage ?? fallbackStage;
 
 			if (stage?.trim() && !normalizedStage) {
-				console.error("[SearchResultsView] invalid_stage_fallback", {
+				logger.error("[SearchResultsView] invalid_stage_fallback", {
 					rowId: id,
 					rawStage: stage,
 					fallbackStage: resolvedStage,
@@ -632,7 +633,7 @@ export const useSearchResultsState = () => {
 						{ duration: 5000 },
 					);
 				} catch (error) {
-					console.error("[SearchResultsView] vin_auto_move_failed", {
+					logger.error("[SearchResultsView] vin_auto_move_failed", {
 						error,
 						vin: event.data.vin,
 						stage,

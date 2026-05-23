@@ -17,6 +17,7 @@ import { useDraftSession } from "@/hooks/useDraftSession";
 import { useWarrantyExpiryMaintenance } from "@/hooks/useWarrantyExpiryMaintenance";
 import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 import { exportAllSystemDataCSV } from "@/lib/exportUtils";
+import { logger } from "@/lib/logger";
 import {
 	ALLOWED_COMPANIES,
 	type AllowedCompany,
@@ -224,7 +225,7 @@ export const Header = React.memo(function Header() {
 				id: toastId,
 			});
 		} catch (error) {
-			console.error("Export failed:", error);
+			logger.error("Export failed:", error);
 			toast.error(`Failed to export ${company} CSV`, { id: toastId });
 		} finally {
 			setIsExporting(false);

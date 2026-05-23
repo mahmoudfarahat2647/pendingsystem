@@ -142,6 +142,7 @@ function snakeToCamel(str: string): string {
 	return str.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
 }
 
+/** Shallow snake_case → camelCase key transform. Does not recurse into nested objects. */
 export function mapKeysToCamel<T>(obj: Record<string, unknown>): T {
 	return Object.fromEntries(
 		Object.entries(obj).map(([k, v]) => [snakeToCamel(k), v]),

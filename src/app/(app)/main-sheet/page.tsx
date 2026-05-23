@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { MainSheetToolbar } from "@/components/main-sheet/MainSheetToolbar";
+import { logger } from "@/lib/logger";
 
 const BookingCalendarModal = dynamic(
 	() =>
@@ -125,7 +126,7 @@ export default function MainSheetPage() {
 					return prev - 1;
 				});
 			} catch (err) {
-				console.error("[MainSheet] Auto-lock timer callback failed:", err);
+				logger.error("[MainSheet] Auto-lock timer callback failed:", err);
 			}
 		}, 1000);
 

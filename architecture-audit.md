@@ -322,13 +322,13 @@ You don't have to adopt this layout wholesale. The two highest-leverage moves:
 | H5 | 300-600-line page-level handler hooks contain business logic | High | ✅ Fixed |
 | H6 | Operational data lives in both React Query and Zustand | High | ✅ Resolved |
 | M1 | Schemas import `lib/utils` and `lib/company` | Medium | ✅ Resolved |
-| M2 | Snake/camel mapping repeated per endpoint | Medium | ⬜ Open |
+| M2 | Snake/camel mapping repeated per endpoint | Medium | ✅ Resolved |
 | M3 | UI hooks call `orderService` directly, bypassing RQ | Medium | ⬜ Open |
 | M4 | `mapSupabaseOrder` returns `null` silently | Medium | ✅ Fixed |
 | M5 | Persistence columns leak into `PendingRowSchema` | Medium | ⬜ Open |
 | M6 | Business logic in `mobile-order/route.ts` | Medium | ✅ Resolved |
 | M7 | Top-level singletons (`supabase`, `queryClient`, `auth`) block port substitution | Medium | ⬜ Open |
-| L1 | Pure domain logic mixed under `lib/` | Low | 🟡 Partial (`detectModelFromVin` deferred) |
+| L1 | Pure domain logic mixed under `lib/` | Low | ✅ Resolved |
 | L2 | Back-compat re-exports in `useOrdersQuery.ts` | Low | ✅ Fixed |
 | L3 | No `services/index.ts` barrel | Low | ✅ Resolved |
 | L4 | No logger abstraction; `console.*` everywhere | Low | ⬜ Open |

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { usePendingSearchSelection } from "@/hooks/usePendingSearchSelection";
 import { tryJumpToRow } from "@/lib/ag-grid-helpers";
 import { gridTheme } from "@/lib/ag-grid-setup";
+import { logger } from "@/lib/logger";
 import { useLiveGridStore } from "@/store/useLiveGridStore";
 import { useAppStore } from "@/store/useStore";
 import { defaultColDef, defaultGridOptions } from "./config/defaultOptions";
@@ -174,7 +175,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 			if (pendingHighlightRef.current === requestedId) {
 				pendingHighlightRef.current = null;
 				setHighlightedRowId(null);
-				console.warn(`Jump to row ${requestedId} timed out`);
+				logger.warn(`Jump to row ${requestedId} timed out`);
 			}
 		}, 8000);
 

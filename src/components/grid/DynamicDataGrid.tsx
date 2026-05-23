@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { memo } from "react";
 import { ClientErrorBoundary } from "@/components/shared/ClientErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
+import { logger } from "@/lib/logger";
 import type { DataGridProps } from "./DataGrid";
 
 // Skeleton loader for grid
@@ -52,8 +53,7 @@ if (typeof window !== "undefined") {
 			// Swallow ChunkLoadError / HMR cache mismatches that may occur during dev
 			// Log for debugging in development only
 			if (process.env.NODE_ENV === "development") {
-				// eslint-disable-next-line no-console
-				console.debug("[preloadGrid] preload failed:", err);
+				logger.debug("[preloadGrid] preload failed:", err);
 			}
 		}
 	};
