@@ -2,7 +2,9 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { createServiceClient } from "@/lib/supabase-admin";
+import { mapKeysToCamel } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -11,17 +13,6 @@ const AddTemplateSchema = z.object({
 	category: CategorySchema,
 	text: z.string().trim().min(1).max(200),
 });
-
-function mapRow(row: Record<string, unknown>) {
-	return {
-		id: row.id,
-		category: row.category,
-		text: row.text,
-		sortOrder: row.sort_order,
-		createdAt: row.created_at,
-		updatedAt: row.updated_at,
-	};
-}
 
 export async function GET(req: NextRequest) {
 	const session = await auth.api.getSession({ headers: req.headers });
@@ -45,10 +36,12 @@ export async function GET(req: NextRequest) {
 			.order("created_at", { ascending: true });
 
 		if (error) throw new Error(error.message);
-		return NextResponse.json((data ?? []).map(mapRow));
+		return NextResponse.json(
+			(data ?? []).map((row) => mapKeysToCamel(row as Record<string, unknown>)),
+		);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : "Database error";
-		console.error("[quick-templates GET]", message);
+		logger.error("[quick-templates GET]", message);
 		return NextResponse.json({ error: message }, { status: 500 });
 	}
 }
@@ -85,12 +78,12 @@ export async function POST(req: NextRequest) {
 			}
 			throw new Error(error.message);
 		}
-		return NextResponse.json(mapRow(data as Record<string, unknown>), {
+		return NextResponse.json(mapKeysToCamel(data as Record<string, unknown>), {
 			status: 201,
 		});
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : "Database error";
-		console.error("[quick-templates POST]", message);
+		logger.error("[quick-templates POST]", message);
 		return NextResponse.json({ error: message }, { status: 500 });
 	}
 }
@@ -121,7 +114,7 @@ export async function DELETE(req: NextRequest) {
 		return NextResponse.json(null, { status: 204 });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : "Database error";
-		console.error("[quick-templates DELETE]", message);
+		logger.error("[quick-templates DELETE]", message);
 		return NextResponse.json({ error: message }, { status: 500 });
 	}
 }
