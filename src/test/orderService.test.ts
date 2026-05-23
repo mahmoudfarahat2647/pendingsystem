@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { supabase } from "../lib/supabase";
-import { orderService } from "../services/orderService";
+import { createOrderService, orderService } from "../services/orderService";
 
 // Mock Supabase client
 vi.mock("../lib/supabase", () => ({
@@ -272,7 +272,7 @@ describe("orderService", () => {
 		};
 
 		expect(() => orderService.mapSupabaseOrder(invalidRow)).toThrow(
-			"[orderService] Row mapping failed for id=",
+			"[orderMapper] Row mapping failed for id=",
 		);
 	});
 
@@ -491,6 +491,30 @@ describe("orderService", () => {
 			const writtenPayload = mockUpdate.mock.calls[0][0];
 			expect(writtenPayload).not.toHaveProperty("attachment_link");
 			expect(writtenPayload).not.toHaveProperty("attachment_file_path");
+		});
+	});
+
+	describe("createOrderService – injected client", () => {
+		it("calls db.from('orders') with the injected client and returns data", async () => {
+			const mockData = [{ id: "x", stage: "main" }];
+			const chainable: Record<string, unknown> = {};
+			chainable.select = vi.fn().mockReturnValue(chainable);
+			chainable.order = vi.fn().mockReturnValue(chainable);
+			chainable.eq = vi.fn().mockResolvedValue({ data: mockData, error: null });
+			const mockFrom = vi.fn().mockReturnValue(chainable);
+			const mockDb = { from: mockFrom } as unknown as Parameters<
+				typeof createOrderService
+			>[0];
+
+			const svc = createOrderService(mockDb);
+			const result = await svc.getOrders("main");
+
+			expect(mockFrom).toHaveBeenCalledWith("orders");
+			expect(result).toEqual(mockData);
+		});
+
+		it("uses the real supabase client when no db is injected", () => {
+			expect(() => createOrderService()).not.toThrow();
 		});
 	});
 });
