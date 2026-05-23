@@ -332,7 +332,7 @@ You don't have to adopt this layout wholesale. The two highest-leverage moves:
 | M4 | `mapSupabaseOrder` returns `null` silently | Medium | ✅ Fixed |
 | M5 | Persistence columns leak into `PendingRowSchema` | Medium | ✅ Resolved |
 | M6 | Business logic in `mobile-order/route.ts` | Medium | ✅ Resolved |
-| M7 | Top-level singletons (`supabase`, `queryClient`, `auth`) block port substitution | Medium | ⬜ Open |
+| M7 | Top-level singletons (`supabase`, `queryClient`, `auth`) block port substitution | Medium | ✅ Resolved |
 | L1 | Pure domain logic mixed under `lib/` | Low | ✅ Resolved |
 | L2 | Back-compat re-exports in `useOrdersQuery.ts` | Low | ✅ Fixed |
 | L3 | No `services/index.ts` barrel | Low | ✅ Resolved |
