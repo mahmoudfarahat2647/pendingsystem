@@ -38,6 +38,10 @@ Severity counts: **High: 6 · Medium: 7 · Low: 5**.
 | L5 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | `PendingRow.stage` now `z.enum(["orders","main","call","booking","archive"])` |
 
 | H5 | `refactor/schema-stage-enum-no-reexports-throw-on-map` | All 5 page hooks already call `buildSendToArchiveCommands`, `buildReorderCommands`, `buildBookingCommands`, `buildRebookingCommands` from `src/lib/orderStageTransitions.ts`. One inline booking command in `useOrdersPageHandlers.handleConfirmBooking` is intentionally kept (populates per-row `previousValues` for atomic undo — a caller concern). |
+| H4 | `refactor/arch-h4-h6-m6-l3` | Mapper logic extracted to `src/services/orderMapper.ts`; `orderService.ts` retains a backward-compat re-export so all import paths remain unchanged. |
+| H6 | `refactor/arch-h4-h6-m6-l3` | `useOrderValidation` migrated from stale Zustand arrays to live `useOrdersQuery` hooks for all five stages. Duplicate detection now runs against real React Query data. |
+| M6 | `refactor/arch-h4-h6-m6-l3` | Business logic (per-row insert loop, `mergeAppSettings`, empty-parts fallback) extracted from `mobile-order/route.ts` into `src/services/mobileOrderService.ts`. Route handler is now ≤ 50 lines. |
+| L3 | `refactor/arch-h4-h6-m6-l3` | `src/services/index.ts` barrel created with explicit named re-exports for all public service symbols. |
 
 ---
 
