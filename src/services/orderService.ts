@@ -1,4 +1,4 @@
-import type { PostgrestError } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { processBatch } from "@/lib/batchUtils";
 import { normalizeNullableCompanyName } from "@/lib/company";
 import { logger } from "@/lib/logger";
@@ -14,6 +14,8 @@ import { mapSupabaseOrder } from "./orderMapper";
 export { mapSupabaseOrder } from "./orderMapper";
 
 export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
+
+type DbClient = Pick<SupabaseClient, "from">;
 
 class ServiceError extends Error {
 	code: string;
@@ -80,9 +82,7 @@ function handleSupabaseError(error: PostgrestError): never {
 	});
 }
 
-export function createOrderService(
-	db: typeof supabaseDefault = supabaseDefault,
-) {
+export function createOrderService(db: DbClient = supabaseDefault) {
 	const service = {
 		async getOrders(stage?: OrderStage) {
 			// Use explicit selection to avoid potential schema cache issues with '*'

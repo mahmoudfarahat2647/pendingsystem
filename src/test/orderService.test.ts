@@ -502,7 +502,7 @@ describe("orderService", () => {
 			chainable.order = vi.fn().mockReturnValue(chainable);
 			chainable.eq = vi.fn().mockResolvedValue({ data: mockData, error: null });
 			const mockFrom = vi.fn().mockReturnValue(chainable);
-			const mockDb = { from: mockFrom } as unknown as Parameters<
+			const mockDb = { from: mockFrom } as Parameters<
 				typeof createOrderService
 			>[0];
 
