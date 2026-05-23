@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizeNullableCompanyName } from "@/lib/company";
+import { logger } from "@/lib/logger";
 import type { MobileQuickOrderPayload } from "@/schemas/mobileOrder.schema";
 
 function todayString(): string {
@@ -117,7 +118,7 @@ export const mobileOrderService = {
 				.single();
 
 			if (error) {
-				console.error("[mobile-order] insert error:", error.message);
+				logger.error("[mobile-order] insert error:", error.message);
 				errors.push(error.message);
 			}
 		}

@@ -42,8 +42,10 @@ Severity counts: **High: 6 · Medium: 7 · Low: 5**.
 | H6 | `refactor/arch-h4-h6-m6-l3` | `useOrderValidation` migrated from stale Zustand arrays to live `useOrdersQuery` hooks for all five stages. Duplicate detection now runs against real React Query data. |
 | M6 | `refactor/arch-h4-h6-m6-l3` | Business logic (per-row insert loop, `mergeAppSettings`, empty-parts fallback) extracted from `mobile-order/route.ts` into `src/services/mobileOrderService.ts`. Route handler is now ≤ 50 lines. |
 | L3 | `refactor/arch-h4-h6-m6-l3` | `src/services/index.ts` barrel created with explicit named re-exports for all public service symbols. |
-| L1 | `refactor/arch-l1-m1` | Pure domain logic promoted from `src/lib/` to `src/domain/`: `orderWorkflow.ts` → `domain/order/orderWorkflow.ts`; warranty/mileage utils → `domain/order/warranty.ts` and `domain/order/mileage.ts`; company utils → `domain/company/company.ts`. Lib files converted to re-export barrels — no call-sites broken. |
+| L1 | `refactor/arch-l1-m1` → **completed** `refactor/arch-l1-l4-m2` | Pure domain logic promoted to `src/domain/`. **Completed:** `VIN_PREFIX_MAP` + `detectModelFromVin` moved to `src/domain/order/vin.ts`; `src/lib/utils.ts` re-exports for zero call-site breakage. |
 | M1 | `refactor/arch-l1-m1` | `src/schemas/order.schema.ts` imports updated from `@/lib/company` → `@/domain/company/company` and `@/lib/utils` → `@/domain/order/mileage`. Schemas now pull from the domain layer directly. |
+| L4 | `refactor/arch-l1-l4-m2` | `src/lib/logger.ts` thin wrapper introduced (`debug` suppressed in prod, `warn`/`error` always pass through). All `console.warn`/`console.error`/`console.debug` calls routed through `logger.*` across 14 files (services, hooks, API routes, domain). |
+| M2 | `refactor/arch-l1-l4-m2` | `mapKeysToCamel<T>` helper added to `src/lib/utils.ts`. `quick-templates/route.ts` local `mapRow` removed and replaced. `app-settings/route.ts` inline object construction replaced. Shared mapper now available for future routes. |
 
 ---
 
@@ -319,14 +321,14 @@ You don't have to adopt this layout wholesale. The two highest-leverage moves:
 | H4 | `orderService.ts` is a 697-line god module | High | ✅ Resolved |
 | H5 | 300-600-line page-level handler hooks contain business logic | High | ✅ Fixed |
 | H6 | Operational data lives in both React Query and Zustand | High | ✅ Resolved |
-| M1 | Schemas import `lib/utils` and `lib/company` | Medium | ⬜ Open |
-| M2 | Snake/camel mapping repeated per endpoint | Medium | ⬜ Open |
+| M1 | Schemas import `lib/utils` and `lib/company` | Medium | ✅ Resolved |
+| M2 | Snake/camel mapping repeated per endpoint | Medium | ✅ Resolved |
 | M3 | UI hooks call `orderService` directly, bypassing RQ | Medium | ⬜ Open |
 | M4 | `mapSupabaseOrder` returns `null` silently | Medium | ✅ Fixed |
 | M5 | Persistence columns leak into `PendingRowSchema` | Medium | ⬜ Open |
 | M6 | Business logic in `mobile-order/route.ts` | Medium | ✅ Resolved |
 | M7 | Top-level singletons (`supabase`, `queryClient`, `auth`) block port substitution | Medium | ⬜ Open |
-| L1 | Pure domain logic mixed under `lib/` | Low | ⬜ Open |
+| L1 | Pure domain logic mixed under `lib/` | Low | ✅ Resolved |
 | L2 | Back-compat re-exports in `useOrdersQuery.ts` | Low | ✅ Fixed |
 | L3 | No `services/index.ts` barrel | Low | ✅ Resolved |
 | L4 | No logger abstraction; `console.*` everywhere | Low | ⬜ Open |

@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { hasAttachment } from "@/lib/attachment";
+import { logger } from "@/lib/logger";
 import { normalizeOrderStage } from "@/lib/orderStage";
 import type { PendingRow } from "@/types";
 
@@ -72,7 +73,7 @@ export const useRowModals = (
 					toast.success("Note saved successfully");
 					closeModal();
 				} catch (error) {
-					console.error("Failed to save note:", error);
+					logger.error("Failed to save note:", error);
 					const { toast } = await import("sonner");
 					toast.error("Failed to save note");
 				}
@@ -125,7 +126,7 @@ export const useRowModals = (
 					toast.success("Attachment saved successfully");
 					closeModal();
 				} catch (error) {
-					console.error("Failed to save attachment:", error);
+					logger.error("Failed to save attachment:", error);
 					const { toast } = await import("sonner");
 					toast.error("Failed to save attachment");
 				}

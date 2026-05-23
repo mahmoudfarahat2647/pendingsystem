@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { logger } from "@/lib/logger";
 import { pool } from "@/lib/postgres";
 
 export const runtime = "nodejs";
@@ -39,7 +40,7 @@ export async function GET() {
 			} catch (dbError) {
 				health.checks.database = "error";
 				health.status = "degraded";
-				console.error("[Health Check] Database connectivity failed:", dbError);
+				logger.error("[Health Check] Database connectivity failed:", dbError);
 			}
 		}
 
@@ -58,7 +59,7 @@ export async function GET() {
 		health.status = "unhealthy";
 		health.checks.api = "error";
 
-		console.error("[Health Check] Failed:", error);
+		logger.error("[Health Check] Failed:", error);
 
 		return NextResponse.json(health, { status: 503 });
 	}

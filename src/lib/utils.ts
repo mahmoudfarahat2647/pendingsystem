@@ -5,6 +5,7 @@ export {
 	normalizeMileage,
 	normalizeMileageAsNumber,
 } from "@/domain/order/mileage";
+export { detectModelFromVin } from "@/domain/order/vin";
 export {
 	calculateEndWarranty,
 	calculateRemainingTime,
@@ -12,27 +13,6 @@ export {
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
-}
-
-const VIN_PREFIX_MAP: Record<string, string> = {
-	VF1RJA: "Clio V",
-	VF1RJB: "Captur II",
-	VF1RFB: "Megane IV",
-	VF1RFE: "Kadjar",
-	VF1RFA: "Talisman",
-	VF1HJB: "Duster II",
-	VF1XJA: "Arkana",
-	VF1LJA: "Logan III",
-	VF1SJA: "Sandero III",
-};
-
-/**
- * Detect vehicle model from VIN prefix
- */
-export function detectModelFromVin(vin: string): string | null {
-	if (!vin || vin.length < 6) return null;
-	const prefix = vin.substring(0, 6).toUpperCase();
-	return VIN_PREFIX_MAP[prefix] || null;
 }
 
 /**
@@ -156,4 +136,15 @@ export function getVinColor(vin: string): VinBadgeStyle {
  */
 export function generateId(): string {
 	return `row-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+}
+
+function snakeToCamel(str: string): string {
+	return str.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+}
+
+/** Shallow snake_case → camelCase key transform. Does not recurse into nested objects. */
+export function mapKeysToCamel<T>(obj: Record<string, unknown>): T {
+	return Object.fromEntries(
+		Object.entries(obj).map(([k, v]) => [snakeToCamel(k), v]),
+	) as T;
 }

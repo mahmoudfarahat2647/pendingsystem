@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import "./globals.css";
+import { logger } from "@/lib/logger";
 
 export default function GlobalError({
 	error,
@@ -11,7 +12,7 @@ export default function GlobalError({
 	reset: () => void;
 }) {
 	useEffect(() => {
-		console.error("Global Error:", error);
+		logger.error("Global Error:", error);
 	}, [error]);
 
 	const isChunkError =

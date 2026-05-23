@@ -1,4 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
+import { logger } from "@/lib/logger";
 import { getOrdersQueryKey } from "@/lib/queryClient";
 import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";
@@ -37,7 +38,7 @@ let registrationCount = 0;
 export function setOrdersQueryAdapter(adapter: OrdersQueryAdapter): void {
 	registrationCount += 1;
 	if (registrationCount > 1 && process.env.NODE_ENV !== "production") {
-		console.warn(
+		logger.warn(
 			"[ordersQueryAdapter] adapter registered more than once — last registration wins. " +
 				"This is expected in tests, but indicates a wiring bug in production code.",
 		);

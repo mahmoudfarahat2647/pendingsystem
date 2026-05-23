@@ -1,6 +1,7 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { processBatch } from "@/lib/batchUtils";
 import { normalizeNullableCompanyName } from "@/lib/company";
+import { logger } from "@/lib/logger";
 import { isUuid } from "@/lib/orderWorkflow";
 import { supabase } from "@/lib/supabase";
 import type {
@@ -275,7 +276,7 @@ export const orderService = {
 
 			if (!data && !error) {
 				// 0 rows matched — row was already moved to a different stage by another client.
-				console.debug(
+				logger.debug(
 					`[saveOrder] Skipped update for ${id}: row no longer in stage "${expectedCurrentStage}"`,
 				);
 				return null;
@@ -293,7 +294,7 @@ export const orderService = {
 					.select()
 					.maybeSingle();
 				if (!fallbackData && !fallbackError) {
-					console.debug(
+					logger.debug(
 						`[saveOrder] Fallback skipped for ${id}: row no longer in stage "${expectedCurrentStage}"`,
 					);
 					return null;
@@ -446,7 +447,7 @@ export const orderService = {
 
 	async deleteOrder(id: string) {
 		if (!id || !isUuid(id)) {
-			console.warn(`Skipping delete for non-UUID id: ${id}`);
+			logger.warn(`Skipping delete for non-UUID id: ${id}`);
 			return;
 		}
 
@@ -460,14 +461,14 @@ export const orderService = {
 
 		const validIds = ids.filter(isUuid);
 		if (validIds.length === 0) {
-			console.warn("Skipping bulk delete; no valid UUID ids", {
+			logger.warn("Skipping bulk delete; no valid UUID ids", {
 				count: ids.length,
 			});
 			return;
 		}
 
 		if (validIds.length !== ids.length) {
-			console.warn("Skipping non-UUID ids during bulk delete", {
+			logger.warn("Skipping non-UUID ids during bulk delete", {
 				totalIds: ids.length,
 				validIds: validIds.length,
 			});
@@ -510,7 +511,7 @@ export const orderService = {
 			.limit(100);
 
 		if (error) {
-			console.warn(
+			logger.warn(
 				"[orderService] checkHistoricalVinPartDuplicate error:",
 				error,
 			);
@@ -558,7 +559,7 @@ export const orderService = {
 			.limit(100);
 
 		if (error) {
-			console.warn(
+			logger.warn(
 				"[orderService] checkHistoricalDescriptionConflict error:",
 				error,
 			);

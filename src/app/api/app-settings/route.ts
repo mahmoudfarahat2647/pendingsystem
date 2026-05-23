@@ -1,7 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { createServiceClient } from "@/lib/supabase-admin";
+import { mapKeysToCamel } from "@/lib/utils";
 import type { AppSettings } from "@/services/appSettingsService";
 
 export const runtime = "nodejs";
@@ -47,15 +49,13 @@ export async function PATCH(req: NextRequest) {
 
 		if (error) throw new Error(error.message);
 
-		return NextResponse.json({
-			models: data.models as string[],
-			repairSystems: data.repair_systems as string[],
-			requesters: data.requesters as string[],
-		} satisfies AppSettings);
+		return NextResponse.json(
+			mapKeysToCamel<AppSettings>(data as Record<string, unknown>),
+		);
 	} catch (error: unknown) {
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
-		console.error("[app-settings PATCH]", message);
+		logger.error("[app-settings PATCH]", message);
 		return NextResponse.json({ error: message }, { status: 500 });
 	}
 }

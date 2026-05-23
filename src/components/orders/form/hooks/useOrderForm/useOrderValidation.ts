@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
+import { logger } from "@/lib/logger";
 import { ValidationMode } from "@/lib/ordersValidationConstants";
 import {
 	checkDescriptionConflict,
@@ -153,7 +154,7 @@ export function useOrderValidation({
 				setAsyncDuplicateWarnings((prev) => ({ ...prev, [partId]: null }));
 			}
 		} catch (error) {
-			console.error("Error checking duplicate:", error);
+			logger.error("Error checking duplicate:", error);
 		} finally {
 			setIsCheckingDuplicates(false);
 		}

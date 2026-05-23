@@ -1,4 +1,5 @@
 import type { StateCreator } from "zustand";
+import { logger } from "@/lib/logger";
 import { reportSettingsService } from "@/services/reports/reportSettingsService";
 import type {
 	CombinedStore,
@@ -25,7 +26,7 @@ export const createReportSettingsSlice: StateCreator<
 			set({ reportSettings });
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : "Unknown error";
-			console.error("Failed to fetch report settings:", error);
+			logger.error("Failed to fetch report settings:", error);
 			set({
 				reportSettings: {
 					id: "temp-id",
@@ -83,7 +84,7 @@ export const createReportSettingsSlice: StateCreator<
 			await get().fetchReportSettings();
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : "Unknown error";
-			console.error("Trigger backup error:", error);
+			logger.error("Trigger backup error:", error);
 			set({ reportSettingsError: message });
 		} finally {
 			set({ isReportSettingsLoading: false });

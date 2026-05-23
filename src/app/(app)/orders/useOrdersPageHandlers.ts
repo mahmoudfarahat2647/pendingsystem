@@ -9,6 +9,7 @@ import { useDraftSession } from "@/hooks/useDraftSession";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { hasAttachment } from "@/lib/attachment";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
+import { logger } from "@/lib/logger";
 import { buildSendToArchiveCommands } from "@/lib/orderStageTransitions";
 import {
 	appendTaggedUserNote,
@@ -238,7 +239,7 @@ export const useOrdersPageHandlers = () => {
 			};
 			const errorMessage =
 				dbError?.message || dbError?.hint || dbError?.details || String(error);
-			console.error("Error saving order:", errorMessage, error);
+			logger.error(`Error saving order: ${errorMessage}`, error);
 			toast.error(`Error saving order: ${errorMessage}`);
 		}
 	};

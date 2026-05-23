@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { createServiceClient } from "@/lib/supabase-admin";
 import type { ReportSettings } from "@/store/types";
 
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
 	} catch (error: unknown) {
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
-		console.error("[report-settings GET]", message);
+		logger.error("[report-settings GET]", message);
 		return NextResponse.json({ error: message }, { status: 500 });
 	}
 }
@@ -81,7 +82,7 @@ export async function PATCH(req: NextRequest) {
 	} catch (error: unknown) {
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
-		console.error("[report-settings PATCH]", message);
+		logger.error("[report-settings PATCH]", message);
 		return NextResponse.json({ error: message }, { status: 500 });
 	}
 }

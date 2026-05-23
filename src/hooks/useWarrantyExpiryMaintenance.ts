@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef } from "react";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
+import { logger } from "@/lib/logger";
 import { getOrdersQueryKey } from "@/lib/queryClient";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
@@ -105,7 +106,7 @@ export function useWarrantyExpiryMaintenance() {
 			);
 			allRows = results.flat();
 		} catch (error) {
-			console.warn(
+			logger.warn(
 				"[useWarrantyExpiryMaintenance] Failed to fetch stages:",
 				error,
 			);
@@ -135,7 +136,7 @@ export function useWarrantyExpiryMaintenance() {
 							(row.stage as "orders" | "main" | "call" | "booking") ?? "orders",
 					});
 				} catch (error) {
-					console.warn(
+					logger.warn(
 						`[useWarrantyExpiryMaintenance] Failed to archive row ${row.id} (VIN: ${vin}):`,
 						error,
 					);

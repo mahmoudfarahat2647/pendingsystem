@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { logger } from "@/lib/logger";
+
 export const RATE_LIMIT_MAX = 30;
 
 export async function isRateLimited(
@@ -19,7 +21,7 @@ export async function isRateLimited(
 
 	if (error) {
 		// Fail open: a DB error should not block legitimate requests.
-		console.error("[mobile-order] rate limit check error:", error.message);
+		logger.error("[mobile-order] rate limit check error:", error.message);
 		return false;
 	}
 
