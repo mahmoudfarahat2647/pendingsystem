@@ -38,6 +38,7 @@ const RowModals = dynamic(
 );
 
 import { useOrdersRealtimeSync } from "@/hooks/useOrdersRealtimeSync";
+import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
 import { useAppStore } from "@/store/useStore";
 import { useOrdersPageHandlers } from "./useOrdersPageHandlers";
 
@@ -79,6 +80,11 @@ export default function OrdersPage() {
 		applyCommand,
 		draftSaving,
 	} = useOrdersPageHandlers();
+
+	const { onSelectAllByVin, isSelectAllByVinDisabled } = useSelectAllByVin(
+		selectedRows,
+		gridApi,
+	);
 
 	const [scrollDir, setScrollDir] = useState<"vertical" | "horizontal">(
 		"vertical",
@@ -156,6 +162,8 @@ export default function OrdersPage() {
 							partStatuses={partStatuses}
 							onUpdateStatus={handleUpdatePartStatus}
 							rowData={ordersRowData}
+							onSelectAllByVin={onSelectAllByVin}
+							isSelectAllByVinDisabled={isSelectAllByVinDisabled}
 						/>
 
 						{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}
