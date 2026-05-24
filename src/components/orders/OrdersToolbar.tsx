@@ -17,6 +17,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,6 +55,8 @@ interface OrdersToolbarProps {
 	onUpdateStatus?: (status: string) => void;
 	onCallList: () => void;
 	rowData?: PendingRow[];
+	onSelectAllByVin: () => void;
+	isSelectAllByVinDisabled: boolean;
 }
 
 export const OrdersToolbar = ({
@@ -75,6 +78,8 @@ export const OrdersToolbar = ({
 	onUpdateStatus,
 	onCallList,
 	rowData = [],
+	onSelectAllByVin,
+	isSelectAllByVinDisabled,
 }: OrdersToolbarProps) => {
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("orders");
@@ -386,6 +391,10 @@ export const OrdersToolbar = ({
 				className="flex items-center gap-1.5"
 				suppressHydrationWarning={true}
 			>
+				<SelectAllByVinButton
+					onSelectAllByVin={onSelectAllByVin}
+					isDisabled={isSelectAllByVinDisabled}
+				/>
 				<VINLineCounter rows={rowData} />
 
 				<Tooltip>
