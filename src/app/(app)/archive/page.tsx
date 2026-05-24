@@ -23,6 +23,7 @@ import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { RowModals } from "@/components/shared/RowModals";
+import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +51,7 @@ import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
+import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import {
 	buildBookingCommands,
@@ -115,6 +117,11 @@ export default function ArchivePage() {
 	);
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
+
+	const { onSelectAllByVin, isSelectAllByVinDisabled } = useSelectAllByVin(
+		selectedRows,
+		gridApi,
+	);
 	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -341,6 +348,10 @@ export default function ArchivePage() {
 					</div>
 
 					<div className="flex items-center gap-1.5">
+						<SelectAllByVinButton
+							onSelectAllByVin={onSelectAllByVin}
+							isDisabled={isSelectAllByVinDisabled}
+						/>
 						<VINLineCounter rows={effectiveData} />
 						<Tooltip>
 							<TooltipTrigger asChild>

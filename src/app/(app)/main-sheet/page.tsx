@@ -39,6 +39,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
+import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import {
 	buildBookingCommands,
@@ -140,6 +141,10 @@ export default function MainSheetPage() {
 	};
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
+	const { onSelectAllByVin, isSelectAllByVinDisabled } = useSelectAllByVin(
+		selectedRows,
+		gridApi,
+	);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 	const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -311,6 +316,8 @@ export default function MainSheetPage() {
 								if (status) toast.info(`Filtering by: ${status}`);
 							}}
 							rowData={filteredRowData}
+							onSelectAllByVin={onSelectAllByVin}
+							isSelectAllByVinDisabled={isSelectAllByVinDisabled}
 							onLockToggle={() => setIsSheetLocked(!isSheetLocked)}
 							onUpdateStatus={handleUpdatePartStatus}
 							onBooking={() => setIsBookingModalOpen(true)}
