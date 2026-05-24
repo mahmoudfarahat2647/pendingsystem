@@ -20,6 +20,7 @@ import { getBookingColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { RowModals } from "@/components/shared/RowModals";
+import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +49,7 @@ import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
+import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { trySelectRowsByVin } from "@/lib/ag-grid-helpers";
 import {
@@ -125,6 +127,10 @@ export default function BookingPage() {
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
+	const { onSelectAllByVin, isSelectAllByVinDisabled } = useSelectAllByVin(
+		selectedRows,
+		gridApi,
+	);
 	const hasMixedVins = hasMixedVinSelection(selectedRows);
 
 	useEffect(() => {
@@ -412,6 +418,10 @@ export default function BookingPage() {
 					</div>
 
 					<div className="flex items-center gap-1.5">
+						<SelectAllByVinButton
+							onSelectAllByVin={onSelectAllByVin}
+							isDisabled={isSelectAllByVinDisabled}
+						/>
 						<VINLineCounter rows={effectiveBookingData} />
 						<Tooltip>
 							<TooltipTrigger asChild>
