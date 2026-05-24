@@ -16,6 +16,7 @@ import {
 	Unlock,
 } from "lucide-react";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +52,8 @@ interface MainSheetToolbarProps {
 	activeFilter?: string | null;
 	onFilterChange?: (status: string | null) => void;
 	rowData?: PendingRow[];
+	onSelectAllByVin: () => void;
+	isSelectAllByVinDisabled: boolean;
 }
 
 export const MainSheetToolbar = ({
@@ -71,6 +74,8 @@ export const MainSheetToolbar = ({
 	activeFilter,
 	onFilterChange,
 	rowData = [],
+	onSelectAllByVin,
+	isSelectAllByVinDisabled,
 }: MainSheetToolbarProps) => {
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("main-sheet");
@@ -339,6 +344,10 @@ export const MainSheetToolbar = ({
 			</div>
 
 			<div className="flex items-center gap-2">
+				<SelectAllByVinButton
+					onSelectAllByVin={onSelectAllByVin}
+					isDisabled={isSelectAllByVinDisabled}
+				/>
 				<VINLineCounter rows={rowData} />
 
 				<Tooltip>
