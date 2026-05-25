@@ -4,6 +4,7 @@
 --   B) metadata->'parts' array entries (source of truth for the app)
 -- ILIKE = case-insensitive part number match
 -- IS DISTINCT FROM = skip rows already correct
+-- COALESCE(..., '[]'::jsonb) = guard against jsonb_agg returning NULL on empty aggregation
 
 -- ============================================================
 -- 260605634R → كشاف شمال علوى
@@ -19,12 +20,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '260605634R'
-        THEN jsonb_set(part, '{description}', '"كشاف شمال علوى"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '260605634R'
+          THEN jsonb_set(part, '{description}', '"كشاف شمال علوى"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -50,12 +54,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '620129443R'
-        THEN jsonb_set(part, '{description}', '"اكصدام امامى علوى"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '620129443R'
+          THEN jsonb_set(part, '{description}', '"اكصدام امامى علوى"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -81,12 +88,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '620221471R'
-        THEN jsonb_set(part, '{description}', '"اكصدام امامى"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '620221471R'
+          THEN jsonb_set(part, '{description}', '"اكصدام امامى"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -112,12 +122,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '622355863R'
-        THEN jsonb_set(part, '{description}', '"مصفح اكصدام امامى"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '622355863R'
+          THEN jsonb_set(part, '{description}', '"مصفح اكصدام امامى"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -143,12 +156,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '625006891R'
-        THEN jsonb_set(part, '{description}', '"صدر"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '625006891R'
+          THEN jsonb_set(part, '{description}', '"صدر"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -174,12 +190,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '638132363R'
-        THEN jsonb_set(part, '{description}', '"داير رفرف امامى شمال"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '638132363R'
+          THEN jsonb_set(part, '{description}', '"داير رفرف امامى شمال"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -205,12 +224,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '727124129R'
-        THEN jsonb_set(part, '{description}', '"زجاج امامى"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '727124129R'
+          THEN jsonb_set(part, '{description}', '"زجاج امامى"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -236,12 +258,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '804309225R'
-        THEN jsonb_set(part, '{description}', '"2 شدادات خلفى"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '804309225R'
+          THEN jsonb_set(part, '{description}', '"2 شدادات خلفى"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -267,12 +292,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '809012155R'
-        THEN jsonb_set(part, '{description}', '"فرش باب امامى شمال"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '809012155R'
+          THEN jsonb_set(part, '{description}', '"فرش باب امامى شمال"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -298,12 +326,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '824309801R'
-        THEN jsonb_set(part, '{description}', '"2 شدادات امامى"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '824309801R'
+          THEN jsonb_set(part, '{description}', '"2 شدادات امامى"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -329,12 +360,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '850100309V'
-        THEN jsonb_set(part, '{description}', '"اكصدام خلفى"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '850100309V'
+          THEN jsonb_set(part, '{description}', '"اكصدام خلفى"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -360,12 +394,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '876G37352R'
-        THEN jsonb_set(part, '{description}', '"مساج كرسى السائق"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '876G37352R'
+          THEN jsonb_set(part, '{description}', '"مساج كرسى السائق"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -391,12 +428,15 @@ SET metadata = jsonb_set(
   metadata,
   '{parts}',
   (
-    SELECT jsonb_agg(
-      CASE
-        WHEN part->>'partNumber' ILIKE '913504996R'
-        THEN jsonb_set(part, '{description}', '"زجاج فتحة سقف"')
-        ELSE part
-      END
+    SELECT COALESCE(
+      jsonb_agg(
+        CASE
+          WHEN part->>'partNumber' ILIKE '913504996R'
+          THEN jsonb_set(part, '{description}', '"زجاج فتحة سقف"')
+          ELSE part
+        END
+      ),
+      '[]'::jsonb
     )
     FROM jsonb_array_elements(metadata->'parts') AS part
   )
@@ -407,3 +447,139 @@ WHERE EXISTS (
   WHERE part->>'partNumber' ILIKE '913504996R'
     AND part->>'description' IS DISTINCT FROM 'زجاج فتحة سقف'
 );
+
+-- ============================================================
+-- ROLLBACK (uncomment to revert all description changes)
+-- Sets both top-level description and all matching parts array
+-- entries back to NULL for each of the 13 part numbers.
+-- ============================================================
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '260605634R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '260605634R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '260605634R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '620129443R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '620129443R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '620129443R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '620221471R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '620221471R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '620221471R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '622355863R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '622355863R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '622355863R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '625006891R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '625006891R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '625006891R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '638132363R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '638132363R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '638132363R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '727124129R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '727124129R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '727124129R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '804309225R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '804309225R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '804309225R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '809012155R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '809012155R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '809012155R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '824309801R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '824309801R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '824309801R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '850100309V';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '850100309V'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '850100309V');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '876G37352R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '876G37352R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '876G37352R');
+
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{description}', 'null'::jsonb)
+-- WHERE metadata->>'partNumber' ILIKE '913504996R';
+-- UPDATE orders
+-- SET metadata = jsonb_set(metadata, '{parts}', (
+--   SELECT COALESCE(jsonb_agg(CASE WHEN part->>'partNumber' ILIKE '913504996R'
+--     THEN jsonb_set(part, '{description}', 'null'::jsonb) ELSE part END), '[]'::jsonb)
+--   FROM jsonb_array_elements(metadata->'parts') AS part
+-- )) WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(metadata->'parts') AS part WHERE part->>'partNumber' ILIKE '913504996R');
