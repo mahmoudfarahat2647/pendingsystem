@@ -2,6 +2,36 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 	reactStrictMode: true,
+	webpack: (config, { isServer, webpack: wp }) => {
+		if (!isServer) {
+			// pptxgenjs uses node: URI scheme (e.g. "node:fs") which webpack cannot
+			// resolve for browser bundles. NormalModuleReplacementPlugin strips the
+			// prefix first, then fallback stubs the built-ins to empty modules.
+			config.plugins?.push(
+				new wp.NormalModuleReplacementPlugin(
+					/^node:/,
+					(resource: { request: string }) => {
+						resource.request = resource.request.replace(/^node:/, "");
+					},
+				),
+			);
+			config.resolve = {
+				...config.resolve,
+				fallback: {
+					...(config.resolve?.fallback as Record<string, unknown>),
+					fs: false,
+					path: false,
+					os: false,
+					stream: false,
+					zlib: false,
+					buffer: false,
+					util: false,
+					events: false,
+				},
+			};
+		}
+		return config;
+	},
 	// Enable React Compiler
 	experimental: {
 		// reactCompiler: true,

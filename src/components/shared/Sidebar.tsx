@@ -3,6 +3,7 @@
 import {
 	AlertTriangle,
 	Archive,
+	BarChart3,
 	Calendar,
 	ChevronLeft,
 	ChevronRight,
@@ -71,6 +72,11 @@ const navItems: NavItem[] = [
 		href: "/archive",
 		label: "Archive",
 		icon: <Archive className="h-5 w-5" />,
+	},
+	{
+		href: "/reports",
+		label: "Reports",
+		icon: <BarChart3 className="h-5 w-5" />,
 	},
 ];
 
