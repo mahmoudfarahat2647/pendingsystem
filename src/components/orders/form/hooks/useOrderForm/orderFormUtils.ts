@@ -52,6 +52,7 @@ export function buildInitialParts(selectedRows: PendingRow[]): PartEntry[] {
 		id: generateId(),
 		partNumber: row.partNumber || "",
 		description: row.description || "",
+		quantity: row.quantity ?? 1,
 		rowId: row.id,
 	}));
 }

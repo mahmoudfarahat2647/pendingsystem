@@ -32,6 +32,7 @@ const createMockRow = (overrides: Partial<PendingRow> = {}): PendingRow => ({
 	remainTime: "",
 	partNumber: "P1",
 	description: "Test Part",
+	quantity: 1,
 	vin: "VIN12345678901234",
 	stage: "orders",
 	...overrides,

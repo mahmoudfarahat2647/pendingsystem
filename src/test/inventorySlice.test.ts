@@ -20,6 +20,7 @@ const mockRow: PendingRow = {
 	requester: "Admin",
 	partNumber: "P1",
 	description: "Part 1",
+	quantity: 1,
 	status: "Orders",
 	rDate: "2024-01-01",
 	repairSystem: "None",

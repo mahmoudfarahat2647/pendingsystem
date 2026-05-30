@@ -28,7 +28,12 @@ interface PartsSectionProps {
 	parts: PartEntry[];
 	onAddPart: () => void;
 	onRemovePart: (id: string) => void;
-	onPartChange: (id: string, field: keyof PartEntry, value: string) => void;
+	onPartChange: (
+		id: string,
+		field: Exclude<keyof PartEntry, "quantity">,
+		value: string,
+	) => void;
+	onQuantityChange: (id: string, value: number) => void;
 	onCheckDuplicate: (
 		partId: string,
 		vin: string,
@@ -53,6 +58,7 @@ export const PartsSection = ({
 	onAddPart,
 	onRemovePart,
 	onPartChange,
+	onQuantityChange,
 	onCheckDuplicate,
 	onBulkImport,
 	partValidationWarnings,
@@ -82,6 +88,7 @@ export const PartsSection = ({
 					id: generateId(),
 					partNumber: (rowParts[0]?.trim() || "").toUpperCase(),
 					description: rowParts.slice(1).join(" ").trim() || "",
+					quantity: 1,
 				};
 			})
 			.filter(
@@ -212,6 +219,24 @@ export const PartsSection = ({
 												)}
 											>
 												<div className="flex items-center gap-2">
+													<div className="w-14">
+														<Input
+															type="number"
+															min={1}
+															value={part.quantity ?? 1}
+															onChange={(e) => {
+																const n = Math.floor(Number(e.target.value));
+																onQuantityChange(
+																	part.id,
+																	Number.isFinite(n) && n >= 1 ? n : 1,
+																);
+															}}
+															className={cn(
+																"bg-white/5 border-white/5 h-8 text-[10px] rounded-lg px-2 focus:ring-1 text-center",
+																focusColor,
+															)}
+														/>
+													</div>
 													<div className="w-1/3">
 														<Input
 															placeholder="REF#"
