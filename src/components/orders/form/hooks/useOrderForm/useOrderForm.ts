@@ -62,6 +62,7 @@ export const useOrderForm = ({
 		handleAddPartRow,
 		handleRemovePartRow,
 		handlePartChange,
+		handlePartQuantityChange,
 		handleBulkImportParts,
 	} = useOrderParts();
 
@@ -122,7 +123,9 @@ export const useOrderForm = ({
 				checkBeastModeTimer(first.id, initialFormData);
 			} else {
 				setFormData(buildEmptyFormData());
-				setParts([{ id: generateId(), partNumber: "", description: "" }]);
+				setParts([
+					{ id: generateId(), partNumber: "", description: "", quantity: 1 },
+				]);
 				resetValidation();
 			}
 		} else {
@@ -165,6 +168,7 @@ export const useOrderForm = ({
 		handleAddPartRow,
 		handleRemovePartRow,
 		handlePartChange,
+		handlePartQuantityChange,
 		handleBulkImportParts,
 		checkDuplicateForPart,
 		handleLocalSubmit,

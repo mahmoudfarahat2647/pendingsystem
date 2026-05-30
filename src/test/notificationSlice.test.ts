@@ -28,6 +28,7 @@ const createMockRow = (id: string, endWarranty?: string): PendingRow => ({
 	requester: "User",
 	partNumber: "P1",
 	description: "Desc",
+	quantity: 1,
 	status: "Orders",
 	rDate: "2024-01-01",
 	repairSystem: "None",

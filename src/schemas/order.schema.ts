@@ -11,6 +11,7 @@ export const PartEntrySchema = z.object({
 	id: z.string(),
 	partNumber: z.string(),
 	description: z.string(),
+	quantity: z.number().int().positive().default(1),
 	rowId: z.string().optional(),
 });
 
@@ -99,6 +100,7 @@ const PendingRowBaseObject = z.object({
 	// Legacy (These will be auto-synced via transform)
 	partNumber: z.string().optional(),
 	description: z.string().optional(),
+	quantity: z.number().int().positive().optional(),
 
 	// Workflow
 	status: StatusSchema.default("Pending"),
@@ -143,13 +145,14 @@ const PendingRowBaseObject = z.object({
 	createdAt: z.string().optional(),
 });
 
-// AUTO-SYNC transform: partNumber/description always reflect parts[0] if available
+// AUTO-SYNC transform: partNumber/description/quantity always reflect parts[0] if available
 const pendingRowTransform = (data: z.infer<typeof PendingRowBaseObject>) => {
 	const firstPart = data.parts?.[0];
 	return {
 		...data,
 		partNumber: firstPart?.partNumber || data.partNumber || "",
 		description: firstPart?.description || data.description || "",
+		quantity: firstPart?.quantity ?? data.quantity ?? 1,
 	};
 };
 

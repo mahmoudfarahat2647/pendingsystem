@@ -39,6 +39,7 @@ const createMockRow = (overrides: Partial<PendingRow> = {}): PendingRow => ({
 	remainTime: "",
 	partNumber: "P1",
 	description: "Test Part",
+	quantity: 1,
 	vin: "VIN12345678901234",
 	stage: "orders",
 	...overrides,
@@ -158,15 +159,25 @@ describe("checkVinPartDuplicate", () => {
 describe("findSameOrderDuplicates", () => {
 	it("should return empty array for no duplicates", () => {
 		const parts: PartEntry[] = [
-			{ id: "1", partNumber: "PART-A", description: "Desc A" },
-			{ id: "2", partNumber: "PART-B", description: "Desc B" },
+			{ id: "1", partNumber: "PART-A", description: "Desc A", quantity: 1 },
+			{ id: "2", partNumber: "PART-B", description: "Desc B", quantity: 1 },
 		];
 		expect(findSameOrderDuplicates(parts)).toEqual([]);
 	});
 
 	it("should return duplicate parts", () => {
-		const partA = { id: "1", partNumber: "PART-A", description: "Desc A" };
-		const partB = { id: "2", partNumber: "PART-A", description: "Desc A" };
+		const partA = {
+			id: "1",
+			partNumber: "PART-A",
+			description: "Desc A",
+			quantity: 1,
+		};
+		const partB = {
+			id: "2",
+			partNumber: "PART-A",
+			description: "Desc A",
+			quantity: 1,
+		};
 		const parts: PartEntry[] = [partA, partB];
 		const result = findSameOrderDuplicates(parts);
 		expect(result).toHaveLength(2);
@@ -175,9 +186,24 @@ describe("findSameOrderDuplicates", () => {
 	});
 
 	it("should handle multiple duplicates of same part", () => {
-		const partA = { id: "1", partNumber: "PART-A", description: "Desc A" };
-		const partB = { id: "2", partNumber: "PART-A", description: "Desc A" };
-		const partC = { id: "3", partNumber: "PART-A", description: "Desc A" };
+		const partA = {
+			id: "1",
+			partNumber: "PART-A",
+			description: "Desc A",
+			quantity: 1,
+		};
+		const partB = {
+			id: "2",
+			partNumber: "PART-A",
+			description: "Desc A",
+			quantity: 1,
+		};
+		const partC = {
+			id: "3",
+			partNumber: "PART-A",
+			description: "Desc A",
+			quantity: 1,
+		};
 		const parts: PartEntry[] = [partA, partB, partC];
 		const result = findSameOrderDuplicates(parts);
 		expect(result).toHaveLength(3);
@@ -185,24 +211,24 @@ describe("findSameOrderDuplicates", () => {
 
 	it("should be case insensitive", () => {
 		const parts: PartEntry[] = [
-			{ id: "1", partNumber: "PART-A", description: "Desc A" },
-			{ id: "2", partNumber: "part-a", description: "Desc A" },
+			{ id: "1", partNumber: "PART-A", description: "Desc A", quantity: 1 },
+			{ id: "2", partNumber: "part-a", description: "Desc A", quantity: 1 },
 		];
 		expect(findSameOrderDuplicates(parts)).toHaveLength(2);
 	});
 
 	it("should skip empty part numbers", () => {
 		const parts: PartEntry[] = [
-			{ id: "1", partNumber: "", description: "Desc A" },
-			{ id: "2", partNumber: "", description: "Desc B" },
+			{ id: "1", partNumber: "", description: "Desc A", quantity: 1 },
+			{ id: "2", partNumber: "", description: "Desc B", quantity: 1 },
 		];
 		expect(findSameOrderDuplicates(parts)).toEqual([]);
 	});
 
 	it("should handle whitespace in part numbers", () => {
 		const parts: PartEntry[] = [
-			{ id: "1", partNumber: "  PART-A  ", description: "Desc A" },
-			{ id: "2", partNumber: "PART-A", description: "Desc A" },
+			{ id: "1", partNumber: "  PART-A  ", description: "Desc A", quantity: 1 },
+			{ id: "2", partNumber: "PART-A", description: "Desc A", quantity: 1 },
 		];
 		expect(findSameOrderDuplicates(parts)).toHaveLength(2);
 	});
@@ -211,17 +237,17 @@ describe("findSameOrderDuplicates", () => {
 describe("findSameOrderDuplicateIndices", () => {
 	it("should return empty array for no duplicates", () => {
 		const parts: PartEntry[] = [
-			{ id: "1", partNumber: "PART-A", description: "Desc A" },
-			{ id: "2", partNumber: "PART-B", description: "Desc B" },
+			{ id: "1", partNumber: "PART-A", description: "Desc A", quantity: 1 },
+			{ id: "2", partNumber: "PART-B", description: "Desc B", quantity: 1 },
 		];
 		expect(findSameOrderDuplicateIndices(parts)).toEqual([]);
 	});
 
 	it("should return indices of duplicate parts", () => {
 		const parts: PartEntry[] = [
-			{ id: "1", partNumber: "PART-A", description: "Desc A" },
-			{ id: "2", partNumber: "PART-B", description: "Desc B" },
-			{ id: "3", partNumber: "PART-A", description: "Desc A" },
+			{ id: "1", partNumber: "PART-A", description: "Desc A", quantity: 1 },
+			{ id: "2", partNumber: "PART-B", description: "Desc B", quantity: 1 },
+			{ id: "3", partNumber: "PART-A", description: "Desc A", quantity: 1 },
 		];
 		const result = findSameOrderDuplicateIndices(parts);
 		expect(result).toEqual([0, 2]);
@@ -229,9 +255,9 @@ describe("findSameOrderDuplicateIndices", () => {
 
 	it("should return all duplicate indices for repeated parts", () => {
 		const parts: PartEntry[] = [
-			{ id: "1", partNumber: "PART-A", description: "Desc A" },
-			{ id: "2", partNumber: "PART-A", description: "Desc A" },
-			{ id: "3", partNumber: "PART-A", description: "Desc A" },
+			{ id: "1", partNumber: "PART-A", description: "Desc A", quantity: 1 },
+			{ id: "2", partNumber: "PART-A", description: "Desc A", quantity: 1 },
+			{ id: "3", partNumber: "PART-A", description: "Desc A", quantity: 1 },
 		];
 		const result = findSameOrderDuplicateIndices(parts);
 		expect(result).toEqual([0, 1, 2]);
@@ -239,16 +265,16 @@ describe("findSameOrderDuplicateIndices", () => {
 
 	it("should be case insensitive", () => {
 		const parts: PartEntry[] = [
-			{ id: "1", partNumber: "PART-A", description: "Desc A" },
-			{ id: "2", partNumber: "part-a", description: "Desc A" },
+			{ id: "1", partNumber: "PART-A", description: "Desc A", quantity: 1 },
+			{ id: "2", partNumber: "part-a", description: "Desc A", quantity: 1 },
 		];
 		expect(findSameOrderDuplicateIndices(parts)).toEqual([0, 1]);
 	});
 
 	it("should skip empty part numbers", () => {
 		const parts: PartEntry[] = [
-			{ id: "1", partNumber: "", description: "Desc A" },
-			{ id: "2", partNumber: "", description: "Desc B" },
+			{ id: "1", partNumber: "", description: "Desc A", quantity: 1 },
+			{ id: "2", partNumber: "", description: "Desc B", quantity: 1 },
 		];
 		expect(findSameOrderDuplicateIndices(parts)).toEqual([]);
 	});

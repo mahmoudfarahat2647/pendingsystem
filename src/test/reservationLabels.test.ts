@@ -292,6 +292,7 @@ function createMockRow(
 		requestedBy: "",
 		partNumber: "",
 		description: "",
+		quantity: 1,
 		status: "Pending",
 		rDate: "",
 		repairSystem: "",

@@ -39,6 +39,7 @@ export const OrderFormModal = ({
 		handleAddPartRow,
 		handleRemovePartRow,
 		handlePartChange,
+		handlePartQuantityChange,
 		handleBulkImportParts,
 		checkDuplicateForPart,
 		handleLocalSubmit,
@@ -74,6 +75,7 @@ export const OrderFormModal = ({
 							onAddPart={handleAddPartRow}
 							onRemovePart={handleRemovePartRow}
 							onPartChange={handlePartChange}
+							onQuantityChange={handlePartQuantityChange}
 							onBulkImport={handleBulkImportParts}
 							onCheckDuplicate={checkDuplicateForPart}
 							partValidationWarnings={partValidationWarnings}

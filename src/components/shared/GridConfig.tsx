@@ -136,6 +136,13 @@ export const getBaseColumns = (
 		width: 100,
 	},
 	{
+		headerName: "QTY",
+		field: "quantity",
+		filter: "agNumberColumnFilter",
+		width: 80,
+		editable: false,
+	},
+	{
 		headerName: "PART NUMBER",
 		field: "partNumber",
 		filter: "agTextColumnFilter",
@@ -388,6 +395,7 @@ export const getGlobalSearchWorkspaceColumns = (
 	const sabCol = baseCols.find((c) => c.field === "sabNumber");
 	const acceptedByCol = baseCols.find((c) => c.field === "acceptedBy");
 	const modelCol = baseCols.find((c) => c.field === "model");
+	const qtyCol = baseCols.find((c) => c.field === "quantity");
 	const partNumberCol = baseCols.find((c) => c.field === "partNumber");
 	const descriptionCol = baseCols.find((c) => c.field === "description");
 	const repairSystemCol = baseCols.find((c) => c.field === "repairSystem");
@@ -500,6 +508,7 @@ export const getGlobalSearchWorkspaceColumns = (
 		{ ...(sabCol || {}), width: 110 },
 		{ ...(acceptedByCol || {}), width: 120 },
 		{ ...(modelCol || {}), width: 100 },
+		{ ...(qtyCol || {}), width: 80 },
 		{ ...(partNumberCol || {}), minWidth: 120 },
 		{ ...(descriptionCol || {}), minWidth: 180, flex: 2 },
 		{ ...(repairSystemCol || {}), width: 100 },
