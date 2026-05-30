@@ -70,7 +70,7 @@ export const createNotificationSlice: StateCreator<
 	checkNotifications: () => {
 		const _state = get() as CombinedStore;
 		const now = new Date();
-		const WARRANTY_THRESHOLD_DAYS = 10;
+		const WARRANTY_THRESHOLD_DAYS = 35;
 
 		// CRITICAL: Notification Sync Strategy
 		// This function implements a strict synchronization strategy.
