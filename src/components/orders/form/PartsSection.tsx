@@ -223,6 +223,7 @@ export const PartsSection = ({
 														<Input
 															type="number"
 															min={1}
+															aria-label="Quantity"
 															value={part.quantity ?? 1}
 															onChange={(e) => {
 																const n = Math.floor(Number(e.target.value));
