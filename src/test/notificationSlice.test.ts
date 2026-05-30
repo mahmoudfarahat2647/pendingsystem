@@ -109,7 +109,7 @@ describe("notificationSlice", () => {
 
 		// Expired row: 2025-12-31 (yesterday) — daysRemaining < 0, fails >= 0 check
 		const expiredRow = createMockRow("1", "2025-12-31");
-		// Valid row: 2026-01-05 (future, within 10-day threshold)
+		// Valid row: 2026-01-05 (future, within 35-day threshold)
 		const validRow = createMockRow("2", "2026-01-05");
 
 		const store = createTestStore([expiredRow, validRow]);
@@ -129,7 +129,7 @@ describe("notificationSlice", () => {
 		vi.setSystemTime(now);
 
 		// Expires today: "2026-01-01" parses to T00:00. diffTime is negative (-10h),
-		// but Math.ceil(negative / ms_per_day) = 0, which passes >= 0 && <= 10 check.
+		// but Math.ceil(negative / ms_per_day) = 0, which passes >= 0 && <= 35 check.
 		const expiringRow = createMockRow("1", "2026-01-01");
 		const store = createTestStore([expiringRow]);
 
@@ -145,7 +145,7 @@ describe("notificationSlice", () => {
 		const now = new Date("2026-01-01T10:00:00Z");
 		vi.setSystemTime(now);
 
-		// Tomorrow — within 10-day threshold
+		// Tomorrow — within 35-day threshold
 		const futureRow = createMockRow("1", "2026-01-02");
 		const store = createTestStore([futureRow]);
 
@@ -153,6 +153,33 @@ describe("notificationSlice", () => {
 
 		expect(store.getState().notifications).toHaveLength(1);
 		expect(store.getState().notifications[0].type).toBe("warranty");
+	});
+
+	it("should create warranty notification at exactly 35 days remaining (upper boundary)", () => {
+		const now = new Date("2026-01-01T10:00:00Z");
+		vi.setSystemTime(now);
+
+		// 2026-02-05 midnight: diffTime = 34d 14h → Math.ceil = 35 → passes <= 35 check
+		const boundaryRow = createMockRow("1", "2026-02-05");
+		const store = createTestStore([boundaryRow]);
+
+		store.getState().checkNotifications();
+
+		expect(store.getState().notifications).toHaveLength(1);
+		expect(store.getState().notifications[0].type).toBe("warranty");
+	});
+
+	it("should NOT create warranty notification at 36 days remaining (outside threshold)", () => {
+		const now = new Date("2026-01-01T10:00:00Z");
+		vi.setSystemTime(now);
+
+		// 2026-02-06 midnight: diffTime = 35d 14h → Math.ceil = 36 → fails <= 35 check
+		const outsideRow = createMockRow("1", "2026-02-06");
+		const store = createTestStore([outsideRow]);
+
+		store.getState().checkNotifications();
+
+		expect(store.getState().notifications).toHaveLength(0);
 	});
 
 	describe("Reminder Dismissal Logic", () => {
