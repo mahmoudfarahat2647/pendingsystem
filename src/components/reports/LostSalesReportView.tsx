@@ -2,19 +2,23 @@
 
 import { BarChart3, Car, Package, TrendingUp } from "lucide-react";
 import { useId } from "react";
+import { Pie, PieChart } from "recharts";
 import {
 	Bar,
 	BarChart,
-	Cell,
-	Legend,
-	Pie,
-	PieChart,
-	ResponsiveContainer,
-	Tooltip,
-	XAxis,
-	YAxis,
-} from "recharts";
+	BarLineIndicator,
+	BarXAxis,
+	ChartTooltip,
+	Grid,
+	LinearGradient,
+} from "@/components/ui/bar-chart";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+	type ChartConfig,
+	ChartContainer,
+	ChartTooltipContent,
+	ChartTooltip as ShadcnChartTooltip,
+} from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
 	LostSalesReport,
@@ -34,108 +38,72 @@ interface LostSalesReportViewProps {
 // Internal: small bar chart reused for both sections
 // ---------------------------------------------------------------------------
 
-interface ChartData {
+type ChartData = {
 	name: string;
 	value: number;
 	description?: string;
 	models?: string[];
-}
+};
 
 interface SectionChartProps {
 	data: ChartData[];
 }
 
-function PartsBarTooltip({
-	active,
-	payload,
-}: {
-	active?: boolean;
-	payload?: Array<{ payload: ChartData }>;
-}) {
-	if (!active || !payload?.length) return null;
-	const d = payload[0].payload;
-	const modelLabel = d.models?.filter(Boolean).join(" / ") || null;
-	return (
-		<div
-			style={{
-				backgroundColor: "#0a0a0b",
-				border: "1px solid rgba(255,255,255,0.1)",
-				borderRadius: "8px",
-				padding: "8px 12px",
-				fontSize: "12px",
-				color: "#e5e7eb",
-			}}
-		>
-			<p style={{ fontWeight: 600 }}>{d.description || d.name}</p>
-			{modelLabel && (
-				<p style={{ fontSize: "10px", color: "#9ca3af", marginTop: "2px" }}>
-					{modelLabel}
-				</p>
-			)}
-			<p style={{ marginTop: "4px" }}>
-				Count:{" "}
-				<span style={{ fontWeight: 700, color: "#FFCC00" }}>{d.value}</span>
-			</p>
-		</div>
-	);
-}
-
 function SectionChart({ data }: SectionChartProps) {
 	const uid = useId();
-	const filterId = `lostSalesDropShadow-${uid}`;
+	const gradientId = `barGradient-${uid}`;
 
 	return (
-		<ResponsiveContainer width="100%" height={200}>
-			<BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-				<defs>
-					<filter id={filterId} x="-20%" y="-20%" width="140%" height="140%">
-						<feDropShadow
-							dx="0"
-							dy="4"
-							stdDeviation="6"
-							floodColor="#000000"
-							floodOpacity="0.4"
-						/>
-						<feDropShadow
-							dx="0"
-							dy="2"
-							stdDeviation="2"
-							floodColor="#000000"
-							floodOpacity="0.6"
-						/>
-					</filter>
-				</defs>
-				<XAxis
-					dataKey="name"
-					axisLine={false}
-					tickLine={false}
-					tick={{ fill: "#6b7280", fontSize: 10 }}
-					dy={10}
-					interval={0}
-					tickFormatter={(v: string) =>
-						v.length > 12 ? `${v.slice(0, 12)}…` : v
-					}
-				/>
-				<YAxis
-					axisLine={false}
-					tickLine={false}
-					tick={{ fill: "#6b7280", fontSize: 10 }}
-					width={36}
-				/>
-				<Tooltip
-					cursor={{ fill: "rgba(255,255,255,0.05)" }}
-					content={<PartsBarTooltip />}
-				/>
+		<div className="w-full">
+			<BarChart
+				data={data}
+				xDataKey="name"
+				barGap={0}
+				animationDuration={1000}
+				margin={{ top: 10, right: 10, bottom: 20, left: 10 }}
+			>
+				<LinearGradient from="#FFCC00" to="transparent" id={gradientId} />
+				<Grid horizontal />
 				<Bar
 					dataKey="value"
-					fill="#FFCC00"
-					radius={[4, 4, 0, 0]}
-					barSize={20}
-					stroke="none"
-					filter={`url(#${filterId})`}
+					fill={`url(#${gradientId})`}
+					lineCap="butt"
+					stroke="#FFCC00"
+				/>
+				<BarXAxis tickerHalfWidth={40} />
+				<ChartTooltip
+					showCrosshair={false}
+					showDots={false}
+					content={({ point }) => {
+						const d = point as unknown as ChartData;
+						const modelLabel = d.models?.filter(Boolean).join(" / ") || null;
+						return (
+							<div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-3 text-xs text-gray-200 shadow-2xl">
+								<p className="font-semibold text-white">
+									{d.description || d.name}
+								</p>
+								{modelLabel && (
+									<p className="text-[10px] text-gray-400 mt-1">{modelLabel}</p>
+								)}
+								<p className="mt-2 text-gray-300">
+									Count:{" "}
+									<span className="font-bold text-renault-yellow">
+										{d.value}
+									</span>
+								</p>
+							</div>
+						);
+					}}
+				/>
+				<BarLineIndicator
+					data={data}
+					valueKey="value"
+					xKey="name"
+					stroke="#FFCC00"
+					strokeWidth={2}
 				/>
 			</BarChart>
-		</ResponsiveContainer>
+		</div>
 	);
 }
 
@@ -143,55 +111,56 @@ function SectionChart({ data }: SectionChartProps) {
 // Internal: pie chart for model demand
 // ---------------------------------------------------------------------------
 
-const PIE_COLORS = [
-	"#FFCC00",
-	"#FF6B6B",
-	"#4ECDC4",
-	"#45B7D1",
-	"#96CEB4",
-	"#DDA0DD",
-	"#F4A460",
-	"#87CEEB",
-	"#F08080",
-	"#90EE90",
-];
+const CHART_COLORS = [
+	"--chart-1",
+	"--chart-2",
+	"--chart-3",
+	"--chart-4",
+	"--chart-5",
+] as const;
+
+function sanitizeKey(name: string): string {
+	return name.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+}
 
 function ModelsPieChart({ data }: SectionChartProps) {
+	const chartConfig = Object.fromEntries(
+		data.map((d, i) => [
+			sanitizeKey(d.name),
+			{
+				label: d.name,
+				color: `hsl(var(${CHART_COLORS[i % CHART_COLORS.length]}))`,
+			},
+		]),
+	) satisfies ChartConfig;
+
+	const filledData = data.map((d) => ({
+		...d,
+		fill: `var(--color-${sanitizeKey(d.name)})`,
+	}));
+
 	return (
-		<ResponsiveContainer width="100%" height={200}>
+		<ChartContainer
+			config={chartConfig}
+			className="mx-auto aspect-square max-h-[260px] [&_.recharts-pie-label-text]:fill-gray-300"
+		>
 			<PieChart>
+				<ShadcnChartTooltip content={<ChartTooltipContent hideLabel />} />
 				<Pie
-					data={data}
+					data={filledData}
 					dataKey="value"
 					nameKey="name"
+					label
 					cx="50%"
-					cy="45%"
-					outerRadius={65}
+					cy="50%"
+					innerRadius={60}
+					outerRadius={95}
+					paddingAngle={2}
+					cornerRadius={4}
 					strokeWidth={0}
-				>
-					{data.map((_, idx) => (
-						<Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
-					))}
-				</Pie>
-				<Tooltip
-					cursor={false}
-					contentStyle={{
-						backgroundColor: "#0a0a0b",
-						borderColor: "rgba(255,255,255,0.1)",
-						borderRadius: "8px",
-						fontSize: "12px",
-						color: "#e5e7eb",
-					}}
-				/>
-				<Legend
-					iconSize={8}
-					wrapperStyle={{ fontSize: "10px", color: "#9ca3af" }}
-					formatter={(value: string) =>
-						value.length > 14 ? `${value.slice(0, 14)}…` : value
-					}
 				/>
 			</PieChart>
-		</ResponsiveContainer>
+		</ChartContainer>
 	);
 }
 
@@ -207,17 +176,17 @@ interface KpiCardProps {
 
 function KpiCard({ label, value, icon }: KpiCardProps) {
 	return (
-		<Card className="bg-[#0c0c0e]/90 border-white/10">
-			<CardContent className="p-5">
+		<Card className="bg-[#0c0c0e]/90 border-white/10 hover:bg-white/5 hover:border-renault-yellow/20 transition-all duration-300 group cursor-default">
+			<CardContent className="p-3">
 				<div className="flex items-center gap-3">
-					<div className="p-2 rounded-lg bg-renault-yellow/10 text-renault-yellow">
+					<div className="p-2 rounded-lg bg-renault-yellow/10 text-renault-yellow group-hover:bg-renault-yellow/20 group-hover:scale-110 transition-all duration-300">
 						{icon}
 					</div>
 					<div>
-						<p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">
+						<p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase group-hover:text-gray-300 transition-colors">
 							{label}
 						</p>
-						<p className="text-2xl font-black text-white">
+						<p className="text-2xl font-black text-white group-hover:text-renault-yellow transition-colors">
 							{value.toLocaleString()}
 						</p>
 					</div>
@@ -240,8 +209,8 @@ interface SectionCardProps {
 function SectionCard({ title, icon, children }: SectionCardProps) {
 	return (
 		<Card className="bg-[#0c0c0e]/90 border-white/10">
-			<CardContent className="p-6">
-				<div className="flex items-center gap-2 mb-5">
+			<CardContent className="p-4">
+				<div className="flex items-center gap-2 mb-3">
 					<div className="text-renault-yellow">{icon}</div>
 					<h3 className="text-sm font-bold text-white tracking-wide uppercase">
 						{title}
@@ -259,26 +228,26 @@ function SectionCard({ title, icon, children }: SectionCardProps) {
 
 function PartsTable({ rows }: { rows: PartDemand[] }) {
 	return (
-		<div className="overflow-x-auto overflow-y-auto max-h-[180px] mt-5">
+		<div className="overflow-x-auto overflow-y-auto max-h-[180px] mt-4 rounded-md border border-white/5 custom-scrollbar">
 			<table className="w-full border-collapse text-xs text-gray-300">
-				<thead>
+				<thead className="sticky top-0 bg-[#0c0c0e]/95 backdrop-blur-sm z-10 shadow-sm shadow-black/50">
 					<tr className="border-b border-white/10">
-						<th className="text-left py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
+						<th className="text-left py-3 px-4 text-renault-yellow font-bold uppercase tracking-wider">
 							#
 						</th>
-						<th className="text-left py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
+						<th className="text-left py-3 px-4 text-renault-yellow font-bold uppercase tracking-wider">
 							Part Number
 						</th>
-						<th className="text-left py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
+						<th className="text-left py-3 px-4 text-renault-yellow font-bold uppercase tracking-wider">
 							Description
 						</th>
-						<th className="text-right py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
+						<th className="text-right py-3 px-4 text-renault-yellow font-bold uppercase tracking-wider">
 							Order Count
 						</th>
-						<th className="text-right py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
+						<th className="text-right py-3 px-4 text-renault-yellow font-bold uppercase tracking-wider">
 							Total Qty
 						</th>
-						<th className="text-left py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
+						<th className="text-left py-3 px-4 text-renault-yellow font-bold uppercase tracking-wider">
 							Model
 						</th>
 					</tr>
@@ -287,22 +256,24 @@ function PartsTable({ rows }: { rows: PartDemand[] }) {
 					{rows.map((part, idx) => (
 						<tr
 							key={part.partNumber}
-							className="border-b border-white/5 even:bg-white/5 hover:bg-white/[0.07] transition-colors"
+							className="border-b border-white/5 even:bg-white/[0.02] hover:bg-white/[0.08] transition-colors cursor-default"
 						>
-							<td className="py-2 px-3 text-gray-500">{idx + 1}</td>
-							<td className="py-2 px-3 font-mono text-white/80">
+							<td className="py-2.5 px-4 text-gray-500 font-medium">
+								{idx + 1}
+							</td>
+							<td className="py-2.5 px-4 font-mono text-white/80">
 								{part.partNumber}
 							</td>
-							<td className="py-2 px-3 text-gray-300 max-w-[260px] truncate">
+							<td className="py-2.5 px-4 text-gray-300 max-w-[260px] truncate">
 								{part.description || "—"}
 							</td>
-							<td className="py-2 px-3 text-right text-white font-semibold">
+							<td className="py-2.5 px-4 text-right text-white font-semibold">
 								{part.orderCount.toLocaleString()}
 							</td>
-							<td className="py-2 px-3 text-right text-gray-400">
+							<td className="py-2.5 px-4 text-right text-gray-400">
 								{part.totalQuantity.toLocaleString()}
 							</td>
-							<td className="py-2 px-3 text-gray-400 max-w-[120px] truncate">
+							<td className="py-2.5 px-4 text-gray-400 max-w-[120px] truncate">
 								{part.models.filter(Boolean).join(" / ") || "—"}
 							</td>
 						</tr>
@@ -337,20 +308,21 @@ function LoadingSkeleton() {
 				))}
 			</div>
 
-			{/* Chart skeletons */}
-			{[0, 1].map((i) => (
-				<Card key={i} className="bg-[#0c0c0e]/90 border-white/10">
-					<CardContent className="p-6">
-						<Skeleton className="h-4 w-48 mb-6 rounded" />
-						<Skeleton className="h-[280px] w-full rounded-lg" />
-						<div className="mt-5 space-y-2">
-							{[0, 1, 2, 3, 4].map((j) => (
-								<Skeleton key={j} className="h-8 w-full rounded" />
-							))}
-						</div>
-					</CardContent>
-				</Card>
-			))}
+			{/* Chart skeleton */}
+			<Card className="bg-[#0c0c0e]/90 border-white/10">
+				<CardContent className="p-6">
+					<Skeleton className="h-4 w-48 mb-6 rounded" />
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<Skeleton className="h-[220px] w-full rounded-lg" />
+						<Skeleton className="h-[220px] w-full rounded-lg" />
+					</div>
+					<div className="mt-5 space-y-2">
+						{[0, 1, 2, 3, 4].map((j) => (
+							<Skeleton key={j} className="h-8 w-full rounded" />
+						))}
+					</div>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }
@@ -394,9 +366,9 @@ export function LostSalesReportView({
 		.map((m) => ({ name: m.model || "Unknown", value: m.orderCount }));
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-3">
 			{/* KPI strip */}
-			<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+			<div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
 				<KpiCard
 					label="Total Orders"
 					value={kpis.totalOrders}
@@ -419,25 +391,28 @@ export function LostSalesReportView({
 				/>
 			</div>
 
-			{/* Two sections side by side */}
-			<div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-				{/* Top in-demand parts */}
-				<SectionCard
-					title="Top In-Demand Parts"
-					icon={<BarChart3 className="w-4 h-4" />}
-				>
-					<SectionChart data={partsChartData} />
-					<PartsTable rows={topParts.slice(0, 10)} />
-				</SectionCard>
-
-				{/* Demand by car model */}
-				<SectionCard
-					title="Demand by Car Model"
-					icon={<Car className="w-4 h-4" />}
-				>
-					<ModelsPieChart data={modelsChartData} />
-				</SectionCard>
-			</div>
+			{/* Unified demand analysis section */}
+			<SectionCard
+				title="Demand Analysis"
+				icon={<BarChart3 className="w-4 h-4" />}
+			>
+				<div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+					<div className="md:col-span-3">
+						<p className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-3">
+							Top In-Demand Parts
+						</p>
+						<SectionChart data={partsChartData} />
+					</div>
+					<div className="md:col-span-2">
+						<p className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-3">
+							By Car Model
+						</p>
+						<ModelsPieChart data={modelsChartData} />
+					</div>
+				</div>
+				<div className="border-t border-white/10 mt-3" />
+				<PartsTable rows={topParts.slice(0, 10)} />
+			</SectionCard>
 		</div>
 	);
 }
