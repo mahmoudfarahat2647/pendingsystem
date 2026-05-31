@@ -1,7 +1,7 @@
 "use client";
 
 import { BarChart3, Car, Package, TrendingUp } from "lucide-react";
-import { useId } from "react";
+import { useId, useMemo } from "react";
 import { Pie, PieChart } from "recharts";
 import {
 	Bar,
@@ -75,21 +75,27 @@ function SectionChart({ data }: SectionChartProps) {
 					showCrosshair={false}
 					showDots={false}
 					content={({ point }) => {
-						const d = point as unknown as ChartData;
-						const modelLabel = d.models?.filter(Boolean).join(" / ") || null;
+						const name = typeof point.name === "string" ? point.name : "";
+						const description =
+							typeof point.description === "string"
+								? point.description
+								: undefined;
+						const models = Array.isArray(point.models)
+							? (point.models as string[]).filter(Boolean)
+							: [];
+						const value = typeof point.value === "number" ? point.value : 0;
+						const modelLabel = models.join(" / ") || null;
 						return (
 							<div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-3 text-xs text-gray-200 shadow-2xl">
 								<p className="font-semibold text-white">
-									{d.description || d.name}
+									{description || name}
 								</p>
 								{modelLabel && (
 									<p className="text-[10px] text-gray-400 mt-1">{modelLabel}</p>
 								)}
 								<p className="mt-2 text-gray-300">
 									Count:{" "}
-									<span className="font-bold text-renault-yellow">
-										{d.value}
-									</span>
+									<span className="font-bold text-renault-yellow">{value}</span>
 								</p>
 							</div>
 						);
@@ -124,15 +130,19 @@ function sanitizeKey(name: string): string {
 }
 
 function ModelsPieChart({ data }: SectionChartProps) {
-	const chartConfig = Object.fromEntries(
-		data.map((d, i) => [
-			sanitizeKey(d.name),
-			{
-				label: d.name,
-				color: `hsl(var(${CHART_COLORS[i % CHART_COLORS.length]}))`,
-			},
-		]),
-	) satisfies ChartConfig;
+	const chartConfig = useMemo(
+		() =>
+			Object.fromEntries(
+				data.map((d, i) => [
+					sanitizeKey(d.name),
+					{
+						label: d.name,
+						color: `hsl(var(${CHART_COLORS[i % CHART_COLORS.length]}))`,
+					},
+				]),
+			) satisfies ChartConfig,
+		[data],
+	);
 
 	const filledData = data.map((d) => ({
 		...d,
@@ -228,7 +238,10 @@ function SectionCard({ title, icon, children }: SectionCardProps) {
 
 function PartsTable({ rows }: { rows: PartDemand[] }) {
 	return (
-		<div className="overflow-x-auto overflow-y-auto max-h-[180px] mt-4 rounded-md border border-white/5 custom-scrollbar">
+		<section
+			aria-label="Parts demand table"
+			className="overflow-x-auto overflow-y-auto max-h-[180px] mt-4 rounded-md border border-white/5 custom-scrollbar"
+		>
 			<table className="w-full border-collapse text-xs text-gray-300">
 				<thead className="sticky top-0 bg-[#0c0c0e]/95 backdrop-blur-sm z-10 shadow-sm shadow-black/50">
 					<tr className="border-b border-white/10">
@@ -280,7 +293,7 @@ function PartsTable({ rows }: { rows: PartDemand[] }) {
 					))}
 				</tbody>
 			</table>
-		</div>
+		</section>
 	);
 }
 
@@ -340,7 +353,7 @@ export function LostSalesReportView({
 	}
 
 	if (!report) {
-		return <LoadingSkeleton />;
+		return null;
 	}
 
 	const { kpis, topParts, modelDemand } = report;

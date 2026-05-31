@@ -428,7 +428,7 @@ function TooltipBox({
 				setTooltipHeight(h);
 			}
 		}
-	}, [tooltipWidth, tooltipHeight]);
+	}, [x, y, visible]);
 
 	const shouldFlipX = x + tooltipWidth + offset > containerWidth;
 	const targetX = shouldFlipX ? x - offset - tooltipWidth : x + offset;
@@ -479,6 +479,7 @@ function TooltipBox({
 			exit={{ opacity: 0 }}
 			initial={{ opacity: 0 }}
 			ref={tooltipRef}
+			role="tooltip"
 			style={{ left: animatedLeft, top: finalTop }}
 			transition={{ duration: 0.1 }}
 		>
