@@ -18,7 +18,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
 	LostSalesReport,
-	ModelDemand,
 	PartDemand,
 } from "@/domain/reports/lostSalesAnalysis";
 
@@ -314,56 +313,6 @@ function PartsTable({ rows }: { rows: PartDemand[] }) {
 	);
 }
 
-function ModelsTable({ rows }: { rows: ModelDemand[] }) {
-	return (
-		<div className="overflow-x-auto overflow-y-auto max-h-[180px] mt-5">
-			<table className="w-full border-collapse text-xs text-gray-300">
-				<thead>
-					<tr className="border-b border-white/10">
-						<th className="text-left py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
-							#
-						</th>
-						<th className="text-left py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
-							Model
-						</th>
-						<th className="text-left py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
-							Company
-						</th>
-						<th className="text-right py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
-							Order Count
-						</th>
-						<th className="text-right py-2 px-3 text-renault-yellow font-bold uppercase tracking-wider">
-							Total Qty
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{rows.map((model, idx) => (
-						<tr
-							key={`${model.model}-${model.company}`}
-							className="border-b border-white/5 even:bg-white/5 hover:bg-white/[0.07] transition-colors"
-						>
-							<td className="py-2 px-3 text-gray-500">{idx + 1}</td>
-							<td className="py-2 px-3 text-white/80">
-								{model.model || "Unknown"}
-							</td>
-							<td className="py-2 px-3 text-gray-300">
-								{model.company || "—"}
-							</td>
-							<td className="py-2 px-3 text-right text-white font-semibold">
-								{model.orderCount.toLocaleString()}
-							</td>
-							<td className="py-2 px-3 text-right text-gray-400">
-								{model.totalQuantity.toLocaleString()}
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-		</div>
-	);
-}
-
 // ---------------------------------------------------------------------------
 // Internal: loading skeleton
 // ---------------------------------------------------------------------------
@@ -486,11 +435,7 @@ export function LostSalesReportView({
 					title="Demand by Car Model"
 					icon={<Car className="w-4 h-4" />}
 				>
-					<div className="grid grid-cols-2 gap-4">
-						<SectionChart data={modelsChartData} />
-						<ModelsPieChart data={modelsChartData} />
-					</div>
-					<ModelsTable rows={modelDemand} />
+					<ModelsPieChart data={modelsChartData} />
 				</SectionCard>
 			</div>
 		</div>
