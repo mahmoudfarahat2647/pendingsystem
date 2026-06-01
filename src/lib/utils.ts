@@ -9,6 +9,8 @@ export { detectModelFromVin } from "@/domain/order/vin";
 export {
 	calculateEndWarranty,
 	calculateRemainingTime,
+	getEffectiveEndWarranty,
+	isWarrantyExpired,
 } from "@/domain/order/warranty";
 
 export function cn(...inputs: ClassValue[]) {

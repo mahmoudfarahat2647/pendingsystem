@@ -28,3 +28,23 @@ export const calculateRemainingTime = (endDate: string): string => {
 
 	return `${years} y - ${months} m - ${days} d`;
 };
+
+export function isWarrantyExpired(endWarranty: string): boolean {
+	const parts = endWarranty.split("-").map(Number);
+	if (parts.length !== 3 || parts.some(Number.isNaN)) return false;
+	const [y, m, d] = parts;
+	const endDate = new Date(y, m - 1, d);
+	if (Number.isNaN(endDate.getTime())) return false;
+	const todayStart = new Date();
+	todayStart.setHours(0, 0, 0, 0);
+	return endDate < todayStart;
+}
+
+export function getEffectiveEndWarranty(row: {
+	endWarranty: string;
+	startWarranty: string;
+}): string {
+	if (row.endWarranty) return row.endWarranty;
+	if (row.startWarranty) return calculateEndWarranty(row.startWarranty);
+	return "";
+}
