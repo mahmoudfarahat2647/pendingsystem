@@ -2,6 +2,10 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef } from "react";
+import {
+	getEffectiveEndWarranty,
+	isWarrantyExpired,
+} from "@/domain/order/warranty";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { logger } from "@/lib/logger";
 import { getOrdersQueryKey } from "@/lib/queryClient";
@@ -19,27 +23,6 @@ const WARRANTY_REPAIR_SYSTEM = "ضمان";
 const ACTIVE_STAGES = ["orders", "main", "call", "booking"] as const;
 
 /**
- * Returns true if the warranty end date is strictly in the past (expired yesterday or earlier).
- * Day 0 (today) is still "active" per the notification system's daysRemaining >= 0 threshold.
- */
-function isWarrantyExpired(endWarranty: string): boolean {
-	// Parse as local calendar date (not UTC) by splitting the YYYY-MM-DD string.
-	// new Date("YYYY-MM-DD") is interpreted as UTC midnight, which shifts the date
-	// one day earlier in timezones west of UTC and causes premature archiving.
-	const parts = endWarranty.split("-").map(Number);
-	if (parts.length !== 3 || parts.some(Number.isNaN)) return false;
-	const [year, month, day] = parts;
-	const endDate = new Date(year, month - 1, day);
-	if (Number.isNaN(endDate.getTime())) return false;
-
-	// Compare calendar dates only (strip time) so "today" is not expired.
-	const todayStart = new Date();
-	todayStart.setHours(0, 0, 0, 0);
-
-	return endDate < todayStart;
-}
-
-/**
  * Groups rows by VIN. Only includes rows that are warranty rows with expired warranties.
  */
 function getExpiredWarrantyVinGroups(
@@ -49,8 +32,9 @@ function getExpiredWarrantyVinGroups(
 
 	for (const row of rows) {
 		if (row.repairSystem !== WARRANTY_REPAIR_SYSTEM) continue;
-		if (!row.endWarranty) continue;
-		if (!isWarrantyExpired(row.endWarranty)) continue;
+		const effectiveEnd = getEffectiveEndWarranty(row);
+		if (!effectiveEnd) continue;
+		if (!isWarrantyExpired(effectiveEnd)) continue;
 
 		const vin = (row.vin || "").trim().toUpperCase() || "(blank)";
 		if (!groups.has(vin)) {
@@ -110,8 +94,15 @@ export function useWarrantyExpiryMaintenance() {
 				"[useWarrantyExpiryMaintenance] Failed to fetch stages:",
 				error,
 			);
+			// Do not stamp the cooldown — a transient fetch failure should retry next tick.
 			return;
 		}
+
+		// The expensive fetch succeeded, so stamp the once-per-hour cooldown now. This must
+		// happen before the empty-result early return below; otherwise the steady-state case
+		// (no expired warranties) would never record the timestamp and re-fetch all stages on
+		// every 10-second polling tick.
+		lastMaintenanceRunRef.current = now;
 
 		const vinGroups = getExpiredWarrantyVinGroups(allRows);
 		if (vinGroups.size === 0) return;
