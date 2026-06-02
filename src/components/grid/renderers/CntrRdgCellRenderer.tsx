@@ -32,7 +32,6 @@ export const CntrRdgCellRenderer = (
 	}
 
 	const level = warningNotification.cntrRdgLevel;
-	const pulseClass = level === "high" ? "cntr-pulse-red" : "cntr-pulse-yellow";
 	const iconColor = level === "high" ? "#ef4444" : "#eab308";
 	const tooltipText =
 		level === "high"
@@ -42,7 +41,7 @@ export const CntrRdgCellRenderer = (
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<span className={`flex items-center gap-2 px-1 ${pulseClass}`}>
+				<span className="flex items-center gap-2 px-1">
 					{displayValue}
 					<CntrRdgAlertIcon color={iconColor} />
 				</span>
