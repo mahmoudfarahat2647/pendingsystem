@@ -44,7 +44,6 @@ import { Label } from "@/components/ui/label";
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
@@ -227,262 +226,260 @@ export default function ArchivePage() {
 	}, [partStatuses, handleNoteClick, handleReminderClick, handleAttachClick]);
 
 	return (
-		<TooltipProvider>
-			<div className="space-y-4 h-full flex flex-col">
-				<InfoLabel data={selectedRows[0] || null} />
+		<div className="space-y-4 h-full flex flex-col">
+			<InfoLabel data={selectedRows[0] || null} />
 
-				<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
-					<div className="flex items-center gap-1.5">
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									size="icon"
-									className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
-									onClick={() => gridApi?.exportDataAsCsv()}
-								>
-									<Download className="h-3.5 w-3.5" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>Extract</TooltipContent>
-						</Tooltip>
+			<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
+				<div className="flex items-center gap-1.5">
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								size="icon"
+								className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
+								onClick={() => gridApi?.exportDataAsCsv()}
+							>
+								<Download className="h-3.5 w-3.5" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Extract</TooltipContent>
+					</Tooltip>
 
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									size="icon"
-									variant="ghost"
-									className="text-gray-400 hover:text-white h-8 w-8"
-									onClick={() => setShowFilters(!showFilters)}
-								>
-									<Filter className="h-3.5 w-3.5" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>Filter</TooltipContent>
-						</Tooltip>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								size="icon"
+								variant="ghost"
+								className="text-gray-400 hover:text-white h-8 w-8"
+								onClick={() => setShowFilters(!showFilters)}
+							>
+								<Filter className="h-3.5 w-3.5" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Filter</TooltipContent>
+					</Tooltip>
 
-						<LayoutSaveButton
-							isDirty={isDirty}
-							isPositionDirty={isPositionDirty}
-							onSave={saveLayout}
-							onSaveAsDefault={saveAsDefault}
-							onReset={resetLayout}
-						/>
-
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<Button
-											variant="ghost"
-											size="icon"
-											className="text-gray-400 hover:text-white h-8 w-8"
-											disabled={selectedRows.length === 0}
-										>
-											<CheckCircle className="h-4 w-4" />
-										</Button>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent
-										align="end"
-										className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
-									>
-										{partStatuses?.map((status) => {
-											const isHex =
-												status.color?.startsWith("#") ||
-												status.color?.startsWith("rgb");
-											const dotStyle = isHex
-												? { backgroundColor: status.color }
-												: undefined;
-											const colorClass = isHex ? "" : status.color;
-
-											return (
-												<DropdownMenuItem
-													key={status.id}
-													onClick={() => handleUpdatePartStatus(status.label)}
-													className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
-												>
-													<div
-														className={cn("w-2 h-2 rounded-full", colorClass)}
-														style={dotStyle}
-													/>
-													<span className="text-xs">{status.label}</span>
-												</DropdownMenuItem>
-											);
-										})}
-									</DropdownMenuContent>
-								</DropdownMenu>
-							</TooltipTrigger>
-							<TooltipContent>Update Status</TooltipContent>
-						</Tooltip>
-
-						<div className="w-px h-5 bg-white/10 mx-1" />
-
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									size="icon"
-									variant="ghost"
-									className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
-									onClick={() => setIsReorderModalOpen(true)}
-									disabled={selectedRows.length === 0}
-								>
-									<RotateCcw className="h-3.5 w-3.5" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>Reorder</TooltipContent>
-						</Tooltip>
-
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									size="icon"
-									variant="ghost"
-									className="text-green-500/80 hover:text-green-500 h-8 w-8"
-									onClick={() => setIsBookingModalOpen(true)}
-									disabled={selectedRows.length === 0}
-								>
-									<Calendar className="h-3.5 w-3.5" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>Reschedule Booking</TooltipContent>
-						</Tooltip>
-					</div>
-
-					<div className="flex items-center gap-1.5">
-						<SelectAllByVinButton
-							onSelectAllByVin={onSelectAllByVin}
-							isDisabled={isSelectAllByVinDisabled}
-						/>
-						<VINLineCounter rows={effectiveData} />
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									size="icon"
-									variant="ghost"
-									className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
-									onClick={() => setShowDeleteConfirm(true)}
-									disabled={selectedRows.length === 0}
-								>
-									<Trash2 className="h-3.5 w-3.5" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>Delete</TooltipContent>
-						</Tooltip>
-					</div>
-				</div>
-
-				{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}
-				<div
-					role="presentation"
-					className={`flex-1 min-h-[500px] border border-white/10 rounded-xl mt-4 ${
-						scrollDir === "horizontal"
-							? "overflow-x-auto overflow-y-hidden"
-							: "overflow-hidden"
-					}`}
-					onContextMenu={(e) => {
-						e.preventDefault();
-						setScrollDir((d) => (d === "vertical" ? "horizontal" : "vertical"));
-					}}
-				>
-					<DataGrid
-						rowData={effectiveData}
-						columnDefs={columns}
-						gridStateKey="archive"
-						stage="archive"
-						readOnly={draftSaving}
-						onSelectionChange={setSelectedRows}
-						onCellValueChanged={async (params) => {
-							if (
-								params.colDef.field === "rDate" &&
-								params.newValue !== params.oldValue
-							) {
-								const v = params.newValue as string;
-								if (!v?.trim() || Number.isNaN(Date.parse(v))) return;
-								await handleUpdateOrder(params.data.id, { rDate: v });
-							}
-						}}
-						onGridReady={(api) => setGridApi(api)}
-						showFloatingFilters={showFilters}
-						enablePagination={true}
-						pageSize={20}
+					<LayoutSaveButton
+						isDirty={isDirty}
+						isPositionDirty={isPositionDirty}
+						onSave={saveLayout}
+						onSaveAsDefault={saveAsDefault}
+						onReset={resetLayout}
 					/>
+
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										variant="ghost"
+										size="icon"
+										className="text-gray-400 hover:text-white h-8 w-8"
+										disabled={selectedRows.length === 0}
+									>
+										<CheckCircle className="h-4 w-4" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent
+									align="end"
+									className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
+								>
+									{partStatuses?.map((status) => {
+										const isHex =
+											status.color?.startsWith("#") ||
+											status.color?.startsWith("rgb");
+										const dotStyle = isHex
+											? { backgroundColor: status.color }
+											: undefined;
+										const colorClass = isHex ? "" : status.color;
+
+										return (
+											<DropdownMenuItem
+												key={status.id}
+												onClick={() => handleUpdatePartStatus(status.label)}
+												className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
+											>
+												<div
+													className={cn("w-2 h-2 rounded-full", colorClass)}
+													style={dotStyle}
+												/>
+												<span className="text-xs">{status.label}</span>
+											</DropdownMenuItem>
+										);
+									})}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</TooltipTrigger>
+						<TooltipContent>Update Status</TooltipContent>
+					</Tooltip>
+
+					<div className="w-px h-5 bg-white/10 mx-1" />
+
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								size="icon"
+								variant="ghost"
+								className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
+								onClick={() => setIsReorderModalOpen(true)}
+								disabled={selectedRows.length === 0}
+							>
+								<RotateCcw className="h-3.5 w-3.5" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Reorder</TooltipContent>
+					</Tooltip>
+
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								size="icon"
+								variant="ghost"
+								className="text-green-500/80 hover:text-green-500 h-8 w-8"
+								onClick={() => setIsBookingModalOpen(true)}
+								disabled={selectedRows.length === 0}
+							>
+								<Calendar className="h-3.5 w-3.5" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Reschedule Booking</TooltipContent>
+					</Tooltip>
 				</div>
 
-				<RowModals
-					activeModal={activeModal}
-					currentRow={currentRow}
-					onClose={closeModal}
-					onSaveNote={saveNote}
-					onSaveReminder={saveReminder}
-					onSaveAttachment={saveAttachment}
-					onSaveArchive={() => {}}
-					sourceTag="archive"
-				/>
-
-				{/* Reorder Reason Modal */}
-				<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
-					<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
-						<DialogHeader>
-							<DialogTitle className="text-orange-500">
-								Reorder - Reason Required
-							</DialogTitle>
-						</DialogHeader>
-						<div className="space-y-4">
-							<div>
-								<Label>Reason for Reorder</Label>
-								<Input
-									value={reorderReason}
-									onChange={(e) => setReorderReason(e.target.value)}
-									placeholder="e.g., Customer called back, error in archive"
-									className="bg-white/5 border-white/10 text-white"
-								/>
-							</div>
-							<p className="text-sm text-muted-foreground">
-								This will send the selected items back to the Orders view.
-							</p>
-						</div>
-						<DialogFooter>
+				<div className="flex items-center gap-1.5">
+					<SelectAllByVinButton
+						onSelectAllByVin={onSelectAllByVin}
+						isDisabled={isSelectAllByVinDisabled}
+					/>
+					<VINLineCounter rows={effectiveData} />
+					<Tooltip>
+						<TooltipTrigger asChild>
 							<Button
-								variant="outline"
-								onClick={() => setIsReorderModalOpen(false)}
-								className="border-white/20 text-white hover:bg-white/10"
+								size="icon"
+								variant="ghost"
+								className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+								onClick={() => setShowDeleteConfirm(true)}
+								disabled={selectedRows.length === 0}
 							>
-								Cancel
+								<Trash2 className="h-3.5 w-3.5" />
 							</Button>
-							<Button
-								variant="renault"
-								onClick={handleConfirmReorder}
-								disabled={!reorderReason.trim()}
-							>
-								Confirm Reorder
-							</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
+						</TooltipTrigger>
+						<TooltipContent>Delete</TooltipContent>
+					</Tooltip>
+				</div>
+			</div>
 
-				<BookingCalendarModal
-					open={isBookingModalOpen}
-					onOpenChange={setIsBookingModalOpen}
-					onConfirm={handleConfirmBooking}
-					selectedRows={selectedRows}
-				/>
-
-				<ConfirmDialog
-					open={showDeleteConfirm}
-					onOpenChange={setShowDeleteConfirm}
-					onConfirm={async () => {
-						applyCommand({
-							type: "deleteRows",
-							ids: getSelectedIds(selectedRows),
-						});
-						setSelectedRows([]);
-						toast.success("Archived record(s) deleted");
-						setShowDeleteConfirm(false);
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}
+			<div
+				role="presentation"
+				className={`flex-1 min-h-[500px] border border-white/10 rounded-xl mt-4 ${
+					scrollDir === "horizontal"
+						? "overflow-x-auto overflow-y-hidden"
+						: "overflow-hidden"
+				}`}
+				onContextMenu={(e) => {
+					e.preventDefault();
+					setScrollDir((d) => (d === "vertical" ? "horizontal" : "vertical"));
+				}}
+			>
+				<DataGrid
+					rowData={effectiveData}
+					columnDefs={columns}
+					gridStateKey="archive"
+					stage="archive"
+					readOnly={draftSaving}
+					onSelectionChange={setSelectedRows}
+					onCellValueChanged={async (params) => {
+						if (
+							params.colDef.field === "rDate" &&
+							params.newValue !== params.oldValue
+						) {
+							const v = params.newValue as string;
+							if (!v?.trim() || Number.isNaN(Date.parse(v))) return;
+							await handleUpdateOrder(params.data.id, { rDate: v });
+						}
 					}}
-					title="Delete Archived Records"
-					description={`Are you sure you want to permanently delete ${selectedRows.length} selected record(s)?`}
-					confirmText="Permanently Delete"
+					onGridReady={(api) => setGridApi(api)}
+					showFloatingFilters={showFilters}
+					enablePagination={true}
+					pageSize={20}
 				/>
 			</div>
-		</TooltipProvider>
+
+			<RowModals
+				activeModal={activeModal}
+				currentRow={currentRow}
+				onClose={closeModal}
+				onSaveNote={saveNote}
+				onSaveReminder={saveReminder}
+				onSaveAttachment={saveAttachment}
+				onSaveArchive={() => {}}
+				sourceTag="archive"
+			/>
+
+			{/* Reorder Reason Modal */}
+			<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
+				<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
+					<DialogHeader>
+						<DialogTitle className="text-orange-500">
+							Reorder - Reason Required
+						</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4">
+						<div>
+							<Label>Reason for Reorder</Label>
+							<Input
+								value={reorderReason}
+								onChange={(e) => setReorderReason(e.target.value)}
+								placeholder="e.g., Customer called back, error in archive"
+								className="bg-white/5 border-white/10 text-white"
+							/>
+						</div>
+						<p className="text-sm text-muted-foreground">
+							This will send the selected items back to the Orders view.
+						</p>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => setIsReorderModalOpen(false)}
+							className="border-white/20 text-white hover:bg-white/10"
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="renault"
+							onClick={handleConfirmReorder}
+							disabled={!reorderReason.trim()}
+						>
+							Confirm Reorder
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<BookingCalendarModal
+				open={isBookingModalOpen}
+				onOpenChange={setIsBookingModalOpen}
+				onConfirm={handleConfirmBooking}
+				selectedRows={selectedRows}
+			/>
+
+			<ConfirmDialog
+				open={showDeleteConfirm}
+				onOpenChange={setShowDeleteConfirm}
+				onConfirm={async () => {
+					applyCommand({
+						type: "deleteRows",
+						ids: getSelectedIds(selectedRows),
+					});
+					setSelectedRows([]);
+					toast.success("Archived record(s) deleted");
+					setShowDeleteConfirm(false);
+				}}
+				title="Delete Archived Records"
+				description={`Are you sure you want to permanently delete ${selectedRows.length} selected record(s)?`}
+				confirmText="Permanently Delete"
+			/>
+		</div>
 	);
 }

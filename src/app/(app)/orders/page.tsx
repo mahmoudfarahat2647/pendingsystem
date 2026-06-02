@@ -10,7 +10,6 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getOrdersColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
 import { getVinAutoMoveIds, hasMixedVinSelection } from "@/lib/orderWorkflow";
 
@@ -130,182 +129,180 @@ export default function OrdersPage() {
 	};
 
 	return (
-		<TooltipProvider>
-			<div className="space-y-6 h-full flex flex-col">
-				<InfoLabel data={selectedRows.length === 1 ? selectedRows[0] : null} />
+		<div className="space-y-6 h-full flex flex-col">
+			<InfoLabel data={selectedRows.length === 1 ? selectedRows[0] : null} />
 
-				<Card className="flex-1 flex flex-col border-none bg-transparent shadow-none">
-					<CardContent className="p-0 flex-1 flex flex-col space-y-4">
-						<OrdersToolbar
-							selectedCount={selectedRows.length}
-							selectedRows={selectedRows}
-							onAddEdit={() => handleOpenForm(selectedRows.length > 0)}
-							onDelete={() => setShowDeleteConfirm(true)}
-							onCommit={handleCommit}
-							onBooking={() => setIsBookingModalOpen(true)}
-							onBulkAttach={() => setIsBulkAttachmentModalOpen(true)}
-							onPrint={handlePrint}
-							onReserve={handleReserve}
-							onArchive={() => {
-								if (selectedRows.length > 0) {
-									handleArchiveClick(
-										selectedRows[0],
-										selectedRows.map((r) => r.id),
-									);
+			<Card className="flex-1 flex flex-col border-none bg-transparent shadow-none">
+				<CardContent className="p-0 flex-1 flex flex-col space-y-4">
+					<OrdersToolbar
+						selectedCount={selectedRows.length}
+						selectedRows={selectedRows}
+						onAddEdit={() => handleOpenForm(selectedRows.length > 0)}
+						onDelete={() => setShowDeleteConfirm(true)}
+						onCommit={handleCommit}
+						onBooking={() => setIsBookingModalOpen(true)}
+						onBulkAttach={() => setIsBulkAttachmentModalOpen(true)}
+						onPrint={handlePrint}
+						onReserve={handleReserve}
+						onArchive={() => {
+							if (selectedRows.length > 0) {
+								handleArchiveClick(
+									selectedRows[0],
+									selectedRows.map((r) => r.id),
+								);
+							}
+						}}
+						onShareToLogistics={handleShareToLogistics}
+						onCallList={handleSendToCallList}
+						onExtract={() => gridApi?.exportDataAsCsv()}
+						onSetAllRDate={handleSetAllRDate}
+						onFilterToggle={() => setShowFilters(!showFilters)}
+						partStatuses={partStatuses}
+						onUpdateStatus={handleUpdatePartStatus}
+						rowData={ordersRowData}
+						onSelectAllByVin={onSelectAllByVin}
+						isSelectAllByVinDisabled={isSelectAllByVinDisabled}
+					/>
+
+					{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}
+					<div
+						role="presentation"
+						className={`flex-1 min-h-[500px] border border-white/10 rounded-xl ${
+							scrollDir === "horizontal"
+								? "overflow-x-auto overflow-y-hidden"
+								: "overflow-hidden"
+						}`}
+						onContextMenu={(e) => {
+							e.preventDefault();
+							setScrollDir((d) =>
+								d === "vertical" ? "horizontal" : "vertical",
+							);
+						}}
+					>
+						<DataGrid
+							rowData={ordersRowData}
+							columnDefs={columns}
+							gridStateKey="orders"
+							stage="orders"
+							readOnly={draftSaving}
+							onSelectionChange={setSelectedRows}
+							onCellValueChanged={async (params) => {
+								if (
+									params.colDef.field === "status" &&
+									params.newValue !== params.oldValue
+								) {
+									const newStatus = params.newValue;
+									const vin = params.data.vin;
+
+									// 1. Persist the change
+									await handleUpdateOrder(params.data.id, {
+										status: newStatus,
+									});
+
+									// 2. Check for auto-move to Call List
+									const vinIds = getVinAutoMoveIds({
+										stage: "orders",
+										stageRows: ordersRowData,
+										editedRowId: params.data.id,
+										editedVin: vin,
+										nextStatus: newStatus,
+									});
+
+									if (vinIds.length > 0) {
+										applyCommand({
+											type: "moveRows",
+											ids: vinIds,
+											sourceStage: "orders",
+											destinationStage: "call",
+										});
+										toast.success(
+											`All parts for VIN ${vin} arrived! Moved to Call List.`,
+											{ duration: 5000 },
+										);
+									}
+								} else if (
+									params.colDef.field === "rDate" &&
+									params.newValue !== params.oldValue
+								) {
+									const v = params.newValue as string;
+									if (!v?.trim() || Number.isNaN(Date.parse(v))) return;
+									await handleUpdateOrder(params.data.id, { rDate: v });
 								}
 							}}
-							onShareToLogistics={handleShareToLogistics}
-							onCallList={handleSendToCallList}
-							onExtract={() => gridApi?.exportDataAsCsv()}
-							onSetAllRDate={handleSetAllRDate}
-							onFilterToggle={() => setShowFilters(!showFilters)}
-							partStatuses={partStatuses}
-							onUpdateStatus={handleUpdatePartStatus}
-							rowData={ordersRowData}
-							onSelectAllByVin={onSelectAllByVin}
-							isSelectAllByVinDisabled={isSelectAllByVinDisabled}
+							onGridReady={(api) => setGridApi(api)}
+							showFloatingFilters={showFilters}
+							enablePagination={true}
+							pageSize={20}
 						/>
+					</div>
+				</CardContent>
+			</Card>
 
-						{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}
-						<div
-							role="presentation"
-							className={`flex-1 min-h-[500px] border border-white/10 rounded-xl ${
-								scrollDir === "horizontal"
-									? "overflow-x-auto overflow-y-hidden"
-									: "overflow-hidden"
-							}`}
-							onContextMenu={(e) => {
-								e.preventDefault();
-								setScrollDir((d) =>
-									d === "vertical" ? "horizontal" : "vertical",
-								);
-							}}
-						>
-							<DataGrid
-								rowData={ordersRowData}
-								columnDefs={columns}
-								gridStateKey="orders"
-								stage="orders"
-								readOnly={draftSaving}
-								onSelectionChange={setSelectedRows}
-								onCellValueChanged={async (params) => {
-									if (
-										params.colDef.field === "status" &&
-										params.newValue !== params.oldValue
-									) {
-										const newStatus = params.newValue;
-										const vin = params.data.vin;
-
-										// 1. Persist the change
-										await handleUpdateOrder(params.data.id, {
-											status: newStatus,
-										});
-
-										// 2. Check for auto-move to Call List
-										const vinIds = getVinAutoMoveIds({
-											stage: "orders",
-											stageRows: ordersRowData,
-											editedRowId: params.data.id,
-											editedVin: vin,
-											nextStatus: newStatus,
-										});
-
-										if (vinIds.length > 0) {
-											applyCommand({
-												type: "moveRows",
-												ids: vinIds,
-												sourceStage: "orders",
-												destinationStage: "call",
-											});
-											toast.success(
-												`All parts for VIN ${vin} arrived! Moved to Call List.`,
-												{ duration: 5000 },
-											);
-										}
-									} else if (
-										params.colDef.field === "rDate" &&
-										params.newValue !== params.oldValue
-									) {
-										const v = params.newValue as string;
-										if (!v?.trim() || Number.isNaN(Date.parse(v))) return;
-										await handleUpdateOrder(params.data.id, { rDate: v });
-									}
-								}}
-								onGridReady={(api) => setGridApi(api)}
-								showFloatingFilters={showFilters}
-								enablePagination={true}
-								pageSize={20}
-							/>
-						</div>
-					</CardContent>
-				</Card>
-
-				{isFormModalOpen && (
-					<OrderFormErrorBoundary>
-						<OrderFormModal
-							open={isFormModalOpen}
-							onOpenChange={(open) => {
-								setIsFormModalOpen(open);
-							}}
-							isEditMode={isEditMode}
-							selectedRows={selectedRows}
-							onSubmit={handleSaveOrder}
-						/>
-					</OrderFormErrorBoundary>
-				)}
-
-				{currentRow && (
-					<RowModals
-						activeModal={activeModal}
-						currentRow={currentRow}
-						onClose={closeModal}
-						onSaveNote={saveNote}
-						onSaveReminder={saveReminder}
-						onSaveAttachment={saveAttachment}
-						onSaveArchive={saveArchive}
-						sourceTag="orders"
-					/>
-				)}
-
-				{isBulkAttachmentModalOpen && (
-					<EditAttachmentModal
-						open={isBulkAttachmentModalOpen}
-						onOpenChange={setIsBulkAttachmentModalOpen}
-						allowUpload={false}
-						onSave={handleSaveBulkAttachment}
-					/>
-				)}
-
-				{isBookingModalOpen && (
-					<BookingCalendarModal
-						open={isBookingModalOpen}
-						onOpenChange={setIsBookingModalOpen}
-						onConfirm={handleConfirmBooking}
+			{isFormModalOpen && (
+				<OrderFormErrorBoundary>
+					<OrderFormModal
+						open={isFormModalOpen}
+						onOpenChange={(open) => {
+							setIsFormModalOpen(open);
+						}}
+						isEditMode={isEditMode}
 						selectedRows={selectedRows}
+						onSubmit={handleSaveOrder}
 					/>
-				)}
+				</OrderFormErrorBoundary>
+			)}
 
-				<ConfirmDialog
-					open={showDeleteConfirm}
-					onOpenChange={setShowDeleteConfirm}
-					onConfirm={handleDeleteSelected}
-					title="Delete Orders"
-					description={`Are you sure you want to delete ${selectedRows.length} selected order(s)? This action cannot be undone.`}
-					confirmText="Delete"
+			{currentRow && (
+				<RowModals
+					activeModal={activeModal}
+					currentRow={currentRow}
+					onClose={closeModal}
+					onSaveNote={saveNote}
+					onSaveReminder={saveReminder}
+					onSaveAttachment={saveAttachment}
+					onSaveArchive={saveArchive}
+					sourceTag="orders"
 				/>
+			)}
 
-				<ConfirmDialog
-					open={showCommitConfirm}
-					onOpenChange={setShowCommitConfirm}
-					onConfirm={handleConfirmCommit}
-					title="Commit to Main Sheet"
-					description="Have you verified the request date for all selected orders before committing?"
-					confirmText="Commit"
-					cancelText="No, Go Back"
-					variant="success"
-					requireTypeToConfirm="yes"
+			{isBulkAttachmentModalOpen && (
+				<EditAttachmentModal
+					open={isBulkAttachmentModalOpen}
+					onOpenChange={setIsBulkAttachmentModalOpen}
+					allowUpload={false}
+					onSave={handleSaveBulkAttachment}
 				/>
-			</div>
-		</TooltipProvider>
+			)}
+
+			{isBookingModalOpen && (
+				<BookingCalendarModal
+					open={isBookingModalOpen}
+					onOpenChange={setIsBookingModalOpen}
+					onConfirm={handleConfirmBooking}
+					selectedRows={selectedRows}
+				/>
+			)}
+
+			<ConfirmDialog
+				open={showDeleteConfirm}
+				onOpenChange={setShowDeleteConfirm}
+				onConfirm={handleDeleteSelected}
+				title="Delete Orders"
+				description={`Are you sure you want to delete ${selectedRows.length} selected order(s)? This action cannot be undone.`}
+				confirmText="Delete"
+			/>
+
+			<ConfirmDialog
+				open={showCommitConfirm}
+				onOpenChange={setShowCommitConfirm}
+				onConfirm={handleConfirmCommit}
+				title="Commit to Main Sheet"
+				description="Have you verified the request date for all selected orders before committing?"
+				confirmText="Commit"
+				cancelText="No, Go Back"
+				variant="success"
+				requireTypeToConfirm="yes"
+			/>
+		</div>
 	);
 }

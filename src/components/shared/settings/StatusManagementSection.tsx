@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -223,36 +222,34 @@ export const StatusManagementSection = ({
 											<Pencil className="h-4 w-4" />
 										</Button>
 
-										<TooltipProvider>
-											<Tooltip>
-												<TooltipTrigger asChild>
-													<span>
-														<Button
-															variant="ghost"
-															size="icon"
-															onClick={() => onRemove(status.id)}
-															disabled={isLocked || !isDeletable}
-															className={cn(
-																"h-9 w-9 rounded-xl transition-all",
-																!isDeletable
-																	? "text-gray-600 cursor-not-allowed"
-																	: "text-gray-500 hover:text-red-400 hover:bg-red-400/10",
-															)}
-														>
-															<Trash2 className="h-4 w-4" />
-														</Button>
-													</span>
-												</TooltipTrigger>
-												{!isDeletable && (
-													<TooltipContent>
-														<p>
-															Cannot delete: Currently used by {usageCount} item
-															{usageCount !== 1 ? "s" : ""}
-														</p>
-													</TooltipContent>
-												)}
-											</Tooltip>
-										</TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<span>
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() => onRemove(status.id)}
+														disabled={isLocked || !isDeletable}
+														className={cn(
+															"h-9 w-9 rounded-xl transition-all",
+															!isDeletable
+																? "text-gray-600 cursor-not-allowed"
+																: "text-gray-500 hover:text-red-400 hover:bg-red-400/10",
+														)}
+													>
+														<Trash2 className="h-4 w-4" />
+													</Button>
+												</span>
+											</TooltipTrigger>
+											{!isDeletable && (
+												<TooltipContent>
+													<p>
+														Cannot delete: Currently used by {usageCount} item
+														{usageCount !== 1 ? "s" : ""}
+													</p>
+												</TooltipContent>
+											)}
+										</Tooltip>
 									</div>
 								)}
 							</div>
