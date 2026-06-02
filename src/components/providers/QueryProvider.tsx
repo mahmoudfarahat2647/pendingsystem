@@ -2,6 +2,7 @@
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { queryClient } from "@/lib/queryClient";
 import {
 	createReactQueryAdapter,
@@ -31,7 +32,7 @@ export default function QueryProvider({
 }) {
 	return (
 		<QueryClientProvider client={queryClient}>
-			{children}
+			<TooltipProvider>{children}</TooltipProvider>
 			{Devtools ? <Devtools initialIsOpen={false} /> : null}
 		</QueryClientProvider>
 	);

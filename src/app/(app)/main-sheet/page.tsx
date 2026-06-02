@@ -35,7 +35,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
@@ -284,7 +283,7 @@ export default function MainSheetPage() {
 	};
 
 	return (
-		<TooltipProvider>
+		<>
 			<div className="space-y-4 h-full flex flex-col">
 				<InfoLabel data={selectedRows[0] || null} />
 
@@ -509,6 +508,6 @@ export default function MainSheetPage() {
 				description={`Are you sure you want to delete ${selectedRows.length} selected record(s)?`}
 				confirmText="Delete"
 			/>
-		</TooltipProvider>
+		</>
 	);
 }
