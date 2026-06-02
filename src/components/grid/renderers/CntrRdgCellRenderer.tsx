@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import { CntrRdgAlertIcon } from "./CntrRdgAlertIcon";
 
 export const CntrRdgCellRenderer = (
 	params: ICellRendererParams<PendingRow>,
@@ -31,7 +32,7 @@ export const CntrRdgCellRenderer = (
 	}
 
 	const level = warningNotification.cntrRdgLevel;
-	const pulseClass = level === "high" ? "cntr-pulse-red" : "cntr-pulse-yellow";
+	const iconColor = level === "high" ? "#ef4444" : "#eab308";
 	const tooltipText =
 		level === "high"
 			? "High Risk: CNTR RDG approaching 100,000 KM limit"
@@ -40,7 +41,10 @@ export const CntrRdgCellRenderer = (
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<span className={`px-1 ${pulseClass}`}>{displayValue}</span>
+				<span className="flex items-center gap-2 px-1">
+					{displayValue}
+					<CntrRdgAlertIcon color={iconColor} />
+				</span>
 			</TooltipTrigger>
 			<TooltipContent>
 				<p>{tooltipText}</p>
