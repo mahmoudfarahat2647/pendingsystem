@@ -189,4 +189,3 @@ export type PendingRow = z.infer<typeof PendingRowSchema>;
 const PersistedOrderRowBaseObject = PendingRowBaseObject.extend({});
 export const PersistedOrderRowSchema =
 	PersistedOrderRowBaseObject.transform(pendingRowTransform);
-export type PersistedOrderRow = z.infer<typeof PersistedOrderRowSchema>;
