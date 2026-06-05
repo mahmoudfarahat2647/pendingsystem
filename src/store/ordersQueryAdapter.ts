@@ -68,9 +68,3 @@ export function createReactQueryAdapter(
 		},
 	};
 }
-
-/** Test-only: reset the registered adapter to the no-op default. */
-export function __resetOrdersQueryAdapterForTests(): void {
-	registered = noopAdapter;
-	registrationCount = 0;
-}
