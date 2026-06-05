@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	type MobileQuickOrderPayload,
-	MobileQuickOrderSchema,
-} from "@/schemas/mobileOrder.schema";
+import { MobileQuickOrderSchema } from "@/schemas/mobileOrder.schema";
 
 describe("MobileQuickOrderSchema", () => {
 	it("accepts a minimal payload with only company", () => {
@@ -76,6 +73,7 @@ describe("MobileQuickOrderSchema", () => {
 			parts: [],
 		});
 		expect(result.success).toBe(true);
+		// biome-ignore lint/style/noNonNullAssertion: success asserted on previous line
 		const d = result.data!;
 		expect(d.customerName).toBe("");
 		expect(d.vin).toBe("");

@@ -1,4 +1,5 @@
 import type { GridState } from "ag-grid-community";
+import type { OrderStage } from "@/services/orderService";
 import type {
 	AppNotification,
 	PartStatusDef,
@@ -6,8 +7,10 @@ import type {
 	StickyNote,
 } from "@/types";
 import type {
-	DraftSessionActions,
-	DraftSessionState,
+	DraftCommand,
+	DraftRecoverySnapshot,
+	DraftSaveMutations,
+	DraftSession,
 } from "./slices/draftSessionSlice";
 
 export interface OrdersState {
@@ -119,6 +122,24 @@ interface GridSliceActions {
 	setPositionLayoutDirty: (gridKey: string, dirty: boolean) => void;
 	saveAsDefaultLayout: (gridKey: string, state: GridState) => void;
 	getDefaultLayout: (gridKey: string) => GridState | null;
+}
+
+export interface DraftSessionState {
+	draftSession: DraftSession;
+}
+
+export interface DraftSessionActions {
+	applyCommand: (cmd: DraftCommand) => boolean;
+	undoDraft: () => void;
+	redoDraft: () => void;
+	saveDraft: (mutations: DraftSaveMutations) => Promise<void>;
+	discardDraft: () => void;
+	restoreFromRecovery: (snapshot: DraftRecoverySnapshot) => void;
+	getWorkingRows: (stage: OrderStage) => PendingRow[] | undefined;
+	_captureBaseline: () => void;
+	_deriveWorkingRows: () => Record<OrderStage, PendingRow[]>;
+	_persistRecovery: () => void;
+	_clearRecovery: () => void;
 }
 
 export type StoreState = OrdersState &

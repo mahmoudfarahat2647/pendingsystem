@@ -1,8 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type {
-	QuickTemplate,
-	TemplateCategory,
-} from "@/services/quickTemplatesService";
+import type { QuickTemplate } from "@/services/quickTemplatesService";
 
 const makeMockFetch = (status: number, body: unknown) =>
 	vi.fn().mockResolvedValue({

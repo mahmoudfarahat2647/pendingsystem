@@ -67,6 +67,7 @@ describe("notificationSlice", () => {
 					callRowData: [],
 					archiveRowData: [],
 					notifications: [],
+					// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 				}) as unknown as any,
 		);
 	};
@@ -88,6 +89,7 @@ describe("notificationSlice", () => {
 					callRowData: [],
 					archiveRowData: [],
 					notifications: [],
+					// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 				}) as unknown as any,
 		);
 	};
@@ -210,6 +212,7 @@ describe("notificationSlice", () => {
 			store.getState().removeNotification(notificationId);
 			expect(store.getState().notifications).toHaveLength(0);
 			expect(
+				// biome-ignore lint/style/noNonNullAssertion: managedKey is set just above
 				store.getState().dismissedManagedNotificationKeys[managedKey!],
 			).toBe(true);
 

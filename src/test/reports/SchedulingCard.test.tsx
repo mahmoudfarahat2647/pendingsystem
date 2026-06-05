@@ -30,6 +30,7 @@ vi.mock("../../components/ui/card", () => ({
 }));
 
 vi.mock("../../components/ui/label", () => ({
+	// biome-ignore lint/suspicious/noExplicitAny: Mock component for testing
 	Label: ({ children, htmlFor, ...props }: any) => (
 		<label data-testid="label" htmlFor={htmlFor} {...props}>
 			{children}
@@ -38,6 +39,7 @@ vi.mock("../../components/ui/label", () => ({
 }));
 
 vi.mock("../../components/ui/switch", () => ({
+	// biome-ignore lint/suspicious/noExplicitAny: Mock component for testing
 	Switch: ({ checked, onCheckedChange, disabled, id }: any) => (
 		<input
 			data-testid="switch"
@@ -51,6 +53,7 @@ vi.mock("../../components/ui/switch", () => ({
 }));
 
 vi.mock("../../components/reports/FrequencyPicker", () => ({
+	// biome-ignore lint/suspicious/noExplicitAny: Mock component for testing
 	default: ({ value, onChange, disabled }: any) => (
 		<select
 			data-testid="frequency-picker"
@@ -70,9 +73,11 @@ describe("SchedulingCard", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		vi.mocked(useReportSettingsQuery).mockReturnValue({ data: null } as any);
 		vi.mocked(useUpdateReportSettingsMutation).mockReturnValue({
 			mutate,
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 	});
 
@@ -96,6 +101,7 @@ describe("SchedulingCard", () => {
 				is_enabled: false,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 
 		render(<SchedulingCard isLocked={false} />);
@@ -112,6 +118,7 @@ describe("SchedulingCard", () => {
 				is_enabled: true,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 
 		render(<SchedulingCard isLocked={false} />);
@@ -130,6 +137,7 @@ describe("SchedulingCard", () => {
 				is_enabled: true,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 
 		render(<SchedulingCard isLocked={true} />);

@@ -58,6 +58,7 @@ vi.mock("../../components/ui/card", () => ({
 }));
 
 vi.mock("@/components/ui/button", () => ({
+	// biome-ignore lint/suspicious/noExplicitAny: Mock component for testing
 	Button: ({ children, onClick, disabled, variant, type }: any) => (
 		<button
 			data-testid="send-button"
@@ -87,10 +88,12 @@ describe("ManualActionCard", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		vi.mocked(useReportSettingsQuery).mockReturnValue({ data: null } as any);
 		vi.mocked(useTriggerManualBackupMutation).mockReturnValue({
 			mutateAsync,
 			isPending: false,
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 	});
 
@@ -108,10 +111,12 @@ describe("ManualActionCard", () => {
 				is_enabled: false,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 		vi.mocked(useTriggerManualBackupMutation).mockReturnValue({
 			mutateAsync,
 			isPending: true,
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 
 		render(<ManualActionCard isLocked={false} />);
@@ -128,6 +133,7 @@ describe("ManualActionCard", () => {
 				is_enabled: false,
 				last_sent_at: "2024-01-01T12:00:00Z",
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 
 		render(<ManualActionCard isLocked={false} />);
@@ -145,6 +151,7 @@ describe("ManualActionCard", () => {
 				is_enabled: false,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 		mutateAsync.mockResolvedValue(undefined);
 
@@ -168,6 +175,7 @@ describe("ManualActionCard", () => {
 				is_enabled: false,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 		mutateAsync.mockRejectedValue(new Error("Backup failed"));
 

@@ -19,6 +19,7 @@ describe("reportSettingsSlice", () => {
 				({
 					// biome-ignore lint/suspicious/noExplicitAny: Test-only store setup
 					...createReportSettingsSlice(set, get, store as any),
+					// biome-ignore lint/suspicious/noExplicitAny: Test-only store setup
 				}) as unknown as any,
 		);
 	};

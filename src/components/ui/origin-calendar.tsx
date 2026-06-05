@@ -49,6 +49,7 @@ function Calendar({
 		defaultClassNames,
 	).reduce(
 		(acc, key) => ({
+			// biome-ignore lint/performance/noAccumulatingSpread: small fixed-size classNames object
 			...acc,
 			[key]: classNames?.[key as keyof typeof classNames]
 				? cn(
@@ -61,6 +62,7 @@ function Calendar({
 	);
 
 	const defaultComponents = {
+		// biome-ignore lint/suspicious/noExplicitAny: DayPicker component prop type
 		Chevron: (props: any) => {
 			if (props.orientation === "left") {
 				return (

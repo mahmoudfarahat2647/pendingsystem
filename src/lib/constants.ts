@@ -1,4 +1,4 @@
-import type { OrderStage } from "@/services/orderService";
+import type { OrderStage } from "@/types";
 
 /**
  * Application-wide timing and limit constants.

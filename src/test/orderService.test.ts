@@ -25,7 +25,7 @@ describe("orderService", () => {
 
 	it("should fetch orders for a specific stage", async () => {
 		const mockData = [{ id: "1", stage: "main" }];
-		// biome-ignore lint/suspicious/noExplicitAny: Mocking Supabase client
+		// biome-ignore lint/complexity/noBannedTypes: Test mock typing
 		(supabase.from as unknown as { mockReturnValue: Function }).mockReturnValue(
 			{
 				select: vi.fn().mockReturnThis(),
@@ -56,6 +56,7 @@ describe("orderService", () => {
 			.fn()
 			.mockResolvedValue({ data: mockData, error: null });
 
+		// biome-ignore lint/complexity/noBannedTypes: Test mock typing
 		(supabase.from as unknown as { mockReturnValueOnce: Function })
 			.mockReturnValueOnce({
 				select: vi.fn().mockReturnThis(),
@@ -74,7 +75,7 @@ describe("orderService", () => {
 
 	it("should update order stage", async () => {
 		const mockData = { id: "1", stage: "archive" };
-		// biome-ignore lint/suspicious/noExplicitAny: Mocking Supabase client
+		// biome-ignore lint/complexity/noBannedTypes: Test mock typing
 		(supabase.from as unknown as { mockReturnValue: Function }).mockReturnValue(
 			{
 				update: vi.fn().mockReturnThis(),
@@ -100,6 +101,7 @@ describe("orderService", () => {
 		const firstInsert = vi.fn().mockReturnThis();
 		const secondInsert = vi.fn().mockReturnThis();
 
+		// biome-ignore lint/complexity/noBannedTypes: Test mock typing
 		(supabase.from as unknown as { mockReturnValueOnce: Function })
 			.mockReturnValueOnce({
 				insert: firstInsert,
@@ -159,9 +161,9 @@ describe("orderService", () => {
 
 	it("should delete an order with valid UUID", async () => {
 		const mockId = "123e4567-e89b-42d3-a456-426614174000"; // Valid v4 UUID
-		// biome-ignore lint/suspicious/noExplicitAny: Mocking Supabase client
 		const mockDelete = vi.fn().mockReturnThis();
 		const mockEq = vi.fn().mockResolvedValue({ error: null });
+		// biome-ignore lint/complexity/noBannedTypes: Test mock typing
 		(supabase.from as unknown as { mockReturnValue: Function }).mockReturnValue(
 			{
 				delete: mockDelete,
@@ -286,9 +288,8 @@ describe("orderService", () => {
 					metadata: { partNumber: "PART-A" },
 				},
 			];
-			(
-				supabase.from as unknown as { mockReturnValue: Function }
-			).mockReturnValue({
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
@@ -319,9 +320,8 @@ describe("orderService", () => {
 					metadata: { partNumber: "PART-B" },
 				},
 			];
-			(
-				supabase.from as unknown as { mockReturnValue: Function }
-			).mockReturnValue({
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
@@ -347,9 +347,8 @@ describe("orderService", () => {
 					metadata: { partNumber: "PART-A" },
 				},
 			];
-			(
-				supabase.from as unknown as { mockReturnValue: Function }
-			).mockReturnValue({
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
@@ -374,9 +373,8 @@ describe("orderService", () => {
 					metadata: { partNumber: "PART-A" },
 				},
 			];
-			(
-				supabase.from as unknown as { mockReturnValue: Function }
-			).mockReturnValue({
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
@@ -413,9 +411,8 @@ describe("orderService", () => {
 				error: null,
 			});
 
-			(
-				supabase.from as unknown as { mockReturnValue: Function }
-			).mockReturnValue({
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
 				select: mockSelect,
 				eq: mockEq,
 				maybeSingle: mockMaybeSingle,

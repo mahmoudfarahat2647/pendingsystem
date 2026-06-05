@@ -40,6 +40,7 @@ vi.mock("../../components/ui/card", () => ({
 }));
 
 vi.mock("../../components/ui/input", () => ({
+	// biome-ignore lint/suspicious/noExplicitAny: Mock component for testing
 	Input: ({ value, onChange, onKeyDown, disabled, placeholder, type }: any) => (
 		<input
 			data-testid="email-input"
@@ -54,6 +55,7 @@ vi.mock("../../components/ui/input", () => ({
 }));
 
 vi.mock("../../components/ui/button", () => ({
+	// biome-ignore lint/suspicious/noExplicitAny: Mock component for testing
 	Button: ({ children, onClick, disabled, type }: any) => (
 		<button
 			data-testid="add-button"
@@ -67,6 +69,7 @@ vi.mock("../../components/ui/button", () => ({
 }));
 
 vi.mock("../../components/ui/badge", () => ({
+	// biome-ignore lint/suspicious/noExplicitAny: Mock component for testing
 	Badge: ({ children, className }: any) => (
 		<div data-testid="email-badge" className={className}>
 			{children}
@@ -91,12 +94,15 @@ describe("RecipientsCard", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		vi.mocked(useReportSettingsQuery).mockReturnValue({ data: null } as any);
 		vi.mocked(useAddEmailRecipientMutation).mockReturnValue({
 			mutate: addMutate,
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 		vi.mocked(useRemoveEmailRecipientMutation).mockReturnValue({
 			mutate: removeMutate,
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 	});
 
@@ -115,6 +121,7 @@ describe("RecipientsCard", () => {
 				is_enabled: false,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 
 		render(<RecipientsCard isLocked={false} />);
@@ -131,6 +138,7 @@ describe("RecipientsCard", () => {
 				is_enabled: false,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 
 		render(<RecipientsCard isLocked={false} />);
@@ -149,6 +157,7 @@ describe("RecipientsCard", () => {
 				is_enabled: false,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 
 		render(<RecipientsCard isLocked={false} />);
@@ -166,6 +175,7 @@ describe("RecipientsCard", () => {
 				is_enabled: false,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 
 		render(<RecipientsCard isLocked={false} />);
@@ -185,6 +195,7 @@ describe("RecipientsCard", () => {
 				is_enabled: false,
 				last_sent_at: null,
 			},
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 		} as any);
 
 		render(<RecipientsCard isLocked={false} />);
