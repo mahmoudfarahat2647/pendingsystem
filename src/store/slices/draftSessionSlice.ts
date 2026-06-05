@@ -530,9 +530,9 @@ async function executeCommand(
 		for (const child of nonDeletes) {
 			await executeCommand(child, mutations, idMap);
 		}
-		for (const child of deletes) {
-			await executeCommand(child, mutations, idMap);
-		}
+		await Promise.all(
+			deletes.map((child) => executeCommand(child, mutations, idMap)),
+		);
 		return;
 	}
 
