@@ -2,6 +2,8 @@ import type { PartEntry, PendingRow } from "@/schemas/order.schema";
 
 export type { PartEntry, PendingRow };
 
+export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
+
 export interface DuplicateCheckResult {
 	isDuplicate: boolean;
 	existingRow?: PendingRow;

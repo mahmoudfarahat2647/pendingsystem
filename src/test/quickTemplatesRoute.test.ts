@@ -18,16 +18,16 @@ vi.mock("@/lib/auth", () => ({
 	},
 }));
 
-const mockSelect = vi.fn();
-const mockInsert = vi.fn();
-const mockDelete = vi.fn();
+const _mockSelect = vi.fn();
+const _mockInsert = vi.fn();
+const _mockDelete = vi.fn();
 const mockFrom = vi.fn();
 
 vi.mock("@supabase/supabase-js", () => ({
 	createClient: () => ({ from: mockFrom }),
 }));
 
-function makeRequest(method: string, url: string, body?: unknown) {
+function makeRequest(_method: string, url: string, body?: unknown) {
 	return {
 		headers: new Headers(),
 		url,

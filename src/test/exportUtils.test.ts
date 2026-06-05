@@ -125,6 +125,7 @@ describe("exportUtils", () => {
 	it("should export only Renault rows when Renault is selected", () => {
 		exportAllSystemDataCSV(mockData, "Renault");
 
+		// biome-ignore lint/suspicious/noExplicitAny: Test mock access
 		const mockLink = (document.createElement as any).mock.results[0].value;
 		expect(mockLink.setAttribute).toHaveBeenCalledWith(
 			"download",
@@ -140,6 +141,7 @@ describe("exportUtils", () => {
 	it("should export only Zeekr rows when Zeekr is selected", () => {
 		exportAllSystemDataCSV(mockData, "Zeekr");
 
+		// biome-ignore lint/suspicious/noExplicitAny: Test mock access
 		const mockLink = (document.createElement as any).mock.results[0].value;
 		expect(mockLink.setAttribute).toHaveBeenCalledWith(
 			"download",

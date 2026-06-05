@@ -120,9 +120,9 @@
 
 /* Show column menu button (≡) on header hover for themeQuartz grids */
 .ag-header-cell:hover .ag-header-cell-menu-button {
-	opacity: 1 !important;
-	pointer-events: auto !important;
-	width: auto !important;
+	opacity: 1;
+	pointer-events: auto;
+	width: auto;
 }
 
 /* Show filter icons when enabled */

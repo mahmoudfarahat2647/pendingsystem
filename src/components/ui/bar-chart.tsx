@@ -12,7 +12,6 @@ import {
 	createContext,
 	type Dispatch,
 	isValidElement,
-	type ReactElement,
 	type ReactNode,
 	type RefObject,
 	type SetStateAction,
@@ -532,7 +531,6 @@ export function ChartTooltip({
 		xDataKey,
 		containerRef,
 		orientation,
-		yScale,
 	} = useChart();
 
 	const isHorizontal = orientation === "horizontal";
@@ -962,7 +960,7 @@ function resolveRadius(
 export function Bar({
 	dataKey,
 	fill = chartCssVars.linePrimary,
-	stroke,
+	stroke: _stroke,
 	lineCap = "round",
 	animate = true,
 	animationType = "grow",
@@ -1450,6 +1448,7 @@ function BarChartInner({
 
 		const offsets = new Map<number, Map<string, number>>();
 		for (let i = 0; i < data.length; i++) {
+			// biome-ignore lint/style/noNonNullAssertion: bounds-checked above
 			const d = data[i]!;
 			let cumulative = 0;
 			const barOffsets = new Map<string, number>();
@@ -1491,6 +1490,7 @@ function BarChartInner({
 			let foundIndex = -1;
 
 			for (let i = 0; i < domain.length; i++) {
+				// biome-ignore lint/style/noNonNullAssertion: bounds-checked above
 				const cat = domain[i]!;
 				const bandStart = xScale(cat) ?? 0;
 				const bandEnd = bandStart + bandWidth;
@@ -1510,6 +1510,7 @@ function BarChartInner({
 
 			if (foundIndex >= 0) {
 				setHoveredBarIndex(foundIndex);
+				// biome-ignore lint/style/noNonNullAssertion: bounds-checked above
 				const d = data[foundIndex]!;
 
 				const yPositions: Record<string, number> = {};
@@ -1521,10 +1522,12 @@ function BarChartInner({
 							xPositions[bar.dataKey] =
 								innerWidth - (yScale(value) ?? innerWidth);
 							yPositions[bar.dataKey] =
+								// biome-ignore lint/style/noNonNullAssertion: bounds-checked above
 								(xScale(domain[foundIndex]!) ?? 0) + bandWidth / 2;
 						} else {
 							yPositions[bar.dataKey] = yScale(value) ?? 0;
 							xPositions[bar.dataKey] =
+								// biome-ignore lint/style/noNonNullAssertion: bounds-checked above
 								(xScale(domain[foundIndex]!) ?? 0) + bandWidth / 2;
 						}
 					}
@@ -1532,7 +1535,8 @@ function BarChartInner({
 
 				const tooltipX = isHorizontal
 					? innerWidth - (yScale(Number(d[bars[0]?.dataKey ?? ""] ?? 0)) ?? 0)
-					: (xScale(domain[foundIndex]!) ?? 0) + bandWidth / 2;
+					: // biome-ignore lint/style/noNonNullAssertion: bounds-checked above
+						(xScale(domain[foundIndex]!) ?? 0) + bandWidth / 2;
 
 				setTooltipData({
 					point: d,
@@ -1590,6 +1594,7 @@ function BarChartInner({
 			<svg aria-hidden="true" height={height} width={width}>
 				<rect fill="transparent" height={height} width={width} x={0} y={0} />
 
+				{/* biome-ignore lint/a11y/noStaticElementInteractions: SVG group for chart interaction */}
 				<g
 					onMouseMove={isLoaded ? handleMouseMove : undefined}
 					onMouseLeave={isLoaded ? handleMouseLeave : undefined}
