@@ -6,131 +6,38 @@ import { BeastModeSchema } from "@/schemas/form.schema";
 import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 import { getOrdersQueryAdapter } from "../ordersQueryAdapter";
-import type { CombinedStore } from "../types";
-import { useAppStore } from "../useStore";
+import type {
+	CombinedStore,
+	DraftSessionActions,
+	DraftSessionState,
+} from "../types";
 
 // Constants
 const COMMAND_LIMIT = 30;
 const RECOVERY_STORAGE_KEY = "pending-sys-draft-v1";
 const WORKSPACE_ID_KEY = "pending-sys-workspace-id";
 
-// --- Command Types ---
+export type {
+	AtomicCommand,
+	CreateRowsCommand,
+	DeleteRowsCommand,
+	DraftCommand,
+	DraftRecoverySnapshot,
+	DraftSaveMutations,
+	DraftSession,
+	MoveRowsCommand,
+	PatchRowCommand,
+} from "./draftSessionCommands";
 
-export interface PatchRowCommand {
-	type: "patchRow";
-	id: string;
-	sourceStage: OrderStage;
-	destinationStage: OrderStage;
-	updates: Partial<PendingRow>;
-	previousValues: Partial<PendingRow>;
-}
+import type {
+	AtomicCommand,
+	DraftCommand,
+	DraftRecoverySnapshot,
+	DraftSaveMutations,
+	DraftSession,
+} from "./draftSessionCommands";
 
-export interface CreateRowsCommand {
-	type: "createRows";
-	stage: OrderStage;
-	rows: PendingRow[];
-}
-
-export interface DeleteRowsCommand {
-	type: "deleteRows";
-	ids: string[];
-}
-
-export interface MoveRowsCommand {
-	type: "moveRows";
-	ids: string[];
-	sourceStage: OrderStage;
-	destinationStage: OrderStage;
-	fieldOverrides?: Partial<PendingRow>;
-}
-
-interface CompositeCommand {
-	type: "composite";
-	label: string;
-	children: (
-		| PatchRowCommand
-		| CreateRowsCommand
-		| DeleteRowsCommand
-		| MoveRowsCommand
-	)[];
-}
-
-export type AtomicCommand =
-	| PatchRowCommand
-	| CreateRowsCommand
-	| DeleteRowsCommand
-	| MoveRowsCommand;
-
-export type DraftCommand = AtomicCommand | CompositeCommand;
-
-interface SaveOrderDraftMutationVars {
-	id: string;
-	updates: Partial<PendingRow>;
-	stage: OrderStage;
-	sourceStage?: OrderStage;
-	idempotencyKey?: string;
-}
-
-interface BulkUpdateStageDraftMutationVars {
-	ids: string[];
-	stage: OrderStage;
-	silentErrorToast?: boolean;
-}
-
-export interface DraftSaveMutations {
-	saveOrder: (vars: SaveOrderDraftMutationVars) => Promise<unknown>;
-	bulkUpdateStage: (vars: BulkUpdateStageDraftMutationVars) => Promise<unknown>;
-	bulkDelete: (ids: string[]) => Promise<unknown>;
-}
-
-// --- Session State ---
-
-export interface DraftSession {
-	isActive: boolean;
-	baselineByStage: Record<OrderStage, PendingRow[]>;
-	derivedRowsRevision: number;
-	pendingCommands: DraftCommand[];
-	past: DraftCommand[];
-	future: DraftCommand[];
-	dirty: boolean;
-	saving: boolean;
-	saveError: string | null;
-	touchedStages: Set<OrderStage>;
-	lastTouchedAt: number | null;
-	workspaceId: string;
-	saveCheckpoint: {
-		nextIndex: number;
-		idMapEntries: [string, string][];
-	} | null;
-}
-
-// --- Recovery Snapshot ---
-
-export interface DraftRecoverySnapshot {
-	workspaceId: string;
-	updatedAt: number;
-	pendingCommands: DraftCommand[];
-}
-
-// --- Slice Interface ---
-
-export interface DraftSessionState {
-	draftSession: DraftSession;
-}
-
-export interface DraftSessionActions {
-	applyCommand: (cmd: DraftCommand) => boolean;
-	undoDraft: () => void;
-	redoDraft: () => void;
-	saveDraft: (mutations: DraftSaveMutations) => Promise<void>;
-	discardDraft: () => void;
-	restoreFromRecovery: (snapshot: DraftRecoverySnapshot) => void;
-	getWorkingRows: (stage: OrderStage) => PendingRow[] | undefined;
-	_captureBaseline: () => void;
-	_deriveWorkingRows: () => Record<OrderStage, PendingRow[]>;
-	_persistRecovery: () => void;
-	_clearRecovery: () => void;
-}
+export type { DraftSessionActions, DraftSessionState } from "../types";
 
 // --- Helpers ---
 
@@ -354,8 +261,7 @@ export const createDraftSessionSlice: StateCreator<
 					// Run Beast Mode validation
 					const result = BeastModeSchema.safeParse(row);
 					if (!result.success) {
-						const uiSlice = useAppStore.getState();
-						uiSlice.triggerBeastMode(row.id, Date.now());
+						get().triggerBeastMode(row.id, Date.now());
 						toast.error(
 							`Missing required fields for: ${row.trackingId || row.id}`,
 						);
