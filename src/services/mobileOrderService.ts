@@ -93,33 +93,42 @@ export const mobileOrderService = {
 		await mergeAppSettings(supabase, model, repairSystem);
 		const errors: string[] = [];
 
-		for (const part of rowsToInsert) {
-			const partId = crypto.randomUUID();
-			const partEntry = {
-				id: partId,
-				partNumber: part.partNumber,
-				description: part.description,
-			};
-			const row = {
-				...sharedIdentity,
-				stage: "orders",
-				metadata: {
-					...sharedMetadata,
-					parts: [partEntry],
+		const results = await Promise.allSettled(
+			rowsToInsert.map((part) => {
+				const partId = crypto.randomUUID();
+				const partEntry = {
+					id: partId,
 					partNumber: part.partNumber,
 					description: part.description,
-				},
-			};
+				};
+				const row = {
+					...sharedIdentity,
+					stage: "orders",
+					metadata: {
+						...sharedMetadata,
+						parts: [partEntry],
+						partNumber: part.partNumber,
+						description: part.description,
+					},
+				};
+				return supabase.from("orders").insert([row]).select().single();
+			}),
+		);
 
-			const { error } = await supabase
-				.from("orders")
-				.insert([row])
-				.select()
-				.single();
-
-			if (error) {
-				logger.error("[mobile-order] insert error:", error.message);
-				errors.push(error.message);
+		for (const result of results) {
+			if (result.status === "fulfilled" && result.value.error) {
+				logger.error(
+					"[mobile-order] insert error:",
+					result.value.error.message,
+				);
+				errors.push(result.value.error.message);
+			} else if (result.status === "rejected") {
+				const msg =
+					result.reason instanceof Error
+						? result.reason.message
+						: String(result.reason);
+				logger.error("[mobile-order] insert error:", msg);
+				errors.push(msg);
 			}
 		}
 
