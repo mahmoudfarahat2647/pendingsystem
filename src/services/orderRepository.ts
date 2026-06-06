@@ -7,6 +7,7 @@ import { supabase as supabaseDefault } from "@/lib/supabase";
 import type {
 	DescriptionConflictResult,
 	DuplicateCheckResult,
+	OrderStage,
 	PendingRow,
 } from "@/types";
 import { mapSupabaseOrder } from "./orderMapper";
@@ -15,8 +16,6 @@ import {
 	isMissingAttachmentColumnError,
 	ServiceError,
 } from "./orderServiceErrors";
-
-export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
 
 const ORDERS_SELECT_BASE = `
 	id,

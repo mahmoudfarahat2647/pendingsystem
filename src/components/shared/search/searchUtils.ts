@@ -1,7 +1,7 @@
 import type { PendingRow } from "@/types";
 
 // Global search corpus. Keep in sync with PendingRow.
-export const SEARCH_FIELDS: (keyof PendingRow)[] = [
+const SEARCH_FIELDS: (keyof PendingRow)[] = [
 	"sourceType",
 	"vin",
 	"customerName",
