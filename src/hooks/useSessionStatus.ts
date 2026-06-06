@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
-export type SessionStatus = "active" | "expiringSoon" | "expired" | "absent";
+type SessionStatus = "active" | "expiringSoon" | "expired" | "absent";
 
 interface SessionStatusResult {
 	status: SessionStatus;

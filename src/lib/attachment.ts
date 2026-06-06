@@ -1,7 +1,7 @@
 import { env } from "./env";
 
 type AttachmentKind = "image-pdf" | "link";
-export interface AttachmentValue {
+interface AttachmentValue {
 	attachmentLink?: string;
 	attachmentFilePath?: string;
 	attachmentFilePaths?: string[];

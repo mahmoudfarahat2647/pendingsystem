@@ -6,7 +6,7 @@ import {
 	type TemplateCategory,
 } from "@/services/quickTemplatesService";
 
-export function quickTemplatesQueryKey(category: TemplateCategory) {
+function quickTemplatesQueryKey(category: TemplateCategory) {
 	return ["quickTemplates", category] as const;
 }
 
