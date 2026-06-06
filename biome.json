@@ -70,6 +70,12 @@
 	},
 	"overrides": [
 		{
+			"includes": ["package-lock.json"],
+			"linter": { "enabled": false },
+			"formatter": { "enabled": false },
+			"assist": { "enabled": false }
+		},
+		{
 			"includes": ["src/domain/**"],
 			"linter": {
 				"rules": {
