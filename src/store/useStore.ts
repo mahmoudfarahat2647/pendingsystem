@@ -49,6 +49,7 @@ export const useAppStore = create<CombinedStore>()(
 				partStatuses: state.partStatuses,
 				bookingStatuses: state.bookingStatuses,
 				isLocked: state.isLocked,
+				gridEditPermission: state.gridEditPermission,
 				notes: state.notes,
 				gridStates: state.gridStates,
 				defaultLayouts: state.defaultLayouts,

@@ -77,6 +77,7 @@ export default function MainSheetPage() {
 	}, [rowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
+	const gridEditPermission = useAppStore((s) => s.gridEditPermission);
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
@@ -377,50 +378,24 @@ export default function MainSheetPage() {
 								onSelectionChange={setSelectedRows}
 								onCellValueChanged={async (params) => {
 									if (
-										params.colDef.field === "status" &&
-										params.newValue !== params.oldValue
-									) {
-										const newStatus = params.newValue;
-										const vin = params.data.vin;
-
-										// 1. Persist the change to Supabase
-										await handleUpdateOrder(params.data.id, {
-											status: newStatus,
-										});
-
-										// 2. Check for auto-move to Call List
-										const vinIds = getVinAutoMoveIds({
-											stage: "main",
-											stageRows: effectiveRowData,
-											editedRowId: params.data.id,
-											editedVin: vin,
-											nextStatus: newStatus,
-										});
-
-										if (vinIds.length > 0) {
-											applyCommand({
-												type: "moveRows",
-												ids: vinIds,
-												sourceStage: "main",
-												destinationStage: "call",
-											});
-											toast.success(
-												`All parts for VIN ${vin} arrived! Moved to Call List.`,
-												{
-													duration: 5000,
-												},
-											);
-										}
-									} else if (
 										params.colDef.field === "rDate" &&
 										params.newValue !== params.oldValue
 									) {
 										const v = params.newValue as string;
 										if (!v?.trim() || Number.isNaN(Date.parse(v))) return;
 										await handleUpdateOrder(params.data.id, { rDate: v });
+									} else if (
+										params.colDef.field &&
+										params.colDef.field !== "rDate" &&
+										params.colDef.field !== "status" &&
+										params.newValue !== params.oldValue
+									) {
+										await handleUpdateOrder(params.data.id, {
+											[params.colDef.field]: params.newValue,
+										});
 									}
 								}}
-								readOnly={isSheetLocked || draftSaving}
+								readOnly={!gridEditPermission || isSheetLocked || draftSaving}
 								onGridReady={(api) => setGridApi(api)}
 								showFloatingFilters={showFilters}
 								enablePagination={true}

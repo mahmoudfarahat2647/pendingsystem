@@ -90,6 +90,7 @@ export default function CallListPage() {
 	}, [callRowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
+	const gridEditPermission = useAppStore((s) => s.gridEditPermission);
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -452,7 +453,7 @@ export default function CallListPage() {
 					columnDefs={columns}
 					gridStateKey="call-list"
 					stage="call"
-					readOnly={draftSaving}
+					readOnly={!gridEditPermission || draftSaving}
 					onSelectionChange={setSelectedRows}
 					onCellValueChanged={async (params) => {
 						if (
@@ -462,6 +463,15 @@ export default function CallListPage() {
 							const v = params.newValue as string;
 							if (!v?.trim() || Number.isNaN(Date.parse(v))) return;
 							await handleUpdateOrder(params.data.id, { rDate: v });
+						} else if (
+							params.colDef.field &&
+							params.colDef.field !== "rDate" &&
+							params.colDef.field !== "status" &&
+							params.newValue !== params.oldValue
+						) {
+							await handleUpdateOrder(params.data.id, {
+								[params.colDef.field]: params.newValue,
+							});
 						}
 					}}
 					onGridReady={(api) => setGridApi(api)}

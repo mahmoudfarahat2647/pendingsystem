@@ -79,6 +79,7 @@ export interface UIState {
 	partStatuses: PartStatusDef[];
 	bookingStatuses: PartStatusDef[];
 	isLocked: boolean;
+	gridEditPermission: boolean;
 	beastModeTriggers: Record<string, number>;
 	currentEditVin: string | null;
 	currentEditId: string | null;
@@ -98,6 +99,7 @@ export interface UIActions {
 	updatePartStatusDef: (id: string, updates: Partial<PartStatusDef>) => void;
 	removePartStatusDef: (id: string) => void;
 	setIsLocked: (isLocked: boolean) => void;
+	setGridEditPermission: (value: boolean) => void;
 	triggerBeastMode: (id: string, timestamp: number) => void;
 	clearBeastMode: (id: string) => void;
 	setCurrentEditVin: (vin: string | null, editId: string | null) => void;
