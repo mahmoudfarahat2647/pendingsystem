@@ -95,6 +95,7 @@ export default function BookingPage() {
 	}, [bookingRowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
+	const gridEditPermission = useAppStore((s) => s.gridEditPermission);
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
@@ -456,7 +457,7 @@ export default function BookingPage() {
 					columnDefs={columns}
 					gridStateKey="booking"
 					stage="booking"
-					readOnly={draftSaving}
+					readOnly={!gridEditPermission || draftSaving}
 					onSelectionChange={setSelectedRows}
 					onCellValueChanged={async (params) => {
 						if (
@@ -466,6 +467,15 @@ export default function BookingPage() {
 							const v = params.newValue as string;
 							if (!v?.trim() || Number.isNaN(Date.parse(v))) return;
 							await handleUpdateOrder(params.data.id, { rDate: v });
+						} else if (
+							params.colDef.field &&
+							params.colDef.field !== "rDate" &&
+							params.colDef.field !== "status" &&
+							params.newValue !== params.oldValue
+						) {
+							await handleUpdateOrder(params.data.id, {
+								[params.colDef.field]: params.newValue,
+							});
 						}
 					}}
 					onGridReady={(api) => setGridApi(api)}

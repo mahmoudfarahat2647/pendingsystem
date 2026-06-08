@@ -3,6 +3,7 @@
 import {
 	Lock,
 	Palette,
+	PencilLine,
 	Settings as SettingsIcon,
 	Shield,
 	Tag,
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import BackupReportsTab from "../reports/BackupReportsTab";
 import { PartStatusTab } from "./settings/PartStatusTab";
+import { PermissionTab } from "./settings/PermissionTab";
 import { ThemeTab } from "./settings/ThemeTab";
 
 interface SettingsModalProps {
@@ -23,7 +25,11 @@ interface SettingsModalProps {
 	onOpenChange: (open: boolean) => void;
 }
 
-type TabType = "part-statuses" | "theme-color" | "backup-reports";
+type TabType =
+	| "part-statuses"
+	| "theme-color"
+	| "backup-reports"
+	| "permission";
 
 // Client-side only settings password (defaults to env var or falls back for development)
 const _getSettingsPassword = (): string | undefined => {
@@ -48,6 +54,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 		{ id: "theme-color", label: "Theme Color", icon: Palette },
 
 		{ id: "backup-reports", label: "Backup & Reports", icon: Shield },
+		{ id: "permission", label: "Permission", icon: PencilLine },
 	];
 
 	const handleUnlock = (attempt: string) => {
@@ -201,6 +208,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 								{activeTab === "theme-color" && "System Appearance"}
 
 								{activeTab === "backup-reports" && "Backup & Reports Settings"}
+								{activeTab === "permission" && "Grid Edit Permission"}
 							</h3>
 							<p className="text-xs text-gray-400">
 								{activeTab === "part-statuses" &&
@@ -210,6 +218,8 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 								{activeTab === "backup-reports" &&
 									"Configure automated reports and manage data backups."}
+								{activeTab === "permission" &&
+									"Control whether grid cells can be edited directly on non-Orders stages."}
 							</p>
 						</div>
 					</header>
@@ -223,6 +233,10 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 						{activeTab === "backup-reports" && (
 							<BackupReportsTab isLocked={isLocked} />
+						)}
+
+						{activeTab === "permission" && (
+							<PermissionTab isLocked={isLocked} />
 						)}
 					</div>
 				</div>
