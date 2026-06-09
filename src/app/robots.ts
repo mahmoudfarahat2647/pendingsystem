@@ -14,7 +14,6 @@ export default function robots(): MetadataRoute.Robots {
 					"/booking",
 					"/archive",
 					"/api/",
-					"/draft-session-test",
 					"/mobile-order",
 				],
 			},
