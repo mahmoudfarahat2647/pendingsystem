@@ -185,6 +185,32 @@ export function createOrderRepository(
 			// Ensure we don't store id, stage, or reminder in the metadata JSON itself
 			// to avoid confusion, though it wouldn't cause a schema error.
 			const metadataBase = { ...currentMetadata, ...rest };
+
+			if ("partNumber" in rest || "description" in rest || "quantity" in rest) {
+				const existingParts: unknown[] = Array.isArray(metadataBase.parts)
+					? (metadataBase.parts as unknown[])
+					: [];
+				const firstPart = existingParts[0] as
+					| Record<string, unknown>
+					| undefined;
+				const seed = firstPart ?? {
+					id: crypto.randomUUID(),
+					partNumber: (currentMetadata.partNumber as string) ?? "",
+					description: (currentMetadata.description as string) ?? "",
+					quantity: (currentMetadata.quantity as number) ?? 1,
+				};
+				const updatedFirst = {
+					...seed,
+					...("partNumber" in rest ? { partNumber: rest.partNumber } : {}),
+					...("description" in rest ? { description: rest.description } : {}),
+					...("quantity" in rest ? { quantity: rest.quantity } : {}),
+				};
+				(metadataBase as Record<string, unknown>).parts =
+					existingParts.length > 0
+						? [updatedFirst, ...existingParts.slice(1)]
+						: [updatedFirst];
+			}
+
 			delete (metadataBase as Record<string, unknown>).id;
 			delete (metadataBase as Record<string, unknown>).stage;
 			delete (metadataBase as Record<string, unknown>).reminder;
@@ -205,19 +231,23 @@ export function createOrderRepository(
 			const fallbackMetadataToStore = { ...metadataBase };
 
 			// 2. Map strictly to table columns to avoid "column not found" errors
-			const baseSupabaseOrder = {
-				order_number:
+			// Only include columns that are present in the patch so a single-field
+			// inline edit cannot overwrite unrelated columns (e.g. order_number → null).
+			const baseSupabaseOrder: Record<string, unknown> = { stage };
+			if ("trackingId" in rest || "order_number" in rest)
+				baseSupabaseOrder.order_number =
 					rest.trackingId ||
 					(rest as Record<string, unknown>).order_number ||
-					null,
-				customer_name:
-					rest.customerName || (rest as Record<string, unknown>).customer_name,
-				customer_phone:
-					rest.mobile || (rest as Record<string, unknown>).customer_phone,
-				vin: rest.vin,
-				company: normalizeNullableCompanyName(rest.company),
-				stage: stage,
-			};
+					null;
+			if ("customerName" in rest || "customer_name" in rest)
+				baseSupabaseOrder.customer_name =
+					rest.customerName || (rest as Record<string, unknown>).customer_name;
+			if ("mobile" in rest || "customer_phone" in rest)
+				baseSupabaseOrder.customer_phone =
+					rest.mobile || (rest as Record<string, unknown>).customer_phone;
+			if ("vin" in rest) baseSupabaseOrder.vin = rest.vin;
+			if ("company" in rest)
+				baseSupabaseOrder.company = normalizeNullableCompanyName(rest.company);
 
 			const dbOrder = {
 				...baseSupabaseOrder,
