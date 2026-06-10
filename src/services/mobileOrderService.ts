@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { normalizeNullableCompanyName } from "@/lib/company";
+import { normalizeNullableCompanyName } from "@/domain/company/company";
 import { logger } from "@/lib/logger";
 import type { MobileQuickOrderPayload } from "@/schemas/mobileOrder.schema";
 

@@ -1,5 +1,5 @@
 import type { ICellRendererParams } from "ag-grid-community";
-import { normalizeCompanyName } from "@/lib/company";
+import { normalizeCompanyName } from "@/domain/company/company";
 import type { PendingRow } from "@/types";
 
 export const CompanyLogoRenderer = (

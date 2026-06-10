@@ -1,5 +1,4 @@
-// biome-ignore lint/style/noRestrictedImports: type-only seam — OrderStage pending re-home to @/types
-import type { OrderStage } from "@/services/orderService";
+import type { OrderStage } from "@/domain/order/orderStage";
 
 const STAGE_ALIASES: Record<string, OrderStage> = {
 	archive: "archive",

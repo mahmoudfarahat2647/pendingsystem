@@ -1,10 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export {
-	normalizeMileage,
-	normalizeMileageAsNumber,
-} from "@/domain/order/mileage";
+export { normalizeMileage } from "@/domain/order/mileage";
 export { detectModelFromVin } from "@/domain/order/vin";
 export {
 	calculateEndWarranty,

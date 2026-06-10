@@ -13,15 +13,16 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import {
+	ALLOWED_COMPANIES,
+	type AllowedCompany,
+} from "@/domain/order/constants";
+import type { OrderStage } from "@/domain/order/orderStage";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useWarrantyExpiryMaintenance } from "@/hooks/useWarrantyExpiryMaintenance";
 import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 import { exportAllSystemDataCSV } from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
-import {
-	ALLOWED_COMPANIES,
-	type AllowedCompany,
-} from "@/lib/ordersValidationConstants";
 import {
 	getOrdersByStageFromCache,
 	getOrdersQueryKey,
@@ -29,7 +30,6 @@ import {
 	queryClient,
 } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
-import type { OrderStage } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import {

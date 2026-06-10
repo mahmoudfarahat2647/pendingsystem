@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+	appendTaggedUserNote,
+	getEffectiveNoteHistory,
+} from "@/domain/order/orderWorkflow";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import {
 	buildBookingCommands,
@@ -6,10 +10,6 @@ import {
 	buildReorderCommands,
 	buildSendToArchiveCommands,
 } from "@/lib/orderStageTransitions";
-import {
-	appendTaggedUserNote,
-	getEffectiveNoteHistory,
-} from "@/lib/orderWorkflow";
 import type { PendingRow } from "@/types";
 
 const createMockRow = (overrides: Partial<PendingRow> = {}): PendingRow => ({

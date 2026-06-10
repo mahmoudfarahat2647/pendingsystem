@@ -44,6 +44,10 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+	filterReservedRows,
+	getSelectedIds,
+} from "@/domain/order/orderWorkflow";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useDraftSession } from "@/hooks/useDraftSession";
@@ -59,7 +63,6 @@ import {
 	buildReorderCommands,
 	buildSendToArchiveCommands,
 } from "@/lib/orderStageTransitions";
-import { filterReservedRows, getSelectedIds } from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";

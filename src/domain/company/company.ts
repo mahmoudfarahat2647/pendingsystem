@@ -1,7 +1,4 @@
-// biome-ignore lint/style/noRestrictedImports: pre-existing debt — domain using lib logger
-import { logger } from "@/lib/logger";
-// biome-ignore lint/style/noRestrictedImports: pre-existing debt — domain using lib constants
-import { ALLOWED_COMPANIES } from "@/lib/ordersValidationConstants";
+import { ALLOWED_COMPANIES } from "@/domain/order/constants";
 
 /**
  * Normalizes a given company name input into a canonical string format.
@@ -25,11 +22,6 @@ export const normalizeCompanyName = (value: unknown): string => {
 		normalized === "r" ||
 		normalized === "pendingsystem"
 	) {
-		if (normalized === "r") {
-			logger.warn(
-				'Short company alias "r" was matched to "Renault". Monitor for unintended collisions.',
-			);
-		}
 		return "Renault";
 	}
 

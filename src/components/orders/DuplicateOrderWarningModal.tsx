@@ -7,7 +7,7 @@ import {
 	DialogFooter,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { getStageDisplayName } from "@/lib/orderWorkflow";
+import { getStageDisplayName } from "@/domain/order/orderWorkflow";
 
 interface DuplicateOrderWarningModalProps {
 	open: boolean;

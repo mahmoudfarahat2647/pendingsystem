@@ -1,17 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
-import { logger } from "@/lib/logger";
-import { ValidationMode } from "@/lib/ordersValidationConstants";
+import { ValidationMode } from "@/domain/order/constants";
 import {
 	checkDescriptionConflict,
 	checkVinPartDuplicate,
 	findSameOrderDuplicateIndices,
 	shouldSkipDuplicateCheck,
-} from "@/lib/orderWorkflow";
+} from "@/domain/order/orderWorkflow";
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
+import { logger } from "@/lib/logger";
 import { BeastModeSchema, OrderFormSchema } from "@/schemas/form.schema";
-import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
-import type { PartEntry, PendingRow } from "@/types";
+import type { DuplicateCheckResult, PartEntry, PendingRow } from "@/types";
 import type { FormData } from "../../types";
 
 interface UseOrderValidationProps {
@@ -19,6 +18,11 @@ interface UseOrderValidationProps {
 	parts: PartEntry[];
 	isEditMode: boolean;
 	selectedRows: PendingRow[];
+	checkHistoricalDuplicate: (
+		vin: string,
+		partNumber: string,
+		excludeIds?: string | string[],
+	) => Promise<DuplicateCheckResult>;
 }
 
 export function useOrderValidation({
@@ -26,6 +30,7 @@ export function useOrderValidation({
 	parts,
 	isEditMode,
 	selectedRows: _selectedRows,
+	checkHistoricalDuplicate,
 }: UseOrderValidationProps) {
 	// React Query hooks for live stage data (replaces stale Zustand row arrays)
 	const { data: ordersData } = useOrdersQuery("orders");
@@ -135,7 +140,7 @@ export function useOrderValidation({
 
 		try {
 			setIsCheckingDuplicates(true);
-			const result = await orderService.checkHistoricalVinPartDuplicate(
+			const result = await checkHistoricalDuplicate(
 				vin,
 				partNumber,
 				isEditMode ? rowId : undefined,

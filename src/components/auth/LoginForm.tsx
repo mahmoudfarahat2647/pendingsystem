@@ -22,9 +22,11 @@ export function LoginForm({ expired }: LoginFormProps) {
 	useEffect(() => {
 		if (!("customElements" in window)) return;
 
-		void import("ldrs").then(({ mirage }) => {
-			mirage.register();
-		});
+		void import("ldrs")
+			.then(({ mirage }) => {
+				mirage.register();
+			})
+			.catch(() => {});
 	}, []);
 
 	const {

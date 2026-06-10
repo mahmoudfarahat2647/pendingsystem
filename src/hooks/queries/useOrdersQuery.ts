@@ -1,6 +1,7 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import type { OrderStage } from "@/domain/order/orderStage";
 import { OrderMappingError } from "@/lib/errors";
-import { type OrderStage, orderService } from "@/services/orderService";
+import { orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 
 export function useOrdersQuery(

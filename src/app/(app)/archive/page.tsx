@@ -46,6 +46,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getSelectedIds } from "@/domain/order/orderWorkflow";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useDraftSession } from "@/hooks/useDraftSession";
@@ -57,7 +58,6 @@ import {
 	buildReorderCommands,
 	buildSendToArchiveCommands,
 } from "@/lib/orderStageTransitions";
-import { getSelectedIds } from "@/lib/orderWorkflow";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";

@@ -53,3 +53,33 @@ export interface PartStatusDef {
 
 export type BookingStatus = PartStatusDef;
 export type PartStatus = PartStatusDef;
+
+/** Response shape returned by GET /api/storage-stats. */
+export interface StorageStatsResponse {
+	dbUsedBytes: number | null;
+	dbLimitBytes: number;
+	dbAvailable: boolean;
+	storageUsedBytes: number;
+	storageLimitBytes: number;
+	storageAvailable: boolean;
+	combinedUsedBytes: number | null;
+	combinedLimitBytes: number;
+	dataComplete: boolean;
+}
+
+export interface ReportSettings {
+	id: string;
+	emails: string[];
+	frequency: string;
+	is_enabled: boolean;
+	last_sent_at: string | null;
+}
+
+export interface PatchRowCommand {
+	type: "patchRow";
+	id: string;
+	sourceStage: OrderStage;
+	destinationStage: OrderStage;
+	updates: Partial<PendingRow>;
+	previousValues: Partial<PendingRow>;
+}

@@ -4,6 +4,14 @@ import type { GridApi } from "ag-grid-community";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { FormData } from "@/components/orders/form";
+import { normalizeMileageAsNumber } from "@/domain/order/mileage";
+import {
+	appendTaggedUserNote,
+	filterReservedRows,
+	getEffectiveNoteHistory,
+	getSelectedIds,
+	getVinAutoMoveIds,
+} from "@/domain/order/orderWorkflow";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
@@ -11,19 +19,8 @@ import { hasAttachment } from "@/lib/attachment";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
 import { buildSendToArchiveCommands } from "@/lib/orderStageTransitions";
-import {
-	appendTaggedUserNote,
-	filterReservedRows,
-	getEffectiveNoteHistory,
-	getSelectedIds,
-	getVinAutoMoveIds,
-} from "@/lib/orderWorkflow";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
-import {
-	calculateEndWarranty,
-	calculateRemainingTime,
-	normalizeMileageAsNumber,
-} from "@/lib/utils";
+import { calculateEndWarranty, calculateRemainingTime } from "@/lib/utils";
 import type {
 	AtomicCommand,
 	DraftCommand,

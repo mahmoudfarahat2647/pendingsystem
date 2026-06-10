@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SimpleDatePicker } from "@/components/ui/simple-date-picker";
 import { Textarea } from "@/components/ui/textarea";
+import { ALLOWED_COMPANIES } from "@/domain/order/constants";
 import { useUpdateAppSettingsMutation } from "@/hooks/mutations/useUpdateAppSettingsMutation";
 import { useAppSettingsQuery } from "@/hooks/queries/useAppSettingsQuery";
-import { ALLOWED_COMPANIES } from "@/lib/ordersValidationConstants";
 import { cn, normalizeMileage } from "@/lib/utils";
 import type { FormData } from "./types";
 

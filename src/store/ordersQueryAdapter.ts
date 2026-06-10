@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
+import type { OrderStage } from "@/domain/order/orderStage";
 import { logger } from "@/lib/logger";
 import { getOrdersQueryKey } from "@/lib/queryClient";
-import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 
 /**

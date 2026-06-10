@@ -16,6 +16,13 @@ import {
 	buildGlobalSearchString,
 	getMissingPartRows,
 } from "@/components/shared/search/searchUtils";
+import type { OrderStage } from "@/domain/order/orderStage";
+import {
+	appendTaggedUserNote,
+	filterReservedRows,
+	getEffectiveNoteHistory,
+	getVinAutoMoveIds,
+} from "@/domain/order/orderWorkflow";
 import { useBulkDeleteOrdersMutation } from "@/hooks/queries/useBulkDeleteOrdersMutation";
 import { useBulkUpdateOrderStageMutation } from "@/hooks/queries/useBulkUpdateOrderStageMutation";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
@@ -24,14 +31,7 @@ import { useRowModals } from "@/hooks/useRowModals";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
 import { normalizeOrderStage } from "@/lib/orderStage";
-import {
-	appendTaggedUserNote,
-	filterReservedRows,
-	getEffectiveNoteHistory,
-	getVinAutoMoveIds,
-} from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
-import type { OrderStage } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 

@@ -1,7 +1,7 @@
 import type { GridApi } from "ag-grid-community";
 import { useCallback } from "react";
+import { hasMixedVinSelection } from "@/domain/order/orderWorkflow";
 import { trySelectRowsByVin } from "@/lib/ag-grid-helpers";
-import { hasMixedVinSelection } from "@/lib/orderWorkflow";
 import type { PendingRow } from "@/types";
 
 export function useSelectAllByVin(

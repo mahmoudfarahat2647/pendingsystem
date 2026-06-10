@@ -3,8 +3,8 @@ import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Header } from "@/components/shared/Header";
 import { shouldRunNotificationCheck } from "@/components/shared/headerNotificationPolling";
+import type { OrderStage } from "@/domain/order/orderStage";
 import { getOrdersQueryKey, queryClient } from "@/lib/queryClient";
-import type { OrderStage } from "@/services/orderService";
 
 const navigationMocks = vi.hoisted(() => ({
 	pathname: "/orders",

@@ -1,9 +1,8 @@
-import { toast } from "sonner";
 import type { StateCreator } from "zustand";
+import type { OrderStage } from "@/domain/order/orderStage";
 import { hasAttachment } from "@/lib/attachment";
 import { ORDER_STAGES } from "@/lib/constants";
 import { BeastModeSchema } from "@/schemas/form.schema";
-import type { OrderStage } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 import { getOrdersQueryAdapter } from "../ordersQueryAdapter";
 import type {
@@ -26,7 +25,6 @@ export type {
 	DraftSaveMutations,
 	DraftSession,
 	MoveRowsCommand,
-	PatchRowCommand,
 } from "./draftSessionCommands";
 
 import type {
@@ -105,6 +103,8 @@ export const createDraftSessionSlice: StateCreator<
 
 	return {
 		draftSession: initialSession,
+		lastSaveResult: null,
+		lastCommandError: null,
 
 		_captureBaseline: () => {
 			const baseline: Record<OrderStage, PendingRow[]> = {} as Record<
@@ -262,22 +262,24 @@ export const createDraftSessionSlice: StateCreator<
 					const result = BeastModeSchema.safeParse(row);
 					if (!result.success) {
 						get().triggerBeastMode(row.id, Date.now());
-						toast.error(
-							`Missing required fields for: ${row.trackingId || row.id}`,
-						);
+						set(() => ({
+							lastCommandError: `Missing required fields for: ${row.trackingId || row.id}`,
+						}));
 						return false;
 					}
 
 					// Also validate partNumber, description, attachment
 					if (!row.partNumber || !row.description) {
-						toast.error(
-							`Part number and description required for: ${row.trackingId || row.id}`,
-						);
+						set(() => ({
+							lastCommandError: `Part number and description required for: ${row.trackingId || row.id}`,
+						}));
 						return false;
 					}
 
 					if (!hasAttachment(row)) {
-						toast.error(`Attachment required for: ${row.trackingId || row.id}`);
+						set(() => ({
+							lastCommandError: `Attachment required for: ${row.trackingId || row.id}`,
+						}));
 						return false;
 					}
 				}
@@ -453,6 +455,14 @@ export const createDraftSessionSlice: StateCreator<
 				return getOrdersQueryAdapter().getStageRows(stage);
 			}
 			return get()._deriveWorkingRows()[stage];
+		},
+
+		clearSaveResult: () => {
+			set(() => ({ lastSaveResult: null }));
+		},
+
+		clearCommandError: () => {
+			set(() => ({ lastCommandError: null }));
 		},
 	};
 };

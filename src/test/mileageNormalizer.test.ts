@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { normalizeMileage, normalizeMileageAsNumber } from "@/lib/utils";
+import {
+	normalizeMileage,
+	normalizeMileageAsNumber,
+} from "@/domain/order/mileage";
 
 describe("normalizeMileage", () => {
 	describe("returns empty string for null/undefined/empty", () => {

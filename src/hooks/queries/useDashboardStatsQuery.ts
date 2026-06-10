@@ -1,5 +1,6 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
-import { type OrderStage, orderService } from "@/services/orderService";
+import type { OrderStage } from "@/domain/order/orderStage";
+import { orderService } from "@/services/orderService";
 
 interface DashboardStatRow {
 	id: string;

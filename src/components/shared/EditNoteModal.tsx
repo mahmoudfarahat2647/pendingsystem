@@ -24,12 +24,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { appendTaggedUserNote } from "@/domain/order/orderWorkflow";
 import {
 	useAddQuickTemplateMutation,
 	useQuickTemplatesQuery,
 	useRemoveQuickTemplateMutation,
 } from "@/hooks/queries/useQuickTemplatesQuery";
-import { appendTaggedUserNote } from "@/lib/orderWorkflow";
 
 interface EditNoteModalProps {
 	open: boolean;

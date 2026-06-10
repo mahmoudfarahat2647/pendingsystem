@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { StorageStatsResponse } from "@/app/api/storage-stats/route";
+import type { StorageStatsResponse } from "@/types";
 
 /**
  * Fetches Supabase storage and database usage statistics via React Query.

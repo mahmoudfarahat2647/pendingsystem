@@ -1,28 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { logger } from "@/lib/logger";
-import { pool } from "@/lib/postgres";
+import {
+	checkAndApplyRateLimit,
+	sendPasswordResetIfUserExists,
+} from "@/services/passwordResetService";
 
 export const runtime = "nodejs";
-
-// Simple in-memory rate limiter: ip -> [timestamp, ...]
-const rateLimitMap = new Map<string, number[]>();
-const RATE_LIMIT_MAX = 3;
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-
-function isRateLimited(ip: string): boolean {
-	const now = Date.now();
-	const timestamps = rateLimitMap.get(ip) ?? [];
-	// Remove timestamps outside the window
-	const recent = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
-	rateLimitMap.set(ip, recent);
-	if (recent.length >= RATE_LIMIT_MAX) {
-		return true;
-	}
-	recent.push(now);
-	rateLimitMap.set(ip, recent);
-	return false;
-}
 
 const GENERIC_RESPONSE = {
 	success: true,
@@ -32,13 +14,6 @@ const GENERIC_RESPONSE = {
 export async function POST(request: NextRequest) {
 	const start = Date.now();
 
-	// Get IP for rate limiting
-	const ip =
-		request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-		request.headers.get("x-real-ip") ??
-		"unknown";
-
-	// Enforce minimum 500ms response time regardless of path taken
 	const ensureMinDelay = async () => {
 		const elapsed = Date.now() - start;
 		if (elapsed < 500) {
@@ -46,7 +21,12 @@ export async function POST(request: NextRequest) {
 		}
 	};
 
-	if (isRateLimited(ip)) {
+	const ip =
+		request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+		request.headers.get("x-real-ip") ??
+		"unknown";
+
+	if (await checkAndApplyRateLimit(ip)) {
 		await ensureMinDelay();
 		return NextResponse.json(GENERIC_RESPONSE, { status: 200 });
 	}
@@ -68,28 +48,7 @@ export async function POST(request: NextRequest) {
 	}
 
 	try {
-		// Look up email by username
-		const result = await pool.query<{ email: string }>(
-			"SELECT email FROM auth_users WHERE username = $1 LIMIT 1",
-			[username],
-		);
-
-		if (result.rows.length > 0) {
-			const email = result.rows[0].email;
-			const redirectTo = `${process.env.BETTER_AUTH_URL}/reset-password`;
-
-			try {
-				await auth.api.requestPasswordReset({
-					body: { email, redirectTo },
-				});
-			} catch (error) {
-				logger.error("Password reset email dispatch failed", {
-					username,
-					email,
-					error: error instanceof Error ? error.message : String(error),
-				});
-			}
-		}
+		await sendPasswordResetIfUserExists(username);
 	} catch {
 		// Swallow errors — always return generic response
 	}
