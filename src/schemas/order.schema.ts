@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { normalizeNullableCompanyName } from "@/domain/company/company";
 import { normalizeMileageAsNumber } from "@/domain/order/mileage";
+import { ORDER_STAGE_VALUES } from "@/domain/order/orderStage";
 
 // Status Schema — accepts any string; user-managed statuses (Arrived, Reserve, etc.)
 // are now stored here alongside workflow markers (Reorder) and stage defaults (Pending)
@@ -141,7 +142,7 @@ const PendingRowBaseObject = z.object({
 	reserved: z.boolean().optional(),
 	reservedAt: z.string().optional(),
 	sourceType: z.string().optional(),
-	stage: z.enum(["orders", "main", "call", "booking", "archive"]).optional(),
+	stage: z.enum(ORDER_STAGE_VALUES).optional(),
 	createdAt: z.string().optional(),
 });
 

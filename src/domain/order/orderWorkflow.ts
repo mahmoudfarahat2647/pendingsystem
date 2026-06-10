@@ -3,8 +3,7 @@ import {
 	ValidationMode,
 	VIN_MIN_LENGTH,
 	VIN_STANDARD_LENGTH,
-	// biome-ignore lint/style/noRestrictedImports: pre-existing debt — domain using lib constants
-} from "@/lib/ordersValidationConstants";
+} from "@/domain/order/constants";
 import type { PartEntry, PendingRow } from "@/types";
 
 /**

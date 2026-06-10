@@ -1,14 +1,5 @@
-import type { OrderStage } from "@/services/orderService";
-import type { PendingRow } from "@/types";
-
-export interface PatchRowCommand {
-	type: "patchRow";
-	id: string;
-	sourceStage: OrderStage;
-	destinationStage: OrderStage;
-	updates: Partial<PendingRow>;
-	previousValues: Partial<PendingRow>;
-}
+import type { OrderStage } from "@/domain/order/orderStage";
+import type { PatchRowCommand, PendingRow } from "@/types";
 
 export interface CreateRowsCommand {
 	type: "createRows";

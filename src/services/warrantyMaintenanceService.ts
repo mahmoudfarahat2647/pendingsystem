@@ -1,10 +1,10 @@
+import type { OrderStage } from "@/domain/order/orderStage";
 import {
 	getEffectiveEndWarranty,
 	isWarrantyExpired,
 } from "@/domain/order/warranty";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { logger } from "@/lib/logger";
-import type { OrderStage } from "@/services/orderService";
 import { orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 

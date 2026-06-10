@@ -1,6 +1,6 @@
 import type { ICellRendererParams } from "ag-grid-community";
 import { Bell, Paperclip, StickyNote } from "lucide-react";
-import { getEffectiveNoteHistory } from "@/lib/orderWorkflow";
+import { getEffectiveNoteHistory } from "@/domain/order/orderWorkflow";
 import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 

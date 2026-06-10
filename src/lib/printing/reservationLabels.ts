@@ -1,4 +1,4 @@
-import { normalizeCompanyName } from "@/lib/company";
+import { normalizeCompanyName } from "@/domain/company/company";
 import type { PendingRow } from "@/types";
 
 const escapeHtml = (value: unknown): string => {

@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import { toast } from "sonner";
+import type { OrderStage } from "@/domain/order/orderStage";
 import { DRAFT_RECOVERY_MAX_AGE_MS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
-import type { OrderStage } from "@/services/orderService";
 import type { DraftRecoverySnapshot } from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
 import { useBulkDeleteOrdersMutation } from "./queries/useBulkDeleteOrdersMutation";
@@ -38,6 +38,10 @@ export function useDraftSession(stage?: OrderStage) {
 	const restoreFromRecovery = useAppStore((state) => state.restoreFromRecovery);
 	const getWorkingRows = useAppStore((state) => state.getWorkingRows);
 	const saveDraftInternal = useAppStore((state) => state.saveDraft);
+	const lastCommandError = useAppStore((state) => state.lastCommandError);
+	const clearCommandError = useAppStore((state) => state.clearCommandError);
+	const lastSaveResult = useAppStore((state) => state.lastSaveResult);
+	const clearSaveResult = useAppStore((state) => state.clearSaveResult);
 
 	const saveOrderMutation = useSaveOrderMutation();
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation(
@@ -59,6 +63,20 @@ export function useDraftSession(stage?: OrderStage) {
 		saveDraftInternal,
 		saveOrderMutation,
 	]);
+
+	useEffect(() => {
+		if (!lastCommandError) return;
+		toast.error(lastCommandError);
+		clearCommandError();
+	}, [lastCommandError, clearCommandError]);
+
+	useEffect(() => {
+		if (!lastSaveResult) return;
+		if (lastSaveResult === "success")
+			toast.success("Draft saved successfully.");
+		else toast.error("Draft save failed. Please try again.");
+		clearSaveResult();
+	}, [lastSaveResult, clearSaveResult]);
 
 	useEffect(() => {
 		if (typeof window === "undefined") {

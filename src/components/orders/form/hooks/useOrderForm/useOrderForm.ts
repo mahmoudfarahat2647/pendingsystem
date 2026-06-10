@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useHistoricalDuplicateCheck } from "@/hooks/queries/useHistoricalDuplicateCheck";
 import { generateId } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
@@ -66,6 +67,8 @@ export const useOrderForm = ({
 		handleBulkImportParts,
 	} = useOrderParts();
 
+	const checkHistoricalDuplicate = useHistoricalDuplicateCheck();
+
 	// Validation state
 	const {
 		errors,
@@ -84,7 +87,13 @@ export const useOrderForm = ({
 		partValidationWarnings,
 		hasValidationErrors,
 		getFieldError,
-	} = useOrderValidation({ formData, parts, isEditMode, selectedRows });
+	} = useOrderValidation({
+		formData,
+		parts,
+		isEditMode,
+		selectedRows,
+		checkHistoricalDuplicate,
+	});
 
 	const { handleLocalSubmit } = useOrderSubmit({
 		formData,
@@ -94,6 +103,7 @@ export const useOrderForm = ({
 		selectedRows,
 		hasValidationErrors,
 		partValidationWarnings,
+		checkHistoricalDuplicate,
 		setValidationMode,
 		setBeastModeTimer,
 		setBeastModeErrors,

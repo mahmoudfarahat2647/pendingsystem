@@ -1,5 +1,5 @@
+import { normalizeNullableCompanyName } from "@/domain/company/company";
 import { hasAttachment } from "@/lib/attachment";
-import { normalizeNullableCompanyName } from "@/lib/company";
 import { OrderMappingError } from "@/lib/errors";
 import { PersistedOrderRowSchema } from "@/schemas/order.schema";
 import type { PendingRow } from "@/types";

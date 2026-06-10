@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 export default {
 	plugins: [react()],
 	test: {
+		globals: true,
 		environment: "jsdom",
 		pool: "vmForks",
 		setupFiles: ["./src/test/setup.ts"],
@@ -18,6 +19,7 @@ export default {
 			NEXT_PUBLIC_SUPABASE_URL: "https://mock-supabase-url.supabase.co",
 			NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock-anon-key",
 			NEXT_PUBLIC_SUPABASE_ATTACHMENTS_BUCKET: "attachments",
+			SUPABASE_SERVICE_ROLE_KEY: "mock-service-role-key",
 			DATABASE_URL: "postgresql://mock:mock@localhost:5432/mock",
 			BETTER_AUTH_URL: "http://localhost:3000",
 			BETTER_AUTH_SECRET: "mock-secret-for-testing-min-32-chars-long",

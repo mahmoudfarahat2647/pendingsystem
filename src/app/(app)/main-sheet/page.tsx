@@ -35,6 +35,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	filterReservedRows,
+	getSelectedIds,
+	getVinAutoMoveIds,
+} from "@/domain/order/orderWorkflow";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
@@ -45,11 +50,6 @@ import {
 	buildReorderCommands,
 	buildSendToArchiveCommands,
 } from "@/lib/orderStageTransitions";
-import {
-	filterReservedRows,
-	getSelectedIds,
-	getVinAutoMoveIds,
-} from "@/lib/orderWorkflow";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";

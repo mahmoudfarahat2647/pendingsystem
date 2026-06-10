@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { detectModelFromVin, normalizeMileageAsNumber } from "@/lib/utils";
+import { normalizeMileageAsNumber } from "@/domain/order/mileage";
+import { detectModelFromVin } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 import type { FormData } from "../types";
 import { buildEmptyFormData } from "./useOrderForm/orderFormUtils";

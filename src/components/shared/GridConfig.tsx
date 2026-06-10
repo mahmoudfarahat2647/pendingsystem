@@ -7,7 +7,7 @@ import type {
 } from "ag-grid-community";
 import { format } from "date-fns";
 import { useEffect, useRef, useState } from "react";
-import { getEffectiveNoteHistory } from "@/lib/orderWorkflow";
+import { getEffectiveNoteHistory } from "@/domain/order/orderWorkflow";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
 

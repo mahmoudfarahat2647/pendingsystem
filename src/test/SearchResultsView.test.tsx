@@ -8,8 +8,8 @@ import {
 } from "@testing-library/react";
 import type { ButtonHTMLAttributes } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as orderWorkflow from "@/lib/orderWorkflow";
-import { appendTaggedUserNote } from "@/lib/orderWorkflow";
+import * as orderWorkflow from "@/domain/order/orderWorkflow";
+import { appendTaggedUserNote } from "@/domain/order/orderWorkflow";
 import type { PendingRow } from "@/types";
 import {
 	createMockGridApi,

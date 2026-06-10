@@ -1,7 +1,7 @@
 import {
 	appendTaggedUserNote,
 	getEffectiveNoteHistory,
-} from "@/lib/orderWorkflow";
+} from "@/domain/order/orderWorkflow";
 import type { PendingRow } from "@/types";
 
 /**

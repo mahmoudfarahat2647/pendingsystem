@@ -1,9 +1,10 @@
 import type { GridState } from "ag-grid-community";
-import type { OrderStage } from "@/services/orderService";
+import type { OrderStage } from "@/domain/order/orderStage";
 import type {
 	AppNotification,
 	PartStatusDef,
 	PendingRow,
+	ReportSettings,
 	StickyNote,
 } from "@/types";
 import type {
@@ -11,7 +12,9 @@ import type {
 	DraftRecoverySnapshot,
 	DraftSaveMutations,
 	DraftSession,
-} from "./slices/draftSessionSlice";
+} from "./slices/draftSessionCommands";
+
+export type { ReportSettings };
 
 export interface OrdersState {
 	ordersRowData: PendingRow[];
@@ -128,6 +131,8 @@ interface GridSliceActions {
 
 export interface DraftSessionState {
 	draftSession: DraftSession;
+	lastSaveResult: "success" | "error" | null;
+	lastCommandError: string | null;
 }
 
 export interface DraftSessionActions {
@@ -138,6 +143,8 @@ export interface DraftSessionActions {
 	discardDraft: () => void;
 	restoreFromRecovery: (snapshot: DraftRecoverySnapshot) => void;
 	getWorkingRows: (stage: OrderStage) => PendingRow[] | undefined;
+	clearSaveResult: () => void;
+	clearCommandError: () => void;
 	_captureBaseline: () => void;
 	_deriveWorkingRows: () => Record<OrderStage, PendingRow[]>;
 	_persistRecovery: () => void;
@@ -150,36 +157,12 @@ export type StoreState = OrdersState &
 	NotificationState &
 	UIState &
 	DraftSessionState &
-	GridSliceState &
-	ReportSettingsState;
+	GridSliceState;
 export type StoreActions = OrdersActions &
 	InventoryActions &
 	BookingActions &
 	NotificationActions &
 	UIActions &
 	DraftSessionActions &
-	GridSliceActions &
-	ReportSettingsActions;
+	GridSliceActions;
 export type CombinedStore = StoreState & StoreActions;
-
-export interface ReportSettings {
-	id: string;
-	emails: string[];
-	frequency: string;
-	is_enabled: boolean;
-	last_sent_at: string | null;
-}
-
-export interface ReportSettingsState {
-	reportSettings: ReportSettings | null;
-	isReportSettingsLoading: boolean;
-	reportSettingsError: string | null;
-}
-
-export interface ReportSettingsActions {
-	fetchReportSettings: () => Promise<void>;
-	updateReportSettings: (settings: Partial<ReportSettings>) => Promise<void>;
-	addEmailRecipient: (email: string) => Promise<void>;
-	removeEmailRecipient: (email: string) => Promise<void>;
-	triggerManualBackup: () => Promise<void>;
-}

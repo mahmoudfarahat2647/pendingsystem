@@ -1,6 +1,5 @@
 import type { ApiResponse } from "@/lib/apiResponse";
-// biome-ignore lint/style/noRestrictedImports: type-only seam — ReportSettings pending re-home to @/types
-import type { ReportSettings } from "@/store/types";
+import type { ReportSettings } from "@/types";
 
 export const reportSettingsService = {
 	async getReportSettings(): Promise<ReportSettings> {

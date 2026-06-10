@@ -6,12 +6,12 @@ vi.mock("@/lib/ag-grid-helpers", () => ({
 	trySelectRowsByVin: vi.fn(),
 }));
 
-vi.mock("@/lib/orderWorkflow", () => ({
+vi.mock("@/domain/order/orderWorkflow", () => ({
 	hasMixedVinSelection: vi.fn(),
 }));
 
+import { hasMixedVinSelection } from "@/domain/order/orderWorkflow";
 import { trySelectRowsByVin } from "@/lib/ag-grid-helpers";
-import { hasMixedVinSelection } from "@/lib/orderWorkflow";
 import type { PendingRow } from "@/types";
 import { useSelectAllByVin } from "../hooks/useSelectAllByVin";
 

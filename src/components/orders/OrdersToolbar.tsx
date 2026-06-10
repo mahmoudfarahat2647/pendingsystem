@@ -31,8 +31,8 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { hasMixedVinSelection } from "@/domain/order/orderWorkflow";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
-import { hasMixedVinSelection } from "@/lib/orderWorkflow";
 import { cn } from "@/lib/utils";
 import type { PartStatus, PendingRow } from "@/types";
 

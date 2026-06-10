@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { supabase } from "../lib/supabase";
-import { createOrderService, orderService } from "../services/orderService";
+import { createOrderQueryRepository } from "../services/order/orderQueryRepository";
+import { createOrderRepository } from "../services/orderRepository";
+import { orderService } from "../services/orderService";
 
 // Mock Supabase client
 vi.mock("../lib/supabase", () => ({
@@ -491,7 +493,7 @@ describe("orderService", () => {
 		});
 	});
 
-	describe("createOrderService – injected client", () => {
+	describe("createOrderRepository – injected client", () => {
 		it("calls db.from('orders') with the injected client and returns data", async () => {
 			const mockData = [{ id: "x", stage: "main" }];
 			const chainable: Record<string, unknown> = {};
@@ -500,10 +502,10 @@ describe("orderService", () => {
 			chainable.eq = vi.fn().mockResolvedValue({ data: mockData, error: null });
 			const mockFrom = vi.fn().mockReturnValue(chainable);
 			const mockDb = { from: mockFrom } as unknown as Parameters<
-				typeof createOrderService
+				typeof createOrderQueryRepository
 			>[0];
 
-			const svc = createOrderService(mockDb);
+			const svc = createOrderQueryRepository(mockDb);
 			const result = await svc.getOrders("main");
 
 			expect(mockFrom).toHaveBeenCalledWith("orders");
@@ -511,7 +513,7 @@ describe("orderService", () => {
 		});
 
 		it("uses the real supabase client when no db is injected", () => {
-			expect(() => createOrderService()).not.toThrow();
+			expect(() => createOrderRepository()).not.toThrow();
 		});
 	});
 });

@@ -1,4 +1,4 @@
-import { normalizeCompanyName } from "@/lib/company";
+import { normalizeCompanyName } from "@/domain/company/company";
 import { generateId } from "@/lib/utils";
 import type { PartEntry, PendingRow } from "@/types";
 import type { FormData } from "../../types";

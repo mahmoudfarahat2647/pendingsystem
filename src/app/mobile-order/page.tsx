@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { ALLOWED_COMPANIES } from "@/domain/order/constants";
 import { useAppSettingsQuery } from "@/hooks/queries/useAppSettingsQuery";
-import { ALLOWED_COMPANIES } from "@/lib/ordersValidationConstants";
 import type { MobileQuickOrderPayload } from "@/schemas/mobileOrder.schema";
 
 interface PartRow {

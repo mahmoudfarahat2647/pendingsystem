@@ -1,7 +1,7 @@
 "use client";
 
+import { getEffectiveNoteHistory } from "@/domain/order/orderWorkflow";
 import type { RowModalType } from "@/hooks/useRowModals";
-import { getEffectiveNoteHistory } from "@/lib/orderWorkflow";
 import type { PendingRow } from "@/types";
 import { ArchiveReasonModal } from "./ArchiveReasonModal";
 import { EditAttachmentModal } from "./EditAttachmentModal";

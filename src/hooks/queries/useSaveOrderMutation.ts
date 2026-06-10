@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import type { OrderStage } from "@/domain/order/orderStage";
 import {
 	getErrorMessage,
 	type OrdersCacheSnapshot,
 	restoreOrdersCache,
 } from "@/lib/queryCacheHelpers";
 import { getOrdersQueryKey } from "@/lib/queryClient";
-import { type OrderStage, orderService } from "@/services/orderService";
+import { orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 
 /**

@@ -9,18 +9,15 @@ vi.mock("sonner", () => ({
 	},
 }));
 
+import type { OrderStage } from "@/domain/order/orderStage";
 import {
 	getOrdersQueryKey,
 	ORDER_STAGES,
 	queryClient,
 } from "@/lib/queryClient";
-import type { OrderStage } from "@/services/orderService";
-import type {
-	DraftRecoverySnapshot,
-	PatchRowCommand,
-} from "@/store/slices/draftSessionSlice";
+import type { DraftRecoverySnapshot } from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
-import type { PendingRow } from "@/types";
+import type { PatchRowCommand, PendingRow } from "@/types";
 
 const EMPTY_BASELINE: Record<OrderStage, PendingRow[]> = {
 	orders: [],

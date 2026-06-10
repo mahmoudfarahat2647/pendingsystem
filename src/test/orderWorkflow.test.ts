@@ -16,7 +16,7 @@ import {
 	isVinComplete,
 	isVinLongEnoughForDuplicateCheck,
 	normalizeVin,
-} from "@/lib/orderWorkflow";
+} from "@/domain/order/orderWorkflow";
 import type { PartEntry, PendingRow } from "@/types";
 
 const createMockRow = (overrides: Partial<PendingRow> = {}): PendingRow => ({

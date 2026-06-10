@@ -1,9 +1,8 @@
 import { toast } from "sonner";
-import { normalizeCompanyName } from "@/lib/company";
+import { normalizeCompanyName } from "@/domain/company/company";
 import { BeastModeSchema } from "@/schemas/form.schema";
-import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
-import type { PartEntry, PendingRow } from "@/types";
+import type { DuplicateCheckResult, PartEntry, PendingRow } from "@/types";
 import type { FormData } from "../../types";
 
 interface UseOrderSubmitProps {
@@ -17,6 +16,11 @@ interface UseOrderSubmitProps {
 		string,
 		{ type: string; value: string; location?: string }
 	>;
+	checkHistoricalDuplicate: (
+		vin: string,
+		partNumber: string,
+		excludeIds?: string | string[],
+	) => Promise<DuplicateCheckResult>;
 	setValidationMode: (mode: "easy" | "beast") => void;
 	setBeastModeTimer: (
 		timer: number | null | ((prev: number | null) => number | null),
@@ -117,7 +121,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 					for (const part of props.parts) {
 						if (!part.partNumber.trim()) continue;
 
-						const result = await orderService.checkHistoricalVinPartDuplicate(
+						const result = await props.checkHistoricalDuplicate(
 							props.formData.vin,
 							part.partNumber,
 							props.isEditMode ? part.rowId : undefined,

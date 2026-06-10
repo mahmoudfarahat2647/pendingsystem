@@ -1,8 +1,9 @@
 import { supabase as supabaseDefault } from "@/lib/supabase";
+import { createOrderQueryRepository } from "./order/orderQueryRepository";
 import { createOrderRepository } from "./orderRepository";
 
+export { createOrderQueryRepository } from "./order/orderQueryRepository";
 export { mapSupabaseOrder } from "./orderMapper";
-export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
 export { createOrderRepository } from "./orderRepository";
 export {
 	handleSupabaseError,
@@ -10,7 +11,7 @@ export {
 	ServiceError,
 } from "./orderServiceErrors";
 
-/** @deprecated use createOrderRepository */
-export const createOrderService = createOrderRepository;
-
-export const orderService = createOrderRepository(supabaseDefault);
+export const orderService = {
+	...createOrderRepository(supabaseDefault),
+	...createOrderQueryRepository(supabaseDefault),
+};

@@ -10,8 +10,11 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getOrdersColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+	getVinAutoMoveIds,
+	hasMixedVinSelection,
+} from "@/domain/order/orderWorkflow";
 import { useRowModals } from "@/hooks/useRowModals";
-import { getVinAutoMoveIds, hasMixedVinSelection } from "@/lib/orderWorkflow";
 
 const OrderFormModal = dynamic(
 	() => import("@/components/orders/form").then((mod) => mod.OrderFormModal),

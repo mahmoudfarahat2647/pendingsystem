@@ -1,6 +1,6 @@
+import type { AllowedCompany } from "@/domain/order/constants";
+import { getEffectiveNoteHistory } from "@/domain/order/orderWorkflow";
 import type { PendingRow } from "@/types";
-import type { AllowedCompany } from "./ordersValidationConstants";
-import { getEffectiveNoteHistory } from "./orderWorkflow";
 import { calculateRemainingTime } from "./utils";
 
 /**
