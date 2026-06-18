@@ -65,7 +65,7 @@ export const restoreOrdersCache = (
 	cacheSnapshot: OrdersCacheSnapshot,
 ) => {
 	for (const stage of ORDER_STAGES) {
-		if (cacheSnapshot[stage] !== undefined) {
+		if (Object.hasOwn(cacheSnapshot, stage)) {
 			queryClient.setQueryData(getOrdersQueryKey(stage), cacheSnapshot[stage]);
 		}
 	}

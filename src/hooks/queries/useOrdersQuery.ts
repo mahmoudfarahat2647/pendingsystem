@@ -1,6 +1,7 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { OrderMappingError } from "@/lib/errors";
+import { getOrdersQueryKey } from "@/lib/queryClient";
 import { orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 
@@ -9,7 +10,10 @@ export function useOrdersQuery(
 	options?: { enabled?: boolean },
 ): UseQueryResult<PendingRow[], Error> {
 	return useQuery<PendingRow[]>({
-		queryKey: ["orders", stage],
+		queryKey:
+			stage !== undefined
+				? getOrdersQueryKey(stage)
+				: (["orders", stage] as const),
 		queryFn: async (): Promise<PendingRow[]> => {
 			const data = await orderService.getOrders(stage);
 			if (!data) return [];

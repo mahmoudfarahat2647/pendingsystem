@@ -7,7 +7,11 @@ import {
 	type OrdersCacheSnapshot,
 	restoreOrdersCache,
 } from "@/lib/queryCacheHelpers";
-import { getOrdersQueryKey, ORDER_STAGES } from "@/lib/queryClient";
+import {
+	DASHBOARD_STATS_QUERY_KEY,
+	getOrdersQueryKey,
+	ORDER_STAGES,
+} from "@/lib/queryClient";
 import { orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 
@@ -59,6 +63,8 @@ export function useBulkDeleteOrdersMutation(sourceStage: OrderStage) {
 					queryClient.invalidateQueries({ queryKey: getOrdersQueryKey(stage) }),
 				),
 			);
+
+			queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
 		},
 	});
 }

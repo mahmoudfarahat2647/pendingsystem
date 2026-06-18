@@ -6,7 +6,10 @@ import {
 	type OrdersCacheSnapshot,
 	restoreOrdersCache,
 } from "@/lib/queryCacheHelpers";
-import { getOrdersQueryKey } from "@/lib/queryClient";
+import {
+	DASHBOARD_STATS_QUERY_KEY,
+	getOrdersQueryKey,
+} from "@/lib/queryClient";
 import { orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 
@@ -40,21 +43,52 @@ export function useSaveOrderMutation() {
 				expectedCurrentStage: sourceStage,
 				idempotencyKey,
 			}),
-		onMutate: async ({ id, updates, stage }) => {
+		onMutate: async ({ id, updates, stage, sourceStage }) => {
 			await queryClient.cancelQueries({ queryKey: ["orders"] });
 
-			const cacheKey = getOrdersQueryKey(stage);
-			const previousRows = queryClient.getQueryData<PendingRow[]>(cacheKey);
+			const isStageTransition = !!sourceStage && sourceStage !== stage;
+			const destCacheKey = getOrdersQueryKey(stage);
+			const previousDestRows =
+				queryClient.getQueryData<PendingRow[]>(destCacheKey);
 			const previousOrdersCache: OrdersCacheSnapshot = {
-				[stage]: previousRows,
+				[stage]: previousDestRows,
 			};
 
-			if (previousRows) {
-				queryClient.setQueryData<PendingRow[]>(cacheKey, (oldOrders = []) =>
-					oldOrders.map((order) =>
-						order.id === id ? { ...order, ...updates } : order,
-					),
-				);
+			if (isStageTransition) {
+				const sourceCacheKey = getOrdersQueryKey(sourceStage);
+				const previousSourceRows =
+					queryClient.getQueryData<PendingRow[]>(sourceCacheKey);
+				previousOrdersCache[sourceStage] = previousSourceRows;
+
+				if (previousSourceRows) {
+					// Optimistically remove from source stage
+					queryClient.setQueryData<PendingRow[]>(
+						sourceCacheKey,
+						(oldOrders = []) => oldOrders.filter((order) => order.id !== id),
+					);
+					// Optimistically prepend merged row to destination stage
+					const sourceRow = previousSourceRows.find((o) => o.id === id);
+					if (sourceRow) {
+						queryClient.setQueryData<PendingRow[]>(
+							destCacheKey,
+							(oldOrders = []) => [
+								{ ...sourceRow, ...updates, stage },
+								...oldOrders,
+							],
+						);
+					}
+				}
+			} else {
+				// Same-stage update — existing behavior
+				if (previousDestRows) {
+					queryClient.setQueryData<PendingRow[]>(
+						destCacheKey,
+						(oldOrders = []) =>
+							oldOrders.map((order) =>
+								order.id === id ? { ...order, ...updates } : order,
+							),
+					);
+				}
 			}
 
 			return { previousOrdersCache };
@@ -77,6 +111,8 @@ export function useSaveOrderMutation() {
 					queryKey: getOrdersQueryKey(variables.sourceStage),
 				});
 			}
+
+			queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
 		},
 		onSuccess: (data, variables) => {
 			let mappedRow: PendingRow;
