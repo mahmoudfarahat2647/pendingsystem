@@ -8,7 +8,10 @@ import {
 } from "@/domain/order/warranty";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { logger } from "@/lib/logger";
-import { getOrdersQueryKey } from "@/lib/queryClient";
+import {
+	DASHBOARD_STATS_QUERY_KEY,
+	getOrdersQueryKey,
+} from "@/lib/queryClient";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -148,6 +151,7 @@ export function useWarrantyExpiryMaintenance() {
 			queryClient.invalidateQueries({ queryKey: getOrdersQueryKey(stage) });
 		}
 		queryClient.invalidateQueries({ queryKey: getOrdersQueryKey("archive") });
+		queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
 	}, [isDraftDirty, saveOrderMutation, queryClient]);
 
 	return { runMaintenance };

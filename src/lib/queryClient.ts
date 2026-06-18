@@ -1,16 +1,12 @@
 import { QueryClient } from "@tanstack/react-query";
 import type { OrderStage } from "@/domain/order/orderStage";
-import type { PendingRow } from "@/types";
 
 export { ORDER_STAGES } from "@/lib/constants";
 
 export const getOrdersQueryKey = (stage: OrderStage) =>
 	["orders", stage] as const;
 
-export const getOrdersByStageFromCache = (stage: OrderStage): PendingRow[] => {
-	const rows = queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey(stage));
-	return rows ?? [];
-};
+export const DASHBOARD_STATS_QUERY_KEY = ["dashboard-stats"] as const;
 
 export const queryClient = new QueryClient({
 	defaultOptions: {

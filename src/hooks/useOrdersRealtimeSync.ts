@@ -3,7 +3,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { getOrdersQueryKey } from "@/lib/queryClient";
+import {
+	DASHBOARD_STATS_QUERY_KEY,
+	getOrdersQueryKey,
+} from "@/lib/queryClient";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAppStore } from "@/store/useStore";
 
@@ -19,6 +22,9 @@ export function useOrdersRealtimeSync() {
 			pendingUpdate.current = false;
 			void queryClient.invalidateQueries({
 				queryKey: getOrdersQueryKey("orders"),
+			});
+			void queryClient.invalidateQueries({
+				queryKey: DASHBOARD_STATS_QUERY_KEY,
 			});
 		}
 	}, [isDraftActive, queryClient]);
@@ -48,6 +54,9 @@ export function useOrdersRealtimeSync() {
 					} else {
 						void queryClient.invalidateQueries({
 							queryKey: getOrdersQueryKey("orders"),
+						});
+						void queryClient.invalidateQueries({
+							queryKey: DASHBOARD_STATS_QUERY_KEY,
 						});
 					}
 				},

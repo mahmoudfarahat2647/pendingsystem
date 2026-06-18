@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	Download,
 	Loader2,
@@ -23,12 +24,7 @@ import { useWarrantyExpiryMaintenance } from "@/hooks/useWarrantyExpiryMaintenan
 import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 import { exportAllSystemDataCSV } from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
-import {
-	getOrdersByStageFromCache,
-	getOrdersQueryKey,
-	ORDER_STAGES,
-	queryClient,
-} from "@/lib/queryClient";
+import { getOrdersQueryKey, ORDER_STAGES } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -40,6 +36,7 @@ import {
 import { NotificationsDropdown } from "./NotificationsDropdown";
 
 export const Header = React.memo(function Header() {
+	const queryClient = useQueryClient();
 	const _pathname = usePathname();
 	const _router = useRouter();
 	const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -206,8 +203,10 @@ export const Header = React.memo(function Header() {
 
 		const toastId = toast.loading(`Preparing full ${company} system export...`);
 		try {
-			const mappedData: PendingRow[] = ORDER_STAGES.flatMap((stage) =>
-				getOrdersByStageFromCache(stage),
+			const mappedData: PendingRow[] = ORDER_STAGES.flatMap(
+				(stage) =>
+					queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey(stage)) ??
+					[],
 			);
 			if (mappedData.length === 0) {
 				toast.warning("No data available to export", { id: toastId });

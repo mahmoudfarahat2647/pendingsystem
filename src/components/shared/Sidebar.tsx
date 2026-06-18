@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	AlertTriangle,
 	Archive,
@@ -26,9 +27,10 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth-client";
-import { getOrdersByStageFromCache } from "@/lib/queryClient";
+import { getOrdersQueryKey } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
+import type { PendingRow } from "@/types";
 import { Logo } from "./Logo";
 import { SettingsModal } from "./SettingsModal";
 import { SidebarUserMenu } from "./SidebarUserMenu";
@@ -81,6 +83,7 @@ const navItems: NavItem[] = [
 ];
 
 export const Sidebar = React.memo(function Sidebar() {
+	const queryClient = useQueryClient();
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [pendingNavigation, setPendingNavigation] = useState<string | null>(
@@ -101,15 +104,16 @@ export const Sidebar = React.memo(function Sidebar() {
 
 	const getTargetTabVin = (targetHref: string): string | null => {
 		if (targetHref === "/orders") {
-			const targetRow = getOrdersByStageFromCache("orders").find(
-				(r) => r.vin?.toUpperCase() === currentEditVin?.toUpperCase(),
-			);
+			const targetRow = (
+				queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey("orders")) ??
+				[]
+			).find((r) => r.vin?.toUpperCase() === currentEditVin?.toUpperCase());
 			return targetRow ? currentEditVin : "different-context";
 		}
 		if (targetHref === "/main-sheet") {
-			const targetRow = getOrdersByStageFromCache("main").find(
-				(r) => r.vin?.toUpperCase() === currentEditVin?.toUpperCase(),
-			);
+			const targetRow = (
+				queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey("main")) ?? []
+			).find((r) => r.vin?.toUpperCase() === currentEditVin?.toUpperCase());
 			return targetRow ? currentEditVin : "different-context";
 		}
 		return "different-context";

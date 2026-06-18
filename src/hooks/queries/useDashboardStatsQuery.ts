@@ -1,5 +1,6 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { DASHBOARD_STATS_QUERY_KEY } from "@/lib/queryClient";
 import { orderService } from "@/services/orderService";
 
 interface DashboardStatRow {
@@ -13,7 +14,7 @@ export function useDashboardStatsQuery(): UseQueryResult<
 	Error
 > {
 	return useQuery<DashboardStatRow[]>({
-		queryKey: ["dashboard-stats"],
+		queryKey: DASHBOARD_STATS_QUERY_KEY,
 		queryFn: async (): Promise<DashboardStatRow[]> => {
 			const data = await orderService.getDashboardStats();
 			return (data || []) as DashboardStatRow[];
