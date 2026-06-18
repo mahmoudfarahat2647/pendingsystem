@@ -1,5 +1,6 @@
 "use client";
 
+import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef } from "@/types";
 import { StatusManagementSection } from "./StatusManagementSection";
@@ -15,11 +16,11 @@ export const PartStatusTab = ({ isLocked }: PartStatusTabProps) => {
 	const removePartStatusDef = useAppStore((state) => state.removePartStatusDef);
 
 	// Data for usage checks
-	const rowData = useAppStore((state) => state.rowData);
-	const ordersRowData = useAppStore((state) => state.ordersRowData);
-	const callRowData = useAppStore((state) => state.callRowData);
-	const archiveRowData = useAppStore((state) => state.archiveRowData);
-	const bookingRowData = useAppStore((state) => state.bookingRowData);
+	const { data: rowData = [] } = useOrdersQuery("main");
+	const { data: ordersRowData = [] } = useOrdersQuery("orders");
+	const { data: callRowData = [] } = useOrdersQuery("call");
+	const { data: archiveRowData = [] } = useOrdersQuery("archive");
+	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 
 	const getPartStatusUsage = (label: string) => {
 		const allRows = [
