@@ -440,7 +440,7 @@ export const createDraftSessionSlice: StateCreator<
 					...newSession,
 					derivedRowsRevision: allocateDerivedRowsRevision(),
 					pendingCommands: snapshot.pendingCommands,
-					past: [],
+					past: snapshot.pendingCommands.slice(-COMMAND_LIMIT),
 					future: [],
 					dirty: snapshot.pendingCommands.length > 0,
 					touchedStages: new Set(getAllCommandStages(snapshot.pendingCommands)),

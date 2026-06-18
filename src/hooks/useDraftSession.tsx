@@ -5,7 +5,11 @@ import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { DRAFT_RECOVERY_MAX_AGE_MS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
-import type { DraftRecoverySnapshot } from "@/store/slices/draftSessionSlice";
+import { getOrdersQueryAdapter } from "@/store/ordersQueryAdapter";
+import type {
+	DraftCommand,
+	DraftRecoverySnapshot,
+} from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
 import { useBulkDeleteOrdersMutation } from "./queries/useBulkDeleteOrdersMutation";
 import { useBulkUpdateOrderStageMutation } from "./queries/useBulkUpdateOrderStageMutation";
@@ -13,6 +17,37 @@ import { useSaveOrderMutation } from "./queries/useSaveOrderMutation";
 
 const RECOVERY_STORAGE_KEY = "pending-sys-draft-v1";
 const RECOVERY_MAX_AGE_MS = DRAFT_RECOVERY_MAX_AGE_MS;
+
+// Mirrors getCommandStages/getAllCommandStages from draftSessionSlice (not exported there).
+function getSnapshotStages(commands: DraftCommand[]): OrderStage[] {
+	const stages = new Set<OrderStage>();
+	function collectStages(cmd: DraftCommand): void {
+		if (cmd.type === "patchRow") {
+			stages.add(cmd.sourceStage);
+			stages.add(cmd.destinationStage);
+		} else if (cmd.type === "createRows") {
+			stages.add(cmd.stage);
+		} else if (cmd.type === "deleteRows") {
+			// deleteRows could touch any stage; collect all stages already
+			// referenced by other commands — the slice uses ORDER_STAGES here,
+			// but for the loading guard we only need the stages that are actually
+			// referenced in the snapshot, which the other branches cover.
+			// Use a conservative fallback: mark no additional stages so we don't
+			// block restore when unrelated stages aren't loaded.
+		} else if (cmd.type === "moveRows") {
+			stages.add(cmd.sourceStage);
+			stages.add(cmd.destinationStage);
+		} else if (cmd.type === "composite") {
+			for (const child of cmd.children) {
+				collectStages(child);
+			}
+		}
+	}
+	for (const cmd of commands) {
+		collectStages(cmd);
+	}
+	return Array.from(stages);
+}
 
 let activeRecoveryToastId: string | number | null = null;
 let activeRecoveryToastKey: string | null = null;
@@ -132,6 +167,18 @@ export function useDraftSession(stage?: OrderStage) {
 							<button
 								type="button"
 								onClick={() => {
+									const stages = getSnapshotStages(snapshot.pendingCommands);
+									const adapter = getOrdersQueryAdapter();
+									const allLoaded = stages.every((s) =>
+										adapter.isStageLoaded(s),
+									);
+									if (!allLoaded) {
+										toast(
+											"Your data is still loading — try Restore in a moment.",
+											{ duration: 4000 },
+										);
+										return;
+									}
 									clearRecoveryToastOffer();
 									restoreFromRecovery(snapshot);
 									toast.dismiss(t);
