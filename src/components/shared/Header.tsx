@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import {
+	Clock,
 	Download,
 	Loader2,
 	Redo2,
@@ -12,7 +13,8 @@ import {
 	X,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import {
 	ALLOWED_COMPANIES,
@@ -20,6 +22,7 @@ import {
 } from "@/domain/order/constants";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { useDraftSession } from "@/hooks/useDraftSession";
+import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { useWarrantyExpiryMaintenance } from "@/hooks/useWarrantyExpiryMaintenance";
 import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 import { exportAllSystemDataCSV } from "@/lib/exportUtils";
@@ -43,6 +46,13 @@ export const Header = React.memo(function Header() {
 	const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 	const [isExporting, setIsExporting] = useState(false);
 	const exportDropdownRef = useRef<HTMLDivElement>(null);
+	const searchWrapperRef = useRef<HTMLDivElement>(null);
+	const portalRef = useRef<HTMLDivElement>(null);
+	const [dropdownRect, setDropdownRect] = useState<{
+		top: number;
+		left: number;
+		width: number;
+	} | null>(null);
 	const lastNotificationCheckRef = useRef<{
 		dataVersion: number;
 		lastRunAt: number;
@@ -54,6 +64,23 @@ export const Header = React.memo(function Header() {
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
 	const [searchInput, setSearchInput] = useState(searchTerm);
 	const hasSearchInput = searchInput.trim().length > 0;
+	const { recentSearches, addSearch, removeSearch, clearAll } =
+		useRecentSearches();
+	const showRecentDropdown =
+		isSearchFocused && !hasSearchInput && recentSearches.length > 0;
+
+	useLayoutEffect(() => {
+		if (!showRecentDropdown) return;
+		const update = () => {
+			if (searchWrapperRef.current) {
+				const r = searchWrapperRef.current.getBoundingClientRect();
+				setDropdownRect({ top: r.bottom + 4, left: r.left, width: r.width });
+			}
+		};
+		update();
+		window.addEventListener("resize", update);
+		return () => window.removeEventListener("resize", update);
+	}, [showRecentDropdown]);
 
 	// Draft session for undo/redo and save
 	const {
@@ -172,10 +199,11 @@ export const Header = React.memo(function Header() {
 		const timeoutId = setTimeout(() => {
 			if (searchInput !== searchTerm) {
 				setSearchTerm(searchInput);
+				if (searchInput.trim().length >= 2) addSearch(searchInput.trim());
 			}
 		}, SEARCH_DEBOUNCE_MS);
 		return () => clearTimeout(timeoutId);
-	}, [searchInput, searchTerm, setSearchTerm]);
+	}, [searchInput, searchTerm, setSearchTerm, addSearch]);
 
 	// Close export menu when clicking outside
 	useEffect(() => {
@@ -239,6 +267,7 @@ export const Header = React.memo(function Header() {
 			{/* Center: Search */}
 			<div className="flex-1 max-w-2xl mx-auto">
 				<div
+					ref={searchWrapperRef}
 					className={cn(
 						"relative flex items-center rounded-2xl transition-all duration-300",
 						"bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10",
@@ -254,8 +283,21 @@ export const Header = React.memo(function Header() {
 						placeholder="Search system (Cmd+K)..."
 						value={searchInput}
 						onChange={(e) => setSearchInput(e.target.value)}
-						onFocus={() => setIsSearchFocused(true)}
-						onBlur={() => setIsSearchFocused(false)}
+						onFocus={() => {
+							setIsSearchFocused(true);
+						}}
+						onBlur={() => {
+							setTimeout(() => {
+								if (!portalRef.current?.contains(document.activeElement)) {
+									setIsSearchFocused(false);
+								}
+							}, 0);
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Escape" && showRecentDropdown) {
+								setIsSearchFocused(false);
+							}
+						}}
 						className="w-full pl-12 pr-12 py-3 bg-transparent text-sm text-white placeholder:text-gray-600 outline-none"
 					/>
 					<div className="absolute right-4 flex items-center gap-2">
@@ -276,6 +318,72 @@ export const Header = React.memo(function Header() {
 							<span className="text-xs">⌘</span>K
 						</kbd>
 					</div>
+
+					{showRecentDropdown &&
+						dropdownRect &&
+						createPortal(
+							// biome-ignore lint/a11y/noStaticElementInteractions: prevents input blur before dropdown click registers
+							<div
+								ref={portalRef}
+								tabIndex={-1}
+								onMouseDown={(e) => e.preventDefault()}
+								onBlur={(e) => {
+									if (
+										!portalRef.current?.contains(e.relatedTarget as Node) &&
+										document.activeElement?.id !== "global-search"
+									) {
+										setIsSearchFocused(false);
+									}
+								}}
+								style={{
+									position: "fixed",
+									top: dropdownRect.top,
+									left: dropdownRect.left,
+									width: dropdownRect.width,
+								}}
+								className="z-[9999] rounded-xl border border-white/10 bg-[#1A1A1A] shadow-xl shadow-black/50 overflow-hidden"
+							>
+								<div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
+									<span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">
+										Recent Searches
+									</span>
+									<button
+										type="button"
+										onClick={clearAll}
+										className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+									>
+										Clear all
+									</button>
+								</div>
+								<ul aria-label="Recent searches" className="list-none">
+									{recentSearches.map((term) => (
+										<li key={term} className="flex items-center group">
+											<button
+												type="button"
+												onClick={() => {
+													setSearchInput(term);
+													setSearchTerm(term);
+													addSearch(term);
+												}}
+												className="flex-1 flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-left"
+											>
+												<Clock className="h-3.5 w-3.5 text-gray-600 shrink-0" />
+												<span className="truncate">{term}</span>
+											</button>
+											<button
+												type="button"
+												onClick={() => removeSearch(term)}
+												className="pr-3 opacity-0 group-hover:opacity-100 text-gray-600 hover:text-gray-300 transition-all"
+												aria-label={`Remove ${term}`}
+											>
+												<X className="h-3 w-3" />
+											</button>
+										</li>
+									))}
+								</ul>
+							</div>,
+							document.body,
+						)}
 				</div>
 			</div>
 
