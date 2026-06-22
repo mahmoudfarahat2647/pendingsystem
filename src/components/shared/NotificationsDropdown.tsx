@@ -150,7 +150,11 @@ export const NotificationsDropdown = () => {
 																? "bg-amber-500"
 																: n.type === "booking_followup"
 																	? "bg-green-500"
-																	: "bg-indigo-500",
+																	: n.type === "cntr_rdg_warning"
+																		? n.cntrRdgLevel === "high"
+																			? "bg-red-500"
+																			: "bg-orange-500"
+																		: "bg-indigo-500",
 														)}
 													/>
 													<div className="flex-1 space-y-2">

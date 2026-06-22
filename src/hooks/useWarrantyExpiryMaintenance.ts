@@ -68,8 +68,10 @@ export function useWarrantyExpiryMaintenance() {
 	// Set of VINs currently being archived — prevents double-archiving across concurrent runs.
 	const inFlightVinsRef = useRef<Set<string>>(new Set());
 
-	// Read draft dirty state directly from the store (not from useDraftSession, which is stage-bound).
+	// Read draft dirty state via a ref so the callback stays stable across draft toggles.
 	const isDraftDirty = useAppStore((state) => state.draftSession.dirty);
+	const isDraftDirtyRef = useRef(isDraftDirty);
+	isDraftDirtyRef.current = isDraftDirty;
 
 	const runMaintenance = useCallback(async () => {
 		const now = Date.now();
@@ -81,7 +83,7 @@ export function useWarrantyExpiryMaintenance() {
 
 		// Skip entirely if a draft is active — the draft's baseline snapshot would still show
 		// the rows we're about to archive, causing them to reappear after the draft is saved.
-		if (isDraftDirty) {
+		if (isDraftDirtyRef.current) {
 			return;
 		}
 
@@ -143,16 +145,13 @@ export function useWarrantyExpiryMaintenance() {
 			inFlightVinsRef.current.delete(vin);
 		}
 
-		// Stamp the cooldown only after a complete pass so transient failures are retried promptly.
-		lastMaintenanceRunRef.current = now;
-
 		// Invalidate touched stages so the UI reflects archived rows.
 		for (const stage of ACTIVE_STAGES) {
 			queryClient.invalidateQueries({ queryKey: getOrdersQueryKey(stage) });
 		}
 		queryClient.invalidateQueries({ queryKey: getOrdersQueryKey("archive") });
 		queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-	}, [isDraftDirty, saveOrderMutation, queryClient]);
+	}, [saveOrderMutation, queryClient]);
 
 	return { runMaintenance };
 }
