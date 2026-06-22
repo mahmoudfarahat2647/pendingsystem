@@ -5,7 +5,7 @@ name: Backup & Reports
 
 on:
   schedule:
-    # Runs daily at 10:00 AM Cairo Time (08:00 UTC)
+    # Runs daily at 11:00 AM Cairo Time (08:00 UTC, Cairo is UTC+3)
     - cron: '0 8 * * *'
   workflow_dispatch:
     # Allows manual triggering from the UI or GitHub Actions tab
