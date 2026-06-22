@@ -13,7 +13,7 @@ export const createNotificationSlice: StateCreator<
 	[["zustand/persist", unknown]],
 	[],
 	NotificationState & NotificationActions
-> = (set, get) => ({
+> = (set) => ({
 	notifications: [],
 	dismissedManagedNotificationKeys: {},
 
@@ -68,7 +68,6 @@ export const createNotificationSlice: StateCreator<
 	},
 
 	checkNotifications: () => {
-		const _state = get() as CombinedStore;
 		const now = new Date();
 		const WARRANTY_THRESHOLD_DAYS = 35;
 
