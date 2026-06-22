@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import nodemailer from "nodemailer";
+import { shouldRunToday } from "./lib/backupSchedule.mjs";
 
 // [CRITICAL] PROTECTED FILE - DO NOT MODIFY WITHOUT REVIEW
 // This script handles data backup and email reporting.
@@ -32,158 +33,6 @@ if (missingVars.length > 0) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-/**
- * Helper to get current time in Cairo (UTC+2)
- */
-function getCairoDate() {
-	const now = new Date();
-	// Use Intl to format the date in Cairo timezone
-	const formatter = new Intl.DateTimeFormat("en-US", {
-		timeZone: "Africa/Cairo",
-		year: "numeric",
-		month: "numeric",
-		day: "numeric",
-		weekday: "long",
-	});
-
-	const parts = formatter.formatToParts(now);
-	const dateMap = {};
-	for (const part of parts) {
-		dateMap[part.type] = part.value;
-	}
-
-	return {
-		day: Number.parseInt(dateMap.day, 10),
-		month: Number.parseInt(dateMap.month, 10),
-		year: Number.parseInt(dateMap.year, 10),
-		weekday: dateMap.weekday, // e.g., "Monday"
-	};
-}
-
-/**
- * Parses and validates Weekly-X format.
- * @param {string} frequency - Frequency string like "Weekly-2"
- * @returns {number|null} Day index (0-6) or null if invalid
- */
-function parseWeeklyDayIndex(frequency) {
-	const parts = frequency.split("-");
-	const dayIndex = Number.parseInt(parts[1], 10);
-
-	if (Number.isNaN(dayIndex) || dayIndex < 0 || dayIndex > 6) {
-		console.error(
-			`Invalid Weekly format: ${frequency}. Expected "Weekly-0" to "Weekly-6". Skipping.`,
-		);
-		return null;
-	}
-
-	return dayIndex;
-}
-
-/**
- * Checks if schedule matches specific weekly day.
- * @param {string} dayName - Target day name
- * @param {string} todayName - Today's day name
- * @param {number} dayIndex - Day index for logging
- * @returns {boolean}
- */
-function checkWeeklyMatch(dayName, todayName, dayIndex) {
-	const shouldProcess = todayName === dayName;
-	console.log(
-		`Weekly schedule: Selected ${dayName} (index ${dayIndex}), Today is ${todayName}. Run: ${shouldProcess}`,
-	);
-	return shouldProcess;
-}
-
-/**
- * Checks if schedule matches target date (day and/or month).
- * @param {number} targetDay - Target day of month
- * @param {number} currentDay - Current day of month
- * @param {number} targetMonth - Target month (optional)
- * @param {number} currentMonth - Current month (optional)
- * @param {string} label - Log label
- * @returns {boolean}
- */
-function checkDateMatch(
-	targetDay,
-	currentDay,
-	targetMonth,
-	currentMonth,
-	label,
-) {
-	const shouldProcess =
-		currentDay === targetDay &&
-		(targetMonth === undefined || currentMonth === targetMonth);
-	console.log(`${label}: Run: ${shouldProcess}`);
-	return shouldProcess;
-}
-
-/**
- * Validates if the backup should run today based on settings and schedule.
- * @param {object} settings - Report settings from database
- * @param {boolean} isScheduleRun - Whether this is a triggered schedule run
- * @returns {boolean}
- */
-function shouldRunToday(settings, isScheduleRun) {
-	if (!isScheduleRun) return true;
-
-	if (!settings.is_enabled) {
-		console.log("Backup is disabled. Skipping scheduled run.");
-		return false;
-	}
-
-	const cairo = getCairoDate();
-	console.log("Current Cairo Time:", cairo);
-
-	const frequency = settings.frequency || "Weekly";
-	const dayNames = [
-		"Sunday",
-		"Monday",
-		"Tuesday",
-		"Wednesday",
-		"Thursday",
-		"Friday",
-		"Saturday",
-	];
-
-	if (frequency === "Daily") {
-		console.log("Daily schedule: Running backup.");
-		return true;
-	}
-
-	if (frequency.startsWith("Weekly-")) {
-		const dayIndex = parseWeeklyDayIndex(frequency);
-		if (dayIndex === null) return false;
-		return checkWeeklyMatch(dayNames[dayIndex], cairo.weekday, dayIndex);
-	}
-
-	if (frequency === "Weekly") {
-		return checkWeeklyMatch("Monday", cairo.weekday, 1);
-	}
-
-	if (frequency === "Monthly") {
-		return checkDateMatch(
-			1,
-			cairo.day,
-			undefined,
-			undefined,
-			`Monthly schedule: Run on 1st. Today is ${cairo.day}.`,
-		);
-	}
-
-	if (frequency === "Yearly") {
-		return checkDateMatch(
-			1,
-			cairo.day,
-			1,
-			cairo.month,
-			`Yearly schedule: Run on Jan 1st. Today is ${cairo.month}/${cairo.day}.`,
-		);
-	}
-
-	console.error(`Unknown frequency format: ${frequency}. Skipping.`);
-	return false;
-}
 
 /**
  * Maps raw database orders to the flat structure required for CSV.
@@ -294,7 +143,7 @@ async function sendBackupEmail(
 	const recipients = settings.emails || [];
 	if (recipients.length === 0) {
 		console.log("Recipients list is empty in settings. Skipping email.");
-		return;
+		return false;
 	}
 
 	const dateStr = new Date().toISOString().split("T")[0];
@@ -330,8 +179,22 @@ async function sendBackupEmail(
 		],
 	};
 
-	const info = await transporter.sendMail(mailOptions);
-	console.log("Email sent successfully:", info.messageId);
+	const MAX_ATTEMPTS = 3;
+	let lastError;
+	for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+		try {
+			const info = await transporter.sendMail(mailOptions);
+			console.log(`Email sent successfully (attempt ${attempt}):`, info.messageId);
+			return true;
+		} catch (err) {
+			lastError = err;
+			console.error(`Email attempt ${attempt}/${MAX_ATTEMPTS} failed:`, err.message);
+			if (attempt < MAX_ATTEMPTS) {
+				await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+			}
+		}
+	}
+	throw lastError;
 }
 
 try {
@@ -418,19 +281,21 @@ try {
 	const csvContent = generateCSV(mappedData, headers);
 
 	// 5. Send Email
-	await sendBackupEmail(settings, mappedData, csvContent, isScheduleRun);
+	const emailSent = await sendBackupEmail(settings, mappedData, csvContent, isScheduleRun);
 
-	// 6. Update last_sent_at
-	console.log("Updating last_sent_at in database...");
-	const { error: updateError } = await supabase
-		.from("report_settings")
-		.update({ last_sent_at: new Date().toISOString() })
-		.eq("id", settings.id);
+	// 6. Update last_sent_at only when an email was actually sent
+	if (emailSent) {
+		console.log("Updating last_sent_at in database...");
+		const { error: updateError } = await supabase
+			.from("report_settings")
+			.update({ last_sent_at: new Date().toISOString() })
+			.eq("id", settings.id);
 
-	if (updateError) {
-		console.error("Error updating last_sent_at:", updateError);
-	} else {
-		console.log("Database updated with last_sent_at.");
+		if (updateError) {
+			console.error("Error updating last_sent_at:", updateError);
+		} else {
+			console.log("Database updated with last_sent_at.");
+		}
 	}
 } catch (error) {
 	console.error("CRITICAL: Backup process failed:");
