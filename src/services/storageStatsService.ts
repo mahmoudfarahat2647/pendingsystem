@@ -8,51 +8,6 @@ import {
 } from "@/lib/storage-limits";
 import type { StorageStatsResponse } from "@/types";
 
-/**
- * Recursively lists all files in a storage bucket, traversing subdirectories
- * and paginating beyond the 1,000-item limit per request.
- */
-async function getRecursiveBucketSize(
-	supabase: SupabaseClient,
-	bucketId: string,
-	prefix = "",
-): Promise<number> {
-	let totalSize = 0;
-	let offset = 0;
-	const PAGE_SIZE = 1000;
-
-	while (true) {
-		const { data: items, error } = await supabase.storage
-			.from(bucketId)
-			.list(prefix, { limit: PAGE_SIZE, offset });
-
-		if (error) {
-			throw error;
-		}
-
-		if (!items || items.length === 0) break;
-
-		for (const item of items) {
-			if (item.id === null) {
-				// Directory — recurse into it
-				const subPrefix = prefix ? `${prefix}/${item.name}` : item.name;
-				totalSize += await getRecursiveBucketSize(
-					supabase,
-					bucketId,
-					subPrefix,
-				);
-			} else {
-				totalSize += item.metadata?.size || 0;
-			}
-		}
-
-		if (items.length < PAGE_SIZE) break;
-		offset += PAGE_SIZE;
-	}
-
-	return totalSize;
-}
-
 function withTimeout<T>(promise: PromiseLike<T>, label: string): Promise<T> {
 	return new Promise<T>((resolve, reject) => {
 		const timer = setTimeout(() => {
@@ -86,9 +41,9 @@ export async function getStorageStats(
 	let storageUsedBytes = 0;
 	let storageAvailable = false;
 
-	const [dbResult, bucketsResult] = await Promise.allSettled([
+	const [dbResult, storageResult] = await Promise.allSettled([
 		withTimeout(supabase.rpc("get_database_size_bytes"), "Database size RPC"),
-		withTimeout(supabase.storage.listBuckets(), "Storage bucket listing"),
+		withTimeout(supabase.rpc("get_storage_size_bytes"), "Storage size RPC"),
 	]);
 
 	if (dbResult.status === "fulfilled") {
@@ -103,41 +58,16 @@ export async function getStorageStats(
 		logger.error("Error fetching DB size via RPC:", dbResult.reason);
 	}
 
-	if (bucketsResult.status === "fulfilled") {
-		const { data: buckets, error: bucketError } = bucketsResult.value;
-		if (!bucketError && buckets) {
-			const bucketSizeResults = await Promise.allSettled(
-				buckets.map((bucket) =>
-					withTimeout(
-						getRecursiveBucketSize(supabase, bucket.id),
-						`Storage usage for bucket "${bucket.id}"`,
-					),
-				),
-			);
-
-			const hasBucketFailures = bucketSizeResults.some(
-				(result) => result.status === "rejected",
-			);
-
-			if (hasBucketFailures) {
-				for (const result of bucketSizeResults) {
-					if (result.status === "rejected") {
-						logger.error("Error computing storage usage:", result.reason);
-					}
-				}
-			} else {
-				storageUsedBytes = bucketSizeResults.reduce(
-					(total, result) =>
-						total + (result.status === "fulfilled" ? result.value : 0),
-					0,
-				);
-				storageAvailable = true;
-			}
-		} else if (bucketError) {
-			logger.error("Error listing storage buckets:", bucketError);
+	if (storageResult.status === "fulfilled") {
+		const { data: storageData, error: storageError } = storageResult.value;
+		if (storageError) {
+			logger.error("Error fetching storage size via RPC:", storageError);
+		} else {
+			storageUsedBytes = storageData ?? 0;
+			storageAvailable = true;
 		}
 	} else {
-		logger.error("Error listing storage buckets:", bucketsResult.reason);
+		logger.error("Error fetching storage size via RPC:", storageResult.reason);
 	}
 
 	const combinedUsedBytes =

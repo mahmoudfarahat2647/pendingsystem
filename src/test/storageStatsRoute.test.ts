@@ -23,18 +23,27 @@ vi.mock("@/lib/auth", () => ({
 
 // Mock @supabase/supabase-js
 const mockRpc = vi.fn();
-const mockListBuckets = vi.fn();
-const mockStorageFrom = vi.fn();
 
 vi.mock("@supabase/supabase-js", () => ({
 	createClient: () => ({
 		rpc: mockRpc,
-		storage: {
-			listBuckets: mockListBuckets,
-			from: mockStorageFrom,
-		},
 	}),
 }));
+
+/**
+ * Dispatches the two storage-stats RPCs by function name so each can be given
+ * an independent result.
+ */
+function mockRpcResults(results: {
+	db: { data: unknown; error: unknown };
+	storage: { data: unknown; error: unknown };
+}) {
+	mockRpc.mockImplementation((fn: string) =>
+		Promise.resolve(
+			fn === "get_database_size_bytes" ? results.db : results.storage,
+		),
+	);
+}
 
 describe("GET /api/storage-stats", () => {
 	const originalEnv = process.env;
@@ -47,8 +56,6 @@ describe("GET /api/storage-stats", () => {
 			SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
 		};
 		mockRpc.mockReset();
-		mockListBuckets.mockReset();
-		mockStorageFrom.mockReset();
 	});
 
 	afterEach(() => {
@@ -70,18 +77,9 @@ describe("GET /api/storage-stats", () => {
 	});
 
 	it("should return complete data when both sources succeed", async () => {
-		mockRpc.mockResolvedValue({ data: 10_000_000, error: null });
-		mockListBuckets.mockResolvedValue({
-			data: [{ id: "uploads" }],
-			error: null,
-		});
-		mockStorageFrom.mockReturnValue({
-			list: vi.fn().mockResolvedValue({
-				data: [
-					{ id: "file1", name: "file1.pdf", metadata: { size: 5_000_000 } },
-				],
-				error: null,
-			}),
+		mockRpcResults({
+			db: { data: 10_000_000, error: null },
+			storage: { data: 5_000_000, error: null },
 		});
 
 		const response = await callGET();
@@ -96,11 +94,10 @@ describe("GET /api/storage-stats", () => {
 	});
 
 	it("should return dbAvailable false when RPC fails", async () => {
-		mockRpc.mockResolvedValue({
-			data: null,
-			error: { message: "function not found" },
+		mockRpcResults({
+			db: { data: null, error: { message: "function not found" } },
+			storage: { data: 0, error: null },
 		});
-		mockListBuckets.mockResolvedValue({ data: [], error: null });
 
 		const response = await callGET();
 		expect(response.status).toBe(200);
@@ -113,11 +110,10 @@ describe("GET /api/storage-stats", () => {
 		expect(body.combinedUsedBytes).toBeNull();
 	});
 
-	it("should return storageAvailable false when bucket listing fails", async () => {
-		mockRpc.mockResolvedValue({ data: 10_000_000, error: null });
-		mockListBuckets.mockResolvedValue({
-			data: null,
-			error: { message: "permission denied" },
+	it("should return storageAvailable false when storage RPC fails", async () => {
+		mockRpcResults({
+			db: { data: 10_000_000, error: null },
+			storage: { data: null, error: { message: "permission denied" } },
 		});
 
 		const response = await callGET();
@@ -125,6 +121,7 @@ describe("GET /api/storage-stats", () => {
 
 		const body = response.body as unknown as Record<string, unknown>;
 		expect(body.dbAvailable).toBe(true);
+		expect(body.storageUsedBytes).toBe(0);
 		expect(body.storageAvailable).toBe(false);
 		expect(body.dataComplete).toBe(false);
 		expect(body.combinedUsedBytes).toBeNull();
@@ -133,9 +130,6 @@ describe("GET /api/storage-stats", () => {
 	it("should return degraded data when Supabase calls exceed the timeout", async () => {
 		vi.useFakeTimers();
 		mockRpc.mockImplementation(
-			() => new Promise(() => undefined) as Promise<unknown>,
-		);
-		mockListBuckets.mockImplementation(
 			() => new Promise(() => undefined) as Promise<unknown>,
 		);
 
@@ -155,33 +149,11 @@ describe("GET /api/storage-stats", () => {
 		expect(body.combinedUsedBytes).toBeNull();
 	});
 
-	it("should mark storage unavailable when recursive bucket listing fails", async () => {
-		mockRpc.mockResolvedValue({ data: 10_000_000, error: null });
-		mockListBuckets.mockResolvedValue({
-			data: [{ id: "uploads" }],
-			error: null,
-		});
-		mockStorageFrom.mockReturnValue({
-			list: vi.fn().mockResolvedValue({
-				data: null,
-				error: { message: "timeout" },
-			}),
-		});
-
-		const response = await callGET();
-		expect(response.status).toBe(200);
-
-		const body = response.body as unknown as Record<string, unknown>;
-		expect(body.dbAvailable).toBe(true);
-		expect(body.storageUsedBytes).toBe(0);
-		expect(body.storageAvailable).toBe(false);
-		expect(body.dataComplete).toBe(false);
-		expect(body.combinedUsedBytes).toBeNull();
-	});
-
 	it("should include correct limit constants", async () => {
-		mockRpc.mockResolvedValue({ data: 0, error: null });
-		mockListBuckets.mockResolvedValue({ data: [], error: null });
+		mockRpcResults({
+			db: { data: 0, error: null },
+			storage: { data: 0, error: null },
+		});
 
 		const response = await callGET();
 		const body = response.body as unknown as Record<string, unknown>;
