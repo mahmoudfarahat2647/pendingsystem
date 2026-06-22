@@ -1,3 +1,4 @@
+import { QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -83,7 +84,11 @@ describe("Header notification polling", () => {
 
 	it("polls again within the same minute once the freshness window has elapsed", async () => {
 		seedQueryState();
-		render(<Header />);
+		render(
+			<QueryClientProvider client={queryClient}>
+				<Header />
+			</QueryClientProvider>,
+		);
 
 		await act(async () => {
 			await vi.advanceTimersByTimeAsync(3000);
@@ -103,7 +108,11 @@ describe("Header notification polling", () => {
 
 	it("skips unchanged data when the last scan was less than eight seconds ago", async () => {
 		seedQueryState();
-		render(<Header />);
+		render(
+			<QueryClientProvider client={queryClient}>
+				<Header />
+			</QueryClientProvider>,
+		);
 
 		await act(async () => {
 			await vi.advanceTimersByTimeAsync(3000);

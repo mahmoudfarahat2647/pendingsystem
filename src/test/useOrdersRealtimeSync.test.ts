@@ -11,6 +11,7 @@ vi.mock("@tanstack/react-query", () => ({
 
 vi.mock("@/lib/queryClient", () => ({
 	getOrdersQueryKey: (stage: string) => ["orders", stage],
+	DASHBOARD_STATS_QUERY_KEY: ["dashboard-stats"],
 }));
 
 let capturedInsertCallback: (() => void) | null = null;
@@ -57,7 +58,7 @@ describe("useOrdersRealtimeSync", () => {
 			capturedInsertCallback?.();
 		});
 
-		expect(mockInvalidateQueries).toHaveBeenCalledTimes(1);
+		expect(mockInvalidateQueries).toHaveBeenCalledTimes(2);
 		expect(mockInvalidateQueries).toHaveBeenCalledWith({
 			queryKey: ["orders", "orders"],
 		});
@@ -92,7 +93,7 @@ describe("useOrdersRealtimeSync", () => {
 			rerender();
 		});
 
-		expect(mockInvalidateQueries).toHaveBeenCalledTimes(1);
+		expect(mockInvalidateQueries).toHaveBeenCalledTimes(2);
 		expect(mockInvalidateQueries).toHaveBeenCalledWith({
 			queryKey: ["orders", "orders"],
 		});
