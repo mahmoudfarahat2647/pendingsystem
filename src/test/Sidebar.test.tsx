@@ -13,8 +13,6 @@ const storeMocks = vi.hoisted(() => ({
 	state: {
 		currentEditVin: null as string | null,
 		clearCurrentEditVin: vi.fn(),
-		ordersRowData: [] as Array<{ vin?: string | null }>,
-		rowData: [] as Array<{ vin?: string | null }>,
 	},
 }));
 
@@ -68,8 +66,6 @@ describe("Sidebar", () => {
 		navigationMocks.push.mockReset();
 		storeMocks.state.currentEditVin = null;
 		storeMocks.state.clearCurrentEditVin.mockReset();
-		storeMocks.state.ordersRowData = [];
-		storeMocks.state.rowData = [];
 	});
 
 	it("navigates to the dashboard when the logo is clicked", async () => {

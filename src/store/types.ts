@@ -16,48 +16,6 @@ import type {
 
 export type { ReportSettings };
 
-export interface OrdersState {
-	ordersRowData: PendingRow[];
-}
-
-export interface OrdersActions {
-	addOrder: (order: PendingRow) => void;
-	addOrders: (orders: PendingRow[]) => void;
-	updateOrder: (id: string, updates: Partial<PendingRow>) => void;
-	updateOrders: (ids: string[], updates: Partial<PendingRow>) => void;
-	deleteOrders: (ids: string[]) => void;
-	setOrdersRowData: (orders: PendingRow[]) => void;
-}
-
-export interface InventoryState {
-	rowData: PendingRow[];
-	callRowData: PendingRow[];
-	archiveRowData: PendingRow[];
-}
-
-export interface InventoryActions {
-	sendToCallList: (ids: string[]) => void;
-	updatePartStatus: (id: string, status: string) => void;
-	setRowData: (data: PendingRow[]) => void;
-	setCallRowData: (data: PendingRow[]) => void;
-	setArchiveRowData: (data: PendingRow[]) => void;
-}
-
-export interface BookingState {
-	bookingRowData: PendingRow[];
-}
-
-export interface BookingActions {
-	sendToBooking: (
-		ids: string[],
-		bookingDate: string,
-		bookingNote?: string,
-		bookingStatus?: string,
-	) => void;
-	updateBookingStatus: (id: string, bookingStatus: string) => void;
-	setBookingRowData: (data: PendingRow[]) => void;
-}
-
 export interface NotificationState {
 	notifications: AppNotification[];
 	// Using Record<string, true> instead of Set<string> because it serializes cleanly to JSON for localStorage persistence via Zustand persist
@@ -151,17 +109,11 @@ export interface DraftSessionActions {
 	_clearRecovery: () => void;
 }
 
-export type StoreState = OrdersState &
-	InventoryState &
-	BookingState &
-	NotificationState &
+export type StoreState = NotificationState &
 	UIState &
 	DraftSessionState &
 	GridSliceState;
-export type StoreActions = OrdersActions &
-	InventoryActions &
-	BookingActions &
-	NotificationActions &
+export type StoreActions = NotificationActions &
 	UIActions &
 	DraftSessionActions &
 	GridSliceActions;

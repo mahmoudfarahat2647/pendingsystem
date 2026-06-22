@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { ORDER_STAGES } from "@/lib/constants";
 import {
 	type DeleteContext,
 	getErrorMessage,
@@ -10,7 +11,6 @@ import {
 import {
 	DASHBOARD_STATS_QUERY_KEY,
 	getOrdersQueryKey,
-	ORDER_STAGES,
 } from "@/lib/queryClient";
 import { orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";

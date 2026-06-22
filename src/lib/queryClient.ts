@@ -1,8 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import type { OrderStage } from "@/domain/order/orderStage";
 
-export { ORDER_STAGES } from "@/lib/constants";
-
 export const getOrdersQueryKey = (stage: OrderStage) =>
 	["orders", stage] as const;
 

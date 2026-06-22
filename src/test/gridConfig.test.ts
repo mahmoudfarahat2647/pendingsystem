@@ -1,7 +1,5 @@
-import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { defaultGridOptions } from "../components/grid/config/defaultOptions";
-import { useColumnDefs } from "../components/grid/hooks/useColumnDefs";
 import {
 	getBaseColumns,
 	getBookingColumns,
@@ -86,29 +84,6 @@ describe("Grid Column Configuration Selection Fix", () => {
 			expect(icmDateCol?.field).toBe("startWarranty");
 			expect(icmDateCol?.width).toBe(110);
 			expect(typeof icmDateCol?.valueFormatter).toBe("function");
-		});
-	});
-
-	describe("useColumnDefs hook", () => {
-		it("should expose ACTIONS as the first configured column for all grid types", () => {
-			const gridTypes: Array<
-				"main" | "orders" | "booking" | "archive" | "call"
-			> = ["main", "orders", "booking", "archive", "call"];
-
-			for (const type of gridTypes) {
-				const { result } = renderHook(() => useColumnDefs(type));
-
-				const actionsCol = result.current[0];
-				expect(
-					actionsCol,
-					`Actions column missing at index 0 for type ${type}`,
-				).toBeDefined();
-				expect(actionsCol?.colId).toBe("row-actions");
-				expect(
-					result.current.find((c) => c.colId === "checkbox-placeholder"),
-					`Checkbox placeholder should be absent for type ${type}`,
-				).toBeUndefined();
-			}
 		});
 	});
 

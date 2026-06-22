@@ -61,11 +61,6 @@ describe("notificationSlice", () => {
 					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
 					...createNotificationSlice(a[0], a[1], a[2] as any),
 					// Mock other slices/state required by checkNotifications
-					rowData: [],
-					ordersRowData: [],
-					bookingRowData: [],
-					callRowData: [],
-					archiveRowData: [],
 					notifications: [],
 					// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 				}) as unknown as any,
@@ -83,11 +78,6 @@ describe("notificationSlice", () => {
 				({
 					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
 					...createNotificationSlice(a[0], a[1], a[2] as any),
-					rowData: [],
-					ordersRowData: [],
-					bookingRowData: [],
-					callRowData: [],
-					archiveRowData: [],
 					notifications: [],
 					// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
 				}) as unknown as any,

@@ -10,11 +10,8 @@ vi.mock("sonner", () => ({
 }));
 
 import type { OrderStage } from "@/domain/order/orderStage";
-import {
-	getOrdersQueryKey,
-	ORDER_STAGES,
-	queryClient,
-} from "@/lib/queryClient";
+import { ORDER_STAGES } from "@/lib/constants";
+import { getOrdersQueryKey, queryClient } from "@/lib/queryClient";
 import type { DraftRecoverySnapshot } from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
 import type { PatchRowCommand, PendingRow } from "@/types";

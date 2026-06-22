@@ -2,21 +2,15 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { createBookingSlice } from "./slices/bookingSlice";
 import { createDraftSessionSlice } from "./slices/draftSessionSlice";
 import { createGridSlice } from "./slices/gridSlice";
-import { createInventorySlice } from "./slices/inventorySlice";
 import { createNotificationSlice } from "./slices/notificationSlice";
-import { createOrdersSlice } from "./slices/ordersSlice";
 import { createUISlice, defaultPartStatuses } from "./slices/uiSlice";
 import type { CombinedStore } from "./types";
 
 export const useAppStore = create<CombinedStore>()(
 	persist(
 		(...a) => ({
-			...createOrdersSlice(...a),
-			...createInventorySlice(...a),
-			...createBookingSlice(...a),
 			...createNotificationSlice(...a),
 			...createUISlice(...a),
 			...createDraftSessionSlice(...a),
