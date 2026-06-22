@@ -1,6 +1,5 @@
 import type { StateCreator } from "zustand";
 import { generateId } from "@/lib/utils";
-import type { PendingRow } from "@/types";
 import type { CombinedStore, UIActions, UIState } from "../types";
 
 export const PROTECTED_REPAIR_SYSTEMS = ["ضمان"];
@@ -110,30 +109,11 @@ export const createUISlice: StateCreator<
 				})()
 			: updates;
 
-		const oldLabel = statusToUpdate.label;
-		const newLabel = safeUpdates.label;
-
 		set((state) => ({
 			partStatuses: state.partStatuses.map((s) =>
 				s.id === id ? { ...s, ...safeUpdates } : s,
 			),
 		}));
-
-		// If label changed, bulk update all rows
-		if (newLabel && newLabel !== oldLabel) {
-			const updateRows = (rows: PendingRow[]) =>
-				rows.map((row) =>
-					row.status === oldLabel ? { ...row, status: newLabel } : row,
-				);
-
-			set((state) => ({
-				ordersRowData: updateRows(state.ordersRowData),
-				rowData: updateRows(state.rowData),
-				callRowData: updateRows(state.callRowData),
-				archiveRowData: updateRows(state.archiveRowData),
-				bookingRowData: updateRows(state.bookingRowData),
-			}));
-		}
 	},
 
 	removePartStatusDef: (id) => {

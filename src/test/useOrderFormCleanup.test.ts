@@ -5,11 +5,6 @@ import type { PendingRow } from "../types";
 
 const mocks = vi.hoisted(() => ({
 	storeState: {
-		rowData: [] as PendingRow[],
-		ordersRowData: [] as PendingRow[],
-		callRowData: [] as PendingRow[],
-		bookingRowData: [] as PendingRow[],
-		archiveRowData: [] as PendingRow[],
 		beastModeTriggers: {} as Record<string, number>,
 		setCurrentEditVin: vi.fn(),
 		clearCurrentEditVin: vi.fn(),

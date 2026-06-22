@@ -42,11 +42,6 @@ export const useOrderForm = ({
 	onSubmit,
 }: UseOrderFormOptions) => {
 	// Store selectors
-	const _rowData = useAppStore((state) => state.rowData);
-	const _ordersRowData = useAppStore((state) => state.ordersRowData);
-	const _callRowData = useAppStore((state) => state.callRowData);
-	const _bookingRowData = useAppStore((state) => state.bookingRowData);
-	const _archiveRowData = useAppStore((state) => state.archiveRowData);
 	const _beastModeTriggers = useAppStore((state) => state.beastModeTriggers);
 	const setCurrentEditVin = useAppStore((state) => state.setCurrentEditVin);
 	const clearCurrentEditVin = useAppStore((state) => state.clearCurrentEditVin);

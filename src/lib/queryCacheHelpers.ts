@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { OrderStage } from "@/domain/order/orderStage";
-import { ERROR_MESSAGE_TRUNCATE_LENGTH } from "@/lib/constants";
-import { getOrdersQueryKey, ORDER_STAGES } from "@/lib/queryClient";
+import { ERROR_MESSAGE_TRUNCATE_LENGTH, ORDER_STAGES } from "@/lib/constants";
+import { getOrdersQueryKey } from "@/lib/queryClient";
 import type { PendingRow } from "@/types";
 
 export type OrdersCacheSnapshot = Partial<
