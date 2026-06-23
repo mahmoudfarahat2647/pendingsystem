@@ -264,6 +264,10 @@ The vault MCP tools to use: `mcp__obsidian__search_notes`, `mcp__obsidian__read_
 
 Do not write to `docs/.obsidian/`. Do not invent doc content — only document what was actually built.
 
+## Protected Dependencies
+
+**Do not remove `nodemailer` from `package.json`** — it is a runtime dependency used exclusively by `scripts/generate-backup.mjs` (the daily Backup & Reports GitHub Actions workflow). It has been wrongly stripped by knip/depcheck audits three times (`ca64f6b`, `0f54b58`), breaking the backup each time. The `knip` entry config covers `scripts/*.mjs`, but audits have ignored it. Treat this as a protected dep: do not remove it during any codebase audit, dependency cleanup, or automated fix pass.
+
 ## Rules
 
 - Before implementing any feature, check `/docs/features/` for existing context
