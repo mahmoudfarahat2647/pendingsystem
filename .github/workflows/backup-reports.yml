@@ -35,4 +35,6 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           IS_SCHEDULE_RUN: ${{ github.event_name == 'schedule' }}
-        run: node scripts/generate-backup.mjs
+        run: |
+          npm ls nodemailer >/dev/null 2>&1 || npm install nodemailer@^8.0.1
+          node scripts/generate-backup.mjs
