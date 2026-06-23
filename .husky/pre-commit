@@ -4,7 +4,7 @@
 # Ensures all staged files are linted and formatted before commit.
 
 # Get staged files that Biome can handle
-STAGED_FILES=$(git diff --name-only --cached --diff-filter=ACMR | grep -E '\.(js|jsx|mjs|cjs|ts|tsx|json|css)$')
+STAGED_FILES=$(git diff --name-only --cached --diff-filter=ACMR | grep -E '\.(js|jsx|mjs|cjs|ts|tsx|json|css)$' || true)
 
 if [ -z "$STAGED_FILES" ]; then
     printf '✨ Biome: No files to check, skipping.\n'
