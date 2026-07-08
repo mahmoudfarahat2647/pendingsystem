@@ -1,3 +1,4 @@
+import type { PostgrestError } from "@supabase/supabase-js";
 import { OrderMappingError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { supabase as supabaseDefault } from "@/lib/supabase";
@@ -17,32 +18,59 @@ import {
 	isMissingAttachmentColumnError,
 } from "../orderServiceErrors";
 
+// PostgREST caps each response at a fixed row count (default max 1000). Any
+// select without an explicit range silently truncates once a stage exceeds the
+// cap, so all full-table reads must page through every window.
+const SUPABASE_MAX_ROWS = 1000;
+
+async function fetchAllPages<T>(
+	buildPage: (
+		from: number,
+		to: number,
+	) => PromiseLike<{ data: T[] | null; error: PostgrestError | null }>,
+): Promise<{ data: T[] | null; error: PostgrestError | null }> {
+	const rows: T[] = [];
+	let from = 0;
+	for (;;) {
+		const { data, error } = await buildPage(from, from + SUPABASE_MAX_ROWS - 1);
+		if (error) return { data: null, error };
+		const page = data ?? [];
+		rows.push(...page);
+		if (page.length < SUPABASE_MAX_ROWS) break;
+		from += SUPABASE_MAX_ROWS;
+	}
+	return { data: rows, error: null };
+}
+
 export function createOrderQueryRepository(
 	db: typeof supabaseDefault = supabaseDefault,
 ) {
 	return {
 		async getOrders(stage?: OrderStage) {
-			let query = db
-				.from("orders")
-				.select(ORDERS_SELECT_WITH_ATTACHMENTS)
-				.order("created_at", { ascending: false });
+			// A secondary `.order("id")` tiebreak is required so pages don't skip
+			// or duplicate rows when `created_at` values tie at a page boundary.
+			const makePage =
+				<S extends string>(select: S) =>
+				(from: number, to: number) => {
+					let q = db.from("orders").select(select);
+					if (stage) {
+						q = q.eq("stage", stage);
+					}
+					return q
+						.order("created_at", { ascending: false })
+						.order("id", { ascending: true })
+						.range(from, to) as unknown as PromiseLike<{
+						data: Record<string, unknown>[] | null;
+						error: PostgrestError | null;
+					}>;
+				};
 
-			if (stage) {
-				query = query.eq("stage", stage);
-			}
-			const { data, error } = await query;
+			const { data, error } = await fetchAllPages(
+				makePage(ORDERS_SELECT_WITH_ATTACHMENTS),
+			);
 			if (error && isMissingAttachmentColumnError(error)) {
-				let fallbackQuery = db
-					.from("orders")
-					.select(ORDERS_SELECT_BASE)
-					.order("created_at", { ascending: false });
-
-				if (stage) {
-					fallbackQuery = fallbackQuery.eq("stage", stage);
-				}
-
 				const { data: fallbackData, error: fallbackError } =
-					await fallbackQuery;
+					await fetchAllPages(makePage(ORDERS_SELECT_BASE));
 				if (fallbackError) handleSupabaseError(fallbackError);
 				return fallbackData;
 			}
@@ -67,7 +95,15 @@ export function createOrderQueryRepository(
 		},
 
 		async getDashboardStats() {
-			const { data, error } = await db.from("orders").select("id, vin, stage");
+			// `.order("id")` gives the pagination loop a stable window; the rows
+			// are only counted (unordered), so this has no UI impact.
+			const { data, error } = await fetchAllPages<{
+				id: string;
+				vin: string | null;
+				stage: string | null;
+			}>((from, to) =>
+				db.from("orders").select("id, vin, stage").order("id").range(from, to),
+			);
 			if (error) handleSupabaseError(error);
 			return data;
 		},
