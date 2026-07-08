@@ -3,6 +3,7 @@ import {
 	appendTaggedUserNote,
 	BLANK_VIN_BUCKET,
 	checkVinPartDuplicate,
+	filterPrintableRows,
 	filterReservedRows,
 	findSameOrderDuplicateIndices,
 	findSameOrderDuplicates,
@@ -836,5 +837,75 @@ describe("filterReservedRows", () => {
 
 	it("returns an empty array for an empty row list", () => {
 		expect(filterReservedRows([], defaultPartStatuses)).toEqual([]);
+	});
+});
+
+describe("filterPrintableRows", () => {
+	const defaultPartStatuses = [
+		{ id: "no_stats", label: "Pending" },
+		{ id: "reserve", label: "Reserve" },
+		{ id: "arrived", label: "Arrived" },
+		{ id: "hold", label: "Hold" },
+	];
+
+	it("returns only Pending/Reserve rows from a mixed selection", () => {
+		const rows = [
+			createMockRow({ id: "1", status: "Pending" }),
+			createMockRow({ id: "2", status: "Reserve" }),
+			createMockRow({ id: "3", status: "Arrived" }),
+			createMockRow({ id: "4", status: "Hold" }),
+		];
+		const result = filterPrintableRows(rows, defaultPartStatuses);
+		expect(result.map((r) => r.id)).toEqual(["1", "2"]);
+	});
+
+	it("is case-insensitive and trim-tolerant", () => {
+		const rows = [
+			createMockRow({ id: "1", status: "  pending  " }),
+			createMockRow({ id: "2", status: "RESERVE" }),
+		];
+		const result = filterPrintableRows(rows, defaultPartStatuses);
+		expect(result.map((r) => r.id)).toEqual(["1", "2"]);
+	});
+
+	it("matches renamed Pending/Reserve labels via id", () => {
+		const renamedStatuses = [
+			{ id: "no_stats", label: "Awaiting Parts" },
+			{ id: "reserve", label: "Reserved" },
+			{ id: "arrived", label: "Arrived" },
+		];
+		const rows = [
+			createMockRow({ id: "1", status: "Awaiting Parts" }),
+			createMockRow({ id: "2", status: "Reserved" }),
+			createMockRow({ id: "3", status: "Arrived" }),
+		];
+		const result = filterPrintableRows(rows, renamedStatuses);
+		expect(result.map((r) => r.id)).toEqual(["1", "2"]);
+	});
+
+	it("excludes custom statuses", () => {
+		const statusesWithCustom = [
+			...defaultPartStatuses,
+			{ id: "custom-1", label: "Backordered" },
+		];
+		const rows = [
+			createMockRow({ id: "1", status: "Backordered" }),
+			createMockRow({ id: "2", status: "Pending" }),
+		];
+		const result = filterPrintableRows(rows, statusesWithCustom);
+		expect(result.map((r) => r.id)).toEqual(["2"]);
+	});
+
+	it("returns an empty array when neither Pending nor Reserve is defined", () => {
+		const noPrintableStatuses = [
+			{ id: "arrived", label: "Arrived" },
+			{ id: "hold", label: "Hold" },
+		];
+		const row = createMockRow({ id: "1", status: "Arrived" });
+		expect(filterPrintableRows([row], noPrintableStatuses)).toEqual([]);
+	});
+
+	it("returns an empty array for an empty row list", () => {
+		expect(filterPrintableRows([], defaultPartStatuses)).toEqual([]);
 	});
 });
