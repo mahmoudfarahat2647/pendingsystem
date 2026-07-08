@@ -383,3 +383,24 @@ export function filterReservedRows(
 		(r) => (r.status ?? "").trim().toLowerCase() === normalized,
 	);
 }
+
+/**
+ * Filters a selection of rows to only those whose `status` matches the
+ * configured "Pending" (`id === "no_stats"`) or "Reserve" (`id === "reserve"`)
+ * part-status labels. Only these statuses are printable via the Print
+ * action — any other status (Hold, Arrived, custom statuses, etc.) is
+ * excluded. Comparison is trim + case-insensitive so label renames are
+ * handled transparently.
+ */
+export function filterPrintableRows(
+	rows: PendingRow[],
+	partStatuses: { id: string; label: string }[],
+): PendingRow[] {
+	const printableLabels = partStatuses
+		.filter((s) => s.id === "no_stats" || s.id === "reserve")
+		.map((s) => s.label.trim().toLowerCase());
+	if (printableLabels.length === 0) return [];
+	return rows.filter((r) =>
+		printableLabels.includes((r.status ?? "").trim().toLowerCase()),
+	);
+}

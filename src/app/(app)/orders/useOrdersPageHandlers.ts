@@ -7,6 +7,7 @@ import type { FormData } from "@/components/orders/form";
 import { normalizeMileageAsNumber } from "@/domain/order/mileage";
 import {
 	appendTaggedUserNote,
+	filterPrintableRows,
 	filterReservedRows,
 	getEffectiveNoteHistory,
 	getSelectedIds,
@@ -396,7 +397,11 @@ export const useOrdersPageHandlers = () => {
 
 	const handlePrint = () => {
 		if (selectedRows.length === 0) return;
-		printOrderDocument(selectedRows);
+
+		const printableRows = filterPrintableRows(selectedRows, partStatuses);
+		if (printableRows.length === 0) return;
+
+		printOrderDocument(printableRows);
 	};
 
 	const handleReserve = () => {
