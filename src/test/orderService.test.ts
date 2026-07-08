@@ -31,8 +31,9 @@ describe("orderService", () => {
 		(supabase.from as unknown as { mockReturnValue: Function }).mockReturnValue(
 			{
 				select: vi.fn().mockReturnThis(),
+				eq: vi.fn().mockReturnThis(),
 				order: vi.fn().mockReturnThis(),
-				eq: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+				range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			},
 		);
 
@@ -51,10 +52,10 @@ describe("orderService", () => {
 			hint: null,
 		};
 		const mockData = [{ id: "1", stage: "orders", metadata: {} }];
-		const initialOrder = vi
+		const initialRange = vi
 			.fn()
 			.mockResolvedValue({ data: null, error: missingColumnError });
-		const fallbackOrder = vi
+		const fallbackRange = vi
 			.fn()
 			.mockResolvedValue({ data: mockData, error: null });
 
@@ -62,11 +63,13 @@ describe("orderService", () => {
 		(supabase.from as unknown as { mockReturnValueOnce: Function })
 			.mockReturnValueOnce({
 				select: vi.fn().mockReturnThis(),
-				order: initialOrder,
+				order: vi.fn().mockReturnThis(),
+				range: initialRange,
 			})
 			.mockReturnValueOnce({
 				select: vi.fn().mockReturnThis(),
-				order: fallbackOrder,
+				order: vi.fn().mockReturnThis(),
+				range: fallbackRange,
 			});
 
 		const result = await orderService.getOrders();
@@ -498,8 +501,11 @@ describe("orderService", () => {
 			const mockData = [{ id: "x", stage: "main" }];
 			const chainable: Record<string, unknown> = {};
 			chainable.select = vi.fn().mockReturnValue(chainable);
+			chainable.eq = vi.fn().mockReturnValue(chainable);
 			chainable.order = vi.fn().mockReturnValue(chainable);
-			chainable.eq = vi.fn().mockResolvedValue({ data: mockData, error: null });
+			chainable.range = vi
+				.fn()
+				.mockResolvedValue({ data: mockData, error: null });
 			const mockFrom = vi.fn().mockReturnValue(chainable);
 			const mockDb = { from: mockFrom } as unknown as Parameters<
 				typeof createOrderQueryRepository
@@ -514,6 +520,84 @@ describe("orderService", () => {
 
 		it("uses the real supabase client when no db is injected", () => {
 			expect(() => createOrderRepository()).not.toThrow();
+		});
+	});
+
+	describe("createOrderQueryRepository – pagination", () => {
+		function makePagedDb(range: ReturnType<typeof vi.fn>) {
+			const chainable: Record<string, unknown> = {
+				select: vi.fn().mockReturnThis(),
+				eq: vi.fn().mockReturnThis(),
+				order: vi.fn().mockReturnThis(),
+				range,
+			};
+			return {
+				from: vi.fn().mockReturnValue(chainable),
+			} as unknown as Parameters<typeof createOrderQueryRepository>[0];
+		}
+
+		it("getOrders fetches every page until a short page ends the loop", async () => {
+			const firstPage = Array.from({ length: 1000 }, (_, i) => ({
+				id: `id-${i}`,
+				stage: "archive",
+			}));
+			const secondPage = [{ id: "id-1000", stage: "archive" }];
+			const range = vi.fn((from: number) =>
+				Promise.resolve({
+					data: from === 0 ? firstPage : secondPage,
+					error: null,
+				}),
+			);
+
+			const svc = createOrderQueryRepository(makePagedDb(range));
+			const result = await svc.getOrders("archive");
+
+			expect(result).toHaveLength(1001);
+			expect(range).toHaveBeenCalledTimes(2);
+			expect(range).toHaveBeenNthCalledWith(1, 0, 999);
+			expect(range).toHaveBeenNthCalledWith(2, 1000, 1999);
+		});
+
+		it("getDashboardStats paginates the same way", async () => {
+			const firstPage = Array.from({ length: 1000 }, (_, i) => ({
+				id: `id-${i}`,
+				vin: null,
+				stage: "main",
+			}));
+			const secondPage = [{ id: "id-1000", vin: null, stage: "call" }];
+			const range = vi.fn((from: number) =>
+				Promise.resolve({
+					data: from === 0 ? firstPage : secondPage,
+					error: null,
+				}),
+			);
+
+			const svc = createOrderQueryRepository(makePagedDb(range));
+			const result = await svc.getDashboardStats();
+
+			expect(result).toHaveLength(1001);
+			expect(range).toHaveBeenCalledTimes(2);
+			expect(range).toHaveBeenNthCalledWith(1, 0, 999);
+			expect(range).toHaveBeenNthCalledWith(2, 1000, 1999);
+		});
+
+		it("getOrders surfaces a non-attachment error via handleSupabaseError", async () => {
+			const range = vi.fn().mockResolvedValue({
+				data: null,
+				error: {
+					code: "57014",
+					message: "statement timeout",
+					details: null,
+					hint: null,
+				},
+			});
+
+			const svc = createOrderQueryRepository(makePagedDb(range));
+
+			await expect(svc.getOrders("archive")).rejects.toThrow(
+				"statement timeout",
+			);
+			expect(range).toHaveBeenCalledTimes(1);
 		});
 	});
 });
