@@ -48,6 +48,32 @@ async function fetchAllPages<T>(
 	return { data: rows, error: null };
 }
 
+// Same paging contract as fetchAllPages, but stops as soon as `check` finds a
+// match instead of draining every remaining page first — used by the
+// duplicate-check queries below, which only need the first match, not the
+// full result set.
+async function scanPages<T, R>(
+	buildPage: (
+		from: number,
+		to: number,
+	) => PromiseLike<{ data: T[] | null; error: PostgrestError | null }>,
+	check: (row: T) => R | undefined,
+): Promise<{ result: R | undefined; error: PostgrestError | null }> {
+	let from = 0;
+	for (;;) {
+		const { data, error } = await buildPage(from, from + SUPABASE_MAX_ROWS - 1);
+		if (error) return { result: undefined, error };
+		const page = data ?? [];
+		for (const row of page) {
+			const result = check(row);
+			if (result !== undefined) return { result, error: null };
+		}
+		if (page.length < SUPABASE_MAX_ROWS) break;
+		from += SUPABASE_MAX_ROWS;
+	}
+	return { result: undefined, error: null };
+}
+
 export function createOrderQueryRepository(
 	db: typeof supabaseDefault = supabaseDefault,
 ) {
@@ -134,47 +160,50 @@ export function createOrderQueryRepository(
 				Array.isArray(excludeIds) ? excludeIds : excludeIds ? [excludeIds] : [],
 			);
 
-			const { data, error } = await fetchAllPages<{
-				id: string;
-				vin: string | null;
-				stage: string | null;
-				metadata: unknown;
-			}>((from, to) =>
-				db
-					.from("orders")
-					.select("id, vin, stage, metadata")
-					.ilike("vin", escapeLikePattern(normalizedVin))
-					.filter(
-						"metadata->>partNumber",
-						"ilike",
-						escapeLikePattern(normalizedPart),
-					)
-					.order("id")
-					.range(from, to),
+			const { result, error } = await scanPages<
+				{
+					id: string;
+					vin: string | null;
+					stage: string | null;
+					metadata: unknown;
+				},
+				DuplicateCheckResult
+			>(
+				(from, to) =>
+					db
+						.from("orders")
+						.select("id, vin, stage, metadata")
+						.ilike("vin", escapeLikePattern(normalizedVin))
+						.filter(
+							"metadata->>partNumber",
+							"ilike",
+							escapeLikePattern(normalizedPart),
+						)
+						.order("id")
+						.range(from, to),
+				(row) => {
+					if (excludeSet.has(row.id)) return undefined;
+
+					const rowPart = (row.metadata as Record<string, unknown>)
+						?.partNumber as string | undefined;
+					if (rowPart?.toUpperCase() === normalizedPart) {
+						return {
+							isDuplicate: true,
+							existingRow: {
+								id: row.id,
+								vin: row.vin || "",
+								stage: row.stage,
+							} as PendingRow,
+							location: row.stage || "history",
+						};
+					}
+					return undefined;
+				},
 			);
 
 			if (error) handleSupabaseError(error);
 
-			for (const row of data || []) {
-				if (excludeSet.has(row.id)) continue;
-
-				const rowPart = (row.metadata as Record<string, unknown>)?.partNumber as
-					| string
-					| undefined;
-				if (rowPart?.toUpperCase() === normalizedPart) {
-					return {
-						isDuplicate: true,
-						existingRow: {
-							id: row.id,
-							vin: row.vin || "",
-							stage: row.stage,
-						} as PendingRow,
-						location: row.stage || "history",
-					};
-				}
-			}
-
-			return { isDuplicate: false };
+			return result ?? { isDuplicate: false };
 		},
 
 		async checkHistoricalDescriptionConflict(
@@ -189,52 +218,55 @@ export function createOrderQueryRepository(
 			const normalizedPart = partNumber.trim().toUpperCase();
 			const normalizedDesc = currentDescription.trim().toLowerCase();
 
-			const { data, error } = await fetchAllPages<{
-				id: string;
-				vin: string | null;
-				stage: string | null;
-				metadata: unknown;
-			}>((from, to) =>
-				db
-					.from("orders")
-					.select("id, vin, stage, metadata")
-					.filter(
-						"metadata->>partNumber",
-						"ilike",
-						escapeLikePattern(normalizedPart),
-					)
-					.order("id")
-					.range(from, to),
+			const { result, error } = await scanPages<
+				{
+					id: string;
+					vin: string | null;
+					stage: string | null;
+					metadata: unknown;
+				},
+				DescriptionConflictResult
+			>(
+				(from, to) =>
+					db
+						.from("orders")
+						.select("id, vin, stage, metadata")
+						.filter(
+							"metadata->>partNumber",
+							"ilike",
+							escapeLikePattern(normalizedPart),
+						)
+						.order("id")
+						.range(from, to),
+				(row) => {
+					if (currentRowId && row.id === currentRowId) return undefined;
+
+					const rowPart = (row.metadata as Record<string, unknown>)
+						?.partNumber as string | undefined;
+					const rowDesc = (row.metadata as Record<string, unknown>)
+						?.description as string | undefined;
+
+					if (
+						rowPart?.toUpperCase() === normalizedPart &&
+						rowDesc?.trim().toLowerCase() !== normalizedDesc
+					) {
+						return {
+							hasConflict: true,
+							existingDescription: rowDesc,
+							existingRow: {
+								id: row.id,
+								vin: row.vin || "",
+								stage: row.stage,
+							} as PendingRow,
+						};
+					}
+					return undefined;
+				},
 			);
 
 			if (error) handleSupabaseError(error);
 
-			for (const row of data || []) {
-				if (currentRowId && row.id === currentRowId) continue;
-
-				const rowPart = (row.metadata as Record<string, unknown>)?.partNumber as
-					| string
-					| undefined;
-				const rowDesc = (row.metadata as Record<string, unknown>)
-					?.description as string | undefined;
-
-				if (
-					rowPart?.toUpperCase() === normalizedPart &&
-					rowDesc?.trim().toLowerCase() !== normalizedDesc
-				) {
-					return {
-						hasConflict: true,
-						existingDescription: rowDesc,
-						existingRow: {
-							id: row.id,
-							vin: row.vin || "",
-							stage: row.stage,
-						} as PendingRow,
-					};
-				}
-			}
-
-			return { hasConflict: false };
+			return result ?? { hasConflict: false };
 		},
 	};
 }

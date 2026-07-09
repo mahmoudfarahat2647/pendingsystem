@@ -118,23 +118,27 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 			props.setIsCheckingDuplicates(true);
 			try {
 				if (props.formData.vin && props.formData.vin.length >= 6) {
-					for (const part of props.parts) {
-						if (!part.partNumber.trim()) continue;
+					const partsToCheck = props.parts.filter((p) => p.partNumber.trim());
+					const results = await Promise.all(
+						partsToCheck.map((part) =>
+							props.checkHistoricalDuplicate(
+								props.formData.vin,
+								part.partNumber,
+								props.isEditMode ? part.rowId : undefined,
+							),
+						),
+					);
 
-						const result = await props.checkHistoricalDuplicate(
-							props.formData.vin,
-							part.partNumber,
-							props.isEditMode ? part.rowId : undefined,
-						);
-
-						if (result.isDuplicate) {
-							props.setDuplicateWarning({
-								location: result.location || "unknown",
-								vin: props.formData.vin,
-								partNumber: part.partNumber,
-							});
-							return; // Block submission
-						}
+					const duplicateIndex = results.findIndex((r) => r.isDuplicate);
+					if (duplicateIndex !== -1) {
+						const part = partsToCheck[duplicateIndex];
+						const result = results[duplicateIndex];
+						props.setDuplicateWarning({
+							location: result.location || "unknown",
+							vin: props.formData.vin,
+							partNumber: part.partNumber,
+						});
+						return; // Block submission
 					}
 				}
 			} catch {

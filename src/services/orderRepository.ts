@@ -26,6 +26,12 @@ type ZeroRowMatchOutcome =
 			updatedAt: string | undefined;
 	  };
 
+// User-facing message for a WRITE_CONFLICT error. The full diagnostic
+// (attempt count, row id) is logged via logger.warn instead, so it never
+// reaches a toast.
+const WRITE_CONFLICT_MESSAGE =
+	"This order was just updated by someone else. Please refresh and try again.";
+
 // Decides why a conditional UPDATE matched 0 rows: the row moved to a
 // different stage (legitimate no-op — e.g. concurrent maintenance-scan
 // archive), the row was deleted (no-op), or another writer changed
@@ -46,11 +52,13 @@ async function resolveZeroRowMatch({
 	maxAttempts: number;
 	context: string;
 }): Promise<ZeroRowMatchOutcome> {
-	const { data: recheck } = await db
+	const { data: recheck, error: recheckError } = await db
 		.from("orders")
 		.select("stage, metadata, updated_at")
 		.eq("id", id)
 		.maybeSingle();
+
+	if (recheckError) handleSupabaseError(recheckError);
 
 	if (!recheck) {
 		logger.debug(`[${context}] Skipped for ${id}: row no longer exists`);
@@ -65,16 +73,42 @@ async function resolveZeroRowMatch({
 	}
 
 	if (attempt >= maxAttempts) {
-		return {
-			type: "conflict",
-			message: `${context}: exhausted ${maxAttempts} attempts for id ${id} due to concurrent metadata writes`,
-		};
+		logger.warn(
+			`[${context}] Exhausted ${maxAttempts} attempts for id ${id} due to concurrent metadata writes`,
+		);
+		return { type: "conflict", message: WRITE_CONFLICT_MESSAGE };
 	}
 
 	return {
 		type: "retry",
 		metadata: (recheck.metadata as Record<string, unknown>) || {},
 		updatedAt: recheck.updated_at as string | undefined,
+	};
+}
+
+type ZeroRowHandling =
+	| { action: "return-null" }
+	| { action: "throw"; message: string }
+	| {
+			action: "retry";
+			metadata: Record<string, unknown>;
+			updatedAt: string | undefined;
+	  };
+
+// Shared branch logic for a conditional UPDATE that matched 0 rows: used by
+// both the primary update and the missing-attachment-column fallback update
+// in saveOrder, which otherwise duplicate this exact decision.
+async function handleZeroRowMatch(
+	args: Parameters<typeof resolveZeroRowMatch>[0],
+): Promise<ZeroRowHandling> {
+	const outcome = await resolveZeroRowMatch(args);
+	if (outcome.type === "no-op") return { action: "return-null" };
+	if (outcome.type === "conflict")
+		return { action: "throw", message: outcome.message };
+	return {
+		action: "retry",
+		metadata: outcome.metadata,
+		updatedAt: outcome.updatedAt,
 	};
 }
 
@@ -204,11 +238,14 @@ export function createOrderRepository(
 						null;
 				if ("customerName" in rest || "customer_name" in rest)
 					baseSupabaseOrder.customer_name =
-						rest.customerName ||
-						(rest as Record<string, unknown>).customer_name;
+						rest.customerName !== undefined
+							? rest.customerName
+							: (rest as Record<string, unknown>).customer_name;
 				if ("mobile" in rest || "customer_phone" in rest)
 					baseSupabaseOrder.customer_phone =
-						rest.mobile || (rest as Record<string, unknown>).customer_phone;
+						rest.mobile !== undefined
+							? rest.mobile
+							: (rest as Record<string, unknown>).customer_phone;
 				if ("vin" in rest) baseSupabaseOrder.vin = rest.vin;
 				if ("company" in rest)
 					baseSupabaseOrder.company = normalizeNullableCompanyName(
@@ -246,11 +283,13 @@ export function createOrderRepository(
 				// guard below. The `orders_updated_at` trigger bumps updated_at on every
 				// UPDATE, so an equality match on it detects a concurrent write between
 				// this read and our write.
-				const { data: existing } = await db
+				const { data: existing, error: existingError } = await db
 					.from("orders")
 					.select("metadata, updated_at")
 					.eq("id", id)
 					.maybeSingle();
+
+				if (existingError) handleSupabaseError(existingError);
 
 				let snapshotMetadata =
 					(existing?.metadata as Record<string, unknown>) || {};
@@ -286,7 +325,7 @@ export function createOrderRepository(
 					const { data, error } = await updateQuery.select().maybeSingle();
 
 					if (!data && !error) {
-						const outcome = await resolveZeroRowMatch({
+						const zeroRow = await handleZeroRowMatch({
 							db,
 							id,
 							expectedCurrentStage,
@@ -294,11 +333,11 @@ export function createOrderRepository(
 							maxAttempts: MAX_ATTEMPTS,
 							context: "saveOrder",
 						});
-						if (outcome.type === "no-op") return null;
-						if (outcome.type === "conflict")
-							throw new ServiceError("WRITE_CONFLICT", outcome.message);
-						snapshotMetadata = outcome.metadata;
-						snapshotUpdatedAt = outcome.updatedAt;
+						if (zeroRow.action === "return-null") return null;
+						if (zeroRow.action === "throw")
+							throw new ServiceError("WRITE_CONFLICT", zeroRow.message);
+						snapshotMetadata = zeroRow.metadata;
+						snapshotUpdatedAt = zeroRow.updatedAt;
 						continue;
 					}
 
@@ -317,7 +356,7 @@ export function createOrderRepository(
 							await fallbackQuery.select().maybeSingle();
 
 						if (!fallbackData && !fallbackError) {
-							const outcome = await resolveZeroRowMatch({
+							const zeroRow = await handleZeroRowMatch({
 								db,
 								id,
 								expectedCurrentStage,
@@ -325,11 +364,11 @@ export function createOrderRepository(
 								maxAttempts: MAX_ATTEMPTS,
 								context: "saveOrder fallback",
 							});
-							if (outcome.type === "no-op") return null;
-							if (outcome.type === "conflict")
-								throw new ServiceError("WRITE_CONFLICT", outcome.message);
-							snapshotMetadata = outcome.metadata;
-							snapshotUpdatedAt = outcome.updatedAt;
+							if (zeroRow.action === "return-null") return null;
+							if (zeroRow.action === "throw")
+								throw new ServiceError("WRITE_CONFLICT", zeroRow.message);
+							snapshotMetadata = zeroRow.metadata;
+							snapshotUpdatedAt = zeroRow.updatedAt;
 							continue;
 						}
 						if (fallbackError) handleSupabaseError(fallbackError);

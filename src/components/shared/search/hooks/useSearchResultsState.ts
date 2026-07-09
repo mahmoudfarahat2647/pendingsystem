@@ -347,7 +347,7 @@ export const useSearchResultsState = () => {
 			}
 
 			try {
-				await Promise.all(
+				const results = await Promise.allSettled(
 					selectedRows.map((row) => {
 						const freshRow = searchResults.find((r) => r.id === row.id) ?? row;
 						return saveOrderMutation.mutateAsync({
@@ -367,8 +367,30 @@ export const useSearchResultsState = () => {
 						});
 					}),
 				);
-				toast.success(`Booked ${selectedRows.length} rows for ${date}`);
-				setShowBookingModal(false);
+
+				const succeededIds = new Set(
+					selectedRows
+						.filter((_, i) => results[i]?.status === "fulfilled")
+						.map((r) => r.id),
+				);
+				const failedCount = selectedRows.length - succeededIds.size;
+
+				if (succeededIds.size > 0) {
+					setShowBookingModal(false);
+					if (failedCount === 0) {
+						setSelectedRows([]);
+						toast.success(`Booked ${selectedRows.length} rows for ${date}`);
+					} else {
+						setSelectedRows((prev) =>
+							prev.filter((r) => !succeededIds.has(r.id)),
+						);
+						toast.warning(
+							`${succeededIds.size} row(s) booked, ${failedCount} failed (possibly edited elsewhere). Remaining rows stay selected.`,
+						);
+					}
+				} else {
+					toast.error("Booking failed");
+				}
 			} catch (_error) {
 				toast.error("Booking failed");
 			}
@@ -380,7 +402,7 @@ export const useSearchResultsState = () => {
 		async (reason: string) => {
 			if (selectedRows.length === 0 || !isSameSource) return;
 			try {
-				await Promise.all(
+				const results = await Promise.allSettled(
 					selectedRows.map((row) => {
 						const freshRow = searchResults.find((r) => r.id === row.id) ?? row;
 						const updatedHistory = appendTaggedUserNote(
@@ -399,8 +421,30 @@ export const useSearchResultsState = () => {
 						});
 					}),
 				);
-				toast.success(`Archived ${selectedRows.length} rows`);
-				setShowArchiveModal(false);
+
+				const succeededIds = new Set(
+					selectedRows
+						.filter((_, i) => results[i]?.status === "fulfilled")
+						.map((r) => r.id),
+				);
+				const failedCount = selectedRows.length - succeededIds.size;
+
+				if (succeededIds.size > 0) {
+					setShowArchiveModal(false);
+					if (failedCount === 0) {
+						setSelectedRows([]);
+						toast.success(`Archived ${selectedRows.length} rows`);
+					} else {
+						setSelectedRows((prev) =>
+							prev.filter((r) => !succeededIds.has(r.id)),
+						);
+						toast.warning(
+							`${succeededIds.size} row(s) archived, ${failedCount} failed (possibly edited elsewhere). Remaining rows stay selected.`,
+						);
+					}
+				} else {
+					toast.error("Archiving failed");
+				}
 			} catch (_error) {
 				toast.error("Archiving failed");
 			}
@@ -527,7 +571,7 @@ export const useSearchResultsState = () => {
 		async (status: string) => {
 			if (selectedRows.length === 0 || !isSameSource) return;
 			try {
-				await Promise.all(
+				const results = await Promise.allSettled(
 					selectedRows.map((row) =>
 						saveOrderMutation.mutateAsync({
 							id: row.id,
@@ -537,7 +581,28 @@ export const useSearchResultsState = () => {
 						}),
 					),
 				);
-				toast.success(`Updated status for ${selectedRows.length} rows`);
+
+				const succeededIds = new Set(
+					selectedRows
+						.filter((_, i) => results[i]?.status === "fulfilled")
+						.map((r) => r.id),
+				);
+				const failedCount = selectedRows.length - succeededIds.size;
+
+				if (succeededIds.size > 0) {
+					if (failedCount === 0) {
+						toast.success(`Updated status for ${selectedRows.length} rows`);
+					} else {
+						setSelectedRows((prev) =>
+							prev.filter((r) => !succeededIds.has(r.id)),
+						);
+						toast.warning(
+							`Updated ${succeededIds.size} row(s), ${failedCount} failed (possibly edited elsewhere). Remaining rows stay selected.`,
+						);
+					}
+				} else {
+					toast.error("Status update failed");
+				}
 			} catch (_error) {
 				toast.error("Status update failed");
 			}
