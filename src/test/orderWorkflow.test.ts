@@ -915,6 +915,21 @@ describe("filterPrintableRows", () => {
 		expect(result.map((r) => r.id)).toEqual(["1", "2"]);
 	});
 
+	it("matches Reorder alongside renamed Pending/Reserve labels", () => {
+		const renamedStatuses = [
+			{ id: "no_stats", label: "Awaiting Parts" },
+			{ id: "reserve", label: "Reserved" },
+			{ id: "arrived", label: "Arrived" },
+		];
+		const rows = [
+			createMockRow({ id: "1", status: "  REORDER  " }),
+			createMockRow({ id: "2", status: "Awaiting Parts" }),
+			createMockRow({ id: "3", status: "Arrived" }),
+		];
+		const result = filterPrintableRows(rows, renamedStatuses);
+		expect(result.map((r) => r.id)).toEqual(["1", "2"]);
+	});
+
 	it("excludes custom statuses", () => {
 		const statusesWithCustom = [
 			...defaultPartStatuses,
