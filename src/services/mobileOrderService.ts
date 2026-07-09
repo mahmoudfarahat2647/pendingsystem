@@ -11,41 +11,6 @@ function todayString(): string {
 	return `${dd}/${mm}/${yyyy}`;
 }
 
-async function mergeAppSettings(
-	supabase: SupabaseClient,
-	model: string,
-	repairSystem: string,
-): Promise<void> {
-	const { data, error } = await supabase
-		.from("app_settings")
-		.select("models, repair_systems")
-		.eq("id", 1)
-		.single();
-
-	if (error || !data) return;
-
-	const currentModels: string[] = data.models ?? [];
-	const currentRepairSystems: string[] = data.repair_systems ?? [];
-
-	const patch: Record<string, unknown> = {
-		updated_at: new Date().toISOString(),
-	};
-	let needsUpdate = false;
-
-	if (model && !currentModels.includes(model)) {
-		patch.models = [...currentModels, model];
-		needsUpdate = true;
-	}
-	if (repairSystem && !currentRepairSystems.includes(repairSystem)) {
-		patch.repair_systems = [...currentRepairSystems, repairSystem];
-		needsUpdate = true;
-	}
-
-	if (needsUpdate) {
-		await supabase.from("app_settings").update(patch).eq("id", 1);
-	}
-}
-
 export interface CreateOrdersResult {
 	inserted: number;
 	errors: string[];
@@ -90,7 +55,6 @@ export const mobileOrderService = {
 		const rowsToInsert =
 			parts.length === 0 ? [{ partNumber: "", description: "" }] : parts;
 
-		await mergeAppSettings(supabase, model, repairSystem);
 		const errors: string[] = [];
 
 		const results = await Promise.allSettled(

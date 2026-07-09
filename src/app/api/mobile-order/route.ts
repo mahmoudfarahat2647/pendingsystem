@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { getClientIp } from "@/lib/getClientIp";
 import { createServiceClient } from "@/lib/supabase-admin";
 import { MobileQuickOrderSchema } from "@/schemas/mobileOrder.schema";
 import { mobileOrderService } from "@/services/mobileOrderService";
@@ -8,10 +9,7 @@ import { isRateLimited } from "./rateLimiter";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-	const ip =
-		req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-		req.headers.get("x-real-ip") ??
-		"unknown";
+	const ip = getClientIp(req.headers);
 
 	const supabase = createServiceClient();
 
