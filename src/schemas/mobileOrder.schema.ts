@@ -3,23 +3,24 @@ import { normalizeNullableCompanyName } from "@/domain/company/company";
 import { ALLOWED_COMPANIES } from "@/domain/order/constants";
 
 const MobilePartRowSchema = z.object({
-	partNumber: z.string().default(""),
-	description: z.string().default(""),
+	partNumber: z.string().max(100).default(""),
+	description: z.string().max(500).default(""),
 });
 
 export const MobileQuickOrderSchema = z.object({
-	customerName: z.string().default(""),
+	customerName: z.string().max(120).default(""),
 	company: z.preprocess(
 		normalizeNullableCompanyName,
 		z.enum([...ALLOWED_COMPANIES] as [string, ...string[]]),
 	),
-	vin: z.string().default(""),
-	mobile: z.string().default(""),
-	sabNumber: z.string().default(""),
-	model: z.string().default(""),
-	repairSystem: z.string().default(""),
+	vin: z.string().max(64).default(""),
+	mobile: z.string().max(32).default(""),
+	sabNumber: z.string().max(64).default(""),
+	model: z.string().max(80).default(""),
+	repairSystem: z.string().max(80).default(""),
 	parts: z
 		.array(MobilePartRowSchema)
+		.max(50)
 		.default([])
 		.transform((rows) =>
 			rows.filter(

@@ -147,7 +147,7 @@ mockFrom.mockImplementation((table: string) => {
 	};
 });
 
-describe("POST /api/mobile-order — app_settings merge", () => {
+describe("POST /api/mobile-order — app_settings", () => {
 	beforeEach(() => {
 		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
@@ -182,14 +182,61 @@ describe("POST /api/mobile-order — app_settings merge", () => {
 		});
 	});
 
-	it("merges new model into app_settings when not already present", async () => {
+	it("never reads or writes app_settings for a valid request with a new model", async () => {
 		const req = makeRequest({
 			company: "Zeekr",
 			model: "BrandNewModel",
+			repairSystem: "BrandNewSystem",
 			parts: [],
 		});
-		await POST(req as never);
-		expect(mockFrom).toHaveBeenCalledWith("app_settings");
+		const res = await POST(req as never);
+		expect(res.status).toBe(200);
+		expect(mockFrom).not.toHaveBeenCalledWith("app_settings");
+		expect(mockAppSettingsSelect).not.toHaveBeenCalled();
+	});
+});
+
+describe("POST /api/mobile-order — payload bounds", () => {
+	beforeEach(() => {
+		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
+		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+		vi.clearAllMocks();
+		mockRpc.mockResolvedValue({ data: false, error: null });
+		mockSingle.mockResolvedValue({
+			data: { id: "uuid-1", stage: "orders" },
+			error: null,
+		});
+	});
+
+	it("returns 400 when model exceeds 80 characters", async () => {
+		const req = makeRequest({
+			company: "Zeekr",
+			model: "M".repeat(81),
+			parts: [],
+		});
+		const res = await POST(req as never);
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 400 when a part description exceeds 500 characters", async () => {
+		const req = makeRequest({
+			company: "Zeekr",
+			parts: [{ partNumber: "A1", description: "D".repeat(501) }],
+		});
+		const res = await POST(req as never);
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 400 when the parts array exceeds 50 items", async () => {
+		const req = makeRequest({
+			company: "Zeekr",
+			parts: Array.from({ length: 51 }, (_, i) => ({
+				partNumber: `P${i}`,
+				description: "d",
+			})),
+		});
+		const res = await POST(req as never);
+		expect(res.status).toBe(400);
 	});
 });
 
