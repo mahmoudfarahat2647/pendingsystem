@@ -1,6 +1,5 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { OrderMappingError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
 import { supabase as supabaseDefault } from "@/lib/supabase";
 import type {
 	DescriptionConflictResult,
@@ -22,6 +21,13 @@ import {
 // select without an explicit range silently truncates once a stage exceeds the
 // cap, so all full-table reads must page through every window.
 const SUPABASE_MAX_ROWS = 1000;
+
+// Escapes Postgres LIKE/ILIKE metacharacters (`%`, `_`) so user-supplied VIN
+// and part-number input is matched literally instead of as a wildcard
+// pattern. The escape character itself must be escaped first.
+function escapeLikePattern(input: string): string {
+	return input.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
 
 async function fetchAllPages<T>(
 	buildPage: (
@@ -128,20 +134,26 @@ export function createOrderQueryRepository(
 				Array.isArray(excludeIds) ? excludeIds : excludeIds ? [excludeIds] : [],
 			);
 
-			const { data, error } = await db
-				.from("orders")
-				.select("id, vin, stage, metadata")
-				.ilike("vin", normalizedVin)
-				.filter("metadata->>partNumber", "ilike", normalizedPart)
-				.limit(100);
+			const { data, error } = await fetchAllPages<{
+				id: string;
+				vin: string | null;
+				stage: string | null;
+				metadata: unknown;
+			}>((from, to) =>
+				db
+					.from("orders")
+					.select("id, vin, stage, metadata")
+					.ilike("vin", escapeLikePattern(normalizedVin))
+					.filter(
+						"metadata->>partNumber",
+						"ilike",
+						escapeLikePattern(normalizedPart),
+					)
+					.order("id")
+					.range(from, to),
+			);
 
-			if (error) {
-				logger.warn(
-					"[orderService] checkHistoricalVinPartDuplicate error:",
-					error,
-				);
-				return { isDuplicate: false };
-			}
+			if (error) handleSupabaseError(error);
 
 			for (const row of data || []) {
 				if (excludeSet.has(row.id)) continue;
@@ -177,19 +189,25 @@ export function createOrderQueryRepository(
 			const normalizedPart = partNumber.trim().toUpperCase();
 			const normalizedDesc = currentDescription.trim().toLowerCase();
 
-			const { data, error } = await db
-				.from("orders")
-				.select("id, vin, stage, metadata")
-				.filter("metadata->>partNumber", "ilike", normalizedPart)
-				.limit(100);
+			const { data, error } = await fetchAllPages<{
+				id: string;
+				vin: string | null;
+				stage: string | null;
+				metadata: unknown;
+			}>((from, to) =>
+				db
+					.from("orders")
+					.select("id, vin, stage, metadata")
+					.filter(
+						"metadata->>partNumber",
+						"ilike",
+						escapeLikePattern(normalizedPart),
+					)
+					.order("id")
+					.range(from, to),
+			);
 
-			if (error) {
-				logger.warn(
-					"[orderService] checkHistoricalDescriptionConflict error:",
-					error,
-				);
-				return { hasConflict: false };
-			}
+			if (error) handleSupabaseError(error);
 
 			for (const row of data || []) {
 				if (currentRowId && row.id === currentRowId) continue;

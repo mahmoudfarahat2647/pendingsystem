@@ -298,7 +298,8 @@ describe("orderService", () => {
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
-				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
 			const result = await orderService.checkHistoricalVinPartDuplicate(
@@ -330,7 +331,8 @@ describe("orderService", () => {
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
-				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
 			const result = await orderService.checkHistoricalVinPartDuplicate(
@@ -357,7 +359,8 @@ describe("orderService", () => {
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
-				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
 			const result = await orderService.checkHistoricalVinPartDuplicate(
@@ -383,7 +386,8 @@ describe("orderService", () => {
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
-				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
 			const result = await orderService.checkHistoricalVinPartDuplicate(
@@ -392,6 +396,119 @@ describe("orderService", () => {
 			);
 
 			expect(result.isDuplicate).toBe(false);
+		});
+	});
+
+	describe("checkHistoricalVinPartDuplicate / checkHistoricalDescriptionConflict — error handling & escaping (MAH-16, MAH-24)", () => {
+		it("throws instead of reporting 'clean' when the VIN+part query fails", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				filter: vi.fn().mockReturnThis(),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({
+					data: null,
+					error: {
+						code: "500",
+						message: "connection reset",
+						hint: "",
+						details: "",
+					},
+				}),
+			});
+
+			await expect(
+				orderService.checkHistoricalVinPartDuplicate("VIN123456789", "PART-A"),
+			).rejects.toMatchObject({ code: "500" });
+		});
+
+		it("throws instead of reporting 'clean' when the description-conflict query fails", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				filter: vi.fn().mockReturnThis(),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({
+					data: null,
+					error: {
+						code: "500",
+						message: "connection reset",
+						hint: "",
+						details: "",
+					},
+				}),
+			});
+
+			await expect(
+				orderService.checkHistoricalDescriptionConflict(
+					"PART-A",
+					"a description",
+				),
+			).rejects.toMatchObject({ code: "500" });
+		});
+
+		it("escapes % and _ wildcards in VIN/part number before querying", async () => {
+			const ilikeSpy = vi.fn().mockReturnThis();
+			const filterSpy = vi.fn().mockReturnThis();
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: ilikeSpy,
+				filter: filterSpy,
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({ data: [], error: null }),
+			});
+
+			await orderService.checkHistoricalVinPartDuplicate(
+				"VIN%12345_6",
+				"PART_A%",
+			);
+
+			expect(ilikeSpy).toHaveBeenCalledWith("vin", "VIN\\%12345\\_6");
+			expect(filterSpy).toHaveBeenCalledWith(
+				"metadata->>partNumber",
+				"ilike",
+				"PART\\_A\\%",
+			);
+		});
+
+		it("finds a real duplicate beyond the first page instead of truncating at 100 rows", async () => {
+			const firstPage = Array.from({ length: 1000 }, (_, i) => ({
+				id: `filler-${i}`,
+				vin: "VIN123456789",
+				stage: "orders",
+				metadata: { partNumber: "OTHER-PART" },
+			}));
+			const secondPage = [
+				{
+					id: "row-1001",
+					vin: "VIN123456789",
+					stage: "orders",
+					metadata: { partNumber: "PART-A" },
+				},
+			];
+			const range = vi
+				.fn()
+				.mockResolvedValueOnce({ data: firstPage, error: null })
+				.mockResolvedValueOnce({ data: secondPage, error: null });
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				filter: vi.fn().mockReturnThis(),
+				order: vi.fn().mockReturnThis(),
+				range,
+			});
+
+			const result = await orderService.checkHistoricalVinPartDuplicate(
+				"VIN123456789",
+				"PART-A",
+			);
+
+			expect(range).toHaveBeenCalledTimes(2);
+			expect(result.isDuplicate).toBe(true);
+			expect(result.existingRow?.id).toBe("row-1001");
 		});
 	});
 

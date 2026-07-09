@@ -137,6 +137,14 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 						}
 					}
 				}
+			} catch {
+				// The duplicate check couldn't complete (e.g. transient DB error).
+				// Fail closed: block submission rather than risk creating a real
+				// VIN+part duplicate that the check failed to catch.
+				toast.error(
+					"Could not verify duplicate parts. Please try submitting again.",
+				);
+				return;
 			} finally {
 				props.setIsCheckingDuplicates(false);
 			}
