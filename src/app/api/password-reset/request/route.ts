@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { getClientIp } from "@/lib/getClientIp";
 import {
 	checkAndApplyRateLimit,
 	sendPasswordResetIfUserExists,
@@ -21,10 +22,7 @@ export async function POST(request: NextRequest) {
 		}
 	};
 
-	const ip =
-		request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-		request.headers.get("x-real-ip") ??
-		"unknown";
+	const ip = getClientIp(request.headers);
 
 	if (await checkAndApplyRateLimit(ip)) {
 		await ensureMinDelay();
