@@ -868,6 +868,38 @@ describe("filterPrintableRows", () => {
 		expect(result.map((r) => r.id)).toEqual(["1", "2"]);
 	});
 
+	it("includes Reorder rows alongside Pending/Reserve", () => {
+		const rows = [
+			createMockRow({ id: "1", status: "Pending" }),
+			createMockRow({ id: "2", status: "Reorder" }),
+			createMockRow({ id: "3", status: "Arrived" }),
+		];
+		const result = filterPrintableRows(rows, defaultPartStatuses);
+		expect(result.map((r) => r.id)).toEqual(["1", "2"]);
+	});
+
+	it("matches Reorder case-insensitively and is trim-tolerant", () => {
+		const rows = [
+			createMockRow({ id: "1", status: "REORDER" }),
+			createMockRow({ id: "2", status: "  reorder  " }),
+		];
+		const result = filterPrintableRows(rows, defaultPartStatuses);
+		expect(result.map((r) => r.id)).toEqual(["1", "2"]);
+	});
+
+	it("includes Reorder rows even when Pending/Reserve are not defined", () => {
+		const noPrintableStatuses = [
+			{ id: "arrived", label: "Arrived" },
+			{ id: "hold", label: "Hold" },
+		];
+		const rows = [
+			createMockRow({ id: "1", status: "Reorder" }),
+			createMockRow({ id: "2", status: "Arrived" }),
+		];
+		const result = filterPrintableRows(rows, noPrintableStatuses);
+		expect(result.map((r) => r.id)).toEqual(["1"]);
+	});
+
 	it("matches renamed Pending/Reserve labels via id", () => {
 		const renamedStatuses = [
 			{ id: "no_stats", label: "Awaiting Parts" },
