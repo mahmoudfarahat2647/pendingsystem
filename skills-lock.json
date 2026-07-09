@@ -16,6 +16,12 @@
 			"sourceType": "github",
 			"computedHash": "516bd2154eb843a8240e43d5b285229129853114ad7075a5e141e1c08e408c84"
 		},
+		"opencode-delegate": {
+			"source": "amelnagdy/delegate-skills",
+			"sourceType": "github",
+			"skillPath": "skills/opencode-delegate/SKILL.md",
+			"computedHash": "ee6bfcc1793d7445b65b4a799a87ea7addbee2f44cd5661d2c2bb35cf00f25cf"
+		},
 		"playwright-cli": {
 			"source": "microsoft/playwright-cli",
 			"sourceType": "github",

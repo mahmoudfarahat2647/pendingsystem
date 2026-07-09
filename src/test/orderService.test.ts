@@ -298,7 +298,8 @@ describe("orderService", () => {
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
-				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
 			const result = await orderService.checkHistoricalVinPartDuplicate(
@@ -330,7 +331,8 @@ describe("orderService", () => {
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
-				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
 			const result = await orderService.checkHistoricalVinPartDuplicate(
@@ -357,7 +359,8 @@ describe("orderService", () => {
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
-				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
 			const result = await orderService.checkHistoricalVinPartDuplicate(
@@ -383,7 +386,8 @@ describe("orderService", () => {
 				select: vi.fn().mockReturnThis(),
 				ilike: vi.fn().mockReturnThis(),
 				filter: vi.fn().mockReturnThis(),
-				limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
 			});
 
 			const result = await orderService.checkHistoricalVinPartDuplicate(
@@ -392,6 +396,275 @@ describe("orderService", () => {
 			);
 
 			expect(result.isDuplicate).toBe(false);
+		});
+	});
+
+	describe("checkHistoricalVinPartDuplicate / checkHistoricalDescriptionConflict — error handling & escaping (MAH-16, MAH-24)", () => {
+		it("throws instead of reporting 'clean' when the VIN+part query fails", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				filter: vi.fn().mockReturnThis(),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({
+					data: null,
+					error: {
+						code: "500",
+						message: "connection reset",
+						hint: "",
+						details: "",
+					},
+				}),
+			});
+
+			await expect(
+				orderService.checkHistoricalVinPartDuplicate("VIN123456789", "PART-A"),
+			).rejects.toMatchObject({ code: "500" });
+		});
+
+		it("throws instead of reporting 'clean' when the description-conflict query fails", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				filter: vi.fn().mockReturnThis(),
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({
+					data: null,
+					error: {
+						code: "500",
+						message: "connection reset",
+						hint: "",
+						details: "",
+					},
+				}),
+			});
+
+			await expect(
+				orderService.checkHistoricalDescriptionConflict(
+					"PART-A",
+					"a description",
+				),
+			).rejects.toMatchObject({ code: "500" });
+		});
+
+		it("escapes % and _ wildcards in VIN/part number before querying", async () => {
+			const ilikeSpy = vi.fn().mockReturnThis();
+			const filterSpy = vi.fn().mockReturnThis();
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: ilikeSpy,
+				filter: filterSpy,
+				order: vi.fn().mockReturnThis(),
+				range: vi.fn().mockResolvedValue({ data: [], error: null }),
+			});
+
+			await orderService.checkHistoricalVinPartDuplicate(
+				"VIN%12345_6",
+				"PART_A%",
+			);
+
+			expect(ilikeSpy).toHaveBeenCalledWith("vin", "VIN\\%12345\\_6");
+			expect(filterSpy).toHaveBeenCalledWith(
+				"metadata->>partNumber",
+				"ilike",
+				"PART\\_A\\%",
+			);
+		});
+
+		it("finds a real duplicate beyond the first page instead of truncating at 100 rows", async () => {
+			const firstPage = Array.from({ length: 1000 }, (_, i) => ({
+				id: `filler-${i}`,
+				vin: "VIN123456789",
+				stage: "orders",
+				metadata: { partNumber: "OTHER-PART" },
+			}));
+			const secondPage = [
+				{
+					id: "row-1001",
+					vin: "VIN123456789",
+					stage: "orders",
+					metadata: { partNumber: "PART-A" },
+				},
+			];
+			const range = vi
+				.fn()
+				.mockResolvedValueOnce({ data: firstPage, error: null })
+				.mockResolvedValueOnce({ data: secondPage, error: null });
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				select: vi.fn().mockReturnThis(),
+				ilike: vi.fn().mockReturnThis(),
+				filter: vi.fn().mockReturnThis(),
+				order: vi.fn().mockReturnThis(),
+				range,
+			});
+
+			const result = await orderService.checkHistoricalVinPartDuplicate(
+				"VIN123456789",
+				"PART-A",
+			);
+
+			expect(range).toHaveBeenCalledTimes(2);
+			expect(result.isDuplicate).toBe(true);
+			expect(result.existingRow?.id).toBe("row-1001");
+		});
+	});
+
+	describe("saveOrder – optimistic concurrency on metadata writes (MAH-11)", () => {
+		const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
+
+		// Builds a fake Supabase client where each successive `.from("orders")`
+		// call resolves the *next* queued { data, error } response, regardless of
+		// which chain methods (select/update/eq/order/insert) were called on it.
+		// saveOrder always issues exactly one terminal call (maybeSingle/single)
+		// per `.from("orders")` invocation, so a flat queue lines up with the
+		// sequence of DB round-trips the function makes.
+		function makeSequentialDb(
+			responses: Array<{ data: unknown; error: unknown }>,
+		) {
+			let call = 0;
+			const from = vi.fn(() => {
+				const response = responses[Math.min(call, responses.length - 1)];
+				call++;
+				// biome-ignore lint/suspicious/noExplicitAny: chainable test mock
+				const chain: any = {};
+				chain.select = vi.fn(() => chain);
+				chain.eq = vi.fn(() => chain);
+				chain.update = vi.fn(() => chain);
+				chain.order = vi.fn(() => chain);
+				chain.insert = vi.fn(() => chain);
+				chain.delete = vi.fn(() => chain);
+				chain.maybeSingle = vi.fn().mockResolvedValue(response);
+				chain.single = vi.fn().mockResolvedValue(response);
+				return chain;
+			});
+			return {
+				db: { from } as unknown as Parameters<typeof createOrderRepository>[0],
+				callCount: () => call,
+			};
+		}
+
+		it("writes the merged metadata when no concurrent write occurred", async () => {
+			const { db } = makeSequentialDb([
+				// 1. initial snapshot read
+				{
+					data: { metadata: { existingField: "keep" }, updated_at: "t1" },
+					error: null,
+				},
+				// 2. conditional UPDATE succeeds on the first attempt
+				{ data: { id: VALID_UUID }, error: null },
+				// 3. final re-fetch
+				{ data: { id: VALID_UUID }, error: null },
+			]);
+
+			const repo = createOrderRepository(db);
+			const result = await repo.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				customerName: "Jane",
+			});
+
+			expect(result).toEqual({ id: VALID_UUID });
+		});
+
+		it("re-merges against fresh metadata and retries when a concurrent write is detected", async () => {
+			const { db, callCount } = makeSequentialDb([
+				// 1. initial snapshot: updated_at "t1"
+				{
+					data: { metadata: { field: "old" }, updated_at: "t1" },
+					error: null,
+				},
+				// 2. first UPDATE matches 0 rows — another writer changed updated_at
+				{ data: null, error: null },
+				// 3. recheck: still in the expected stage, but metadata/updated_at moved on
+				{
+					data: {
+						stage: "main",
+						metadata: { field: "concurrent-write" },
+						updated_at: "t2",
+					},
+					error: null,
+				},
+				// 4. retry UPDATE (now guarded on updated_at "t2") succeeds
+				{ data: { id: VALID_UUID }, error: null },
+				// 5. final re-fetch
+				{ data: { id: VALID_UUID }, error: null },
+			]);
+
+			const repo = createOrderRepository(db);
+			const result = await repo.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				expectedCurrentStage: "main",
+				customerName: "Jane",
+			});
+
+			expect(result).toEqual({ id: VALID_UUID });
+			expect(callCount()).toBe(5);
+		});
+
+		it("returns null (no throw) when the row legitimately moved to a different stage", async () => {
+			const { db } = makeSequentialDb([
+				// 1. initial snapshot
+				{
+					data: { metadata: {}, updated_at: "t1" },
+					error: null,
+				},
+				// 2. conditional UPDATE matches 0 rows
+				{ data: null, error: null },
+				// 3. recheck shows the row already moved to "archive"
+				{
+					data: { stage: "archive", metadata: {}, updated_at: "t2" },
+					error: null,
+				},
+			]);
+
+			const repo = createOrderRepository(db);
+			const result = await repo.saveOrder({
+				id: VALID_UUID,
+				stage: "archive",
+				expectedCurrentStage: "main",
+				customerName: "Jane",
+			});
+
+			expect(result).toBeNull();
+		});
+
+		it("throws WRITE_CONFLICT after exhausting the retry budget", async () => {
+			const staleRecheck = {
+				data: {
+					stage: "main",
+					metadata: { field: "still-racing" },
+					updated_at: "t-racing",
+				},
+				error: null,
+			};
+			const { db } = makeSequentialDb([
+				// 1. initial snapshot
+				{ data: { metadata: {}, updated_at: "t0" }, error: null },
+				// attempt 1: update misses, recheck says retry
+				{ data: null, error: null },
+				staleRecheck,
+				// attempt 2: update misses, recheck says retry
+				{ data: null, error: null },
+				staleRecheck,
+				// attempt 3: update misses, recheck exhausts the budget -> conflict
+				{ data: null, error: null },
+				staleRecheck,
+			]);
+
+			const repo = createOrderRepository(db);
+
+			await expect(
+				repo.saveOrder({
+					id: VALID_UUID,
+					stage: "main",
+					expectedCurrentStage: "main",
+					customerName: "Jane",
+				}),
+			).rejects.toMatchObject({ code: "WRITE_CONFLICT" });
 		});
 	});
 
