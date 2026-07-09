@@ -17,6 +17,67 @@ import {
 
 export { createOrderQueryRepository } from "./order/orderQueryRepository";
 
+type ZeroRowMatchOutcome =
+	| { type: "no-op" }
+	| { type: "conflict"; message: string }
+	| {
+			type: "retry";
+			metadata: Record<string, unknown>;
+			updatedAt: string | undefined;
+	  };
+
+// Decides why a conditional UPDATE matched 0 rows: the row moved to a
+// different stage (legitimate no-op — e.g. concurrent maintenance-scan
+// archive), the row was deleted (no-op), or another writer changed
+// `metadata`/`updated_at` concurrently (retry the merge, or surface a
+// conflict once the retry budget is exhausted).
+async function resolveZeroRowMatch({
+	db,
+	id,
+	expectedCurrentStage,
+	attempt,
+	maxAttempts,
+	context,
+}: {
+	db: typeof supabaseDefault;
+	id: string;
+	expectedCurrentStage?: OrderStage;
+	attempt: number;
+	maxAttempts: number;
+	context: string;
+}): Promise<ZeroRowMatchOutcome> {
+	const { data: recheck } = await db
+		.from("orders")
+		.select("stage, metadata, updated_at")
+		.eq("id", id)
+		.maybeSingle();
+
+	if (!recheck) {
+		logger.debug(`[${context}] Skipped for ${id}: row no longer exists`);
+		return { type: "no-op" };
+	}
+
+	if (expectedCurrentStage && recheck.stage !== expectedCurrentStage) {
+		logger.debug(
+			`[${context}] Skipped for ${id}: row no longer in stage "${expectedCurrentStage}"`,
+		);
+		return { type: "no-op" };
+	}
+
+	if (attempt >= maxAttempts) {
+		return {
+			type: "conflict",
+			message: `${context}: exhausted ${maxAttempts} attempts for id ${id} due to concurrent metadata writes`,
+		};
+	}
+
+	return {
+		type: "retry",
+		metadata: (recheck.metadata as Record<string, unknown>) || {},
+		updatedAt: recheck.updated_at as string | undefined,
+	};
+}
+
 export function createOrderRepository(
 	db: typeof supabaseDefault = supabaseDefault,
 ) {
@@ -75,152 +136,213 @@ export function createOrderRepository(
 				...rest
 			} = order;
 
-			// 1. Prepare Metadata Merge
-			let currentMetadata: Record<string, unknown> = {};
-			if (id && id.length === 36) {
-				const { data: existing } = await db
-					.from("orders")
-					.select("metadata")
-					.eq("id", id)
-					.maybeSingle();
-				if (existing) {
-					currentMetadata =
-						(existing.metadata as Record<string, unknown>) || {};
+			// Builds the metadata merge + column-mapped payload against a given
+			// metadata snapshot. Re-invoked on each optimistic-concurrency retry so
+			// a retry always merges against the row's latest metadata instead of
+			// the stale snapshot that lost the race.
+			function buildPayload(currentMetadata: Record<string, unknown>) {
+				// Ensure we don't store id, stage, or reminder in the metadata JSON itself
+				// to avoid confusion, though it wouldn't cause a schema error.
+				const metadataBase = { ...currentMetadata, ...rest };
+
+				if (
+					"partNumber" in rest ||
+					"description" in rest ||
+					"quantity" in rest
+				) {
+					const existingParts: unknown[] = Array.isArray(metadataBase.parts)
+						? (metadataBase.parts as unknown[])
+						: [];
+					const firstPart = existingParts[0] as
+						| Record<string, unknown>
+						| undefined;
+					const seed = firstPart ?? {
+						id: crypto.randomUUID(),
+						partNumber: (currentMetadata.partNumber as string) ?? "",
+						description: (currentMetadata.description as string) ?? "",
+						quantity: (currentMetadata.quantity as number) ?? 1,
+					};
+					const updatedFirst = {
+						...seed,
+						...("partNumber" in rest ? { partNumber: rest.partNumber } : {}),
+						...("description" in rest ? { description: rest.description } : {}),
+						...("quantity" in rest ? { quantity: rest.quantity } : {}),
+					};
+					(metadataBase as Record<string, unknown>).parts =
+						existingParts.length > 0
+							? [updatedFirst, ...existingParts.slice(1)]
+							: [updatedFirst];
 				}
-			}
 
-			// Ensure we don't store id, stage, or reminder in the metadata JSON itself
-			// to avoid confusion, though it wouldn't cause a schema error.
-			const metadataBase = { ...currentMetadata, ...rest };
+				delete (metadataBase as Record<string, unknown>).id;
+				delete (metadataBase as Record<string, unknown>).stage;
+				delete (metadataBase as Record<string, unknown>).reminder;
+				delete (metadataBase as Record<string, unknown>).hasAttachment;
 
-			if ("partNumber" in rest || "description" in rest || "quantity" in rest) {
-				const existingParts: unknown[] = Array.isArray(metadataBase.parts)
-					? (metadataBase.parts as unknown[])
-					: [];
-				const firstPart = existingParts[0] as
-					| Record<string, unknown>
-					| undefined;
-				const seed = firstPart ?? {
-					id: crypto.randomUUID(),
-					partNumber: (currentMetadata.partNumber as string) ?? "",
-					description: (currentMetadata.description as string) ?? "",
-					quantity: (currentMetadata.quantity as number) ?? 1,
+				// When the payload explicitly includes `noteHistory`, clear legacy note keys
+				// so a deliberate save of noteHistory: "" cannot be revived by stale fields.
+				if ("noteHistory" in rest) {
+					delete (metadataBase as Record<string, unknown>).actionNote;
+					delete (metadataBase as Record<string, unknown>).noteContent;
+				}
+
+				const metadataToStore = { ...metadataBase };
+				delete (metadataToStore as Record<string, unknown>).attachmentLink;
+				delete (metadataToStore as Record<string, unknown>).attachmentFilePath;
+				delete (metadataToStore as Record<string, unknown>).attachmentFilePaths;
+
+				const fallbackMetadataToStore = { ...metadataBase };
+
+				// 2. Map strictly to table columns to avoid "column not found" errors
+				// Only include columns that are present in the patch so a single-field
+				// inline edit cannot overwrite unrelated columns (e.g. order_number → null).
+				const baseSupabaseOrder: Record<string, unknown> = { stage };
+				if ("trackingId" in rest || "order_number" in rest)
+					baseSupabaseOrder.order_number =
+						rest.trackingId ||
+						(rest as Record<string, unknown>).order_number ||
+						null;
+				if ("customerName" in rest || "customer_name" in rest)
+					baseSupabaseOrder.customer_name =
+						rest.customerName ||
+						(rest as Record<string, unknown>).customer_name;
+				if ("mobile" in rest || "customer_phone" in rest)
+					baseSupabaseOrder.customer_phone =
+						rest.mobile || (rest as Record<string, unknown>).customer_phone;
+				if ("vin" in rest) baseSupabaseOrder.vin = rest.vin;
+				if ("company" in rest)
+					baseSupabaseOrder.company = normalizeNullableCompanyName(
+						rest.company,
+					);
+
+				const dbOrder = {
+					...baseSupabaseOrder,
+					...("attachmentLink" in rest && {
+						attachment_link: rest.attachmentLink ?? null,
+					}),
+					...("attachmentFilePath" in rest && {
+						attachment_file_path: rest.attachmentFilePath ?? null,
+					}),
+					...("attachmentFilePaths" in rest && {
+						attachment_file_paths: rest.attachmentFilePaths ?? [],
+					}),
+					metadata: metadataToStore,
 				};
-				const updatedFirst = {
-					...seed,
-					...("partNumber" in rest ? { partNumber: rest.partNumber } : {}),
-					...("description" in rest ? { description: rest.description } : {}),
-					...("quantity" in rest ? { quantity: rest.quantity } : {}),
+
+				const fallbackSupabaseOrder = {
+					...baseSupabaseOrder,
+					metadata: fallbackMetadataToStore,
 				};
-				(metadataBase as Record<string, unknown>).parts =
-					existingParts.length > 0
-						? [updatedFirst, ...existingParts.slice(1)]
-						: [updatedFirst];
+
+				return { dbOrder, fallbackSupabaseOrder };
 			}
-
-			delete (metadataBase as Record<string, unknown>).id;
-			delete (metadataBase as Record<string, unknown>).stage;
-			delete (metadataBase as Record<string, unknown>).reminder;
-			delete (metadataBase as Record<string, unknown>).hasAttachment;
-
-			// When the payload explicitly includes `noteHistory`, clear legacy note keys
-			// so a deliberate save of noteHistory: "" cannot be revived by stale fields.
-			if ("noteHistory" in rest) {
-				delete (metadataBase as Record<string, unknown>).actionNote;
-				delete (metadataBase as Record<string, unknown>).noteContent;
-			}
-
-			const metadataToStore = { ...metadataBase };
-			delete (metadataToStore as Record<string, unknown>).attachmentLink;
-			delete (metadataToStore as Record<string, unknown>).attachmentFilePath;
-			delete (metadataToStore as Record<string, unknown>).attachmentFilePaths;
-
-			const fallbackMetadataToStore = { ...metadataBase };
-
-			// 2. Map strictly to table columns to avoid "column not found" errors
-			// Only include columns that are present in the patch so a single-field
-			// inline edit cannot overwrite unrelated columns (e.g. order_number → null).
-			const baseSupabaseOrder: Record<string, unknown> = { stage };
-			if ("trackingId" in rest || "order_number" in rest)
-				baseSupabaseOrder.order_number =
-					rest.trackingId ||
-					(rest as Record<string, unknown>).order_number ||
-					null;
-			if ("customerName" in rest || "customer_name" in rest)
-				baseSupabaseOrder.customer_name =
-					rest.customerName || (rest as Record<string, unknown>).customer_name;
-			if ("mobile" in rest || "customer_phone" in rest)
-				baseSupabaseOrder.customer_phone =
-					rest.mobile || (rest as Record<string, unknown>).customer_phone;
-			if ("vin" in rest) baseSupabaseOrder.vin = rest.vin;
-			if ("company" in rest)
-				baseSupabaseOrder.company = normalizeNullableCompanyName(rest.company);
-
-			const dbOrder = {
-				...baseSupabaseOrder,
-				...("attachmentLink" in rest && {
-					attachment_link: rest.attachmentLink ?? null,
-				}),
-				...("attachmentFilePath" in rest && {
-					attachment_file_path: rest.attachmentFilePath ?? null,
-				}),
-				...("attachmentFilePaths" in rest && {
-					attachment_file_paths: rest.attachmentFilePaths ?? [],
-				}),
-				metadata: metadataToStore,
-			};
-
-			const fallbackSupabaseOrder = {
-				...baseSupabaseOrder,
-				metadata: fallbackMetadataToStore,
-			};
 
 			let orderId = id;
 			// biome-ignore lint/suspicious/noExplicitAny: Supabase return type
 			let resultData: any;
 
 			if (id && id.length === 36) {
-				// When expectedCurrentStage is set, the UPDATE is conditional: it only matches
-				// the row if it is still in that stage. This prevents duplicate archives when
-				// multiple tabs run the maintenance scan concurrently — if another client already
-				// archived the row, stage will be "archive" and this update matches 0 rows (no-op).
-				let updateQuery = db.from("orders").update(dbOrder).eq("id", id);
-				if (expectedCurrentStage) {
-					updateQuery = updateQuery.eq("stage", expectedCurrentStage);
-				}
-				const { data, error } = await updateQuery.select().maybeSingle();
+				// Snapshot current metadata + updated_at for the optimistic-concurrency
+				// guard below. The `orders_updated_at` trigger bumps updated_at on every
+				// UPDATE, so an equality match on it detects a concurrent write between
+				// this read and our write.
+				const { data: existing } = await db
+					.from("orders")
+					.select("metadata, updated_at")
+					.eq("id", id)
+					.maybeSingle();
 
-				if (!data && !error) {
-					// 0 rows matched — row was already moved to a different stage by another client.
-					logger.debug(
-						`[saveOrder] Skipped update for ${id}: row no longer in stage "${expectedCurrentStage}"`,
-					);
-					return null;
-				}
+				let snapshotMetadata =
+					(existing?.metadata as Record<string, unknown>) || {};
+				let snapshotUpdatedAt = existing?.updated_at as string | undefined;
 
-				if (error && isMissingAttachmentColumnError(error)) {
-					let fallbackQuery = db
-						.from("orders")
-						.update(fallbackSupabaseOrder)
-						.eq("id", id);
+				// Bounded retry: a concurrent saveOrder on the same row (two tabs, or a
+				// user edit racing a background maintenance scan) can update the row
+				// between our read and write. Rather than silently overwriting the
+				// other writer's metadata fields, re-merge against the fresh row and
+				// retry, up to MAX_ATTEMPTS.
+				const MAX_ATTEMPTS = 3;
+				let attempt = 0;
+
+				for (;;) {
+					attempt += 1;
+					const { dbOrder, fallbackSupabaseOrder } =
+						buildPayload(snapshotMetadata);
+
+					// When expectedCurrentStage is set, the UPDATE is conditional: it only matches
+					// the row if it is still in that stage. This prevents duplicate archives when
+					// multiple tabs run the maintenance scan concurrently — if another client already
+					// archived the row, stage will be "archive" and this update matches 0 rows (no-op).
+					// The updated_at equality guard additionally protects the metadata merge: if
+					// another writer changed the row after our snapshot, this update matches 0 rows
+					// too, and we retry the merge against the fresh data instead of clobbering it.
+					let updateQuery = db.from("orders").update(dbOrder).eq("id", id);
 					if (expectedCurrentStage) {
-						fallbackQuery = fallbackQuery.eq("stage", expectedCurrentStage);
+						updateQuery = updateQuery.eq("stage", expectedCurrentStage);
 					}
-					const { data: fallbackData, error: fallbackError } =
-						await fallbackQuery.select().maybeSingle();
-					if (!fallbackData && !fallbackError) {
-						logger.debug(
-							`[saveOrder] Fallback skipped for ${id}: row no longer in stage "${expectedCurrentStage}"`,
-						);
-						return null;
+					if (snapshotUpdatedAt) {
+						updateQuery = updateQuery.eq("updated_at", snapshotUpdatedAt);
 					}
-					if (fallbackError) handleSupabaseError(fallbackError);
-					resultData = fallbackData;
-				} else {
+					const { data, error } = await updateQuery.select().maybeSingle();
+
+					if (!data && !error) {
+						const outcome = await resolveZeroRowMatch({
+							db,
+							id,
+							expectedCurrentStage,
+							attempt,
+							maxAttempts: MAX_ATTEMPTS,
+							context: "saveOrder",
+						});
+						if (outcome.type === "no-op") return null;
+						if (outcome.type === "conflict")
+							throw new ServiceError("WRITE_CONFLICT", outcome.message);
+						snapshotMetadata = outcome.metadata;
+						snapshotUpdatedAt = outcome.updatedAt;
+						continue;
+					}
+
+					if (error && isMissingAttachmentColumnError(error)) {
+						let fallbackQuery = db
+							.from("orders")
+							.update(fallbackSupabaseOrder)
+							.eq("id", id);
+						if (expectedCurrentStage) {
+							fallbackQuery = fallbackQuery.eq("stage", expectedCurrentStage);
+						}
+						if (snapshotUpdatedAt) {
+							fallbackQuery = fallbackQuery.eq("updated_at", snapshotUpdatedAt);
+						}
+						const { data: fallbackData, error: fallbackError } =
+							await fallbackQuery.select().maybeSingle();
+
+						if (!fallbackData && !fallbackError) {
+							const outcome = await resolveZeroRowMatch({
+								db,
+								id,
+								expectedCurrentStage,
+								attempt,
+								maxAttempts: MAX_ATTEMPTS,
+								context: "saveOrder fallback",
+							});
+							if (outcome.type === "no-op") return null;
+							if (outcome.type === "conflict")
+								throw new ServiceError("WRITE_CONFLICT", outcome.message);
+							snapshotMetadata = outcome.metadata;
+							snapshotUpdatedAt = outcome.updatedAt;
+							continue;
+						}
+						if (fallbackError) handleSupabaseError(fallbackError);
+						resultData = fallbackData;
+						break;
+					}
+
 					if (error) handleSupabaseError(error);
 					resultData = data;
+					break;
 				}
 			} else {
+				const { dbOrder, fallbackSupabaseOrder } = buildPayload({});
 				const insertOrder = idempotencyKey
 					? { ...dbOrder, idempotency_key: idempotencyKey }
 					: dbOrder;
