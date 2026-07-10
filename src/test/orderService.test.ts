@@ -95,6 +95,74 @@ describe("orderService", () => {
 		expect(result).toEqual(mockData);
 	});
 
+	describe("updateOrdersStage (bulk move)", () => {
+		it("should process batches and return successful data", async () => {
+			const mockUpdate = vi.fn().mockReturnThis();
+			const mockIn = vi.fn().mockReturnThis();
+			const mockSelect = vi
+				.fn()
+				.mockResolvedValue({ data: [{ id: "1" }], error: null });
+
+			// biome-ignore lint/complexity/noBannedTypes: Test mock typing
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
+				update: mockUpdate,
+				in: mockIn,
+				select: mockSelect,
+			});
+
+			const ids = Array.from({ length: 60 }, (_, i) => String(i));
+			const result = await orderService.updateOrdersStage(
+				ids,
+				"archive",
+				"main",
+			);
+
+			expect(mockIn).toHaveBeenCalledTimes(2); // 60 items = 50 + 10 = 2 batches
+			expect(result).toHaveLength(2); // 2 batches, each returned 1 item from mockSelect
+		});
+
+		it("should rollback previously successful batches if a later batch fails", async () => {
+			const mockUpdate = vi.fn().mockReturnThis();
+			const mockIn = vi.fn().mockReturnThis();
+
+			// First batch succeeds, second fails
+			const mockSelect = vi
+				.fn()
+				.mockResolvedValueOnce({ data: [{ id: "success-id" }], error: null })
+				.mockResolvedValueOnce({
+					data: null,
+					error: { message: "Batch 2 failed", code: "500" },
+				});
+
+			// biome-ignore lint/complexity/noBannedTypes: Test mock typing
+			(
+				supabase.from as unknown as { mockReturnValue: Function }
+			).mockReturnValue({
+				update: mockUpdate,
+				in: mockIn,
+				select: mockSelect,
+			});
+
+			const ids = Array.from({ length: 60 }, (_, i) => String(i)); // 2 batches
+
+			await expect(
+				orderService.updateOrdersStage(ids, "archive", "main"),
+			).rejects.toMatchObject({
+				code: "BULK_STAGE_MOVE_PARTIAL_FAILURE",
+				message: "Batch 2 failed",
+			});
+
+			// Update was called 3 times total:
+			// 1. Batch 1 update to archive
+			// 2. Batch 2 update to archive (failed)
+			// 3. Rollback update to main for successful batch 1
+			expect(mockUpdate).toHaveBeenCalledTimes(3);
+			expect(mockUpdate.mock.calls[2][0]).toEqual({ stage: "main" });
+		});
+	});
+
 	it("should fallback to metadata save when attachment columns are missing", async () => {
 		const missingColumnError = {
 			code: "PGRST204",

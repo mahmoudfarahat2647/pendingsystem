@@ -15,8 +15,6 @@ import {
 	ServiceError,
 } from "./orderServiceErrors";
 
-export { createOrderQueryRepository } from "./order/orderQueryRepository";
-
 type ZeroRowMatchOutcome =
 	| { type: "no-op" }
 	| { type: "conflict"; message: string }
@@ -127,22 +125,73 @@ export function createOrderRepository(
 			return data;
 		},
 
-		async updateOrdersStage(ids: string[], stage: OrderStage) {
+		async updateOrdersStage(
+			ids: string[],
+			stage: OrderStage,
+			previousStage?: OrderStage,
+		) {
 			if (ids.length === 0) return [];
 
 			// For large batches, process in chunks to avoid connection pool exhaustion
 			const BATCH_SIZE = 50;
 
 			if (ids.length > BATCH_SIZE) {
-				return processBatch(ids, BATCH_SIZE, async (batch) => {
-					const { data, error } = await db
-						.from("orders")
-						.update({ stage })
-						.in("id", batch)
-						.select();
-					if (error) handleSupabaseError(error);
-					return data || [];
-				});
+				const successfulIds: string[] = [];
+				let encounteredError: Error | null = null;
+				let returnData: Record<string, unknown>[] = [];
+
+				try {
+					returnData = await processBatch(ids, BATCH_SIZE, async (batch) => {
+						const { data, error } = await db
+							.from("orders")
+							.update({ stage })
+							.in("id", batch)
+							.select();
+						if (error) handleSupabaseError(error);
+
+						if (data) {
+							successfulIds.push(...data.map((r) => r.id));
+						}
+						return data || [];
+					});
+				} catch (err: unknown) {
+					encounteredError =
+						err instanceof Error ? err : new Error(String(err));
+				}
+
+				if (encounteredError) {
+					if (successfulIds.length > 0) {
+						if (previousStage) {
+							logger.warn(
+								`Bulk move failed, rolling back ${successfulIds.length} rows to ${previousStage}...`,
+							);
+							try {
+								await processBatch(successfulIds, BATCH_SIZE, async (batch) => {
+									await db
+										.from("orders")
+										.update({ stage: previousStage })
+										.in("id", batch);
+									return [];
+								});
+							} catch (rollbackErr) {
+								logger.error(
+									"Failed to rollback partial bulk update:",
+									rollbackErr,
+								);
+							}
+						} else {
+							logger.warn(
+								`Partial bulk move failure with ${successfulIds.length} committed rows — no previousStage provided, cannot rollback DB state.`,
+							);
+						}
+					}
+					throw new ServiceError(
+						"BULK_STAGE_MOVE_PARTIAL_FAILURE",
+						encounteredError.message || "Bulk update failed",
+					);
+				}
+
+				return returnData;
 			}
 
 			const { data, error } = await db

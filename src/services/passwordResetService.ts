@@ -31,8 +31,6 @@ export async function sendPasswordResetIfUserExists(
 		await auth.api.requestPasswordReset({ body: { email, redirectTo } });
 	} catch (error) {
 		logger.error("Password reset email dispatch failed", {
-			username,
-			email,
 			error: error instanceof Error ? error.message : String(error),
 		});
 	}

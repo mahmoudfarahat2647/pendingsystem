@@ -21,7 +21,10 @@ export async function GET(req: NextRequest) {
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
 		logger.error("[report-settings GET]", message);
-		return NextResponse.json({ error: message }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }
 
@@ -60,6 +63,9 @@ export async function PATCH(req: NextRequest) {
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
 		logger.error("[report-settings PATCH]", message);
-		return NextResponse.json({ error: message }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }

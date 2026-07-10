@@ -41,7 +41,10 @@ export async function GET(req: NextRequest) {
 	} catch (error: unknown) {
 		if (error instanceof Error) {
 			logger.error("Storage stats error:", error.message);
-			return NextResponse.json({ error: error.message }, { status: 500 });
+			return NextResponse.json(
+				{ error: "Internal server error" },
+				{ status: 500 },
+			);
 		}
 		logger.error("Storage stats error:", error);
 		return NextResponse.json(

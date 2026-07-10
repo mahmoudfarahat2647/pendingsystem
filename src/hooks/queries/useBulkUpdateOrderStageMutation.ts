@@ -35,7 +35,7 @@ export function useBulkUpdateOrderStageMutation(sourceStage: OrderStage) {
 	return useMutation({
 		mutationKey: ["bulk-update-stage", sourceStage],
 		mutationFn: ({ ids, stage }: BulkUpdateStageVariables) =>
-			orderService.updateOrdersStage(ids, stage),
+			orderService.updateOrdersStage(ids, stage, sourceStage),
 		onMutate: async ({ ids, stage }) => {
 			await queryClient.cancelQueries({ queryKey: ["orders"] });
 

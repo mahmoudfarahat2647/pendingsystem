@@ -27,6 +27,9 @@ export async function PATCH(req: NextRequest) {
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
 		logger.error("[app-settings PATCH]", message);
-		return NextResponse.json({ error: message }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }
