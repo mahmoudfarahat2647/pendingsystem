@@ -233,9 +233,9 @@ export function createOrderRepository(
 				const baseSupabaseOrder: Record<string, unknown> = { stage };
 				if ("trackingId" in rest || "order_number" in rest)
 					baseSupabaseOrder.order_number =
-						rest.trackingId ||
-						(rest as Record<string, unknown>).order_number ||
-						null;
+						rest.trackingId !== undefined
+							? rest.trackingId
+							: ((rest as Record<string, unknown>).order_number ?? null);
 				if ("customerName" in rest || "customer_name" in rest)
 					baseSupabaseOrder.customer_name =
 						rest.customerName !== undefined
@@ -278,7 +278,7 @@ export function createOrderRepository(
 			// biome-ignore lint/suspicious/noExplicitAny: Supabase return type
 			let resultData: any;
 
-			if (id && id.length === 36) {
+			if (id && isUuid(id)) {
 				// Snapshot current metadata + updated_at for the optimistic-concurrency
 				// guard below. The `orders_updated_at` trigger bumps updated_at on every
 				// UPDATE, so an equality match on it detects a concurrent write between
@@ -455,12 +455,12 @@ export function createOrderRepository(
 
 			// 3. Handle Reminder in separate table
 			if (reminder !== undefined && orderId) {
-				// Clear existing pending reminders
-				await db
-					.from("order_reminders")
-					.delete()
-					.eq("order_id", orderId)
-					.eq("is_completed", false);
+				// Insert the new reminder (if any) before clearing the stale ones, and
+				// exclude the newly-inserted row from that delete. This keeps the
+				// reminder set from ever being briefly empty: if the process fails
+				// after the insert but before the delete, the new reminder is still
+				// present rather than lost.
+				let newReminderId: string | undefined;
 
 				if (reminder) {
 					let remindAt: string | null = null;
@@ -478,16 +478,31 @@ export function createOrderRepository(
 						remindAt = new Date().toISOString();
 					}
 
-					const { error: reminderError } = await db
+					const { data: insertedReminder, error: reminderError } = await db
 						.from("order_reminders")
 						.insert({
 							order_id: orderId,
 							title: reminder.subject,
 							remind_at: remindAt,
 							is_completed: false,
-						});
+						})
+						.select("id")
+						.single();
 					if (reminderError) handleSupabaseError(reminderError);
+					newReminderId = insertedReminder?.id as string | undefined;
 				}
+
+				// Clear the now-stale pending reminders, excluding the one just inserted.
+				let clearStaleQuery = db
+					.from("order_reminders")
+					.delete()
+					.eq("order_id", orderId)
+					.eq("is_completed", false);
+				if (newReminderId) {
+					clearStaleQuery = clearStaleQuery.neq("id", newReminderId);
+				}
+				const { error: clearStaleError } = await clearStaleQuery;
+				if (clearStaleError) handleSupabaseError(clearStaleError);
 			}
 
 			// Re-fetch the complete row with the order_reminders join so the mutation
