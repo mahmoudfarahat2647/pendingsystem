@@ -138,7 +138,7 @@ export function createOrderRepository(
 			if (ids.length > BATCH_SIZE) {
 				const successfulIds: string[] = [];
 				let encounteredError: Error | null = null;
-				let returnData: any[] = [];
+				let returnData: Record<string, unknown>[] = [];
 
 				try {
 					returnData = await processBatch(ids, BATCH_SIZE, async (batch) => {
@@ -154,27 +154,34 @@ export function createOrderRepository(
 						}
 						return data || [];
 					});
-				} catch (err: any) {
-					encounteredError = err;
+				} catch (err: unknown) {
+					encounteredError =
+						err instanceof Error ? err : new Error(String(err));
 				}
 
 				if (encounteredError) {
-					if (successfulIds.length > 0 && previousStage) {
-						logger.warn(
-							`Bulk move failed, rolling back ${successfulIds.length} rows to ${previousStage}...`,
-						);
-						try {
-							await processBatch(successfulIds, BATCH_SIZE, async (batch) => {
-								await db
-									.from("orders")
-									.update({ stage: previousStage })
-									.in("id", batch);
-								return [];
-							});
-						} catch (rollbackErr) {
-							logger.error(
-								"Failed to rollback partial bulk update:",
-								rollbackErr,
+					if (successfulIds.length > 0) {
+						if (previousStage) {
+							logger.warn(
+								`Bulk move failed, rolling back ${successfulIds.length} rows to ${previousStage}...`,
+							);
+							try {
+								await processBatch(successfulIds, BATCH_SIZE, async (batch) => {
+									await db
+										.from("orders")
+										.update({ stage: previousStage })
+										.in("id", batch);
+									return [];
+								});
+							} catch (rollbackErr) {
+								logger.error(
+									"Failed to rollback partial bulk update:",
+									rollbackErr,
+								);
+							}
+						} else {
+							logger.warn(
+								`Partial bulk move failure with ${successfulIds.length} committed rows — no previousStage provided, cannot rollback DB state.`,
 							);
 						}
 					}

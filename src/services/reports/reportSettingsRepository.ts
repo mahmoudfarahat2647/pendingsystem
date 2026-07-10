@@ -1,5 +1,8 @@
 import { createServiceClient } from "@/lib/supabase-admin";
-import { handleSupabaseError } from "@/services/orderServiceErrors";
+import {
+	handleSupabaseError,
+	ServiceError,
+} from "@/services/orderServiceErrors";
 import type { ReportSettings } from "@/types";
 
 const DEFAULT_REPORT_SETTINGS = {
@@ -23,7 +26,8 @@ export async function getOrCreateReportSettings(): Promise<ReportSettings> {
 		.select("id, emails, frequency, is_enabled, last_sent_at")
 		.single();
 	if (error) handleSupabaseError(error);
-	return data as ReportSettings;
+	if (!data) throw new ServiceError("NOT_FOUND", "Report settings not found");
+	return data;
 }
 
 export async function patchReportSettings(
@@ -38,5 +42,6 @@ export async function patchReportSettings(
 		.select()
 		.single();
 	if (error) handleSupabaseError(error);
-	return data as ReportSettings;
+	if (!data) throw new ServiceError("NOT_FOUND", "Report settings not found");
+	return data;
 }

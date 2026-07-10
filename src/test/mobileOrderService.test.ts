@@ -171,6 +171,7 @@ describe("mobileOrderService.createOrders", () => {
 		expect(ordersFromCount).toBe(parts.length);
 
 		expect(result.inserted).toBe(parts.length);
+		expect(result.errors).toHaveLength(0);
 	});
 
 	// ── Test 4: network rejection handling ────────────────────────────────────
