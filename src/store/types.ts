@@ -98,6 +98,7 @@ export interface DraftSessionActions {
 	undoDraft: () => void;
 	redoDraft: () => void;
 	saveDraft: (mutations: DraftSaveMutations) => Promise<void>;
+	skipFailedCommand: () => void;
 	discardDraft: () => void;
 	restoreFromRecovery: (snapshot: DraftRecoverySnapshot) => void;
 	getWorkingRows: (stage: OrderStage) => PendingRow[] | undefined;
