@@ -769,6 +769,72 @@ describe("orderService", () => {
 		});
 	});
 
+	describe("saveOrder – order_number explicit empty-string clear (MAH-14)", () => {
+		const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
+
+		function makeSupabaseMock({
+			existingMetadata,
+			savedData,
+		}: {
+			existingMetadata: Record<string, unknown>;
+			savedData: Record<string, unknown>;
+		}) {
+			const mockUpdate = vi.fn().mockReturnThis();
+			const mockSingle = vi
+				.fn()
+				.mockResolvedValue({ data: savedData, error: null });
+			const mockEq = vi.fn().mockReturnThis();
+			const mockSelect = vi.fn().mockReturnThis();
+			const mockMaybeSingle = vi.fn().mockResolvedValue({
+				data: { metadata: existingMetadata, updated_at: "t1" },
+				error: null,
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				select: mockSelect,
+				eq: mockEq,
+				maybeSingle: mockMaybeSingle,
+				update: mockUpdate,
+				single: mockSingle,
+			});
+
+			return { mockUpdate };
+		}
+
+		it("persists an explicit empty-string trackingId as order_number: '' instead of falling back", async () => {
+			const { mockUpdate } = makeSupabaseMock({
+				existingMetadata: { order_number: "OLD-123" },
+				savedData: { id: VALID_UUID },
+			});
+
+			await orderService.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				trackingId: "",
+			});
+
+			const writtenPayload = mockUpdate.mock.calls[0][0];
+			expect(writtenPayload.order_number).toBe("");
+		});
+
+		it("still writes a non-empty trackingId as order_number", async () => {
+			const { mockUpdate } = makeSupabaseMock({
+				existingMetadata: {},
+				savedData: { id: VALID_UUID },
+			});
+
+			await orderService.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				trackingId: "NEW-456",
+			});
+
+			const writtenPayload = mockUpdate.mock.calls[0][0];
+			expect(writtenPayload.order_number).toBe("NEW-456");
+		});
+	});
+
 	describe("createOrderRepository – injected client", () => {
 		it("calls db.from('orders') with the injected client and returns data", async () => {
 			const mockData = [{ id: "x", stage: "main" }];

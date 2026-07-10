@@ -233,9 +233,9 @@ export function createOrderRepository(
 				const baseSupabaseOrder: Record<string, unknown> = { stage };
 				if ("trackingId" in rest || "order_number" in rest)
 					baseSupabaseOrder.order_number =
-						rest.trackingId ||
-						(rest as Record<string, unknown>).order_number ||
-						null;
+						rest.trackingId !== undefined
+							? rest.trackingId
+							: ((rest as Record<string, unknown>).order_number ?? null);
 				if ("customerName" in rest || "customer_name" in rest)
 					baseSupabaseOrder.customer_name =
 						rest.customerName !== undefined
