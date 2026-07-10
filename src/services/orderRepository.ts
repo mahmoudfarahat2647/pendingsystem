@@ -490,6 +490,19 @@ export function createOrderRepository(
 						.single();
 					if (reminderError) handleSupabaseError(reminderError);
 					newReminderId = insertedReminder?.id as string | undefined;
+
+					// Defensive guard: .single() should make this unreachable (a
+					// successful insert with no matching error must return the row),
+					// but if it ever happens, newReminderId would stay undefined and
+					// the delete below would have nothing to exclude — wiping the
+					// reminder we just inserted. Fail loudly instead of silently
+					// deleting the new reminder.
+					if (!newReminderId) {
+						throw new ServiceError(
+							"REMINDER_INSERT_FAILED",
+							"Reminder insert reported success but returned no id",
+						);
+					}
 				}
 
 				// Clear the now-stale pending reminders, excluding the one just inserted.

@@ -1084,7 +1084,7 @@ describe("SearchResultsView", () => {
 		mocks.queryData.main = [firstRow, secondRow];
 		mocks.saveMutateAsync.mockReset();
 		mocks.saveMutateAsync
-			.mockResolvedValueOnce(undefined)
+			.mockRejectedValueOnce(new Error("save failed"))
 			.mockRejectedValueOnce(new Error("save failed"));
 
 		renderView();

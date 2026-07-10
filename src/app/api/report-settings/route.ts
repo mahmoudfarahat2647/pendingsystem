@@ -30,19 +30,31 @@ export async function PATCH(req: NextRequest) {
 	if (!session?.user?.id)
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-	const body = (await req.json()) as { id?: string } & Record<string, unknown>;
-	const { id, ...rest } = body;
-	if (!id)
-		return NextResponse.json({ error: "Missing settings id" }, { status: 400 });
-
-	const parsed = ReportSettingsPatchSchema.safeParse(rest);
-	if (!parsed.success)
-		return NextResponse.json(
-			{ error: "Invalid report settings payload", issues: parsed.error.issues },
-			{ status: 400 },
-		);
-
 	try {
+		let body: { id?: string } & Record<string, unknown>;
+		try {
+			body = (await req.json()) as { id?: string } & Record<string, unknown>;
+		} catch {
+			return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+		}
+
+		const { id, ...rest } = body;
+		if (!id)
+			return NextResponse.json(
+				{ error: "Missing settings id" },
+				{ status: 400 },
+			);
+
+		const parsed = ReportSettingsPatchSchema.safeParse(rest);
+		if (!parsed.success)
+			return NextResponse.json(
+				{
+					error: "Invalid report settings payload",
+					issues: parsed.error.issues,
+				},
+				{ status: 400 },
+			);
+
 		return NextResponse.json(await patchReportSettings(id, parsed.data));
 	} catch (error: unknown) {
 		const message =

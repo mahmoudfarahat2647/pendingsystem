@@ -26,15 +26,28 @@ vi.mock("sonner", () => ({
 	},
 }));
 
-// Mock window.location.reload
-const originalLocation = window.location;
-// biome-ignore lint/suspicious/noExplicitAny: redefining window.location for test mocking requires bypassing the DOM type
-delete (window as any).location;
-Object.defineProperty(window, "location", {
-	value: { ...originalLocation, reload: vi.fn() },
-	configurable: true,
-	writable: true,
-});
+// jsdom marks `window.location` (and its methods) as [LegacyUnforgeable] as of
+// jsdom v21+, so it can no longer be deleted/redefined via `delete` or
+// `Object.defineProperty` under Vitest's `vmForks`/`vmThreads` pools (this repo
+// uses `pool: "vmForks"` in vitest.config.ts). See jsdom/jsdom#3739 and
+// vitest-dev/vitest#4018 (closed as "works as expected" by the Vitest team,
+// since the strict pool intentionally mirrors real browser unforgeable
+// semantics). `window.location.reload()` is a documented no-op under jsdom
+// (navigation is "not implemented"), so calling it for real is safe; we spy on
+// jsdom's internal virtual console to observe that the reload was attempted
+// instead of replacing `window.location`.
+function spyOnReloadAttempt() {
+	const handler = vi.fn();
+	const virtualConsole = (
+		window as unknown as {
+			_virtualConsole?: {
+				on: (event: string, cb: (err: Error) => void) => void;
+			};
+		}
+	)._virtualConsole;
+	virtualConsole?.on("jsdomError", handler);
+	return handler;
+}
 
 describe("useColumnLayoutTracker", () => {
 	beforeEach(() => {
@@ -124,13 +137,14 @@ describe("useColumnLayoutTracker", () => {
 	});
 
 	it("should reset layout and reload page", () => {
+		const reloadAttempted = spyOnReloadAttempt();
 		const { result } = renderHook(() => useColumnLayoutTracker("test-grid"));
 
 		act(() => {
 			result.current.resetLayout();
 		});
 
-		expect(window.location.reload).toHaveBeenCalled();
+		expect(reloadAttempted).toHaveBeenCalled();
 	});
 
 	it("should persist default layouts in the storage snapshot", () => {

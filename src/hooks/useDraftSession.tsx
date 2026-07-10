@@ -71,6 +71,7 @@ export function useDraftSession(stage?: OrderStage) {
 	const undoDraft = useAppStore((state) => state.undoDraft);
 	const redoDraft = useAppStore((state) => state.redoDraft);
 	const discardDraft = useAppStore((state) => state.discardDraft);
+	const skipFailedCommand = useAppStore((state) => state.skipFailedCommand);
 	const restoreFromRecovery = useAppStore((state) => state.restoreFromRecovery);
 	const getWorkingRows = useAppStore((state) => state.getWorkingRows);
 	const saveDraftInternal = useAppStore((state) => state.saveDraft);
@@ -78,6 +79,10 @@ export function useDraftSession(stage?: OrderStage) {
 	const clearCommandError = useAppStore((state) => state.clearCommandError);
 	const lastSaveResult = useAppStore((state) => state.lastSaveResult);
 	const clearSaveResult = useAppStore((state) => state.clearSaveResult);
+	const saveError = useAppStore((state) => state.draftSession.saveError);
+	const saveCheckpoint = useAppStore(
+		(state) => state.draftSession.saveCheckpoint,
+	);
 
 	const saveOrderMutation = useSaveOrderMutation();
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation(
@@ -113,6 +118,24 @@ export function useDraftSession(stage?: OrderStage) {
 		else toast.error("Draft save failed. Please try again.");
 		clearSaveResult();
 	}, [lastSaveResult, clearSaveResult]);
+
+	// When saveDraft() stops partway through and is stuck retrying the same
+	// failing command (saveCheckpoint is set alongside saveError), offer a way
+	// to discard just that one command instead of the whole draft.
+	useEffect(() => {
+		if (!saveError || !saveCheckpoint) return;
+		toast.error(`Save failed: ${saveError}`, {
+			id: "draft-save-stuck",
+			duration: Number.POSITIVE_INFINITY,
+			action: {
+				label: "Skip this change",
+				onClick: () => {
+					skipFailedCommand();
+					toast.dismiss("draft-save-stuck");
+				},
+			},
+		});
+	}, [saveError, saveCheckpoint, skipFailedCommand]);
 
 	useEffect(() => {
 		if (typeof window === "undefined") {
@@ -254,5 +277,6 @@ export function useDraftSession(stage?: OrderStage) {
 		redoDraft,
 		saveDraft,
 		discardDraft,
+		skipFailedCommand,
 	};
 }
