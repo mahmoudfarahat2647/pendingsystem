@@ -278,7 +278,7 @@ export function createOrderRepository(
 			// biome-ignore lint/suspicious/noExplicitAny: Supabase return type
 			let resultData: any;
 
-			if (id && id.length === 36) {
+			if (id && isUuid(id)) {
 				// Snapshot current metadata + updated_at for the optimistic-concurrency
 				// guard below. The `orders_updated_at` trigger bumps updated_at on every
 				// UPDATE, so an equality match on it detects a concurrent write between

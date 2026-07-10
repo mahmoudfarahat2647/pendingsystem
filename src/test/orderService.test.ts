@@ -835,6 +835,79 @@ describe("orderService", () => {
 		});
 	});
 
+	describe("saveOrder – strict UUID check for insert vs update routing (MAH-15)", () => {
+		// A 36-character string that is NOT a valid UUID (wrong grouping/no
+		// hyphens at hyphen positions) — the old `id.length === 36` check
+		// would have misrouted this to the UPDATE branch.
+		const FAKE_36_CHAR_NON_UUID = "not-a-real-uuid-but-36-characters!!!";
+		const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
+
+		it("routes a non-UUID 36-character id to the INSERT branch", async () => {
+			expect(FAKE_36_CHAR_NON_UUID.length).toBe(36);
+
+			const insertSpy = vi.fn().mockReturnThis();
+			const selectSpy = vi.fn().mockReturnThis();
+			const singleSpy = vi.fn().mockResolvedValue({
+				data: { id: "new-id", metadata: {} },
+				error: null,
+			});
+			const eqSpy = vi.fn().mockReturnThis();
+			const maybeSingleSpy = vi.fn().mockResolvedValue({
+				data: { id: "new-id", metadata: {} },
+				error: null,
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				insert: insertSpy,
+				select: selectSpy,
+				single: singleSpy,
+				eq: eqSpy,
+				maybeSingle: maybeSingleSpy,
+			});
+
+			await orderService.saveOrder({
+				id: FAKE_36_CHAR_NON_UUID,
+				stage: "orders",
+				customerName: "Jane",
+			});
+
+			expect(insertSpy).toHaveBeenCalled();
+		});
+
+		it("routes a real UUID id to the UPDATE branch", async () => {
+			const updateSpy = vi.fn().mockReturnThis();
+			const selectSpy = vi.fn().mockReturnThis();
+			const eqSpy = vi.fn().mockReturnThis();
+			const maybeSingleSpy = vi
+				.fn()
+				.mockResolvedValueOnce({
+					data: { metadata: {}, updated_at: "t1" },
+					error: null,
+				})
+				.mockResolvedValue({
+					data: { id: VALID_UUID, metadata: {} },
+					error: null,
+				});
+
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				update: updateSpy,
+				select: selectSpy,
+				eq: eqSpy,
+				maybeSingle: maybeSingleSpy,
+			});
+
+			await orderService.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				customerName: "Jane",
+			});
+
+			expect(updateSpy).toHaveBeenCalled();
+		});
+	});
+
 	describe("createOrderRepository – injected client", () => {
 		it("calls db.from('orders') with the injected client and returns data", async () => {
 			const mockData = [{ id: "x", stage: "main" }];
