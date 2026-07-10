@@ -117,10 +117,7 @@ describe("useDraftSession recovery toast", () => {
 				},
 			],
 		};
-		localStorage.setItem(
-			"pending-sys-draft-v1",
-			JSON.stringify(validSnapshot),
-		);
+		localStorage.setItem("pending-sys-draft-v1", JSON.stringify(validSnapshot));
 
 		// restoreFromRecovery blows up at runtime (e.g. a shape that passed the
 		// lenient schema but is unusable downstream) — the click handler must not

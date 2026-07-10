@@ -936,11 +936,13 @@ describe("orderService", () => {
 					chain.select = vi.fn(() => chain);
 					chain.eq = vi.fn(() => chain);
 					chain.update = vi.fn(() => chain);
-					chain.maybeSingle = vi.fn().mockResolvedValue(
-						ordersCall === 1
-							? { data: { metadata: {}, updated_at: "t1" }, error: null }
-							: { data: { id: VALID_UUID, metadata: {} }, error: null },
-					);
+					chain.maybeSingle = vi
+						.fn()
+						.mockResolvedValue(
+							ordersCall === 1
+								? { data: { metadata: {}, updated_at: "t1" }, error: null }
+								: { data: { id: VALID_UUID, metadata: {} }, error: null },
+						);
 					return chain;
 				}
 
@@ -960,6 +962,7 @@ describe("orderService", () => {
 				chain.delete = vi.fn(() => chain);
 				chain.eq = vi.fn(() => chain);
 				chain.neq = vi.fn(() => chain);
+				// biome-ignore lint/suspicious/noThenProperty: mocks Supabase's PromiseLike query builder, which is awaited without a terminal method
 				chain.then = (resolve: (value: unknown) => void) => {
 					callOrder.push("delete");
 					return resolve({ error: deleteError ?? null });

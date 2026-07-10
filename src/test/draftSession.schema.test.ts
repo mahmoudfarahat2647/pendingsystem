@@ -71,17 +71,15 @@ describe("DraftRecoverySnapshotSchema", () => {
 		const result = DraftRecoverySnapshotSchema.safeParse({
 			workspaceId: "workspace-1",
 			updatedAt: Date.now(),
-			pendingCommands: [
-				{ type: "deleteRows", ids: ["row-1"] },
-			],
+			pendingCommands: [{ type: "deleteRows", ids: ["row-1"] }],
 		});
 		expect(result.success).toBe(true);
 	});
 
 	it("rejects malformed / garbage JSON content", () => {
-		expect(DraftRecoverySnapshotSchema.safeParse({ garbage: true }).success).toBe(
-			false,
-		);
+		expect(
+			DraftRecoverySnapshotSchema.safeParse({ garbage: true }).success,
+		).toBe(false);
 		expect(DraftRecoverySnapshotSchema.safeParse(null).success).toBe(false);
 		expect(DraftRecoverySnapshotSchema.safeParse("just a string").success).toBe(
 			false,

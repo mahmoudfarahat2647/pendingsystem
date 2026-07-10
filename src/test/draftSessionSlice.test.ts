@@ -663,7 +663,10 @@ describe("draftSessionSlice", () => {
 					isActive: true,
 					baselineByStage: { ...EMPTY_BASELINE, orders: [row] },
 					pendingCommands: [
-						{ type: "teleportRows", ids: [row.id] } as unknown as PatchRowCommand,
+						{
+							type: "teleportRows",
+							ids: [row.id],
+						} as unknown as PatchRowCommand,
 					],
 					derivedRowsRevision: 1,
 				},
@@ -681,7 +684,10 @@ describe("draftSessionSlice", () => {
 					isActive: true,
 					dirty: true,
 					pendingCommands: [
-						{ type: "teleportRows", ids: ["row-x"] } as unknown as PatchRowCommand,
+						{
+							type: "teleportRows",
+							ids: ["row-x"],
+						} as unknown as PatchRowCommand,
 					],
 				},
 			});
@@ -747,9 +753,9 @@ describe("draftSessionSlice", () => {
 				nextIndex: 1,
 				idMapEntries: [[TEMP_ID, REAL_UUID]],
 			});
-			expect(
-				useAppStore.getState().draftSession.pendingCommands,
-			).toHaveLength(3);
+			expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(
+				3,
+			);
 
 			useAppStore.getState().skipFailedCommand();
 
@@ -814,9 +820,9 @@ describe("draftSessionSlice", () => {
 			await useAppStore
 				.getState()
 				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
-			expect(
-				useAppStore.getState().draftSession.pendingCommands,
-			).toHaveLength(2);
+			expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(
+				2,
+			);
 
 			useAppStore.getState().skipFailedCommand();
 
@@ -840,15 +846,15 @@ describe("draftSessionSlice", () => {
 				previousValues: { status: "Pending" },
 			});
 
-			expect(
-				useAppStore.getState().draftSession.pendingCommands,
-			).toHaveLength(1);
+			expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(
+				1,
+			);
 
 			useAppStore.getState().skipFailedCommand();
 
-			expect(
-				useAppStore.getState().draftSession.pendingCommands,
-			).toHaveLength(1);
+			expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(
+				1,
+			);
 		});
 	});
 });

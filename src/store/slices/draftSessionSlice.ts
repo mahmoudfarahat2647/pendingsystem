@@ -456,7 +456,10 @@ export const createDraftSessionSlice: StateCreator<
 						saveError: null,
 						derivedRowsRevision: allocateDerivedRowsRevision(),
 						saveCheckpoint: hasRemaining
-							? { nextIndex: failingIndex, idMapEntries: checkpoint.idMapEntries }
+							? {
+									nextIndex: failingIndex,
+									idMapEntries: checkpoint.idMapEntries,
+								}
 							: null,
 					},
 				};
