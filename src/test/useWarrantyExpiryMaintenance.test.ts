@@ -12,6 +12,7 @@ vi.mock("@tanstack/react-query", () => ({
 
 vi.mock("@/lib/queryClient", () => ({
 	getOrdersQueryKey: (stage: string) => ["orders", stage],
+	DASHBOARD_STATS_QUERY_KEY: ["dashboard-stats"],
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -111,8 +112,8 @@ describe("useWarrantyExpiryMaintenance", () => {
 				sourceStage: "orders",
 			}),
 		);
-		// 4 active stages + archive invalidation.
-		expect(mockInvalidateQueries).toHaveBeenCalledTimes(STAGES_PER_PASS + 1);
+		// 4 active stages + archive invalidation + dashboard-stats invalidation.
+		expect(mockInvalidateQueries).toHaveBeenCalledTimes(STAGES_PER_PASS + 2);
 
 		// Second run within the hour is rate-limited — no further fetch/archive.
 		mockFetchMappedOrders.mockClear();

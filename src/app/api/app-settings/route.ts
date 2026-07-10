@@ -2,13 +2,10 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { createServiceClient } from "@/lib/supabase-admin";
-import { mapKeysToCamel } from "@/lib/utils";
-import type { AppSettings } from "@/services/appSettingsService";
+import { AppSettingsPatchSchema } from "@/schemas/appSettings.schema";
+import { updateAppSettings } from "@/services/appSettingsRepository";
 
 export const runtime = "nodejs";
-
-const PROTECTED_REPAIR_SYSTEMS = ["ضمان"];
 
 export async function PATCH(req: NextRequest) {
 	const session = await auth.api.getSession({ headers: req.headers });
@@ -17,41 +14,15 @@ export async function PATCH(req: NextRequest) {
 	}
 
 	try {
-		let patch = (await req.json()) as Partial<AppSettings>;
-
-		if (patch.repairSystems !== undefined) {
-			const current = patch.repairSystems;
-			const missing = PROTECTED_REPAIR_SYSTEMS.filter(
-				(s) => !current.includes(s),
+		const parsed = AppSettingsPatchSchema.safeParse(await req.json());
+		if (!parsed.success) {
+			return NextResponse.json(
+				{ error: "Validation failed", issues: parsed.error.issues },
+				{ status: 400 },
 			);
-			if (missing.length > 0) {
-				patch = { ...patch, repairSystems: [...current, ...missing] };
-			}
 		}
 
-		const updatePayload: Record<string, unknown> = {
-			updated_at: new Date().toISOString(),
-		};
-		if (patch.models !== undefined) updatePayload.models = patch.models;
-		if (patch.repairSystems !== undefined)
-			updatePayload.repair_systems = patch.repairSystems;
-		if (patch.requesters !== undefined)
-			updatePayload.requesters = patch.requesters;
-
-		const supabase = createServiceClient();
-
-		const { data, error } = await supabase
-			.from("app_settings")
-			.update(updatePayload)
-			.eq("id", 1)
-			.select("models, repair_systems, requesters")
-			.single();
-
-		if (error) throw new Error(error.message);
-
-		return NextResponse.json(
-			mapKeysToCamel<AppSettings>(data as Record<string, unknown>),
-		);
+		return NextResponse.json(await updateAppSettings(parsed.data));
 	} catch (error: unknown) {
 		const message =
 			error instanceof Error ? error.message : "Internal server error";

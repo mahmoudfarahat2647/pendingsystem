@@ -1,3 +1,4 @@
+import { QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -5,6 +6,14 @@ import { Header } from "@/components/shared/Header";
 import { shouldRunNotificationCheck } from "@/components/shared/headerNotificationPolling";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { getOrdersQueryKey, queryClient } from "@/lib/queryClient";
+
+function renderHeader() {
+	return render(
+		<QueryClientProvider client={queryClient}>
+			<Header />
+		</QueryClientProvider>,
+	);
+}
 
 const navigationMocks = vi.hoisted(() => ({
 	pathname: "/orders",
@@ -83,7 +92,7 @@ describe("Header notification polling", () => {
 
 	it("polls again within the same minute once the freshness window has elapsed", async () => {
 		seedQueryState();
-		render(<Header />);
+		renderHeader();
 
 		await act(async () => {
 			await vi.advanceTimersByTimeAsync(3000);
@@ -103,7 +112,7 @@ describe("Header notification polling", () => {
 
 	it("skips unchanged data when the last scan was less than eight seconds ago", async () => {
 		seedQueryState();
-		render(<Header />);
+		renderHeader();
 
 		await act(async () => {
 			await vi.advanceTimersByTimeAsync(3000);

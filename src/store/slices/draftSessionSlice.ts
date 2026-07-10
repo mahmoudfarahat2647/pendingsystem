@@ -2,6 +2,7 @@ import type { StateCreator } from "zustand";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { hasAttachment } from "@/lib/attachment";
 import { ORDER_STAGES } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 import { BeastModeSchema } from "@/schemas/form.schema";
 import type { PendingRow } from "@/types";
 import { getOrdersQueryAdapter } from "../ordersQueryAdapter";
@@ -207,6 +208,13 @@ export const createDraftSessionSlice: StateCreator<
 					for (const child of cmd.children) {
 						applyCommandToWorking(child, working);
 					}
+				} else {
+					const unknownType = (cmd as { type?: unknown }).type;
+					logger.error(
+						"Unknown draft command type in applyCommandToWorking",
+						unknownType,
+					);
+					throw new Error(`Unknown draft command type: ${String(unknownType)}`);
 				}
 			};
 
@@ -409,6 +417,57 @@ export const createDraftSessionSlice: StateCreator<
 			}
 		},
 
+		// Removes only the single pending command that saveDraft() is currently stuck on
+		// (the one at saveCheckpoint.nextIndex — e.g. a command with a permanent validation
+		// error that will never succeed on retry), leaving the rest of the draft
+		// (past, future, and every other pending command) untouched. Use discardDraft()
+		// instead if the whole draft should be thrown away.
+		skipFailedCommand: () => {
+			const state = get().draftSession;
+			const checkpoint = state.saveCheckpoint;
+			if (!checkpoint) {
+				logger.warn(
+					"skipFailedCommand called with no active saveCheckpoint; ignoring.",
+				);
+				return;
+			}
+
+			const failingIndex = checkpoint.nextIndex;
+			if (failingIndex < 0 || failingIndex >= state.pendingCommands.length) {
+				logger.warn(
+					"skipFailedCommand: saveCheckpoint.nextIndex is out of range; ignoring.",
+				);
+				return;
+			}
+
+			set((state) => {
+				const pendingCommands = [
+					...state.draftSession.pendingCommands.slice(0, failingIndex),
+					...state.draftSession.pendingCommands.slice(failingIndex + 1),
+				];
+				const hasRemaining = failingIndex < pendingCommands.length;
+
+				return {
+					draftSession: {
+						...state.draftSession,
+						pendingCommands,
+						dirty: pendingCommands.length > 0,
+						saving: false,
+						saveError: null,
+						derivedRowsRevision: allocateDerivedRowsRevision(),
+						saveCheckpoint: hasRemaining
+							? {
+									nextIndex: failingIndex,
+									idMapEntries: checkpoint.idMapEntries,
+								}
+							: null,
+					},
+				};
+			});
+
+			get()._persistRecovery();
+		},
+
 		discardDraft: () => {
 			const state = get().draftSession;
 
@@ -440,7 +499,7 @@ export const createDraftSessionSlice: StateCreator<
 					...newSession,
 					derivedRowsRevision: allocateDerivedRowsRevision(),
 					pendingCommands: snapshot.pendingCommands,
-					past: snapshot.pendingCommands.slice(-COMMAND_LIMIT),
+					past: [],
 					future: [],
 					dirty: snapshot.pendingCommands.length > 0,
 					touchedStages: new Set(getAllCommandStages(snapshot.pendingCommands)),
@@ -488,7 +547,9 @@ function getCommandStages(cmd: DraftCommand): OrderStage[] {
 		}
 		return Array.from(stages);
 	}
-	return [];
+	const unknownType = (cmd as { type?: unknown }).type;
+	logger.error("Unknown draft command type in getCommandStages", unknownType);
+	throw new Error(`Unknown draft command type: ${String(unknownType)}`);
 }
 
 function getAllCommandStages(commands: DraftCommand[]): OrderStage[] {
@@ -579,5 +640,9 @@ async function executeCommand(
 			ids: remapped.ids,
 			stage: remapped.destinationStage,
 		});
+	} else {
+		const unknownType = (remapped as { type?: unknown }).type;
+		logger.error("Unknown draft command type in executeCommand", unknownType);
+		throw new Error(`Unknown draft command type: ${String(unknownType)}`);
 	}
 }

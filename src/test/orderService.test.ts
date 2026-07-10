@@ -769,6 +769,258 @@ describe("orderService", () => {
 		});
 	});
 
+	describe("saveOrder – order_number explicit empty-string clear (MAH-14)", () => {
+		const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
+
+		function makeSupabaseMock({
+			existingMetadata,
+			savedData,
+		}: {
+			existingMetadata: Record<string, unknown>;
+			savedData: Record<string, unknown>;
+		}) {
+			const mockUpdate = vi.fn().mockReturnThis();
+			const mockSingle = vi
+				.fn()
+				.mockResolvedValue({ data: savedData, error: null });
+			const mockEq = vi.fn().mockReturnThis();
+			const mockSelect = vi.fn().mockReturnThis();
+			const mockMaybeSingle = vi.fn().mockResolvedValue({
+				data: { metadata: existingMetadata, updated_at: "t1" },
+				error: null,
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				select: mockSelect,
+				eq: mockEq,
+				maybeSingle: mockMaybeSingle,
+				update: mockUpdate,
+				single: mockSingle,
+			});
+
+			return { mockUpdate };
+		}
+
+		it("persists an explicit empty-string trackingId as order_number: '' instead of falling back", async () => {
+			const { mockUpdate } = makeSupabaseMock({
+				existingMetadata: { order_number: "OLD-123" },
+				savedData: { id: VALID_UUID },
+			});
+
+			await orderService.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				trackingId: "",
+			});
+
+			const writtenPayload = mockUpdate.mock.calls[0][0];
+			expect(writtenPayload.order_number).toBe("");
+		});
+
+		it("still writes a non-empty trackingId as order_number", async () => {
+			const { mockUpdate } = makeSupabaseMock({
+				existingMetadata: {},
+				savedData: { id: VALID_UUID },
+			});
+
+			await orderService.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				trackingId: "NEW-456",
+			});
+
+			const writtenPayload = mockUpdate.mock.calls[0][0];
+			expect(writtenPayload.order_number).toBe("NEW-456");
+		});
+	});
+
+	describe("saveOrder – strict UUID check for insert vs update routing (MAH-15)", () => {
+		// A 36-character string that is NOT a valid UUID (wrong grouping/no
+		// hyphens at hyphen positions) — the old `id.length === 36` check
+		// would have misrouted this to the UPDATE branch.
+		const FAKE_36_CHAR_NON_UUID = "not-a-real-uuid-but-36-characters!!!";
+		const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
+
+		it("routes a non-UUID 36-character id to the INSERT branch", async () => {
+			expect(FAKE_36_CHAR_NON_UUID.length).toBe(36);
+
+			const insertSpy = vi.fn().mockReturnThis();
+			const selectSpy = vi.fn().mockReturnThis();
+			const singleSpy = vi.fn().mockResolvedValue({
+				data: { id: "new-id", metadata: {} },
+				error: null,
+			});
+			const eqSpy = vi.fn().mockReturnThis();
+			const maybeSingleSpy = vi.fn().mockResolvedValue({
+				data: { id: "new-id", metadata: {} },
+				error: null,
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				insert: insertSpy,
+				select: selectSpy,
+				single: singleSpy,
+				eq: eqSpy,
+				maybeSingle: maybeSingleSpy,
+			});
+
+			await orderService.saveOrder({
+				id: FAKE_36_CHAR_NON_UUID,
+				stage: "orders",
+				customerName: "Jane",
+			});
+
+			expect(insertSpy).toHaveBeenCalled();
+		});
+
+		it("routes a real UUID id to the UPDATE branch", async () => {
+			const updateSpy = vi.fn().mockReturnThis();
+			const selectSpy = vi.fn().mockReturnThis();
+			const eqSpy = vi.fn().mockReturnThis();
+			const maybeSingleSpy = vi
+				.fn()
+				.mockResolvedValueOnce({
+					data: { metadata: {}, updated_at: "t1" },
+					error: null,
+				})
+				.mockResolvedValue({
+					data: { id: VALID_UUID, metadata: {} },
+					error: null,
+				});
+
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock typing
+			(supabase.from as any).mockReturnValue({
+				update: updateSpy,
+				select: selectSpy,
+				eq: eqSpy,
+				maybeSingle: maybeSingleSpy,
+			});
+
+			await orderService.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				customerName: "Jane",
+			});
+
+			expect(updateSpy).toHaveBeenCalled();
+		});
+	});
+
+	describe("saveOrder – reminder replace is insert-then-delete and delete errors surface (MAH-17)", () => {
+		const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
+
+		// Builds a fake Supabase client that distinguishes the "orders" table
+		// (snapshot read, conditional update, final re-fetch) from the
+		// "order_reminders" table (insert of the new reminder, then delete of
+		// stale ones). `callOrder` records "insert" / "delete" as each
+		// order_reminders operation resolves, so tests can assert ordering.
+		function makeReminderTestDb({
+			insertError,
+			deleteError,
+			insertedId = "new-reminder-id",
+		}: {
+			insertError?: { code: string; message: string } | null;
+			deleteError?: { code: string; message: string } | null;
+			insertedId?: string;
+		}) {
+			const callOrder: string[] = [];
+			let ordersCall = 0;
+
+			const from = vi.fn((table: string) => {
+				if (table === "orders") {
+					ordersCall++;
+					// biome-ignore lint/suspicious/noExplicitAny: chainable test mock
+					const chain: any = {};
+					chain.select = vi.fn(() => chain);
+					chain.eq = vi.fn(() => chain);
+					chain.update = vi.fn(() => chain);
+					chain.maybeSingle = vi
+						.fn()
+						.mockResolvedValue(
+							ordersCall === 1
+								? { data: { metadata: {}, updated_at: "t1" }, error: null }
+								: { data: { id: VALID_UUID, metadata: {} }, error: null },
+						);
+					return chain;
+				}
+
+				// order_reminders: first call is the insert of the new reminder,
+				// second call is the delete of stale reminders.
+				// biome-ignore lint/suspicious/noExplicitAny: chainable test mock
+				const chain: any = {};
+				chain.insert = vi.fn(() => chain);
+				chain.select = vi.fn(() => chain);
+				chain.single = vi.fn().mockImplementation(async () => {
+					callOrder.push("insert");
+					return {
+						data: insertError ? null : { id: insertedId },
+						error: insertError ?? null,
+					};
+				});
+				chain.delete = vi.fn(() => chain);
+				chain.eq = vi.fn(() => chain);
+				chain.neq = vi.fn(() => chain);
+				// biome-ignore lint/suspicious/noThenProperty: mocks Supabase's PromiseLike query builder, which is awaited without a terminal method
+				chain.then = (resolve: (value: unknown) => void) => {
+					callOrder.push("delete");
+					return resolve({ error: deleteError ?? null });
+				};
+				return chain;
+			});
+
+			return {
+				db: { from } as unknown as Parameters<typeof createOrderRepository>[0],
+				callOrder,
+			};
+		}
+
+		it("surfaces a reminder-delete failure as a ServiceError instead of swallowing it", async () => {
+			const { db } = makeReminderTestDb({
+				deleteError: { code: "500", message: "delete failed" },
+			});
+			const repo = createOrderRepository(db);
+
+			await expect(
+				repo.saveOrder({
+					id: VALID_UUID,
+					stage: "main",
+					reminder: { subject: "Call back", date: "", time: "" },
+				}),
+			).rejects.toMatchObject({ code: "500" });
+		});
+
+		it("inserts the new reminder before deleting the stale ones, so a failed insert never leaves the set empty", async () => {
+			const { db, callOrder } = makeReminderTestDb({});
+			const repo = createOrderRepository(db);
+
+			await repo.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				reminder: { subject: "Call back", date: "", time: "" },
+			});
+
+			expect(callOrder).toEqual(["insert", "delete"]);
+		});
+
+		it("surfaces an insert failure instead of proceeding to delete the existing reminders", async () => {
+			const { db, callOrder } = makeReminderTestDb({
+				insertError: { code: "500", message: "insert failed" },
+			});
+			const repo = createOrderRepository(db);
+
+			await expect(
+				repo.saveOrder({
+					id: VALID_UUID,
+					stage: "main",
+					reminder: { subject: "Call back", date: "", time: "" },
+				}),
+			).rejects.toMatchObject({ code: "500" });
+			expect(callOrder).toEqual(["insert"]);
+		});
+	});
+
 	describe("createOrderRepository – injected client", () => {
 		it("calls db.from('orders') with the injected client and returns data", async () => {
 			const mockData = [{ id: "x", stage: "main" }];

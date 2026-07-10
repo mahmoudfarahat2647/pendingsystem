@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { DRAFT_RECOVERY_MAX_AGE_MS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { DraftRecoverySnapshotSchema } from "@/schemas/draftSession.schema";
 import { getOrdersQueryAdapter } from "@/store/ordersQueryAdapter";
 import type {
 	DraftCommand,
@@ -70,6 +71,7 @@ export function useDraftSession(stage?: OrderStage) {
 	const undoDraft = useAppStore((state) => state.undoDraft);
 	const redoDraft = useAppStore((state) => state.redoDraft);
 	const discardDraft = useAppStore((state) => state.discardDraft);
+	const skipFailedCommand = useAppStore((state) => state.skipFailedCommand);
 	const restoreFromRecovery = useAppStore((state) => state.restoreFromRecovery);
 	const getWorkingRows = useAppStore((state) => state.getWorkingRows);
 	const saveDraftInternal = useAppStore((state) => state.saveDraft);
@@ -77,6 +79,10 @@ export function useDraftSession(stage?: OrderStage) {
 	const clearCommandError = useAppStore((state) => state.clearCommandError);
 	const lastSaveResult = useAppStore((state) => state.lastSaveResult);
 	const clearSaveResult = useAppStore((state) => state.clearSaveResult);
+	const saveError = useAppStore((state) => state.draftSession.saveError);
+	const saveCheckpoint = useAppStore(
+		(state) => state.draftSession.saveCheckpoint,
+	);
 
 	const saveOrderMutation = useSaveOrderMutation();
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation(
@@ -113,6 +119,24 @@ export function useDraftSession(stage?: OrderStage) {
 		clearSaveResult();
 	}, [lastSaveResult, clearSaveResult]);
 
+	// When saveDraft() stops partway through and is stuck retrying the same
+	// failing command (saveCheckpoint is set alongside saveError), offer a way
+	// to discard just that one command instead of the whole draft.
+	useEffect(() => {
+		if (!saveError || !saveCheckpoint) return;
+		toast.error(`Save failed: ${saveError}`, {
+			id: "draft-save-stuck",
+			duration: Number.POSITIVE_INFINITY,
+			action: {
+				label: "Skip this change",
+				onClick: () => {
+					skipFailedCommand();
+					toast.dismiss("draft-save-stuck");
+				},
+			},
+		});
+	}, [saveError, saveCheckpoint, skipFailedCommand]);
+
 	useEffect(() => {
 		if (typeof window === "undefined") {
 			return;
@@ -130,7 +154,20 @@ export function useDraftSession(stage?: OrderStage) {
 		}
 
 		try {
-			const snapshot: DraftRecoverySnapshot = JSON.parse(raw);
+			const parsed = DraftRecoverySnapshotSchema.safeParse(JSON.parse(raw));
+			if (!parsed.success) {
+				logger.warn(
+					"Discarding invalid recovery snapshot:",
+					parsed.error.flatten(),
+				);
+				localStorage.removeItem(RECOVERY_STORAGE_KEY);
+				clearRecoveryToastOffer();
+				return;
+			}
+			// The schema intentionally validates structure loosely (row/patch payloads are
+			// arbitrary key/value bags); cast to the richer DraftRecoverySnapshot type used
+			// by the rest of the draft-session flow.
+			const snapshot = parsed.data as DraftRecoverySnapshot;
 			if (
 				snapshot.workspaceId !== draftSession.workspaceId ||
 				!snapshot.pendingCommands?.length
@@ -180,7 +217,14 @@ export function useDraftSession(stage?: OrderStage) {
 										return;
 									}
 									clearRecoveryToastOffer();
-									restoreFromRecovery(snapshot);
+									try {
+										restoreFromRecovery(snapshot);
+									} catch (error) {
+										logger.error("Failed to restore draft snapshot:", error);
+										toast.error(
+											"Could not restore your unsaved changes — the saved data was invalid.",
+										);
+									}
 									toast.dismiss(t);
 								}}
 								className="rounded bg-blue-600 px-3 py-1 text-sm text-white transition-colors hover:bg-blue-700"
@@ -233,5 +277,6 @@ export function useDraftSession(stage?: OrderStage) {
 		redoDraft,
 		saveDraft,
 		discardDraft,
+		skipFailedCommand,
 	};
 }

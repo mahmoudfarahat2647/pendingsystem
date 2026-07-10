@@ -1,6 +1,7 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Sidebar } from "@/components/shared/Sidebar";
 
@@ -60,6 +61,16 @@ vi.mock("@/components/shared/SidebarUserMenu", () => ({
 	),
 }));
 
+function renderWithProviders(ui: React.ReactElement) {
+	const queryClient = new QueryClient({
+		defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+	});
+	const wrapper = ({ children }: { children: ReactNode }) => (
+		<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+	);
+	return render(ui, { wrapper });
+}
+
 describe("Sidebar", () => {
 	beforeEach(() => {
 		navigationMocks.pathname = "/orders";
@@ -71,7 +82,7 @@ describe("Sidebar", () => {
 	it("navigates to the dashboard when the logo is clicked", async () => {
 		const user = userEvent.setup();
 
-		render(<Sidebar />);
+		renderWithProviders(<Sidebar />);
 
 		await user.click(screen.getByRole("link", { name: /go to dashboard/i }));
 
@@ -79,7 +90,7 @@ describe("Sidebar", () => {
 	});
 
 	it("shows the sign-out menu trigger when sidebar is expanded", () => {
-		render(<Sidebar />);
+		renderWithProviders(<Sidebar />);
 		expect(screen.getByTestId("sign-out-menu")).toBeInTheDocument();
 	});
 });
