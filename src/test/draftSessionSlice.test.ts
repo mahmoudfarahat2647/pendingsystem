@@ -639,4 +639,68 @@ describe("draftSessionSlice", () => {
 
 		expect(saveOrder).toHaveBeenCalledTimes(31);
 	});
+
+	describe("unrecognized command type dispatch guards", () => {
+		it("applyCommand throws instead of silently dropping an unrecognized command type", () => {
+			const row = createRow("00000000-0000-4000-8000-000000000020", "orders");
+			seedStageData({ orders: [row] });
+
+			expect(() => {
+				useAppStore.getState().applyCommand({
+					type: "teleportRows",
+					ids: [row.id],
+				} as unknown as PatchRowCommand);
+			}).toThrow(/Unknown draft command type/);
+		});
+
+		it("getWorkingRows throws instead of silently dropping an unrecognized command type", () => {
+			const row = createRow("00000000-0000-4000-8000-000000000021", "orders");
+			seedStageData({ orders: [row] });
+
+			useAppStore.setState({
+				draftSession: {
+					...useAppStore.getState().draftSession,
+					isActive: true,
+					baselineByStage: { ...EMPTY_BASELINE, orders: [row] },
+					pendingCommands: [
+						{ type: "teleportRows", ids: [row.id] } as unknown as PatchRowCommand,
+					],
+					derivedRowsRevision: 1,
+				},
+			});
+
+			expect(() => useAppStore.getState().getWorkingRows("orders")).toThrow(
+				/Unknown draft command type/,
+			);
+		});
+
+		it("saveDraft surfaces an unrecognized command type as a saveError instead of hanging or no-oping", async () => {
+			useAppStore.setState({
+				draftSession: {
+					...useAppStore.getState().draftSession,
+					isActive: true,
+					dirty: true,
+					pendingCommands: [
+						{ type: "teleportRows", ids: ["row-x"] } as unknown as PatchRowCommand,
+					],
+				},
+			});
+
+			const saveOrder = vi.fn();
+			const bulkUpdateStage = vi.fn();
+			const bulkDelete = vi.fn();
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(useAppStore.getState().draftSession.saveError).toMatch(
+				/Unknown draft command type/,
+			);
+			// Draft state must be preserved for retry/discard, not silently cleared.
+			expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(
+				1,
+			);
+		});
+	});
 });

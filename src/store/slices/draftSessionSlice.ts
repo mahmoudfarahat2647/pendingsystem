@@ -2,6 +2,7 @@ import type { StateCreator } from "zustand";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { hasAttachment } from "@/lib/attachment";
 import { ORDER_STAGES } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 import { BeastModeSchema } from "@/schemas/form.schema";
 import type { PendingRow } from "@/types";
 import { getOrdersQueryAdapter } from "../ordersQueryAdapter";
@@ -207,6 +208,13 @@ export const createDraftSessionSlice: StateCreator<
 					for (const child of cmd.children) {
 						applyCommandToWorking(child, working);
 					}
+				} else {
+					const unknownType = (cmd as { type?: unknown }).type;
+					logger.error(
+						"Unknown draft command type in applyCommandToWorking",
+						unknownType,
+					);
+					throw new Error(`Unknown draft command type: ${String(unknownType)}`);
 				}
 			};
 
@@ -488,7 +496,9 @@ function getCommandStages(cmd: DraftCommand): OrderStage[] {
 		}
 		return Array.from(stages);
 	}
-	return [];
+	const unknownType = (cmd as { type?: unknown }).type;
+	logger.error("Unknown draft command type in getCommandStages", unknownType);
+	throw new Error(`Unknown draft command type: ${String(unknownType)}`);
 }
 
 function getAllCommandStages(commands: DraftCommand[]): OrderStage[] {
@@ -579,5 +589,9 @@ async function executeCommand(
 			ids: remapped.ids,
 			stage: remapped.destinationStage,
 		});
+	} else {
+		const unknownType = (remapped as { type?: unknown }).type;
+		logger.error("Unknown draft command type in executeCommand", unknownType);
+		throw new Error(`Unknown draft command type: ${String(unknownType)}`);
 	}
 }

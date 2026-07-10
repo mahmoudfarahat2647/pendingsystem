@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { DRAFT_RECOVERY_MAX_AGE_MS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { DraftRecoverySnapshotSchema } from "@/schemas/draftSession.schema";
 import { getOrdersQueryAdapter } from "@/store/ordersQueryAdapter";
 import type {
 	DraftCommand,
@@ -130,7 +131,20 @@ export function useDraftSession(stage?: OrderStage) {
 		}
 
 		try {
-			const snapshot: DraftRecoverySnapshot = JSON.parse(raw);
+			const parsed = DraftRecoverySnapshotSchema.safeParse(JSON.parse(raw));
+			if (!parsed.success) {
+				logger.warn(
+					"Discarding invalid recovery snapshot:",
+					parsed.error.flatten(),
+				);
+				localStorage.removeItem(RECOVERY_STORAGE_KEY);
+				clearRecoveryToastOffer();
+				return;
+			}
+			// The schema intentionally validates structure loosely (row/patch payloads are
+			// arbitrary key/value bags); cast to the richer DraftRecoverySnapshot type used
+			// by the rest of the draft-session flow.
+			const snapshot = parsed.data as DraftRecoverySnapshot;
 			if (
 				snapshot.workspaceId !== draftSession.workspaceId ||
 				!snapshot.pendingCommands?.length
@@ -180,7 +194,14 @@ export function useDraftSession(stage?: OrderStage) {
 										return;
 									}
 									clearRecoveryToastOffer();
-									restoreFromRecovery(snapshot);
+									try {
+										restoreFromRecovery(snapshot);
+									} catch (error) {
+										logger.error("Failed to restore draft snapshot:", error);
+										toast.error(
+											"Could not restore your unsaved changes — the saved data was invalid.",
+										);
+									}
 									toast.dismiss(t);
 								}}
 								className="rounded bg-blue-600 px-3 py-1 text-sm text-white transition-colors hover:bg-blue-700"
