@@ -417,6 +417,54 @@ export const createDraftSessionSlice: StateCreator<
 			}
 		},
 
+		// Removes only the single pending command that saveDraft() is currently stuck on
+		// (the one at saveCheckpoint.nextIndex — e.g. a command with a permanent validation
+		// error that will never succeed on retry), leaving the rest of the draft
+		// (past, future, and every other pending command) untouched. Use discardDraft()
+		// instead if the whole draft should be thrown away.
+		skipFailedCommand: () => {
+			const state = get().draftSession;
+			const checkpoint = state.saveCheckpoint;
+			if (!checkpoint) {
+				logger.warn(
+					"skipFailedCommand called with no active saveCheckpoint; ignoring.",
+				);
+				return;
+			}
+
+			const failingIndex = checkpoint.nextIndex;
+			if (failingIndex < 0 || failingIndex >= state.pendingCommands.length) {
+				logger.warn(
+					"skipFailedCommand: saveCheckpoint.nextIndex is out of range; ignoring.",
+				);
+				return;
+			}
+
+			set((state) => {
+				const pendingCommands = [
+					...state.draftSession.pendingCommands.slice(0, failingIndex),
+					...state.draftSession.pendingCommands.slice(failingIndex + 1),
+				];
+				const hasRemaining = failingIndex < pendingCommands.length;
+
+				return {
+					draftSession: {
+						...state.draftSession,
+						pendingCommands,
+						dirty: pendingCommands.length > 0,
+						saving: false,
+						saveError: null,
+						derivedRowsRevision: allocateDerivedRowsRevision(),
+						saveCheckpoint: hasRemaining
+							? { nextIndex: failingIndex, idMapEntries: checkpoint.idMapEntries }
+							: null,
+					},
+				};
+			});
+
+			get()._persistRecovery();
+		},
+
 		discardDraft: () => {
 			const state = get().draftSession;
 

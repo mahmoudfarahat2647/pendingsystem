@@ -703,4 +703,152 @@ describe("draftSessionSlice", () => {
 			);
 		});
 	});
+
+	describe("skipFailedCommand", () => {
+		it("removes only the currently-failing command and lets saveDraft proceed with the rest", async () => {
+			const REAL_UUID = "dddddddd-eeee-4fff-8000-000000000001";
+			const TEMP_ID = "temp-dddd-eeee-ffff-0000-000000000001";
+
+			seedStageData({ orders: [] });
+
+			useAppStore.getState().applyCommand({
+				type: "createRows",
+				stage: "orders",
+				rows: [createRow(TEMP_ID, "orders")],
+			});
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: TEMP_ID,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates: { status: "Bad" },
+				previousValues: { status: "Pending" },
+			});
+			useAppStore.getState().applyCommand({
+				type: "deleteRows",
+				ids: [TEMP_ID],
+			});
+
+			const saveOrder = vi
+				.fn()
+				.mockResolvedValueOnce({ id: REAL_UUID }) // createRows succeeds
+				.mockRejectedValueOnce(new Error("permanent validation error")); // patchRow fails permanently
+			const bulkUpdateStage = vi.fn().mockResolvedValue(undefined);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(useAppStore.getState().draftSession.saveError).toBe(
+				"permanent validation error",
+			);
+			expect(useAppStore.getState().draftSession.saveCheckpoint).toEqual({
+				nextIndex: 1,
+				idMapEntries: [[TEMP_ID, REAL_UUID]],
+			});
+			expect(
+				useAppStore.getState().draftSession.pendingCommands,
+			).toHaveLength(3);
+
+			useAppStore.getState().skipFailedCommand();
+
+			const afterSkip = useAppStore.getState().draftSession;
+			expect(afterSkip.pendingCommands).toHaveLength(2);
+			expect(afterSkip.pendingCommands[0]).toMatchObject({
+				type: "createRows",
+			});
+			expect(afterSkip.pendingCommands[1]).toEqual({
+				type: "deleteRows",
+				ids: [TEMP_ID],
+			});
+			expect(afterSkip.saveCheckpoint).toEqual({
+				nextIndex: 1,
+				idMapEntries: [[TEMP_ID, REAL_UUID]],
+			});
+			expect(afterSkip.dirty).toBe(true);
+			// past/future must be untouched by skipping a pending command.
+			expect(afterSkip.past).toHaveLength(3);
+			expect(afterSkip.future).toEqual([]);
+
+			// Retry: only the remaining deleteRows command should execute (now at index 1).
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(bulkDelete).toHaveBeenCalledWith([REAL_UUID]);
+			expect(useAppStore.getState().draftSession.dirty).toBe(false);
+			expect(useAppStore.getState().draftSession.saveCheckpoint).toBeNull();
+			expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(
+				0,
+			);
+		});
+
+		it("clears the checkpoint entirely when the failing command was the last pending command", async () => {
+			const REAL_UUID = "dddddddd-eeee-4fff-8000-000000000002";
+			const TEMP_ID = "temp-dddd-eeee-ffff-0000-000000000002";
+
+			seedStageData({ orders: [] });
+
+			useAppStore.getState().applyCommand({
+				type: "createRows",
+				stage: "orders",
+				rows: [createRow(TEMP_ID, "orders")],
+			});
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: TEMP_ID,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates: { status: "Bad" },
+				previousValues: { status: "Pending" },
+			});
+
+			const saveOrder = vi
+				.fn()
+				.mockResolvedValueOnce({ id: REAL_UUID })
+				.mockRejectedValueOnce(new Error("permanent error"));
+			const bulkUpdateStage = vi.fn().mockResolvedValue(undefined);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+			expect(
+				useAppStore.getState().draftSession.pendingCommands,
+			).toHaveLength(2);
+
+			useAppStore.getState().skipFailedCommand();
+
+			const state = useAppStore.getState().draftSession;
+			expect(state.pendingCommands).toHaveLength(1);
+			expect(state.pendingCommands[0]).toMatchObject({ type: "createRows" });
+			expect(state.saveCheckpoint).toBeNull();
+			expect(state.dirty).toBe(true);
+		});
+
+		it("is a no-op when there is no active saveCheckpoint", () => {
+			const row = createRow("00000000-0000-4000-8000-000000000022", "orders");
+			seedStageData({ orders: [row] });
+
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates: { status: "Arrived" },
+				previousValues: { status: "Pending" },
+			});
+
+			expect(
+				useAppStore.getState().draftSession.pendingCommands,
+			).toHaveLength(1);
+
+			useAppStore.getState().skipFailedCommand();
+
+			expect(
+				useAppStore.getState().draftSession.pendingCommands,
+			).toHaveLength(1);
+		});
+	});
 });
