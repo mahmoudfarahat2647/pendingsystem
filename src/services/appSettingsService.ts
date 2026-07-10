@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { handleSupabaseError } from "@/services/orderServiceErrors";
 
 export interface AppSettings {
 	models: string[];
@@ -13,11 +14,11 @@ export const appSettingsService = {
 			.select("models, repair_systems, requesters")
 			.eq("id", 1)
 			.single();
-		if (error) throw error;
+		if (error) handleSupabaseError(error);
 		return {
-			models: data.models as string[],
-			repairSystems: data.repair_systems as string[],
-			requesters: data.requesters as string[],
+			models: (data.models as string[] | null) ?? [],
+			repairSystems: (data.repair_systems as string[] | null) ?? [],
+			requesters: (data.requesters as string[] | null) ?? [],
 		};
 	},
 
