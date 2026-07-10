@@ -9,7 +9,11 @@ import {
 
 function buildPoolConfig() {
 	const sharedConfig = {
-		ssl: { rejectUnauthorized: false },
+		// Supabase pooler requires rejectUnauthorized: false by default for SSL connections.
+		// To enable strict verification in production, set PGSSL_REJECT_UNAUTHORIZED=true.
+		ssl: {
+			rejectUnauthorized: process.env.PGSSL_REJECT_UNAUTHORIZED === "true",
+		},
 		max: DATABASE_POOL_MAX,
 		connectionTimeoutMillis: DATABASE_CONNECTION_TIMEOUT_MS,
 		idleTimeoutMillis: DATABASE_IDLE_TIMEOUT_MS,

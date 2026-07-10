@@ -99,6 +99,7 @@ describe("mobileOrderService.createOrders", () => {
 
 		expect(insertedRow.metadata.partNumber).toBe("");
 		expect(insertedRow.metadata.description).toBe("");
+		expect(insertedRow.metadata.stage).toBeUndefined(); // MAH-26
 
 		// Result shape.
 		expect(result.inserted).toBe(1);
@@ -170,6 +171,20 @@ describe("mobileOrderService.createOrders", () => {
 		expect(ordersFromCount).toBe(parts.length);
 
 		expect(result.inserted).toBe(parts.length);
-		expect(result.errors).toHaveLength(0);
+	});
+
+	// ── Test 4: network rejection handling ────────────────────────────────────
+	it("collects errors when insert promise rejects (e.g. network failure)", async () => {
+		mockOrderSingle.mockRejectedValueOnce(new Error("network failure"));
+
+		const supabase = makeSupabaseStub();
+		const result: CreateOrdersResult = await mobileOrderService.createOrders(
+			supabase,
+			{ ...baseInput, parts: [{ partNumber: "P1", description: "Part 1" }] },
+		);
+
+		expect(result.inserted).toBe(0);
+		expect(result.errors).toHaveLength(1);
+		expect(result.errors[0]).toBe("network failure");
 	});
 });

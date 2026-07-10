@@ -43,7 +43,6 @@ export const mobileOrderService = {
 		const sharedMetadata = {
 			requester: "mobile",
 			status: "Pending",
-			stage: "orders",
 			sabNumber,
 			model,
 			repairSystem,

@@ -71,6 +71,8 @@ export function middleware(request: NextRequest) {
 	// Content Security Policy
 	// In development, 'unsafe-eval' is required for Next.js hot module replacement (HMR)
 	// and eval-based source maps. In production, we strip it for stronger XSS protection.
+	// Note: 'unsafe-inline' in script-src is currently required by Next.js for its runtime
+	// script injection. Full removal requires implementing nonce-based CSP application-wide.
 	const scriptSrcBase = isProduction
 		? "script-src 'self' 'unsafe-inline' https://*.supabase.co"
 		: "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co";
