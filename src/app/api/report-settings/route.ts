@@ -2,11 +2,11 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { ReportSettingsPatchSchema } from "@/schemas/reportSettings.schema";
 import {
 	getOrCreateReportSettings,
 	patchReportSettings,
 } from "@/services/reports/reportSettingsRepository";
-import type { ReportSettings } from "@/types";
 
 export const runtime = "nodejs";
 
@@ -30,13 +30,20 @@ export async function PATCH(req: NextRequest) {
 	if (!session?.user?.id)
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-	const body = (await req.json()) as { id: string } & Partial<ReportSettings>;
-	const { id, ...settings } = body;
+	const body = (await req.json()) as { id?: string } & Record<string, unknown>;
+	const { id, ...rest } = body;
 	if (!id)
 		return NextResponse.json({ error: "Missing settings id" }, { status: 400 });
 
+	const parsed = ReportSettingsPatchSchema.safeParse(rest);
+	if (!parsed.success)
+		return NextResponse.json(
+			{ error: "Invalid report settings payload", issues: parsed.error.issues },
+			{ status: 400 },
+		);
+
 	try {
-		return NextResponse.json(await patchReportSettings(id, settings));
+		return NextResponse.json(await patchReportSettings(id, parsed.data));
 	} catch (error: unknown) {
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
