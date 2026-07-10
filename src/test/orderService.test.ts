@@ -908,6 +908,116 @@ describe("orderService", () => {
 		});
 	});
 
+	describe("saveOrder – reminder replace is insert-then-delete and delete errors surface (MAH-17)", () => {
+		const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
+
+		// Builds a fake Supabase client that distinguishes the "orders" table
+		// (snapshot read, conditional update, final re-fetch) from the
+		// "order_reminders" table (insert of the new reminder, then delete of
+		// stale ones). `callOrder` records "insert" / "delete" as each
+		// order_reminders operation resolves, so tests can assert ordering.
+		function makeReminderTestDb({
+			insertError,
+			deleteError,
+			insertedId = "new-reminder-id",
+		}: {
+			insertError?: { code: string; message: string } | null;
+			deleteError?: { code: string; message: string } | null;
+			insertedId?: string;
+		}) {
+			const callOrder: string[] = [];
+			let ordersCall = 0;
+
+			const from = vi.fn((table: string) => {
+				if (table === "orders") {
+					ordersCall++;
+					// biome-ignore lint/suspicious/noExplicitAny: chainable test mock
+					const chain: any = {};
+					chain.select = vi.fn(() => chain);
+					chain.eq = vi.fn(() => chain);
+					chain.update = vi.fn(() => chain);
+					chain.maybeSingle = vi.fn().mockResolvedValue(
+						ordersCall === 1
+							? { data: { metadata: {}, updated_at: "t1" }, error: null }
+							: { data: { id: VALID_UUID, metadata: {} }, error: null },
+					);
+					return chain;
+				}
+
+				// order_reminders: first call is the insert of the new reminder,
+				// second call is the delete of stale reminders.
+				// biome-ignore lint/suspicious/noExplicitAny: chainable test mock
+				const chain: any = {};
+				chain.insert = vi.fn(() => chain);
+				chain.select = vi.fn(() => chain);
+				chain.single = vi.fn().mockImplementation(async () => {
+					callOrder.push("insert");
+					return {
+						data: insertError ? null : { id: insertedId },
+						error: insertError ?? null,
+					};
+				});
+				chain.delete = vi.fn(() => chain);
+				chain.eq = vi.fn(() => chain);
+				chain.neq = vi.fn(() => chain);
+				chain.then = (resolve: (value: unknown) => void) => {
+					callOrder.push("delete");
+					return resolve({ error: deleteError ?? null });
+				};
+				return chain;
+			});
+
+			return {
+				db: { from } as unknown as Parameters<typeof createOrderRepository>[0],
+				callOrder,
+			};
+		}
+
+		it("surfaces a reminder-delete failure as a ServiceError instead of swallowing it", async () => {
+			const { db } = makeReminderTestDb({
+				deleteError: { code: "500", message: "delete failed" },
+			});
+			const repo = createOrderRepository(db);
+
+			await expect(
+				repo.saveOrder({
+					id: VALID_UUID,
+					stage: "main",
+					reminder: { subject: "Call back", date: "", time: "" },
+				}),
+			).rejects.toMatchObject({ code: "500" });
+		});
+
+		it("inserts the new reminder before deleting the stale ones, so a failed insert never leaves the set empty", async () => {
+			const { db, callOrder } = makeReminderTestDb({});
+			const repo = createOrderRepository(db);
+
+			await repo.saveOrder({
+				id: VALID_UUID,
+				stage: "main",
+				reminder: { subject: "Call back", date: "", time: "" },
+			});
+
+			expect(callOrder).toEqual(["insert", "delete"]);
+		});
+
+		it("surfaces an insert failure instead of proceeding to delete the existing reminders", async () => {
+			const { db, callOrder } = makeReminderTestDb({
+				insertError: { code: "500", message: "insert failed" },
+			});
+			const repo = createOrderRepository(db);
+
+			await expect(
+				repo.saveOrder({
+					id: VALID_UUID,
+					stage: "main",
+					reminder: { subject: "Call back", date: "", time: "" },
+				}),
+			).rejects.toMatchObject({ code: "500" });
+			expect(callOrder).toEqual(["insert"]);
+		});
+	});
+
 	describe("createOrderRepository – injected client", () => {
 		it("calls db.from('orders') with the injected client and returns data", async () => {
 			const mockData = [{ id: "x", stage: "main" }];

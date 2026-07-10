@@ -455,12 +455,12 @@ export function createOrderRepository(
 
 			// 3. Handle Reminder in separate table
 			if (reminder !== undefined && orderId) {
-				// Clear existing pending reminders
-				await db
-					.from("order_reminders")
-					.delete()
-					.eq("order_id", orderId)
-					.eq("is_completed", false);
+				// Insert the new reminder (if any) before clearing the stale ones, and
+				// exclude the newly-inserted row from that delete. This keeps the
+				// reminder set from ever being briefly empty: if the process fails
+				// after the insert but before the delete, the new reminder is still
+				// present rather than lost.
+				let newReminderId: string | undefined;
 
 				if (reminder) {
 					let remindAt: string | null = null;
@@ -478,16 +478,31 @@ export function createOrderRepository(
 						remindAt = new Date().toISOString();
 					}
 
-					const { error: reminderError } = await db
+					const { data: insertedReminder, error: reminderError } = await db
 						.from("order_reminders")
 						.insert({
 							order_id: orderId,
 							title: reminder.subject,
 							remind_at: remindAt,
 							is_completed: false,
-						});
+						})
+						.select("id")
+						.single();
 					if (reminderError) handleSupabaseError(reminderError);
+					newReminderId = insertedReminder?.id as string | undefined;
 				}
+
+				// Clear the now-stale pending reminders, excluding the one just inserted.
+				let clearStaleQuery = db
+					.from("order_reminders")
+					.delete()
+					.eq("order_id", orderId)
+					.eq("is_completed", false);
+				if (newReminderId) {
+					clearStaleQuery = clearStaleQuery.neq("id", newReminderId);
+				}
+				const { error: clearStaleError } = await clearStaleQuery;
+				if (clearStaleError) handleSupabaseError(clearStaleError);
 			}
 
 			// Re-fetch the complete row with the order_reminders join so the mutation
