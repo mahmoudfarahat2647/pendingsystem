@@ -16,9 +16,9 @@ export const appSettingsService = {
 			.single();
 		if (error) handleSupabaseError(error);
 		return {
-			models: (data.models as string[] | null) ?? [],
-			repairSystems: (data.repair_systems as string[] | null) ?? [],
-			requesters: (data.requesters as string[] | null) ?? [],
+			models: data.models as string[],
+			repairSystems: data.repair_systems as string[],
+			requesters: data.requesters as string[],
 		};
 	},
 
