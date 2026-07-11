@@ -5,7 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Header } from "@/components/shared/Header";
 import { shouldRunNotificationCheck } from "@/components/shared/headerNotificationPolling";
 import type { OrderStage } from "@/domain/order/orderStage";
-import { getOrdersQueryKey, queryClient } from "@/lib/queryClient";
+import { getOrdersQueryKey } from "@/lib/queryClient";
+import { queryClient } from "./testQueryClient";
 
 function renderHeader() {
 	return render(

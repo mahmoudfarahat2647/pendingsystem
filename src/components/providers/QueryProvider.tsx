@@ -2,17 +2,13 @@
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { queryClient } from "@/lib/queryClient";
+import { createAppQueryClient } from "@/lib/queryClient";
 import {
 	createReactQueryAdapter,
 	setOrdersQueryAdapter,
 } from "@/store/ordersQueryAdapter";
-
-// Register the React Query–backed adapter synchronously at module load so the
-// first store action (which may run before any component mounts) already sees
-// it. See architecture-audit.md H1.
-setOrdersQueryAdapter(createReactQueryAdapter(queryClient));
 
 const Devtools =
 	process.env.NODE_ENV === "development"
@@ -30,6 +26,20 @@ export default function QueryProvider({
 }: {
 	children: React.ReactNode;
 }) {
+	// One isolated QueryClient per provider mount (per request/session). The
+	// `useState` initializer stays pure — creating the client only — so React's
+	// StrictMode double-invoke never registers a client that gets discarded.
+	const [queryClient] = useState(() => createAppQueryClient());
+
+	// Register the React Query–backed adapter so the Zustand notification store
+	// reads through the *live* client bound to this provider. This runs on mount,
+	// well before Header's first notification check (deferred ~3s), so
+	// `checkNotifications` never sees a stale/undefined adapter. See
+	// architecture-audit.md H1.
+	useEffect(() => {
+		setOrdersQueryAdapter(createReactQueryAdapter(queryClient));
+	}, [queryClient]);
+
 	return (
 		<QueryClientProvider client={queryClient}>
 			<TooltipProvider>{children}</TooltipProvider>
