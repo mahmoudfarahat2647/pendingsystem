@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
+import { SentryProvider } from "@/components/providers/SentryProvider";
 
 const APP_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -45,10 +46,12 @@ export default function RootLayout({
 	return (
 		<html lang="en" className="dark" suppressHydrationWarning>
 			<body className="font-sans" suppressHydrationWarning>
-				<QueryProvider>
-					{children}
-					<Toaster position="bottom-right" richColors />
-				</QueryProvider>
+				<SentryProvider>
+					<QueryProvider>
+						{children}
+						<Toaster position="bottom-right" richColors />
+					</QueryProvider>
+				</SentryProvider>
 			</body>
 		</html>
 	);
