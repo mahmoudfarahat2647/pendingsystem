@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
-import { getOrdersQueryKey, queryClient } from "@/lib/queryClient";
+import { getOrdersQueryKey } from "@/lib/queryClient";
 import { createNotificationSlice } from "../store/slices/notificationSlice";
 import type { CombinedStore } from "../store/types";
 import type { PendingRow } from "../types";
+import { queryClient } from "./testQueryClient";
 
 // Mock orderService
 vi.mock("@/services/orderService", () => ({

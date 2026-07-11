@@ -15,10 +15,10 @@ process.env.RESEND_FROM_EMAIL = "test@example.com";
 // already use via `queryClient.setQueryData(...)`. Without this, store slices
 // (which now go through the adapter) would see the no-op default instead of
 // the seeded data. See h1-plan.md step 3.
-import { queryClient } from "@/lib/queryClient";
 import {
 	createReactQueryAdapter,
 	setOrdersQueryAdapter,
 } from "@/store/ordersQueryAdapter";
+import { queryClient } from "./testQueryClient";
 
 setOrdersQueryAdapter(createReactQueryAdapter(queryClient));

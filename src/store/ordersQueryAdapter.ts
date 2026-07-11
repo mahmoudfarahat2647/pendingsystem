@@ -46,6 +46,21 @@ export function setOrdersQueryAdapter(adapter: OrdersQueryAdapter): void {
 	registered = adapter;
 }
 
+/**
+ * Tears down the current registration, restoring the no-op default.
+ *
+ * Paired with `setOrdersQueryAdapter` as the cleanup half of a React effect so
+ * the registration is symmetric across mount/unmount. This also keeps
+ * `registrationCount` balanced under React StrictMode, which double-invokes
+ * effects (setup -> cleanup -> setup) on mount in development — without the
+ * decrement here that dev-only replay would falsely trip the
+ * "registered more than once" warning below.
+ */
+export function clearOrdersQueryAdapter(): void {
+	registrationCount = Math.max(0, registrationCount - 1);
+	registered = noopAdapter;
+}
+
 export function getOrdersQueryAdapter(): OrdersQueryAdapter {
 	return registered;
 }
