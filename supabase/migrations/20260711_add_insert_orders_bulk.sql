@@ -23,7 +23,7 @@ BEGIN
         r->>'customer_phone',
         r->>'vin',
         r->>'company',
-        r->>'stage',
+        (r->>'stage')::public.order_stage,
         (r->'metadata')::jsonb
       );
       idx := i;
