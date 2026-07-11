@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import "./globals.css";
 import { logger } from "@/lib/logger";
@@ -13,6 +14,7 @@ export default function GlobalError({
 }) {
 	useEffect(() => {
 		logger.error("Global Error:", error);
+		Sentry.captureException(error);
 	}, [error]);
 
 	const isChunkError =

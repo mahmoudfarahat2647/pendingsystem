@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -66,4 +67,11 @@ const nextConfig: NextConfig = {
 	output: "standalone",
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+	org: "koko-sz",
+	project: "pendingsystem",
+	authToken: process.env.SENTRY_AUTH_TOKEN,
+	// Only log during CI builds; keep local/dev builds quiet, and skip source
+	// map upload noise when no auth token is configured.
+	silent: !process.env.CI,
+});
