@@ -38,23 +38,15 @@ const DistributionChart = dynamic(
 );
 
 export default function DashboardPage() {
-	const { data: statsData = [], isLoading: isStageLoading } =
+	const { data: statsData, isLoading: isStageLoading } =
 		useDashboardStatsQuery();
 
-	const ordersCount = statsData.filter((row) => row.stage === "orders").length;
-	const mainCount = statsData.filter((row) => row.stage === "main").length;
-	const bookingCount = statsData.filter(
-		(row) => row.stage === "booking",
-	).length;
-	const archiveCount = statsData.filter(
-		(row) => row.stage === "archive",
-	).length;
-
-	const callQueueRows = statsData.filter((row) => row.stage === "call");
-	const callCount = callQueueRows.length;
-	const callUniqueVehicles = new Set(
-		callQueueRows.map((item) => item.vin).filter(Boolean),
-	).size;
+	const ordersCount = statsData?.orders ?? 0;
+	const mainCount = statsData?.main ?? 0;
+	const bookingCount = statsData?.booking ?? 0;
+	const archiveCount = statsData?.archive ?? 0;
+	const callCount = statsData?.call ?? 0;
+	const callUniqueVehicles = statsData?.callUniqueVehicles ?? 0;
 
 	// Memoize stats to prevent recalculation
 	const stats = useMemo(

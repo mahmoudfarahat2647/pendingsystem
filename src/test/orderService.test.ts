@@ -1151,29 +1151,6 @@ describe("orderService", () => {
 			expect(range).toHaveBeenNthCalledWith(2, 1000, 1999);
 		});
 
-		it("getDashboardStats paginates the same way", async () => {
-			const firstPage = Array.from({ length: 1000 }, (_, i) => ({
-				id: `id-${i}`,
-				vin: null,
-				stage: "main",
-			}));
-			const secondPage = [{ id: "id-1000", vin: null, stage: "call" }];
-			const range = vi.fn((from: number) =>
-				Promise.resolve({
-					data: from === 0 ? firstPage : secondPage,
-					error: null,
-				}),
-			);
-
-			const svc = createOrderQueryRepository(makePagedDb(range));
-			const result = await svc.getDashboardStats();
-
-			expect(result).toHaveLength(1001);
-			expect(range).toHaveBeenCalledTimes(2);
-			expect(range).toHaveBeenNthCalledWith(1, 0, 999);
-			expect(range).toHaveBeenNthCalledWith(2, 1000, 1999);
-		});
-
 		it("getOrders surfaces a non-attachment error via handleSupabaseError", async () => {
 			const range = vi.fn().mockResolvedValue({
 				data: null,
@@ -1191,6 +1168,84 @@ describe("orderService", () => {
 				"statement timeout",
 			);
 			expect(range).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("createOrderQueryRepository – getDashboardStats (MAH-42)", () => {
+		function makeRpcDb(rpc: ReturnType<typeof vi.fn>) {
+			return { rpc } as unknown as Parameters<
+				typeof createOrderQueryRepository
+			>[0];
+		}
+
+		it("calls the get_order_stage_counts RPC instead of paginating rows", async () => {
+			const rpc = vi.fn().mockResolvedValue({
+				data: [
+					{ stage: "orders", row_count: 3, call_unique_vehicles: 0 },
+					{ stage: "main", row_count: 5, call_unique_vehicles: 0 },
+					{ stage: "call", row_count: 4, call_unique_vehicles: 2 },
+					{ stage: "booking", row_count: 1, call_unique_vehicles: 0 },
+					{ stage: "archive", row_count: 7, call_unique_vehicles: 0 },
+				],
+				error: null,
+			});
+
+			const svc = createOrderQueryRepository(makeRpcDb(rpc));
+			const result = await svc.getDashboardStats();
+
+			expect(rpc).toHaveBeenCalledWith("get_order_stage_counts");
+			expect(result).toEqual({
+				orders: 3,
+				main: 5,
+				call: 4,
+				booking: 1,
+				archive: 7,
+				callUniqueVehicles: 2,
+			});
+		});
+
+		it("defaults every stage and callUniqueVehicles to 0 when no rows exist for a stage", async () => {
+			const rpc = vi.fn().mockResolvedValue({ data: [], error: null });
+
+			const svc = createOrderQueryRepository(makeRpcDb(rpc));
+			const result = await svc.getDashboardStats();
+
+			expect(result).toEqual({
+				orders: 0,
+				main: 0,
+				call: 0,
+				booking: 0,
+				archive: 0,
+				callUniqueVehicles: 0,
+			});
+		});
+
+		it("defaults to 0 when data is null", async () => {
+			const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+
+			const svc = createOrderQueryRepository(makeRpcDb(rpc));
+			const result = await svc.getDashboardStats();
+
+			expect(result.orders).toBe(0);
+			expect(result.callUniqueVehicles).toBe(0);
+		});
+
+		it("surfaces an RPC error via handleSupabaseError instead of returning stale/partial counts", async () => {
+			const rpc = vi.fn().mockResolvedValue({
+				data: null,
+				error: {
+					code: "500",
+					message: "aggregate query failed",
+					details: null,
+					hint: null,
+				},
+			});
+
+			const svc = createOrderQueryRepository(makeRpcDb(rpc));
+
+			await expect(svc.getDashboardStats()).rejects.toThrow(
+				"aggregate query failed",
+			);
 		});
 	});
 });

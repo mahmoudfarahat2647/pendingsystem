@@ -1,20 +1,40 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// We test the handler logic by mocking Supabase inserts and the rate-limit RPC.
-// The handler is imported after mocks are set up.
+// We test the handler logic by mocking the Supabase RPC calls (rate limiting
+// and the bulk insert) rather than the old per-row insert() chain — the
+// service now issues a single `insert_orders_bulk` RPC call instead of N
+// separate `.insert().select().single()` calls (MAH-43).
 
-const mockInsert = vi.fn();
-const mockSelect = vi.fn();
-const mockSingle = vi.fn();
-// mockRpc simulates the check_rate_limit / prune_rate_limits RPCs.
-// Default: not rate-limited.
-const mockRpc = vi.fn().mockResolvedValue({ data: false, error: null });
+// biome-ignore lint/suspicious/noExplicitAny: test mock needs a flexible shape for multiple RPC responses
+let rateLimitResponse: any = { data: false, error: null };
+// biome-ignore lint/suspicious/noExplicitAny: null means "auto-generate an all-success response from p_rows"
+let bulkInsertResponse: any = null;
+
+const mockRpc = vi.fn((fn: string, args?: Record<string, unknown>) => {
+	if (fn === "check_rate_limit") {
+		return Promise.resolve(rateLimitResponse);
+	}
+	if (fn === "insert_orders_bulk") {
+		if (bulkInsertResponse) return Promise.resolve(bulkInsertResponse);
+		const rows = (args?.p_rows ?? []) as unknown[];
+		return Promise.resolve({
+			data: rows.map((_, i) => ({
+				idx: i,
+				success: true,
+				error_message: null,
+			})),
+			error: null,
+		});
+	}
+	// prune_rate_limits and any other fire-and-forget RPCs
+	return Promise.resolve({ data: null, error: null });
+});
 
 // biome-ignore lint/suspicious/noExplicitAny: test mock needs flexible return type for multi-table mocking
 const mockFrom = vi.fn((_table: string): any => ({
-	insert: mockInsert.mockReturnThis(),
-	select: mockSelect.mockReturnThis(),
-	single: mockSingle,
+	select: vi.fn().mockReturnThis(),
+	eq: vi.fn().mockReturnThis(),
+	single: vi.fn().mockResolvedValue({ data: null, error: { message: "mock" } }),
 }));
 
 vi.mock("@supabase/supabase-js", () => ({
@@ -36,17 +56,19 @@ function makeRequest(body: unknown) {
 	});
 }
 
+function getBulkInsertRows() {
+	const call = mockRpc.mock.calls.find((c) => c[0] === "insert_orders_bulk");
+	// biome-ignore lint/suspicious/noExplicitAny: reading test mock call args
+	return (call?.[1] as any)?.p_rows as Array<Record<string, unknown>>;
+}
+
 describe("POST /api/mobile-order", () => {
 	beforeEach(() => {
 		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
 		vi.clearAllMocks();
-		// Default: not rate-limited
-		mockRpc.mockResolvedValue({ data: false, error: null });
-		mockSingle.mockResolvedValue({
-			data: { id: "uuid-1", stage: "orders" },
-			error: null,
-		});
+		rateLimitResponse = { data: false, error: null };
+		bulkInsertResponse = null;
 	});
 
 	it("returns 400 when company is missing", async () => {
@@ -59,15 +81,20 @@ describe("POST /api/mobile-order", () => {
 		const req = makeRequest({ company: "Zeekr", parts: [] });
 		const res = await POST(req as never);
 		expect(res.status).toBe(200);
-		expect(mockFrom).toHaveBeenCalledWith("orders");
-		expect(mockInsert).toHaveBeenCalledTimes(1);
-		const insertArg = mockInsert.mock.calls[0][0][0];
-		expect(insertArg.stage).toBe("orders");
-		expect(insertArg.metadata.requester).toBe("mobile");
-		expect(insertArg.metadata.status).toBe("Pending");
+		expect(mockRpc).toHaveBeenCalledWith(
+			"insert_orders_bulk",
+			expect.anything(),
+		);
+		const rows = getBulkInsertRows();
+		expect(rows).toHaveLength(1);
+		expect(rows[0].stage).toBe("orders");
+		// biome-ignore lint/suspicious/noExplicitAny: reading test row shape
+		expect((rows[0].metadata as any).requester).toBe("mobile");
+		// biome-ignore lint/suspicious/noExplicitAny: reading test row shape
+		expect((rows[0].metadata as any).status).toBe("Pending");
 	});
 
-	it("inserts N rows for N valid parts", async () => {
+	it("sends N rows in a single bulk insert call for N valid parts", async () => {
 		const req = makeRequest({
 			company: "Renault",
 			parts: [
@@ -77,8 +104,12 @@ describe("POST /api/mobile-order", () => {
 		});
 		const res = await POST(req as never);
 		expect(res.status).toBe(200);
-		// One insert call per part
-		expect(mockInsert).toHaveBeenCalledTimes(2);
+		// Exactly one RPC call for the bulk insert, carrying both rows.
+		const bulkCalls = mockRpc.mock.calls.filter(
+			(c) => c[0] === "insert_orders_bulk",
+		);
+		expect(bulkCalls).toHaveLength(1);
+		expect(getBulkInsertRows()).toHaveLength(2);
 	});
 
 	it("forces requester to 'mobile' regardless of payload", async () => {
@@ -87,17 +118,19 @@ describe("POST /api/mobile-order", () => {
 			parts: [{ partNumber: "X", description: "Y" }],
 		});
 		await POST(req as never);
-		const insertArg = mockInsert.mock.calls[0][0][0];
-		expect(insertArg.metadata.requester).toBe("mobile");
+		const rows = getBulkInsertRows();
+		// biome-ignore lint/suspicious/noExplicitAny: reading test row shape
+		expect((rows[0].metadata as any).requester).toBe("mobile");
 	});
 
 	it("sets rDate to today if not provided", async () => {
 		const req = makeRequest({ company: "Zeekr", parts: [] });
 		await POST(req as never);
-		const insertArg = mockInsert.mock.calls[0][0][0];
-		// rDate stored in metadata
-		expect(typeof insertArg.metadata.rDate).toBe("string");
-		expect(insertArg.metadata.rDate.length).toBeGreaterThan(0);
+		const rows = getBulkInsertRows();
+		// biome-ignore lint/suspicious/noExplicitAny: reading test row shape
+		const rDate = (rows[0].metadata as any).rDate;
+		expect(typeof rDate).toBe("string");
+		expect(rDate.length).toBeGreaterThan(0);
 	});
 
 	it("copies shared identity data onto every row", async () => {
@@ -112,39 +145,47 @@ describe("POST /api/mobile-order", () => {
 			],
 		});
 		await POST(req as never);
-		for (const call of mockInsert.mock.calls) {
-			const row = call[0][0];
+		const rows = getBulkInsertRows();
+		for (const row of rows) {
 			expect(row.customer_name).toBe("Alice");
 			expect(row.vin).toBe("VIN123");
 			expect(row.customer_phone).toBe("0500000001");
 		}
 	});
-});
 
-// Task 4: app_settings merge tests
-const mockAppSettingsSelect = vi.fn().mockResolvedValue({
-	data: { models: ["Megane IV"], repair_systems: ["Mechanical"] },
-	error: null,
-});
-
-mockFrom.mockImplementation((table: string) => {
-	if (table === "app_settings") {
-		return {
-			select: vi.fn().mockReturnValue({
-				eq: vi.fn().mockReturnValue({
-					single: mockAppSettingsSelect,
-				}),
-			}),
-			update: vi.fn().mockReturnValue({
-				eq: vi.fn().mockResolvedValue({ data: {}, error: null }),
-			}),
+	it("reports partial success when some rows fail server-side", async () => {
+		bulkInsertResponse = {
+			data: [
+				{ idx: 0, success: true, error_message: null },
+				{ idx: 1, success: false, error_message: "duplicate key" },
+			],
+			error: null,
 		};
-	}
-	return {
-		insert: mockInsert.mockReturnThis(),
-		select: mockSelect.mockReturnThis(),
-		single: mockSingle,
-	};
+		const req = makeRequest({
+			company: "Renault",
+			parts: [
+				{ partNumber: "A1", description: "Part A" },
+				{ partNumber: "B2", description: "Part B" },
+			],
+		});
+		const res = await POST(req as never);
+		expect(res.status).toBe(200);
+		const json = await res.json();
+		expect(json.inserted).toBe(1);
+	});
+
+	it("returns 500 when every row in the bulk insert fails", async () => {
+		bulkInsertResponse = {
+			data: [{ idx: 0, success: false, error_message: "insert failed" }],
+			error: null,
+		};
+		const req = makeRequest({
+			company: "Zeekr",
+			parts: [{ partNumber: "A1", description: "Part A" }],
+		});
+		const res = await POST(req as never);
+		expect(res.status).toBe(500);
+	});
 });
 
 describe("POST /api/mobile-order — app_settings", () => {
@@ -152,34 +193,8 @@ describe("POST /api/mobile-order — app_settings", () => {
 		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
 		vi.clearAllMocks();
-		mockRpc.mockResolvedValue({ data: false, error: null });
-		mockSingle.mockResolvedValue({
-			data: { id: "uuid-1", stage: "orders" },
-			error: null,
-		});
-		mockAppSettingsSelect.mockResolvedValue({
-			data: { models: ["Megane IV"], repair_systems: ["Mechanical"] },
-			error: null,
-		});
-		mockFrom.mockImplementation((table: string) => {
-			if (table === "app_settings") {
-				return {
-					select: vi.fn().mockReturnValue({
-						eq: vi.fn().mockReturnValue({
-							single: mockAppSettingsSelect,
-						}),
-					}),
-					update: vi.fn().mockReturnValue({
-						eq: vi.fn().mockResolvedValue({ data: {}, error: null }),
-					}),
-				};
-			}
-			return {
-				insert: mockInsert.mockReturnThis(),
-				select: mockSelect.mockReturnThis(),
-				single: mockSingle,
-			};
-		});
+		rateLimitResponse = { data: false, error: null };
+		bulkInsertResponse = null;
 	});
 
 	it("never reads or writes app_settings for a valid request with a new model", async () => {
@@ -192,7 +207,6 @@ describe("POST /api/mobile-order — app_settings", () => {
 		const res = await POST(req as never);
 		expect(res.status).toBe(200);
 		expect(mockFrom).not.toHaveBeenCalledWith("app_settings");
-		expect(mockAppSettingsSelect).not.toHaveBeenCalled();
 	});
 });
 
@@ -201,11 +215,8 @@ describe("POST /api/mobile-order — payload bounds", () => {
 		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
 		vi.clearAllMocks();
-		mockRpc.mockResolvedValue({ data: false, error: null });
-		mockSingle.mockResolvedValue({
-			data: { id: "uuid-1", stage: "orders" },
-			error: null,
-		});
+		rateLimitResponse = { data: false, error: null };
+		bulkInsertResponse = null;
 	});
 
 	it("returns 400 when model exceeds 80 characters", async () => {
@@ -256,14 +267,11 @@ describe("POST /api/mobile-order — rate limiting", () => {
 		process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
 		process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
 		vi.clearAllMocks();
-		mockSingle.mockResolvedValue({
-			data: { id: "uuid-1", stage: "orders" },
-			error: null,
-		});
+		rateLimitResponse = { data: false, error: null };
+		bulkInsertResponse = null;
 	});
 
 	it("passes the caller IP to the rate-limit RPC", async () => {
-		mockRpc.mockResolvedValue({ data: false, error: null });
 		await POST(makeRequestWithIp("10.0.0.1") as never);
 		expect(mockRpc).toHaveBeenCalledWith(
 			"check_rate_limit",
@@ -275,13 +283,12 @@ describe("POST /api/mobile-order — rate limiting", () => {
 	});
 
 	it("allows request when RPC returns false (under limit)", async () => {
-		mockRpc.mockResolvedValue({ data: false, error: null });
 		const res = await POST(makeRequestWithIp("10.0.0.1") as never);
 		expect(res.status).not.toBe(429);
 	});
 
 	it("returns 429 when RPC returns true (limit reached)", async () => {
-		mockRpc.mockResolvedValue({ data: true, error: null });
+		rateLimitResponse = { data: true, error: null };
 		const res = await POST(makeRequestWithIp("10.0.0.1") as never);
 		expect(res.status).toBe(429);
 		const json = await res.json();
@@ -289,13 +296,12 @@ describe("POST /api/mobile-order — rate limiting", () => {
 	});
 
 	it("fails open (allows request) when RPC errors", async () => {
-		mockRpc.mockResolvedValue({ data: null, error: { message: "DB error" } });
+		rateLimitResponse = { data: null, error: { message: "DB error" } };
 		const res = await POST(makeRequestWithIp("10.0.0.1") as never);
 		expect(res.status).not.toBe(429);
 	});
 
 	it(`passes RATE_LIMIT_MAX (${RATE_LIMIT_MAX}) to the RPC`, async () => {
-		mockRpc.mockResolvedValue({ data: false, error: null });
 		await POST(makeRequestWithIp("10.0.0.1") as never);
 		expect(mockRpc).toHaveBeenCalledWith(
 			"check_rate_limit",

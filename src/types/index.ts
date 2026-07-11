@@ -16,6 +16,17 @@ export interface DescriptionConflictResult {
 	existingRow?: PendingRow;
 }
 
+/** Per-stage row counts, computed via SQL aggregation (see get_order_stage_counts RPC). */
+export interface OrderStageCounts {
+	orders: number;
+	main: number;
+	call: number;
+	booking: number;
+	archive: number;
+	/** Distinct VIN count within the "call" stage. */
+	callUniqueVehicles: number;
+}
+
 export interface AppNotification {
 	id: string;
 	type: "reminder" | "warranty" | "booking_followup" | "cntr_rdg_warning";

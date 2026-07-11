@@ -2,48 +2,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CreateOrdersResult } from "@/services/mobileOrderService";
 import { mobileOrderService } from "@/services/mobileOrderService";
 
-// ── Supabase chain stubs ──────────────────────────────────────────────────────
-// The service accepts a SupabaseClient directly, so we pass a minimal stub
-// rather than mocking the module. Each table branch returns the correct chain:
-//
-//   "app_settings"  →  .select().eq().single()
-//   "orders"        →  .insert([row]).select().single()
-//
-// mergeAppSettings is made a no-op by returning { data: null, error: { message: "mock" } }
-// from the app_settings single().
+// ── Supabase RPC stub ─────────────────────────────────────────────────────────
+// createOrders now issues a single `supabase.rpc("insert_orders_bulk", { p_rows })`
+// call (MAH-43) instead of N per-row `.insert().select().single()` calls. The
+// RPC returns one row per input row: { idx, success, error_message }.
 
-const mockOrderSingle = vi.fn();
-
-const mockAppSettingsSingle = vi.fn().mockResolvedValue({
-	data: null,
-	error: { message: "mock" },
-});
+const mockRpc = vi.fn();
 
 // biome-ignore lint/suspicious/noExplicitAny: test stub must satisfy SupabaseClient shape
 function makeSupabaseStub(): any {
-	const insertChain = {
-		select: vi.fn(() => ({
-			single: mockOrderSingle,
-		})),
-	};
+	return { rpc: mockRpc };
+}
 
-	return {
-		from: vi.fn((table: string) => {
-			if (table === "app_settings") {
-				return {
-					select: vi.fn(() => ({
-						eq: vi.fn(() => ({
-							single: mockAppSettingsSingle,
-						})),
-					})),
-				};
-			}
-			// "orders" table
-			return {
-				insert: vi.fn(() => insertChain),
-			};
-		}),
-	};
+function rpcRow(
+	idx: number,
+	success: boolean,
+	error_message: string | null = null,
+) {
+	return { idx, success, error_message };
 }
 
 // ── Shared base input ─────────────────────────────────────────────────────────
@@ -60,17 +36,12 @@ const baseInput = {
 describe("mobileOrderService.createOrders", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		// Default: app_settings returns error → mergeAppSettings is always a no-op.
-		mockAppSettingsSingle.mockResolvedValue({
-			data: null,
-			error: { message: "mock" },
-		});
 	});
 
 	// ── Test 1: empty-parts fallback ──────────────────────────────────────────
 	it("inserts one blank row when parts is empty", async () => {
-		mockOrderSingle.mockResolvedValueOnce({
-			data: { id: "uuid-blank", stage: "orders" },
+		mockRpc.mockResolvedValueOnce({
+			data: [rpcRow(0, true)],
 			error: null,
 		});
 
@@ -81,22 +52,22 @@ describe("mobileOrderService.createOrders", () => {
 			{ ...baseInput, parts: [] },
 		);
 
-		// Exactly one insert must have been made to the "orders" table.
-		const ordersFrom = supabase.from.mock.calls.filter(
-			(c: string[]) => c[0] === "orders",
+		expect(mockRpc).toHaveBeenCalledTimes(1);
+		expect(mockRpc).toHaveBeenCalledWith(
+			"insert_orders_bulk",
+			expect.objectContaining({
+				p_rows: expect.arrayContaining([
+					expect.objectContaining({
+						metadata: expect.objectContaining({
+							partNumber: "",
+							description: "",
+						}),
+					}),
+				]),
+			}),
 		);
-		expect(ordersFrom).toHaveLength(1);
 
-		// Retrieve the row that was inserted.
-		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals requires any cast
-		const ordersBuilder = (supabase.from as any).mock.results.find(
-			(_: unknown, i: number) =>
-				// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals requires any cast
-				(supabase.from as any).mock.calls[i][0] === "orders",
-		)?.value;
-		// biome-ignore lint/suspicious/noExplicitAny: accessing mock internals requires any cast
-		const insertedRow = (ordersBuilder.insert as any).mock.calls[0][0][0];
-
+		const insertedRow = mockRpc.mock.calls[0][1].p_rows[0];
 		expect(insertedRow.metadata.partNumber).toBe("");
 		expect(insertedRow.metadata.description).toBe("");
 		expect(insertedRow.metadata.stage).toBeUndefined(); // MAH-26
@@ -109,19 +80,14 @@ describe("mobileOrderService.createOrders", () => {
 	// ── Test 2: partial failure counting ─────────────────────────────────────
 	it("counts only successful inserts and collects errors on partial failure", async () => {
 		// 3 parts: first two succeed, third fails.
-		mockOrderSingle
-			.mockResolvedValueOnce({
-				data: { id: "uuid-1", stage: "orders" },
-				error: null,
-			})
-			.mockResolvedValueOnce({
-				data: { id: "uuid-2", stage: "orders" },
-				error: null,
-			})
-			.mockResolvedValueOnce({
-				data: null,
-				error: { message: "insert failed for part 3" },
-			});
+		mockRpc.mockResolvedValueOnce({
+			data: [
+				rpcRow(0, true),
+				rpcRow(1, true),
+				rpcRow(2, false, "insert failed for part 3"),
+			],
+			error: null,
+		});
 
 		const supabase = makeSupabaseStub();
 
@@ -143,19 +109,17 @@ describe("mobileOrderService.createOrders", () => {
 	});
 
 	// ── Test 3: full success with parts ───────────────────────────────────────
-	it("returns inserted equal to part count and empty errors on full success", async () => {
+	it("sends all parts in a single bulk RPC call and reports full success", async () => {
 		const parts = [
 			{ partNumber: "A1", description: "Brake pad" },
 			{ partNumber: "B2", description: "Air filter" },
 			{ partNumber: "C3", description: "Oil filter" },
 		];
 
-		for (let i = 0; i < parts.length; i++) {
-			mockOrderSingle.mockResolvedValueOnce({
-				data: { id: `uuid-${i}`, stage: "orders" },
-				error: null,
-			});
-		}
+		mockRpc.mockResolvedValueOnce({
+			data: parts.map((_, i) => rpcRow(i, true)),
+			error: null,
+		});
 
 		const supabase = makeSupabaseStub();
 
@@ -164,19 +128,35 @@ describe("mobileOrderService.createOrders", () => {
 			{ ...baseInput, parts },
 		);
 
-		// One "orders" from-call per part.
-		const ordersFromCount = (
-			supabase.from as ReturnType<typeof vi.fn>
-		).mock.calls.filter((c: string[]) => c[0] === "orders").length;
-		expect(ordersFromCount).toBe(parts.length);
+		// Exactly one RPC round trip carrying all rows.
+		expect(mockRpc).toHaveBeenCalledTimes(1);
+		expect(mockRpc.mock.calls[0][1].p_rows).toHaveLength(parts.length);
 
 		expect(result.inserted).toBe(parts.length);
 		expect(result.errors).toHaveLength(0);
 	});
 
-	// ── Test 4: network rejection handling ────────────────────────────────────
-	it("collects errors when insert promise rejects (e.g. network failure)", async () => {
-		mockOrderSingle.mockRejectedValueOnce(new Error("network failure"));
+	// ── Test 4: RPC-level error (e.g. connection failure) ─────────────────────
+	it("collects a shared error per row when the RPC call itself errors", async () => {
+		mockRpc.mockResolvedValueOnce({
+			data: null,
+			error: { message: "connection reset" },
+		});
+
+		const supabase = makeSupabaseStub();
+		const result: CreateOrdersResult = await mobileOrderService.createOrders(
+			supabase,
+			{ ...baseInput, parts: [{ partNumber: "P1", description: "Part 1" }] },
+		);
+
+		expect(result.inserted).toBe(0);
+		expect(result.errors).toHaveLength(1);
+		expect(result.errors[0]).toBe("connection reset");
+	});
+
+	// ── Test 5: network rejection handling ────────────────────────────────────
+	it("collects errors when the RPC call promise rejects (e.g. network failure)", async () => {
+		mockRpc.mockRejectedValueOnce(new Error("network failure"));
 
 		const supabase = makeSupabaseStub();
 		const result: CreateOrdersResult = await mobileOrderService.createOrders(
@@ -187,5 +167,31 @@ describe("mobileOrderService.createOrders", () => {
 		expect(result.inserted).toBe(0);
 		expect(result.errors).toHaveLength(1);
 		expect(result.errors[0]).toBe("network failure");
+	});
+
+	// ── Test 6: short/malformed result set must not be reported as full success ──
+	it("does not report full success when the RPC returns fewer rows than submitted", async () => {
+		// 3 parts submitted, but the RPC only returns 2 result rows (e.g. a
+		// truncated response) with no top-level error.
+		mockRpc.mockResolvedValueOnce({
+			data: [rpcRow(0, true), rpcRow(1, true)],
+			error: null,
+		});
+
+		const supabase = makeSupabaseStub();
+		const result: CreateOrdersResult = await mobileOrderService.createOrders(
+			supabase,
+			{
+				...baseInput,
+				parts: [
+					{ partNumber: "P1", description: "Part 1" },
+					{ partNumber: "P2", description: "Part 2" },
+					{ partNumber: "P3", description: "Part 3" },
+				],
+			},
+		);
+
+		expect(result.inserted).toBe(2);
+		expect(result.errors).toHaveLength(1);
 	});
 });
