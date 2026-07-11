@@ -1,8 +1,9 @@
 import * as Sentry from "@sentry/nextjs";
 
 /**
- * Server-side (Node.js runtime) Sentry initialization. Loaded by
- * `register()` in `src/instrumentation.ts`; importing this module runs init.
+ * Edge runtime Sentry initialization (middleware and edge route handlers).
+ * Loaded by `register()` in `src/instrumentation.ts`; importing this module
+ * runs init.
  */
 Sentry.init({
 	dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
