@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
 	"/api/password-reset",
 	"/mobile-order",
 	"/api/mobile-order",
+	"/api/sentry-test", // Temporary test route for Sentry verification
 ];
 
 function isPublicPath(pathname: string): boolean {
