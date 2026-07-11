@@ -5,6 +5,7 @@ import type {
 	DescriptionConflictResult,
 	DuplicateCheckResult,
 	OrderStage,
+	OrderStageCounts,
 	PendingRow,
 } from "@/types";
 import { mapSupabaseOrder } from "../orderMapper";
@@ -126,18 +127,32 @@ export function createOrderQueryRepository(
 			}
 		},
 
-		async getDashboardStats() {
-			// `.order("id")` gives the pagination loop a stable window; the rows
-			// are only counted (unordered), so this has no UI impact.
-			const { data, error } = await fetchAllPages<{
-				id: string;
-				vin: string | null;
-				stage: string | null;
-			}>((from, to) =>
-				db.from("orders").select("id, vin, stage").order("id").range(from, to),
-			);
+		async getDashboardStats(): Promise<OrderStageCounts> {
+			const { data, error } = await db.rpc("get_order_stage_counts");
 			if (error) handleSupabaseError(error);
-			return data;
+
+			const counts: OrderStageCounts = {
+				orders: 0,
+				main: 0,
+				call: 0,
+				booking: 0,
+				archive: 0,
+				callUniqueVehicles: 0,
+			};
+
+			for (const row of data ?? []) {
+				const stage = row.stage as OrderStage | null;
+				if (stage && stage in counts) {
+					counts[
+						stage as Exclude<keyof OrderStageCounts, "callUniqueVehicles">
+					] = Number(row.row_count) || 0;
+				}
+				if (stage === "call") {
+					counts.callUniqueVehicles = Number(row.call_unique_vehicles) || 0;
+				}
+			}
+
+			return counts;
 		},
 
 		async checkHistoricalVinPartDuplicate(

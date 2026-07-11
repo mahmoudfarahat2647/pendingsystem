@@ -54,47 +54,56 @@ export const mobileOrderService = {
 		const rowsToInsert =
 			parts.length === 0 ? [{ partNumber: "", description: "" }] : parts;
 
-		const errors: string[] = [];
-
-		const results = await Promise.allSettled(
-			rowsToInsert.map((part) => {
-				const partId = crypto.randomUUID();
-				const partEntry = {
-					id: partId,
+		const rows = rowsToInsert.map((part) => {
+			const partId = crypto.randomUUID();
+			const partEntry = {
+				id: partId,
+				partNumber: part.partNumber,
+				description: part.description,
+			};
+			return {
+				...sharedIdentity,
+				stage: "orders",
+				metadata: {
+					...sharedMetadata,
+					parts: [partEntry],
 					partNumber: part.partNumber,
 					description: part.description,
-				};
-				const row = {
-					...sharedIdentity,
-					stage: "orders",
-					metadata: {
-						...sharedMetadata,
-						parts: [partEntry],
-						partNumber: part.partNumber,
-						description: part.description,
-					},
-				};
-				return supabase.from("orders").insert([row]).select().single();
-			}),
-		);
+				},
+			};
+		});
 
-		for (const result of results) {
-			if (result.status === "fulfilled" && result.value.error) {
-				logger.error(
-					"[mobile-order] insert error:",
-					result.value.error.message,
-				);
-				errors.push(result.value.error.message);
-			} else if (result.status === "rejected") {
-				const msg =
-					result.reason instanceof Error
-						? result.reason.message
-						: String(result.reason);
-				logger.error("[mobile-order] insert error:", msg);
-				errors.push(msg);
+		const errors: string[] = [];
+
+		try {
+			const { data, error } = await supabase.rpc("insert_orders_bulk", {
+				p_rows: rows,
+			});
+
+			if (error) {
+				logger.error("[mobile-order] bulk insert error:", error.message);
+				return { inserted: 0, errors: rows.map(() => error.message) };
 			}
-		}
 
-		return { inserted: rowsToInsert.length - errors.length, errors };
+			const results = (data ?? []) as Array<{
+				idx: number;
+				success: boolean;
+				error_message: string | null;
+			}>;
+
+			for (const result of results) {
+				if (!result.success) {
+					const msg = result.error_message ?? "Unknown insert error";
+					logger.error("[mobile-order] insert error:", msg);
+					errors.push(msg);
+				}
+			}
+
+			return { inserted: rows.length - errors.length, errors };
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : String(err);
+			logger.error("[mobile-order] insert error:", msg);
+			return { inserted: 0, errors: rows.map(() => msg) };
+		}
 	},
 };

@@ -1,24 +1,15 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
-import type { OrderStage } from "@/domain/order/orderStage";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/lib/queryClient";
 import { orderService } from "@/services/orderService";
-
-interface DashboardStatRow {
-	id: string;
-	vin: string | null;
-	stage: OrderStage | null;
-}
+import type { OrderStageCounts } from "@/types";
 
 export function useDashboardStatsQuery(): UseQueryResult<
-	DashboardStatRow[],
+	OrderStageCounts,
 	Error
 > {
-	return useQuery<DashboardStatRow[]>({
+	return useQuery<OrderStageCounts>({
 		queryKey: DASHBOARD_STATS_QUERY_KEY,
-		queryFn: async (): Promise<DashboardStatRow[]> => {
-			const data = await orderService.getDashboardStats();
-			return (data || []) as DashboardStatRow[];
-		},
+		queryFn: (): Promise<OrderStageCounts> => orderService.getDashboardStats(),
 		staleTime: 1000 * 60 * 5, // 5 minutes
 		gcTime: 1000 * 60 * 10, // 10 minutes
 	});
