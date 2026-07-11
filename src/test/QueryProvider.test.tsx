@@ -4,6 +4,7 @@ import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import QueryProvider from "@/components/providers/QueryProvider";
 import { getOrdersQueryKey } from "@/lib/queryClient";
+import { getOrdersQueryAdapter } from "@/store/ordersQueryAdapter";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
@@ -115,5 +116,20 @@ describe("QueryProvider", () => {
 			.notifications.filter((n) => n.type === "reminder");
 		expect(reminders).toHaveLength(1);
 		expect(reminders[0]?.referenceId).toBe("1");
+	});
+
+	it("tears down the adapter on unmount so registration stays symmetric", () => {
+		// Regression guard: the adapter registration must be paired with a cleanup
+		// so React StrictMode's dev-only setup->cleanup->setup replay cannot leave
+		// the registration counter imbalanced (which would trip a false
+		// "registered more than once" warning). After unmount the live adapter is
+		// gone and reads fall back to the no-op default.
+		const { client, unmount } = renderProviderAndCaptureClient();
+		client.setQueryData(getOrdersQueryKey("orders"), [makeReminderRow("1")]);
+		expect(getOrdersQueryAdapter().getStageRows("orders")).toHaveLength(1);
+
+		unmount();
+
+		expect(getOrdersQueryAdapter().getStageRows("orders")).toBeUndefined();
 	});
 });
