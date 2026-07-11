@@ -168,4 +168,30 @@ describe("mobileOrderService.createOrders", () => {
 		expect(result.errors).toHaveLength(1);
 		expect(result.errors[0]).toBe("network failure");
 	});
+
+	// ── Test 6: short/malformed result set must not be reported as full success ──
+	it("does not report full success when the RPC returns fewer rows than submitted", async () => {
+		// 3 parts submitted, but the RPC only returns 2 result rows (e.g. a
+		// truncated response) with no top-level error.
+		mockRpc.mockResolvedValueOnce({
+			data: [rpcRow(0, true), rpcRow(1, true)],
+			error: null,
+		});
+
+		const supabase = makeSupabaseStub();
+		const result: CreateOrdersResult = await mobileOrderService.createOrders(
+			supabase,
+			{
+				...baseInput,
+				parts: [
+					{ partNumber: "P1", description: "Part 1" },
+					{ partNumber: "P2", description: "Part 2" },
+					{ partNumber: "P3", description: "Part 3" },
+				],
+			},
+		);
+
+		expect(result.inserted).toBe(2);
+		expect(result.errors).toHaveLength(1);
+	});
 });

@@ -91,15 +91,27 @@ export const mobileOrderService = {
 				error_message: string | null;
 			}>;
 
+			let inserted = 0;
 			for (const result of results) {
-				if (!result.success) {
+				if (result.success) {
+					inserted++;
+				} else {
 					const msg = result.error_message ?? "Unknown insert error";
 					logger.error("[mobile-order] insert error:", msg);
 					errors.push(msg);
 				}
 			}
 
-			return { inserted: rows.length - errors.length, errors };
+			// A missing/short/malformed result set (fewer rows than submitted, with
+			// no top-level error) must not be reported as full success.
+			const missing = rows.length - results.length;
+			if (missing > 0) {
+				const msg = "No result returned for row";
+				logger.error("[mobile-order] insert error:", msg);
+				for (let i = 0; i < missing; i++) errors.push(msg);
+			}
+
+			return { inserted, errors };
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : String(err);
 			logger.error("[mobile-order] insert error:", msg);
