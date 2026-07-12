@@ -5,6 +5,10 @@ import {
 } from "@/domain/order/orderWorkflow";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import type { PatchRowCommand, PendingRow } from "@/types";
+import { safeFormatDate } from "@/utils/safeFormatDate";
+
+/** Matches the BOOKING column display format on the Archive/Booking pages. */
+const BOOKING_DATE_FORMAT = "EEE, MMM d, yyyy";
 
 /**
  * Returns patchRow commands to archive the given rows.
@@ -70,11 +74,25 @@ export function buildBookingCommands(
 	status?: string,
 ): PatchRowCommand[] {
 	return rows.map((row) => {
-		const newNoteHistory = appendTaggedUserNote(
-			getEffectiveNoteHistory(row),
-			note,
-			"booking",
+		// If the row already has a booking date (e.g. re-booking an archived,
+		// previously missed/cancelled appointment), record the prior date in the
+		// note history before it is overwritten, so past appointments remain
+		// reviewable. Wording stays neutral ("Previous booking") because nothing
+		// clears bookingDate — the prior appointment may also have been kept.
+		let history = getEffectiveNoteHistory(row);
+		const previousDate = safeFormatDate(
+			row.bookingDate?.trim() || null,
+			BOOKING_DATE_FORMAT,
+			"",
 		);
+		if (previousDate) {
+			history = appendTaggedUserNote(
+				history,
+				`Previous booking: ${previousDate}.`,
+				"rebooking",
+			);
+		}
+		const newNoteHistory = appendTaggedUserNote(history, note, "booking");
 		return {
 			type: "patchRow",
 			id: row.id,
@@ -102,8 +120,15 @@ export function buildRebookingCommands(
 	status?: string,
 ): PatchRowCommand[] {
 	return rows.map((row) => {
-		const oldDate = row.bookingDate || "Unknown Date";
-		const historyLog = `Rescheduled from ${oldDate} to ${newDate}.`;
+		const oldDate = row.bookingDate
+			? safeFormatDate(row.bookingDate, BOOKING_DATE_FORMAT, row.bookingDate)
+			: "Unknown Date";
+		const formattedNewDate = safeFormatDate(
+			newDate,
+			BOOKING_DATE_FORMAT,
+			newDate,
+		);
+		const historyLog = `Rescheduled from ${oldDate} to ${formattedNewDate}.`;
 		const fullNote = `${historyLog} ${newNote}`.trim();
 		const updatedBookingNote = row.bookingNote
 			? `${row.bookingNote}\n[System]: ${fullNote}`
