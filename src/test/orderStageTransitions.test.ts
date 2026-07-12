@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import { describe, expect, it } from "vitest";
 import {
 	appendTaggedUserNote,
@@ -169,13 +168,16 @@ describe("buildBookingCommands", () => {
 	it("records the previous booking date as history when re-booking an archived row", () => {
 		const row = createMockRow({ stage: "archive", bookingDate: "2025-06-01" });
 		const [cmd] = buildBookingCommands([row], "archive", "2025-07-15", "note");
-		const missedLine = `Missed booking: ${format(new Date("2025-06-01"), "EEE, MMM d, yyyy")}. #rebooking`;
-		expect(cmd.updates.noteHistory).toContain(missedLine);
+		// Hardcoded expected date: guards against timezone regressions where
+		// "2025-06-01" would render as the previous day west of UTC.
+		expect(cmd.updates.noteHistory).toContain(
+			"Previous booking: Sun, Jun 1, 2025. #rebooking",
+		);
 		expect(cmd.updates.noteHistory).toContain("note #booking");
 		expect(cmd.updates.bookingDate).toBe("2025-07-15");
 	});
 
-	it("does not add a 'Missed booking' line when the row has no previous bookingDate", () => {
+	it("does not add a 'Previous booking' line when the row has no previous bookingDate", () => {
 		const row = createMockRow();
 		const [cmd] = buildBookingCommands([row], "call", "2025-06-01", "note");
 		const expected = appendTaggedUserNote(
@@ -184,7 +186,20 @@ describe("buildBookingCommands", () => {
 			"booking",
 		);
 		expect(cmd.updates.noteHistory).toBe(expected);
-		expect(cmd.updates.noteHistory).not.toContain("Missed booking");
+		expect(cmd.updates.noteHistory).not.toContain("Previous booking");
+	});
+
+	it("skips the 'Previous booking' line when bookingDate is whitespace or unparseable", () => {
+		for (const bad of [" ", "not-a-date"]) {
+			const row = createMockRow({ stage: "archive", bookingDate: bad });
+			const [cmd] = buildBookingCommands(
+				[row],
+				"archive",
+				"2025-07-15",
+				"note",
+			);
+			expect(cmd.updates.noteHistory).not.toContain("Previous booking");
+		}
 	});
 });
 
@@ -207,7 +222,7 @@ describe("buildRebookingCommands", () => {
 		});
 		const [cmd] = buildRebookingCommands([row], "2025-07-01", "new note");
 		expect(cmd.updates.bookingNote).toBe(
-			"original\n[System]: Rescheduled from 2025-06-01 to 2025-07-01. new note",
+			"original\n[System]: Rescheduled from Sun, Jun 1, 2025 to Tue, Jul 1, 2025. new note",
 		);
 	});
 
@@ -218,14 +233,15 @@ describe("buildRebookingCommands", () => {
 		});
 		const [cmd] = buildRebookingCommands([row], "2025-07-01", "first note");
 		expect(cmd.updates.bookingNote).toBe(
-			"[System]: Rescheduled from 2025-06-01 to 2025-07-01. first note",
+			"[System]: Rescheduled from Sun, Jun 1, 2025 to Tue, Jul 1, 2025. first note",
 		);
 	});
 
 	it("appends a #rebooking tag to noteHistory", () => {
 		const row = createMockRow({ bookingDate: "2025-06-01" });
 		const [cmd] = buildRebookingCommands([row], "2025-07-01", "new note");
-		const fullNote = "Rescheduled from 2025-06-01 to 2025-07-01. new note";
+		const fullNote =
+			"Rescheduled from Sun, Jun 1, 2025 to Tue, Jul 1, 2025. new note";
 		const expected = appendTaggedUserNote(
 			getEffectiveNoteHistory(row),
 			fullNote,

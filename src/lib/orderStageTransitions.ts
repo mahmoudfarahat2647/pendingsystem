@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import type { OrderStage } from "@/domain/order/orderStage";
 import {
 	appendTaggedUserNote,
@@ -6,19 +5,10 @@ import {
 } from "@/domain/order/orderWorkflow";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import type { PatchRowCommand, PendingRow } from "@/types";
+import { safeFormatDate } from "@/utils/safeFormatDate";
 
-/**
- * Formats a stored booking date for display inside note history, matching the
- * Archive/Booking BOOKING column format ("EEE, MMM d, yyyy"). Falls back to the
- * raw value when the stored string is not a parseable date.
- */
-function formatBookingDate(value: string): string {
-	try {
-		return format(new Date(value), "EEE, MMM d, yyyy");
-	} catch {
-		return value;
-	}
-}
+/** Matches the BOOKING column display format on the Archive/Booking pages. */
+const BOOKING_DATE_FORMAT = "EEE, MMM d, yyyy";
 
 /**
  * Returns patchRow commands to archive the given rows.
@@ -86,12 +76,19 @@ export function buildBookingCommands(
 	return rows.map((row) => {
 		// If the row already has a booking date (e.g. re-booking an archived,
 		// previously missed/cancelled appointment), record the prior date in the
-		// note history before it is overwritten, so absences remain reviewable.
+		// note history before it is overwritten, so past appointments remain
+		// reviewable. Wording stays neutral ("Previous booking") because nothing
+		// clears bookingDate — the prior appointment may also have been kept.
 		let history = getEffectiveNoteHistory(row);
-		if (row.bookingDate) {
+		const previousDate = safeFormatDate(
+			row.bookingDate?.trim() || null,
+			BOOKING_DATE_FORMAT,
+			"",
+		);
+		if (previousDate) {
 			history = appendTaggedUserNote(
 				history,
-				`Missed booking: ${formatBookingDate(row.bookingDate)}.`,
+				`Previous booking: ${previousDate}.`,
 				"rebooking",
 			);
 		}
@@ -123,8 +120,15 @@ export function buildRebookingCommands(
 	status?: string,
 ): PatchRowCommand[] {
 	return rows.map((row) => {
-		const oldDate = row.bookingDate || "Unknown Date";
-		const historyLog = `Rescheduled from ${oldDate} to ${newDate}.`;
+		const oldDate = row.bookingDate
+			? safeFormatDate(row.bookingDate, BOOKING_DATE_FORMAT, row.bookingDate)
+			: "Unknown Date";
+		const formattedNewDate = safeFormatDate(
+			newDate,
+			BOOKING_DATE_FORMAT,
+			newDate,
+		);
+		const historyLog = `Rescheduled from ${oldDate} to ${formattedNewDate}.`;
 		const fullNote = `${historyLog} ${newNote}`.trim();
 		const updatedBookingNote = row.bookingNote
 			? `${row.bookingNote}\n[System]: ${fullNote}`
