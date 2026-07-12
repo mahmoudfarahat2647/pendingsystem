@@ -12,6 +12,7 @@ import {
 import {
 	DASHBOARD_STATS_QUERY_KEY,
 	getOrdersQueryKey,
+	NOTIFICATION_CANDIDATES_QUERY_KEY,
 } from "@/lib/queryClient";
 import { orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";
@@ -114,6 +115,9 @@ export function useBulkUpdateOrderStageMutation(sourceStage: OrderStage) {
 			);
 
 			queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
+			queryClient.invalidateQueries({
+				queryKey: NOTIFICATION_CANDIDATES_QUERY_KEY,
+			});
 		},
 	});
 }

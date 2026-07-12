@@ -1,7 +1,10 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { logger } from "@/lib/logger";
-import { getOrdersQueryKey } from "@/lib/queryClient";
+import {
+	getOrdersQueryKey,
+	NOTIFICATION_CANDIDATES_QUERY_KEY,
+} from "@/lib/queryClient";
 import type { PendingRow } from "@/types";
 
 /**
@@ -18,6 +21,8 @@ export interface OrdersQueryAdapter {
 	getStageRows: (stage: OrderStage) => PendingRow[] | undefined;
 	isStageLoaded: (stage: OrderStage) => boolean;
 	invalidateStage: (stage: OrderStage) => void;
+	getDueNotificationCandidates: () => PendingRow[] | undefined;
+	isDueCandidatesLoaded: () => boolean;
 }
 
 /**
@@ -30,6 +35,8 @@ const noopAdapter: OrdersQueryAdapter = {
 	getStageRows: () => undefined,
 	isStageLoaded: () => false,
 	invalidateStage: () => {},
+	getDueNotificationCandidates: () => undefined,
+	isDueCandidatesLoaded: () => false,
 };
 
 let registered: OrdersQueryAdapter = noopAdapter;
@@ -81,5 +88,11 @@ export function createReactQueryAdapter(
 		invalidateStage: (stage) => {
 			queryClient.invalidateQueries({ queryKey: getOrdersQueryKey(stage) });
 		},
+		getDueNotificationCandidates: () =>
+			queryClient.getQueryData<PendingRow[]>(NOTIFICATION_CANDIDATES_QUERY_KEY),
+		isDueCandidatesLoaded: () =>
+			queryClient.getQueryData<PendingRow[]>(
+				NOTIFICATION_CANDIDATES_QUERY_KEY,
+			) !== undefined,
 	};
 }

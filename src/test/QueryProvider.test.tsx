@@ -3,7 +3,10 @@ import { render } from "@testing-library/react";
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import QueryProvider from "@/components/providers/QueryProvider";
-import { getOrdersQueryKey } from "@/lib/queryClient";
+import {
+	getOrdersQueryKey,
+	NOTIFICATION_CANDIDATES_QUERY_KEY,
+} from "@/lib/queryClient";
 import { getOrdersQueryAdapter } from "@/store/ordersQueryAdapter";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -102,10 +105,11 @@ describe("QueryProvider", () => {
 		const { client } = renderProviderAndCaptureClient();
 
 		// Seed the live client the provider is bound to (not a stale singleton).
-		client.setQueryData(getOrdersQueryKey("orders"), [makeReminderRow("1")]);
-		client.setQueryData(getOrdersQueryKey("main"), []);
-		client.setQueryData(getOrdersQueryKey("booking"), []);
-		client.setQueryData(getOrdersQueryKey("call"), []);
+		// checkNotifications reads the server-fetched candidate cache, not the
+		// per-stage caches, so that's what needs seeding here.
+		client.setQueryData(NOTIFICATION_CANDIDATES_QUERY_KEY, [
+			makeReminderRow("1"),
+		]);
 
 		act(() => {
 			useAppStore.getState().checkNotifications();

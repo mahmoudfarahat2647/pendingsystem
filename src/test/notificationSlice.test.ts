@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
-import { getOrdersQueryKey } from "@/lib/queryClient";
+import { NOTIFICATION_CANDIDATES_QUERY_KEY } from "@/lib/queryClient";
+import type { OrderStage } from "../domain/order/orderStage";
 import { createNotificationSlice } from "../store/slices/notificationSlice";
 import type { CombinedStore } from "../store/types";
 import type { PendingRow } from "../types";
@@ -14,7 +15,11 @@ vi.mock("@/services/orderService", () => ({
 }));
 
 // Mock row helper
-const createMockRow = (id: string, endWarranty?: string): PendingRow => ({
+const createMockRow = (
+	id: string,
+	endWarranty?: string,
+	stage: OrderStage = "orders",
+): PendingRow => ({
 	id,
 	baseId: `B${id}`,
 	trackingId: `T${id}`,
@@ -36,6 +41,7 @@ const createMockRow = (id: string, endWarranty?: string): PendingRow => ({
 	startWarranty: "",
 	endWarranty: endWarranty || "",
 	remainTime: "",
+	stage,
 });
 
 const createCntrWarrantyRow = (
@@ -43,7 +49,7 @@ const createCntrWarrantyRow = (
 	cntrRdg: number,
 	createdAt: string,
 ): PendingRow => ({
-	...createMockRow(id),
+	...createMockRow(id, undefined, "main"),
 	repairSystem: "ضمان",
 	cntrRdg,
 	createdAt,
@@ -51,10 +57,7 @@ const createCntrWarrantyRow = (
 
 describe("notificationSlice", () => {
 	const createTestStore = (rows: PendingRow[]) => {
-		queryClient.setQueryData(getOrdersQueryKey("orders"), rows);
-		queryClient.setQueryData(getOrdersQueryKey("main"), []);
-		queryClient.setQueryData(getOrdersQueryKey("booking"), []);
-		queryClient.setQueryData(getOrdersQueryKey("call"), []);
+		queryClient.setQueryData(NOTIFICATION_CANDIDATES_QUERY_KEY, rows);
 
 		return create<CombinedStore>(
 			(...a) =>
@@ -68,22 +71,8 @@ describe("notificationSlice", () => {
 		);
 	};
 
-	const createMainSheetStore = (mainRows: PendingRow[]) => {
-		queryClient.setQueryData(getOrdersQueryKey("orders"), []);
-		queryClient.setQueryData(getOrdersQueryKey("main"), mainRows);
-		queryClient.setQueryData(getOrdersQueryKey("booking"), []);
-		queryClient.setQueryData(getOrdersQueryKey("call"), []);
-
-		return create<CombinedStore>(
-			(...a) =>
-				({
-					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
-					...createNotificationSlice(a[0], a[1], a[2] as any),
-					notifications: [],
-					// biome-ignore lint/suspicious/noExplicitAny: Test mock setup
-				}) as unknown as any,
-		);
-	};
+	const createMainSheetStore = (mainRows: PendingRow[]) =>
+		createTestStore(mainRows);
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -175,6 +164,79 @@ describe("notificationSlice", () => {
 		expect(store.getState().notifications).toHaveLength(0);
 	});
 
+	describe("Server-authoritative candidate source (MAH-39)", () => {
+		it("surfaces a reminder from a stage whose page has never been opened in this session", () => {
+			const now = new Date("2026-03-01T12:00:00Z");
+			vi.setSystemTime(now);
+
+			// Simulate: no per-stage query key was ever seeded (user never visited
+			// any stage page) — only the server-fetched candidate set exists.
+			const row = createMockRow("1", undefined, "call");
+			row.reminder = {
+				date: "2026-03-01",
+				time: "10:00",
+				subject: "Follow up",
+			};
+
+			const store = createTestStore([row]);
+
+			store.getState().checkNotifications();
+
+			const notifications = store.getState().notifications;
+			expect(notifications).toHaveLength(1);
+			expect(notifications[0].type).toBe("reminder");
+			expect(notifications[0].tabName).toBe("Call List");
+			expect(notifications[0].path).toBe("/call-list");
+		});
+
+		it("preserves dismissed keys and resurfaces the item once the candidate cache is refetched after eviction", () => {
+			const now = new Date("2026-03-01T12:00:00Z");
+			vi.setSystemTime(now);
+
+			const row = createMockRow("1");
+			row.reminder = { date: "2026-03-01", time: "10:00", subject: "Call" };
+
+			const store = createTestStore([row]);
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(1);
+
+			store.getState().removeNotification(store.getState().notifications[0].id);
+			expect(store.getState().notifications).toHaveLength(0);
+			expect(
+				Object.keys(store.getState().dismissedManagedNotificationKeys),
+			).toHaveLength(1);
+
+			// Candidate cache is garbage-collected (simulates React Query GC).
+			queryClient.removeQueries({
+				queryKey: NOTIFICATION_CANDIDATES_QUERY_KEY,
+			});
+			store.getState().checkNotifications();
+
+			// isDueCandidatesLoaded() is now false — dismissed keys must be preserved,
+			// not pruned, exactly like the old per-stage "unloaded" guard.
+			expect(
+				Object.keys(store.getState().dismissedManagedNotificationKeys),
+			).toHaveLength(1);
+			expect(store.getState().notifications).toHaveLength(0);
+
+			// Candidate cache refetches (data reappears) — the still-due item must
+			// stay suppressed since it was dismissed and never actually became
+			// not-due.
+			queryClient.setQueryData(NOTIFICATION_CANDIDATES_QUERY_KEY, [row]);
+			store.getState().checkNotifications();
+			expect(store.getState().notifications).toHaveLength(0);
+
+			// Now simulate the reminder actually being cleared — on next fetch with
+			// all data present, the dismissed key should finally be pruned.
+			const clearedRow = { ...row, reminder: null };
+			queryClient.setQueryData(NOTIFICATION_CANDIDATES_QUERY_KEY, [clearedRow]);
+			store.getState().checkNotifications();
+			expect(
+				Object.keys(store.getState().dismissedManagedNotificationKeys),
+			).toHaveLength(0);
+		});
+	});
+
 	describe("Reminder Dismissal Logic", () => {
 		it("should not respawn a dismissed notification on next sync", () => {
 			const now = new Date("2026-03-01T12:00:00Z");
@@ -254,6 +316,7 @@ describe("notificationSlice", () => {
 
 			// Admin edits the reminder subject
 			r1.reminder.subject = "Updated";
+			queryClient.setQueryData(NOTIFICATION_CANDIDATES_QUERY_KEY, [r1]);
 
 			// Next sync should spawn a NEW notification
 			store.getState().checkNotifications();
@@ -280,7 +343,8 @@ describe("notificationSlice", () => {
 			).toHaveLength(1);
 
 			// Simulating the user fulfilled the reminder by deleting it from the row
-			r1.reminder = null;
+			const clearedRow = { ...r1, reminder: null };
+			queryClient.setQueryData(NOTIFICATION_CANDIDATES_QUERY_KEY, [clearedRow]);
 
 			// Next sync
 			store.getState().checkNotifications();
@@ -290,7 +354,7 @@ describe("notificationSlice", () => {
 			).toHaveLength(0);
 		});
 
-		it("should NOT prune dismissed keys if any cache is unloaded", () => {
+		it("should NOT prune dismissed keys if the candidate cache is unloaded", () => {
 			const now = new Date("2026-03-01T12:00:00Z");
 			vi.setSystemTime(now);
 
@@ -306,19 +370,99 @@ describe("notificationSlice", () => {
 				Object.keys(store.getState().dismissedManagedNotificationKeys),
 			).toHaveLength(1);
 
-			// 2. Simulate the user fulfilling or changing the reminder
-			r1.reminder = null;
+			// 2. Simulate the candidate cache being garbage-collected before the
+			// reminder was actually cleared (isDueCandidatesLoaded() -> false).
+			queryClient.removeQueries({
+				queryKey: NOTIFICATION_CANDIDATES_QUERY_KEY,
+			});
 
-			// 3. Simulate one cache being unloaded (e.g., user hasn't visited "main" yet)
-			queryClient.removeQueries({ queryKey: getOrdersQueryKey("main") });
-
-			// 4. Next sync - caches are partially loaded
+			// 3. Next sync - candidate set is unloaded
 			store.getState().checkNotifications();
 
-			// The dismissed keys should be PRESERVED, not pruned, since allCachesLoaded = false
+			// The dismissed keys should be PRESERVED, not pruned.
 			expect(
 				Object.keys(store.getState().dismissedManagedNotificationKeys),
 			).toHaveLength(1);
+		});
+	});
+
+	describe("Booking Follow-up", () => {
+		it("does not fire before the next-day 10:00 local follow-up time", () => {
+			const now = new Date(2026, 2, 2, 9, 59, 0); // local: 2026-03-02 09:59
+			vi.setSystemTime(now);
+
+			const row = createMockRow("1", undefined, "booking");
+			row.bookingDate = "2026-03-01";
+
+			const store = createTestStore([row]);
+			store.getState().checkNotifications();
+
+			expect(store.getState().notifications).toHaveLength(0);
+		});
+
+		it("fires at/after the next-day 10:00 local follow-up time", () => {
+			const now = new Date(2026, 2, 2, 10, 0, 0); // local: 2026-03-02 10:00
+			vi.setSystemTime(now);
+
+			const row = createMockRow("1", undefined, "booking");
+			row.bookingDate = "2026-03-01";
+
+			const store = createTestStore([row]);
+			store.getState().checkNotifications();
+
+			const notifications = store.getState().notifications;
+			expect(notifications).toHaveLength(1);
+			expect(notifications[0].type).toBe("booking_followup");
+			expect(notifications[0].managedKey).toBe(
+				`booking_followup:${row.vin}:2026-03-01`,
+			);
+		});
+
+		it("dedupes multiple rows sharing the same vin + bookingDate and keeps a stable referenceId", () => {
+			const now = new Date(2026, 2, 2, 10, 0, 0);
+			vi.setSystemTime(now);
+
+			const rowA = createMockRow("1", undefined, "booking");
+			rowA.vin = "SHARED_VIN";
+			rowA.bookingDate = "2026-03-01";
+			const rowB = createMockRow("2", undefined, "booking");
+			rowB.vin = "SHARED_VIN";
+			rowB.bookingDate = "2026-03-01";
+
+			const store = createTestStore([rowA, rowB]);
+			store.getState().checkNotifications();
+
+			const notifications = store
+				.getState()
+				.notifications.filter((n) => n.type === "booking_followup");
+			expect(notifications).toHaveLength(1);
+			const firstReferenceId = notifications[0].referenceId;
+
+			// Recompute again with the same underlying data — referenceId must not
+			// flap between rowA/rowB across polls.
+			store.getState().checkNotifications();
+			const secondPass = store
+				.getState()
+				.notifications.filter((n) => n.type === "booking_followup");
+			expect(secondPass).toHaveLength(1);
+			expect(secondPass[0].referenceId).toBe(firstReferenceId);
+		});
+
+		it("ignores booking follow-up logic for non-booking stage rows", () => {
+			const now = new Date(2026, 2, 2, 10, 0, 0);
+			vi.setSystemTime(now);
+
+			const row = createMockRow("1", undefined, "main");
+			row.bookingDate = "2026-03-01";
+
+			const store = createTestStore([row]);
+			store.getState().checkNotifications();
+
+			expect(
+				store
+					.getState()
+					.notifications.filter((n) => n.type === "booking_followup"),
+			).toHaveLength(0);
 		});
 	});
 
@@ -406,7 +550,7 @@ describe("notificationSlice", () => {
 			).toISOString();
 
 			const nonWarrantyRow: PendingRow = {
-				...createMockRow("row-5"),
+				...createMockRow("row-5", undefined, "main"),
 				repairSystem: "Other",
 				cntrRdg: 90_000,
 				createdAt,

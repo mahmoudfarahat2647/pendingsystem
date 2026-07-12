@@ -21,6 +21,7 @@ import {
 	type AllowedCompany,
 } from "@/domain/order/constants";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { useNotificationCandidatesQuery } from "@/hooks/queries/useNotificationCandidatesQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { useWarrantyExpiryMaintenance } from "@/hooks/useWarrantyExpiryMaintenance";
@@ -60,6 +61,7 @@ export const Header = React.memo(function Header() {
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 	const { runMaintenance } = useWarrantyExpiryMaintenance();
+	useNotificationCandidatesQuery();
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
 	const [searchInput, setSearchInput] = useState(searchTerm);

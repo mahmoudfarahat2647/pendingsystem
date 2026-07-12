@@ -15,6 +15,11 @@ export function useOrdersRealtimeSync() {
 	const isDraftActive = useAppStore((s) => s.draftSession.isActive);
 	const pendingUpdate = useRef(false);
 
+	// Read draft-active state via a ref so the channel effect stays stable
+	// across draft toggles instead of tearing down and recreating the socket.
+	const isDraftActiveRef = useRef(isDraftActive);
+	isDraftActiveRef.current = isDraftActive;
+
 	// Flush any INSERT that was deferred while a draft was active.
 	// Runs whenever isDraftActive changes from true → false.
 	useEffect(() => {
@@ -42,7 +47,7 @@ export function useOrdersRealtimeSync() {
 					filter: "stage=eq.orders",
 				},
 				() => {
-					if (isDraftActive) {
+					if (isDraftActiveRef.current) {
 						pendingUpdate.current = true;
 						toast.info(
 							"New mobile orders available — refresh after saving your draft.",
@@ -66,5 +71,5 @@ export function useOrdersRealtimeSync() {
 		return () => {
 			void supabase.removeChannel(channel);
 		};
-	}, [queryClient, isDraftActive]);
+	}, [queryClient]);
 }
