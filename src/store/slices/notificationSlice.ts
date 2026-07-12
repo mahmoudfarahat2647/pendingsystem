@@ -1,12 +1,19 @@
 import type { StateCreator } from "zustand";
 import { generateId } from "@/lib/utils";
-import type { AppNotification } from "@/types";
+import type { AppNotification, PendingRow } from "@/types";
 import { getOrdersQueryAdapter } from "../ordersQueryAdapter";
 import type {
 	CombinedStore,
 	NotificationActions,
 	NotificationState,
 } from "../types";
+
+const STAGE_TAB_INFO: Record<string, { name: string; path: string }> = {
+	main: { name: "Main Sheet", path: "/main-sheet" },
+	orders: { name: "Orders", path: "/orders" },
+	booking: { name: "Booking", path: "/booking" },
+	call: { name: "Call List", path: "/call-list" },
+};
 
 export const createNotificationSlice: StateCreator<
 	CombinedStore,
@@ -92,88 +99,61 @@ export const createNotificationSlice: StateCreator<
 		>[] = [];
 
 		const adapter = getOrdersQueryAdapter();
-		const sources = [
-			{
-				data: adapter.getStageRows("main") ?? [],
-				isLoaded: adapter.isStageLoaded("main"),
-				name: "Main Sheet",
-				path: "/main-sheet",
-			},
-			{
-				data: adapter.getStageRows("orders") ?? [],
-				isLoaded: adapter.isStageLoaded("orders"),
-				name: "Orders",
-				path: "/orders",
-			},
-			{
-				data: adapter.getStageRows("booking") ?? [],
-				isLoaded: adapter.isStageLoaded("booking"),
-				name: "Booking",
-				path: "/booking",
-			},
-			{
-				data: adapter.getStageRows("call") ?? [],
-				isLoaded: adapter.isStageLoaded("call"),
-				name: "Call List",
-				path: "/call-list",
-			},
-		];
-
-		const allCachesLoaded = sources.every((s) => s.isLoaded);
+		const rows: PendingRow[] = adapter.getDueNotificationCandidates() ?? [];
+		const allCachesLoaded = adapter.isDueCandidatesLoaded();
 		const activeManagedKeys = new Set<string>();
 
-		for (const source of sources) {
-			for (const row of source.data) {
-				// Check Reminders
-				if (row.reminder) {
-					const reminderTimeStr = row.reminder.time || "00:00";
-					const reminderDateStr = `${row.reminder.date}T${reminderTimeStr}`;
-					const reminderDate = new Date(reminderDateStr);
+		for (const row of rows) {
+			const tabInfo = row.stage ? STAGE_TAB_INFO[row.stage] : undefined;
+			const tabName = tabInfo?.name ?? "Orders";
+			const path = tabInfo?.path ?? "/orders";
 
-					if (now >= reminderDate) {
-						const managedKey = `reminder:${row.id}:${row.reminder.date}:${reminderTimeStr}:${row.reminder.subject}`;
+			// Check Reminders
+			if (row.reminder) {
+				const reminderTimeStr = row.reminder.time || "00:00";
+				const reminderDateStr = `${row.reminder.date}T${reminderTimeStr}`;
+				const reminderDate = new Date(reminderDateStr);
+
+				if (now >= reminderDate) {
+					const managedKey = `reminder:${row.id}:${row.reminder.date}:${reminderTimeStr}:${row.reminder.subject}`;
+					activeManagedKeys.add(managedKey);
+
+					currentlyDueReminders.push({
+						type: "reminder",
+						title: "Reminder Due",
+						description: `Due: ${row.reminder.date} ${row.reminder.time || ""} - ${row.customerName}: ${row.reminder.subject}`,
+						referenceId: row.id,
+						vin: row.vin,
+						trackingId: row.trackingId,
+						tabName,
+						path,
+						managedKey,
+					});
+				}
+			}
+
+			// Check Warranty Expiration
+			if (row.endWarranty) {
+				const endDate = new Date(row.endWarranty);
+				if (!Number.isNaN(endDate.getTime())) {
+					const diffTime = endDate.getTime() - now.getTime();
+					const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+					if (daysRemaining >= 0 && daysRemaining <= WARRANTY_THRESHOLD_DAYS) {
+						const managedKey = `warranty:${row.id}:${row.endWarranty}`;
 						activeManagedKeys.add(managedKey);
 
-						currentlyDueReminders.push({
-							type: "reminder",
-							title: "Reminder Due",
-							description: `Due: ${row.reminder.date} ${row.reminder.time || ""} - ${row.customerName}: ${row.reminder.subject}`,
+						currentlyDueWarranties.push({
+							type: "warranty",
+							title: "Warranty Expiring",
+							description: `Warranty expires in ${daysRemaining} days (${row.endWarranty})`,
 							referenceId: row.id,
 							vin: row.vin,
 							trackingId: row.trackingId,
-							tabName: source.name,
-							path: source.path,
+							tabName,
+							path,
 							managedKey,
 						});
-					}
-				}
-
-				// Check Warranty Expiration
-				if (row.endWarranty) {
-					const endDate = new Date(row.endWarranty);
-					if (!Number.isNaN(endDate.getTime())) {
-						const diffTime = endDate.getTime() - now.getTime();
-						const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-						if (
-							daysRemaining >= 0 &&
-							daysRemaining <= WARRANTY_THRESHOLD_DAYS
-						) {
-							const managedKey = `warranty:${row.id}:${row.endWarranty}`;
-							activeManagedKeys.add(managedKey);
-
-							currentlyDueWarranties.push({
-								type: "warranty",
-								title: "Warranty Expiring",
-								description: `Warranty expires in ${daysRemaining} days (${row.endWarranty})`,
-								referenceId: row.id,
-								vin: row.vin,
-								trackingId: row.trackingId,
-								tabName: source.name,
-								path: source.path,
-								managedKey,
-							});
-						}
 					}
 				}
 			}
@@ -184,10 +164,10 @@ export const createNotificationSlice: StateCreator<
 			"id" | "timestamp" | "isRead"
 		>[] = [];
 
-		const bookingSource = sources.find((s) => s.path === "/booking");
-		if (bookingSource) {
+		const bookingRows = rows.filter((row) => row.stage === "booking");
+		{
 			const seenKeys = new Set<string>();
-			for (const row of bookingSource.data) {
+			for (const row of bookingRows) {
 				if (!row.bookingDate) continue;
 				const key = `${row.vin}::${row.bookingDate}`;
 				if (seenKeys.has(key)) continue;
@@ -229,51 +209,46 @@ export const createNotificationSlice: StateCreator<
 			"id" | "timestamp" | "isRead"
 		>[] = [];
 
-		const mainSheetSource = sources.find((s) => s.path === "/main-sheet");
-		if (mainSheetSource) {
-			for (const row of mainSheetSource.data) {
-				if (row.repairSystem !== WARRANTY_REPAIR_SYSTEM) continue;
-				if (!row.createdAt) continue;
+		const mainSheetRows = rows.filter((row) => row.stage === "main");
+		for (const row of mainSheetRows) {
+			if (row.repairSystem !== WARRANTY_REPAIR_SYSTEM) continue;
+			if (!row.createdAt) continue;
 
-				const daysSinceCreation = Math.floor(
-					(now.getTime() - new Date(row.createdAt).getTime()) / MS_PER_DAY,
-				);
-				if (Number.isNaN(daysSinceCreation)) continue;
+			const daysSinceCreation = Math.floor(
+				(now.getTime() - new Date(row.createdAt).getTime()) / MS_PER_DAY,
+			);
+			if (Number.isNaN(daysSinceCreation)) continue;
 
-				let level: "high" | "early" | null = null;
-				if (
-					row.cntrRdg >= HIGH_RISK_KM &&
-					daysSinceCreation >= HIGH_RISK_DAYS
-				) {
-					level = "high";
-				} else if (
-					row.cntrRdg >= EARLY_WARNING_KM &&
-					daysSinceCreation >= EARLY_WARNING_DAYS
-				) {
-					level = "early";
-				}
-
-				if (!level) continue;
-
-				const managedKey = `cntr_rdg_warning:${row.id}:${level}`;
-				activeManagedKeys.add(managedKey);
-
-				currentlyDueCntrWarnings.push({
-					type: "cntr_rdg_warning",
-					cntrRdgLevel: level,
-					title:
-						level === "high"
-							? "High Risk: CNTR RDG Warning"
-							: "Early Warning: CNTR RDG",
-					description: `${row.customerName} — ${row.cntrRdg.toLocaleString()} KM (VIN: ${row.vin})`,
-					referenceId: row.id,
-					vin: row.vin,
-					trackingId: row.trackingId,
-					tabName: "Main Sheet",
-					path: "/main-sheet",
-					managedKey,
-				});
+			let level: "high" | "early" | null = null;
+			if (row.cntrRdg >= HIGH_RISK_KM && daysSinceCreation >= HIGH_RISK_DAYS) {
+				level = "high";
+			} else if (
+				row.cntrRdg >= EARLY_WARNING_KM &&
+				daysSinceCreation >= EARLY_WARNING_DAYS
+			) {
+				level = "early";
 			}
+
+			if (!level) continue;
+
+			const managedKey = `cntr_rdg_warning:${row.id}:${level}`;
+			activeManagedKeys.add(managedKey);
+
+			currentlyDueCntrWarnings.push({
+				type: "cntr_rdg_warning",
+				cntrRdgLevel: level,
+				title:
+					level === "high"
+						? "High Risk: CNTR RDG Warning"
+						: "Early Warning: CNTR RDG",
+				description: `${row.customerName} — ${row.cntrRdg.toLocaleString()} KM (VIN: ${row.vin})`,
+				referenceId: row.id,
+				vin: row.vin,
+				trackingId: row.trackingId,
+				tabName: "Main Sheet",
+				path: "/main-sheet",
+				managedKey,
+			});
 		}
 
 		// 2. Synchronize store state

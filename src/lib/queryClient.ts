@@ -6,6 +6,11 @@ export const getOrdersQueryKey = (stage: OrderStage) =>
 
 export const DASHBOARD_STATS_QUERY_KEY = ["dashboard-stats"] as const;
 
+export const NOTIFICATION_CANDIDATES_QUERY_KEY = [
+	"notifications",
+	"candidates",
+] as const;
+
 /**
  * Creates a fresh, isolated `QueryClient`.
  *
