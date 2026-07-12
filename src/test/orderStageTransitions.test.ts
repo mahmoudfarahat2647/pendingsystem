@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { describe, expect, it } from "vitest";
 import {
 	appendTaggedUserNote,
@@ -163,6 +164,27 @@ describe("buildBookingCommands", () => {
 			undefined,
 		);
 		expect("bookingStatus" in cmd.updates).toBe(false);
+	});
+
+	it("records the previous booking date as history when re-booking an archived row", () => {
+		const row = createMockRow({ stage: "archive", bookingDate: "2025-06-01" });
+		const [cmd] = buildBookingCommands([row], "archive", "2025-07-15", "note");
+		const missedLine = `Missed booking: ${format(new Date("2025-06-01"), "EEE, MMM d, yyyy")}. #rebooking`;
+		expect(cmd.updates.noteHistory).toContain(missedLine);
+		expect(cmd.updates.noteHistory).toContain("note #booking");
+		expect(cmd.updates.bookingDate).toBe("2025-07-15");
+	});
+
+	it("does not add a 'Missed booking' line when the row has no previous bookingDate", () => {
+		const row = createMockRow();
+		const [cmd] = buildBookingCommands([row], "call", "2025-06-01", "note");
+		const expected = appendTaggedUserNote(
+			getEffectiveNoteHistory(row),
+			"note",
+			"booking",
+		);
+		expect(cmd.updates.noteHistory).toBe(expected);
+		expect(cmd.updates.noteHistory).not.toContain("Missed booking");
 	});
 });
 

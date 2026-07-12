@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import type { OrderStage } from "@/domain/order/orderStage";
 import {
 	appendTaggedUserNote,
@@ -5,6 +6,19 @@ import {
 } from "@/domain/order/orderWorkflow";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import type { PatchRowCommand, PendingRow } from "@/types";
+
+/**
+ * Formats a stored booking date for display inside note history, matching the
+ * Archive/Booking BOOKING column format ("EEE, MMM d, yyyy"). Falls back to the
+ * raw value when the stored string is not a parseable date.
+ */
+function formatBookingDate(value: string): string {
+	try {
+		return format(new Date(value), "EEE, MMM d, yyyy");
+	} catch {
+		return value;
+	}
+}
 
 /**
  * Returns patchRow commands to archive the given rows.
@@ -70,11 +84,18 @@ export function buildBookingCommands(
 	status?: string,
 ): PatchRowCommand[] {
 	return rows.map((row) => {
-		const newNoteHistory = appendTaggedUserNote(
-			getEffectiveNoteHistory(row),
-			note,
-			"booking",
-		);
+		// If the row already has a booking date (e.g. re-booking an archived,
+		// previously missed/cancelled appointment), record the prior date in the
+		// note history before it is overwritten, so absences remain reviewable.
+		let history = getEffectiveNoteHistory(row);
+		if (row.bookingDate) {
+			history = appendTaggedUserNote(
+				history,
+				`Missed booking: ${formatBookingDate(row.bookingDate)}.`,
+				"rebooking",
+			);
+		}
+		const newNoteHistory = appendTaggedUserNote(history, note, "booking");
 		return {
 			type: "patchRow",
 			id: row.id,
