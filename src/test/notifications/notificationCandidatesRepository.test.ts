@@ -39,9 +39,11 @@ function makeBuilder(response: Response) {
 }
 
 /**
- * Fake db client that hands out builders in the exact order the repository
- * issues its queries: reminderIds, (reminders full-select if any ids),
- * warranty, booking, cntr.
+ * Fake db client that hands out builders in `.from()` call order. Because the
+ * repository runs the reminder phase and the three single-stage queries under
+ * `Promise.all`, that order is: reminderIds, warranty, booking, cntr, and
+ * finally the reminders full-select (which only fires, after its own await, if
+ * the reminderIds query returned any ids).
  */
 function makeFakeDb(responses: Response[]) {
 	let call = 0;
@@ -100,12 +102,15 @@ describe("notificationCandidatesRepository", () => {
 		const sharedRow = orderRow("shared-1", {
 			metadata: { endWarranty: "2026-06-01" },
 		});
+		// Under Promise.all the `.from()` calls resolve in the order:
+		// reminderIds, warranty, booking, cntr, reminders-full (the reminder
+		// full-select fires after its own await resolves).
 		const { from, builders } = makeFakeDb([
 			{ data: [{ id: "shared-1" }], error: null }, // reminderIds
-			{ data: [sharedRow], error: null }, // reminders full-select
 			{ data: [sharedRow], error: null }, // warranty (same row)
 			{ data: [], error: null }, // booking
 			{ data: [], error: null }, // cntr
+			{ data: [sharedRow], error: null }, // reminders full-select
 		]);
 
 		// biome-ignore lint/suspicious/noExplicitAny: fake db satisfies the subset used
@@ -140,10 +145,10 @@ describe("notificationCandidatesRepository", () => {
 		});
 		const { from } = makeFakeDb([
 			{ data: [{ id: "multi-reminder" }], error: null }, // reminderIds
-			{ data: [rowWithTwoReminders], error: null }, // reminders full-select
 			{ data: [], error: null }, // warranty
 			{ data: [], error: null }, // booking
 			{ data: [], error: null }, // cntr
+			{ data: [rowWithTwoReminders], error: null }, // reminders full-select
 		]);
 
 		// biome-ignore lint/suspicious/noExplicitAny: fake db satisfies the subset used
