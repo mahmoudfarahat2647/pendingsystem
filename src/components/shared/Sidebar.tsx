@@ -148,7 +148,7 @@ export const Sidebar = React.memo(function Sidebar() {
 		<aside
 			suppressHydrationWarning
 			className={cn(
-				"flex flex-col border-r transition-all duration-300 z-50",
+				"flex flex-col border-r transition-all duration-300 will-change-[width] z-50",
 				"bg-black/80 backdrop-blur-md border-white/10",
 				isCollapsed ? "w-20" : "w-72",
 			)}

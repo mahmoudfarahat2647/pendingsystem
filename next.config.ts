@@ -37,8 +37,12 @@ const nextConfig: NextConfig = {
 	experimental: {
 		// reactCompiler: true,
 		inlineCss: process.env.NEXT_INLINE_CSS === "true",
+		// Icon/library imports are optimized here (Next tree-shakes named exports).
+		// lucide-react is consolidated onto this single mechanism (no legacy per-icon transform config).
 		optimizePackageImports: [
 			"lucide-react",
+			"@hugeicons/react",
+			"@hugeicons/core-free-icons",
 			"recharts",
 			"date-fns",
 			"@radix-ui/react-dialog",
@@ -55,13 +59,6 @@ const nextConfig: NextConfig = {
 	},
 	images: {
 		formats: ["image/avif", "image/webp"],
-	},
-	// Optimize imports for better tree-shaking
-	modularizeImports: {
-		"lucide-react": {
-			transform: "lucide-react/dist/esm/icons/{{lowerCase kebabCase member}}",
-			skipDefaultConversion: true,
-		},
 	},
 	// Standalone output for smaller container sizes if needed
 	output: "standalone",
