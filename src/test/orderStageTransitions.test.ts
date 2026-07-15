@@ -103,6 +103,37 @@ describe("buildReorderCommands", () => {
 		const [cmd] = buildReorderCommands([createMockRow()], "booking", "test");
 		expect(cmd.previousValues).toEqual({});
 	});
+
+	it("does not touch attachment fields when the row has no External Link", () => {
+		const [cmd] = buildReorderCommands([createMockRow()], "main", "no stock");
+		expect("attachmentLink" in cmd.updates).toBe(false);
+		expect("hasAttachment" in cmd.updates).toBe(false);
+	});
+
+	it("preserves the External Link into the note history and clears it", () => {
+		const row = createMockRow({
+			attachmentLink: "https://example.com/old-link",
+			hasAttachment: true,
+		});
+		const [cmd] = buildReorderCommands([row], "main", "no stock");
+		expect(cmd.updates.attachmentLink).toBe("");
+		expect(cmd.updates.hasAttachment).toBe(false);
+		expect(cmd.updates.noteHistory).toContain("Reorder Reason: no stock");
+		expect(cmd.updates.noteHistory).toContain(
+			"Previous link: https://example.com/old-link",
+		);
+	});
+
+	it("keeps hasAttachment true when uploaded files remain after clearing the link", () => {
+		const row = createMockRow({
+			attachmentLink: "https://example.com/old-link",
+			attachmentFilePaths: ["orders/row-uuid-1/invoice.pdf"],
+			hasAttachment: true,
+		});
+		const [cmd] = buildReorderCommands([row], "call", "wrong part");
+		expect(cmd.updates.attachmentLink).toBe("");
+		expect(cmd.updates.hasAttachment).toBe(true);
+	});
 });
 
 // ---------------------------------------------------------------------------
