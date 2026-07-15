@@ -31,7 +31,7 @@ import { useRowModals } from "@/hooks/useRowModals";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
 import { normalizeOrderStage } from "@/lib/orderStage";
-import { buildReorderCommands } from "@/lib/orderStageTransitions";
+import { buildReorderUpdates } from "@/lib/orderStageTransitions";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -488,14 +488,9 @@ export const useSearchResultsState = () => {
 			const results = await Promise.allSettled(
 				selectedRows.map((row) => {
 					const freshRow = searchResults.find((r) => r.id === row.id) ?? row;
-					const [{ updates }] = buildReorderCommands(
-						[freshRow],
-						row.stage as OrderStage,
-						reorderReason,
-					);
 					return saveOrderMutation.mutateAsync({
 						id: row.id,
-						updates,
+						updates: buildReorderUpdates(freshRow, reorderReason),
 						stage: "orders",
 						sourceStage: row.stage as OrderStage,
 					});

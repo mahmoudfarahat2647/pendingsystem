@@ -4,12 +4,27 @@ import {
 	getEffectiveNoteHistory,
 } from "@/domain/order/orderWorkflow";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
-import { hasAttachment } from "@/lib/attachment";
+import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
 import type { PatchRowCommand, PendingRow } from "@/types";
 import { safeFormatDate } from "@/utils/safeFormatDate";
 
 /** Matches the BOOKING column display format on the Archive/Booking pages. */
 const BOOKING_DATE_FORMAT = "EEE, MMM d, yyyy";
+
+/**
+ * Appends a `<label>: <value> #<tag>` line to note history, recording a value
+ * that is about to be overwritten so it stays reviewable in the audit trail.
+ * No-op when `value` is empty.
+ */
+function appendPreviousValueNote(
+	history: string,
+	label: string,
+	value: string | undefined,
+	tag: string,
+): string {
+	if (!value) return history;
+	return appendTaggedUserNote(history, `${label}: ${value}`, tag);
+}
 
 /**
  * Returns patchRow commands to archive the given rows.
@@ -44,47 +59,53 @@ export function buildSendToArchiveCommands(
  * link the operator later attaches on the way back to Main Sheet would silently
  * overwrite the old one (MAH-47). Uploaded file attachments are left untouched.
  */
+export function buildReorderUpdates(
+	row: PendingRow,
+	reason: string,
+): Partial<PendingRow> {
+	let newNoteHistory = appendTaggedUserNote(
+		getEffectiveNoteHistory(row),
+		`Reorder Reason: ${reason}`,
+		"reorder",
+	);
+
+	const previousLink = sanitizeAttachmentLink(row.attachmentLink ?? "");
+	newNoteHistory = appendPreviousValueNote(
+		newNoteHistory,
+		"Previous link",
+		previousLink,
+		"reorder",
+	);
+
+	const attachmentUpdates: Partial<PendingRow> = {};
+	if (previousLink) {
+		attachmentUpdates.attachmentLink = "";
+		attachmentUpdates.hasAttachment = hasAttachment({
+			attachmentFilePath: row.attachmentFilePath,
+			attachmentFilePaths: row.attachmentFilePaths,
+		});
+	}
+
+	return {
+		noteHistory: newNoteHistory,
+		status: "Reorder",
+		...attachmentUpdates,
+	};
+}
+
 export function buildReorderCommands(
 	rows: PendingRow[],
 	sourceStage: OrderStage,
 	reason: string,
 ): PatchRowCommand[] {
-	return rows.map((row) => {
-		let newNoteHistory = appendTaggedUserNote(
-			getEffectiveNoteHistory(row),
-			`Reorder Reason: ${reason}`,
-			"reorder",
-		);
-
-		const previousLink = row.attachmentLink?.trim();
-		const attachmentUpdates: Partial<PendingRow> = {};
-		if (previousLink) {
-			newNoteHistory = appendTaggedUserNote(
-				newNoteHistory,
-				`Previous link: ${previousLink}`,
-				"reorder",
-			);
-			attachmentUpdates.attachmentLink = "";
-			attachmentUpdates.hasAttachment = hasAttachment({
-				attachmentLink: "",
-				attachmentFilePath: row.attachmentFilePath,
-				attachmentFilePaths: row.attachmentFilePaths,
-			});
-		}
-
-		return {
-			type: "patchRow",
-			id: row.id,
-			sourceStage,
-			destinationStage: "orders" as const,
-			updates: {
-				noteHistory: newNoteHistory,
-				status: "Reorder",
-				...attachmentUpdates,
-			},
-			previousValues: {},
-		};
-	});
+	return rows.map((row) => ({
+		type: "patchRow",
+		id: row.id,
+		sourceStage,
+		destinationStage: "orders" as const,
+		updates: buildReorderUpdates(row, reason),
+		previousValues: {},
+	}));
 }
 
 /**
@@ -108,19 +129,17 @@ export function buildBookingCommands(
 		// note history before it is overwritten, so past appointments remain
 		// reviewable. Wording stays neutral ("Previous booking") because nothing
 		// clears bookingDate — the prior appointment may also have been kept.
-		let history = getEffectiveNoteHistory(row);
 		const previousDate = safeFormatDate(
 			row.bookingDate?.trim() || null,
 			BOOKING_DATE_FORMAT,
 			"",
 		);
-		if (previousDate) {
-			history = appendTaggedUserNote(
-				history,
-				`Previous booking: ${previousDate}.`,
-				"rebooking",
-			);
-		}
+		const history = appendPreviousValueNote(
+			getEffectiveNoteHistory(row),
+			"Previous booking",
+			previousDate ? `${previousDate}.` : undefined,
+			"rebooking",
+		);
 		const newNoteHistory = appendTaggedUserNote(history, note, "booking");
 		return {
 			type: "patchRow",
