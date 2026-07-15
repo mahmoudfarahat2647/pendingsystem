@@ -4,6 +4,7 @@ import {
 	getEffectiveNoteHistory,
 } from "@/domain/order/orderWorkflow";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
+import { hasAttachment } from "@/lib/attachment";
 import type { PatchRowCommand, PendingRow } from "@/types";
 import { safeFormatDate } from "@/utils/safeFormatDate";
 
@@ -35,6 +36,13 @@ export function buildSendToArchiveCommands(
 /**
  * Returns patchRow commands to send rows back to the Orders stage with
  * status "Reorder" and the reason appended to the note history.
+ *
+ * When a row carries an External Link attachment (`attachmentLink`), the link is
+ * preserved into the note history and then cleared from the attachment. This
+ * keeps the previous link reviewable in the audit trail while giving the
+ * reordered line a clean External Link field for its next round — otherwise the
+ * link the operator later attaches on the way back to Main Sheet would silently
+ * overwrite the old one (MAH-47). Uploaded file attachments are left untouched.
  */
 export function buildReorderCommands(
 	rows: PendingRow[],
@@ -42,17 +50,38 @@ export function buildReorderCommands(
 	reason: string,
 ): PatchRowCommand[] {
 	return rows.map((row) => {
-		const newNoteHistory = appendTaggedUserNote(
+		let newNoteHistory = appendTaggedUserNote(
 			getEffectiveNoteHistory(row),
 			`Reorder Reason: ${reason}`,
 			"reorder",
 		);
+
+		const previousLink = row.attachmentLink?.trim();
+		const attachmentUpdates: Partial<PendingRow> = {};
+		if (previousLink) {
+			newNoteHistory = appendTaggedUserNote(
+				newNoteHistory,
+				`Previous link: ${previousLink}`,
+				"reorder",
+			);
+			attachmentUpdates.attachmentLink = "";
+			attachmentUpdates.hasAttachment = hasAttachment({
+				attachmentLink: "",
+				attachmentFilePath: row.attachmentFilePath,
+				attachmentFilePaths: row.attachmentFilePaths,
+			});
+		}
+
 		return {
 			type: "patchRow",
 			id: row.id,
 			sourceStage,
 			destinationStage: "orders" as const,
-			updates: { noteHistory: newNoteHistory, status: "Reorder" },
+			updates: {
+				noteHistory: newNoteHistory,
+				status: "Reorder",
+				...attachmentUpdates,
+			},
 			previousValues: {},
 		};
 	});
