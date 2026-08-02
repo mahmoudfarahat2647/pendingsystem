@@ -34,7 +34,8 @@ export interface NotificationActions {
 
 export interface UIState {
 	searchTerm: string;
-	highlightedRowId: string | null;
+	/** Stage-scoped row jump request (notification click). Only the matching stage grid may consume it. */
+	highlightedRowId: { stage: OrderStage; id: string } | null;
 	pendingVinSelection: { vin: string; bookingDate?: string } | string | null;
 	notes: StickyNote[];
 	partStatuses: PartStatusDef[];
@@ -49,7 +50,9 @@ export interface UIState {
 
 export interface UIActions {
 	setSearchTerm: (term: string) => void;
-	setHighlightedRowId: (id: string | null) => void;
+	setHighlightedRowId: (
+		request: { stage: OrderStage; id: string } | null,
+	) => void;
 	setPendingVinSelection: (
 		vin: { vin: string; bookingDate?: string } | string | null,
 	) => void;

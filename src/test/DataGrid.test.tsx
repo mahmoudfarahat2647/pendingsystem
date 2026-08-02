@@ -56,3 +56,28 @@ describe("DataGrid layout restoration", () => {
 		expect(lastAgGridProps?.initialState).toEqual(defaultState);
 	});
 });
+
+describe("DataGrid stage-scoped jump request", () => {
+	beforeEach(() => {
+		lastAgGridProps = null;
+		useAppStore.setState({
+			highlightedRowId: { stage: "call", id: "row-1" },
+		});
+	});
+
+	it("ignores a jump request addressed to another stage and leaves it pending", () => {
+		render(
+			<DataGrid
+				rowData={[]}
+				columnDefs={[]}
+				gridStateKey="main"
+				stage="main"
+			/>,
+		);
+
+		expect(useAppStore.getState().highlightedRowId).toEqual({
+			stage: "call",
+			id: "row-1",
+		});
+	});
+});

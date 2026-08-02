@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeOrderStage } from "@/lib/orderStage";
+import { normalizeOrderStage, ORDER_STAGE_TAB_INFO } from "@/lib/orderStage";
 
 describe("normalizeOrderStage", () => {
 	it("maps display labels to canonical stages", () => {
@@ -21,5 +21,18 @@ describe("normalizeOrderStage", () => {
 		expect(normalizeOrderStage("Unknown Stage")).toBeUndefined();
 		expect(normalizeOrderStage(null)).toBeUndefined();
 		expect(normalizeOrderStage(undefined)).toBeUndefined();
+	});
+});
+
+describe("ORDER_STAGE_TAB_INFO", () => {
+	it("covers all five stages including archive", () => {
+		expect(ORDER_STAGE_TAB_INFO.orders.path).toBe("/orders");
+		expect(ORDER_STAGE_TAB_INFO.main.path).toBe("/main-sheet");
+		expect(ORDER_STAGE_TAB_INFO.call.path).toBe("/call-list");
+		expect(ORDER_STAGE_TAB_INFO.booking.path).toBe("/booking");
+		expect(ORDER_STAGE_TAB_INFO.archive).toEqual({
+			name: "Archive",
+			path: "/archive",
+		});
 	});
 });
