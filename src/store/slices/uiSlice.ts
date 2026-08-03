@@ -53,8 +53,8 @@ export const createUISlice: StateCreator<
 
 	setSearchTerm: (term) => set({ searchTerm: term }),
 
-	setHighlightedRowId: (id) => {
-		set({ highlightedRowId: id });
+	setHighlightedRowId: (request) => {
+		set({ highlightedRowId: request });
 	},
 
 	setPendingVinSelection: (vin) => set({ pendingVinSelection: vin }),

@@ -4,9 +4,27 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bell, Hash, MapPin, TableProperties, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
+import type { OrderStage } from "@/domain/order/orderStage";
+import { ORDER_STAGES } from "@/lib/constants";
+import { ORDER_STAGE_TAB_INFO } from "@/lib/orderStage";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { AppNotification } from "@/types";
+
+/** Resolve which stage currently holds the order (draft overlay or persisted cache). */
+export function resolveNotificationStage(
+	referenceId: string,
+): OrderStage | undefined {
+	const getWorkingRows = useAppStore.getState().getWorkingRows;
+	for (const stage of ORDER_STAGES) {
+		const rows = getWorkingRows(stage);
+		if (rows?.some((row) => row.id === referenceId)) {
+			return stage;
+		}
+	}
+	return undefined;
+}
 
 export const NotificationsDropdown = () => {
 	const router = useRouter();
@@ -36,8 +54,15 @@ export const NotificationsDropdown = () => {
 			return;
 		}
 
-		if (n.path) router.push(n.path);
-		setHighlightedRowId(n.referenceId);
+		const resolvedStage = resolveNotificationStage(n.referenceId);
+		if (!resolvedStage) {
+			toast.error("Order no longer available");
+			setShowNotifications(false);
+			return;
+		}
+
+		router.push(ORDER_STAGE_TAB_INFO[resolvedStage].path);
+		setHighlightedRowId({ stage: resolvedStage, id: n.referenceId });
 		setShowNotifications(false);
 	};
 

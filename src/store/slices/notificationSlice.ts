@@ -1,4 +1,5 @@
 import type { StateCreator } from "zustand";
+import { ORDER_STAGE_TAB_INFO } from "@/lib/orderStage";
 import { generateId } from "@/lib/utils";
 import type { AppNotification, PendingRow } from "@/types";
 import { getOrdersQueryAdapter } from "../ordersQueryAdapter";
@@ -7,13 +8,6 @@ import type {
 	NotificationActions,
 	NotificationState,
 } from "../types";
-
-const STAGE_TAB_INFO: Record<string, { name: string; path: string }> = {
-	main: { name: "Main Sheet", path: "/main-sheet" },
-	orders: { name: "Orders", path: "/orders" },
-	booking: { name: "Booking", path: "/booking" },
-	call: { name: "Call List", path: "/call-list" },
-};
 
 export const createNotificationSlice: StateCreator<
 	CombinedStore,
@@ -104,7 +98,7 @@ export const createNotificationSlice: StateCreator<
 		const activeManagedKeys = new Set<string>();
 
 		for (const row of rows) {
-			const tabInfo = row.stage ? STAGE_TAB_INFO[row.stage] : undefined;
+			const tabInfo = row.stage ? ORDER_STAGE_TAB_INFO[row.stage] : undefined;
 			const tabName = tabInfo?.name ?? "Orders";
 			const path = tabInfo?.path ?? "/orders";
 

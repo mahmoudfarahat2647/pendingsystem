@@ -140,7 +140,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 		handleLayoutChange();
 	}, [gridStateKey, setPositionLayoutDirty, handleLayoutChange]);
 
-	// Scroll to highlighted row
+	// Scroll to highlighted row (stage-scoped — ignore requests for other stages)
 	const highlightedRowId = useAppStore((state) => state.highlightedRowId);
 	const setHighlightedRowId = useAppStore((state) => state.setHighlightedRowId);
 	const pendingHighlightRef = useRef<string | null>(null);
@@ -159,17 +159,17 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 
 	// Register intent when highlight requests arrive, and trigger jump
 	useEffect(() => {
-		if (!highlightedRowId) return;
+		if (!highlightedRowId || !stage || highlightedRowId.stage !== stage) return;
 
-		pendingHighlightRef.current = highlightedRowId;
+		pendingHighlightRef.current = highlightedRowId.id;
 		attemptJump();
-	}, [highlightedRowId, attemptJump, rowData]);
+	}, [highlightedRowId, attemptJump, rowData, stage]);
 
 	// Guard against unresolvable requests (fallback timeout)
 	useEffect(() => {
-		if (!highlightedRowId) return;
+		if (!highlightedRowId || !stage || highlightedRowId.stage !== stage) return;
 
-		const requestedId = highlightedRowId;
+		const requestedId = highlightedRowId.id;
 
 		const timeout = setTimeout(() => {
 			if (pendingHighlightRef.current === requestedId) {
@@ -180,7 +180,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 		}, 8000);
 
 		return () => clearTimeout(timeout);
-	}, [highlightedRowId, setHighlightedRowId]);
+	}, [highlightedRowId, setHighlightedRowId, stage]);
 
 	// Wire search badge navigation for this stage
 	const attemptPendingSelect = usePendingSearchSelection(

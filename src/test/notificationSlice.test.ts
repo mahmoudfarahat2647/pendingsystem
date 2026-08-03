@@ -189,6 +189,26 @@ describe("notificationSlice", () => {
 			expect(notifications[0].path).toBe("/call-list");
 		});
 
+		it("routes archive-stage reminders to /archive (not /orders fallback)", () => {
+			const now = new Date("2026-03-01T12:00:00Z");
+			vi.setSystemTime(now);
+
+			const row = createMockRow("arch-1", undefined, "archive");
+			row.reminder = {
+				date: "2026-03-01",
+				time: "09:00",
+				subject: "Archive follow-up",
+			};
+
+			const store = createTestStore([row]);
+			store.getState().checkNotifications();
+
+			const notifications = store.getState().notifications;
+			expect(notifications).toHaveLength(1);
+			expect(notifications[0].tabName).toBe("Archive");
+			expect(notifications[0].path).toBe("/archive");
+		});
+
 		it("preserves dismissed keys and resurfaces the item once the candidate cache is refetched after eviction", () => {
 			const now = new Date("2026-03-01T12:00:00Z");
 			vi.setSystemTime(now);
