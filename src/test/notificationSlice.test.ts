@@ -164,6 +164,39 @@ describe("notificationSlice", () => {
 		expect(store.getState().notifications).toHaveLength(0);
 	});
 
+	describe("Routing metadata refresh on existing managed notifications", () => {
+		it("refreshes path and tabName when the same managed key moves stage, preserving identity fields", () => {
+			const now = new Date("2026-03-01T12:00:00Z");
+			vi.setSystemTime(now);
+
+			const row = createMockRow("1", undefined, "main");
+			row.reminder = {
+				date: "2026-03-01",
+				time: "10:00",
+				subject: "Follow up",
+			};
+
+			const store = createTestStore([row]);
+			store.getState().checkNotifications();
+
+			const original = store.getState().notifications[0];
+			expect(original.path).toBe("/main-sheet");
+			expect(original.tabName).toBe("Main Sheet");
+
+			const movedRow = { ...row, stage: "call" as OrderStage };
+			queryClient.setQueryData(NOTIFICATION_CANDIDATES_QUERY_KEY, [movedRow]);
+			store.getState().checkNotifications();
+
+			const updated = store.getState().notifications[0];
+			expect(updated.path).toBe("/call-list");
+			expect(updated.tabName).toBe("Call List");
+			expect(updated.id).toBe(original.id);
+			expect(updated.timestamp).toBe(original.timestamp);
+			expect(updated.isRead).toBe(original.isRead);
+			expect(updated.description).toBe(original.description);
+		});
+	});
+
 	describe("Server-authoritative candidate source (MAH-39)", () => {
 		it("surfaces a reminder from a stage whose page has never been opened in this session", () => {
 			const now = new Date("2026-03-01T12:00:00Z");
