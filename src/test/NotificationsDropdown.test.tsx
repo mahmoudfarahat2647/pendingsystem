@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { ORDER_STAGE_TAB_INFO } from "@/lib/orderStage";
+import type { DraftCommand } from "@/store/slices/draftSessionCommands";
 import { useAppStore } from "@/store/useStore";
 import type { AppNotification, PendingRow } from "@/types";
 
@@ -34,6 +36,14 @@ import {
 	NotificationsDropdown,
 	resolveNotificationStage,
 } from "@/components/shared/NotificationsDropdown";
+
+const ALL_STAGES: OrderStage[] = [
+	"orders",
+	"main",
+	"call",
+	"booking",
+	"archive",
+];
 
 const createRow = (id: string, stage: OrderStage): PendingRow =>
 	({
@@ -79,14 +89,38 @@ const createReminderNotification = (
 	...overrides,
 });
 
-function stubWorkingRows(byStage: Partial<Record<OrderStage, PendingRow[]>>) {
+function stubWorkingRows(
+	byStage: Partial<Record<OrderStage, PendingRow[] | undefined>>,
+) {
 	useAppStore.setState({
-		getWorkingRows: (stage: OrderStage) => byStage[stage] ?? [],
+		getWorkingRows: (stage: OrderStage) => byStage[stage],
+	});
+}
+
+function stubAllStagesEmpty() {
+	stubWorkingRows({
+		orders: [],
+		main: [],
+		call: [],
+		booking: [],
+		archive: [],
+	});
+}
+
+function resetDraftSessionInactive() {
+	const current = useAppStore.getState().draftSession;
+	useAppStore.setState({
+		draftSession: {
+			...current,
+			isActive: false,
+			pendingCommands: [],
+		},
 	});
 }
 
 describe("resolveNotificationStage", () => {
 	beforeEach(() => {
+		resetDraftSessionInactive();
 		stubWorkingRows({});
 	});
 
@@ -112,12 +146,64 @@ describe("resolveNotificationStage", () => {
 		});
 		expect(resolveNotificationStage("row-1")).toBeUndefined();
 	});
+
+	it("prefers a loaded call cache over a stale /main-sheet path", () => {
+		stubWorkingRows({
+			call: [createRow("row-1", "call")],
+		});
+		expect(resolveNotificationStage("row-1", "/main-sheet")).toBe("call");
+	});
+
+	it("prefers an unsaved draft move in working rows over the notification path", () => {
+		stubWorkingRows({
+			main: [],
+			call: [createRow("row-1", "call")],
+		});
+		expect(resolveNotificationStage("row-1", "/main-sheet")).toBe("call");
+	});
+
+	it("falls back to each canonical path when all stage caches are unloaded", () => {
+		stubWorkingRows({});
+		for (const stage of ALL_STAGES) {
+			expect(
+				resolveNotificationStage("row-1", ORDER_STAGE_TAB_INFO[stage].path),
+			).toBe(stage);
+		}
+	});
+
+	it("returns undefined when all caches are loaded, row is absent, and draft is inactive", () => {
+		stubAllStagesEmpty();
+		expect(resolveNotificationStage("row-1", "/main-sheet")).toBeUndefined();
+	});
+
+	it("falls back to path during an active draft even when every stage returns an array", () => {
+		useAppStore.setState({
+			draftSession: {
+				...useAppStore.getState().draftSession,
+				isActive: true,
+				pendingCommands: [{} as DraftCommand],
+			},
+		});
+		stubAllStagesEmpty();
+		expect(resolveNotificationStage("row-1", "/booking")).toBe("booking");
+	});
+
+	it("returns undefined for an unknown path when coverage is incomplete", () => {
+		stubWorkingRows({});
+		expect(resolveNotificationStage("row-1", "/unknown")).toBeUndefined();
+	});
+
+	it("returns undefined when coverage is incomplete and no path is provided", () => {
+		stubWorkingRows({});
+		expect(resolveNotificationStage("row-1")).toBeUndefined();
+	});
 });
 
 describe("NotificationsDropdown click-time navigation", () => {
 	beforeEach(() => {
 		routerPush.mockReset();
 		toastError.mockReset();
+		resetDraftSessionInactive();
 		useAppStore.setState({
 			notifications: [createReminderNotification()],
 			highlightedRowId: null,
@@ -176,12 +262,60 @@ describe("NotificationsDropdown click-time navigation", () => {
 	});
 
 	it("skips navigation and toasts when the row is not in any stage", async () => {
-		stubWorkingRows({});
+		stubAllStagesEmpty();
 
 		await openAndClickNotification();
 
 		expect(routerPush).not.toHaveBeenCalled();
 		expect(useAppStore.getState().highlightedRowId).toBeNull();
+		expect(toastError).toHaveBeenCalledWith("Order no longer available");
+	});
+
+	it("navigates via path fallback when all stage caches are unloaded (Dashboard)", async () => {
+		useAppStore.setState({
+			notifications: [
+				createReminderNotification({
+					path: "/booking",
+					tabName: "Booking",
+				}),
+			],
+		});
+		stubWorkingRows({});
+
+		await openAndClickNotification();
+
+		expect(routerPush).toHaveBeenCalledWith("/booking");
+		expect(useAppStore.getState().highlightedRowId).toEqual({
+			stage: "booking",
+			id: "row-1",
+		});
+		expect(toastError).not.toHaveBeenCalled();
+	});
+
+	it("navigates to live call stage over a stale /main-sheet notification path", async () => {
+		useAppStore.setState({
+			notifications: [
+				createReminderNotification({
+					path: "/main-sheet",
+					tabName: "Main Sheet",
+				}),
+			],
+		});
+		stubWorkingRows({
+			call: [createRow("row-1", "call")],
+		});
+
+		await openAndClickNotification();
+
+		expect(routerPush).toHaveBeenCalledWith("/call-list");
+	});
+
+	it("toasts when all caches are loaded empty even with a valid path", async () => {
+		stubAllStagesEmpty();
+
+		await openAndClickNotification();
+
+		expect(routerPush).not.toHaveBeenCalled();
 		expect(toastError).toHaveBeenCalledWith("Order no longer available");
 	});
 

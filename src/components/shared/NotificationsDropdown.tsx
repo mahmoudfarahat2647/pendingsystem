@@ -15,15 +15,36 @@ import type { AppNotification } from "@/types";
 /** Resolve which stage currently holds the order (draft overlay or persisted cache). */
 export function resolveNotificationStage(
 	referenceId: string,
+	notificationPath?: string,
 ): OrderStage | undefined {
-	const getWorkingRows = useAppStore.getState().getWorkingRows;
+	const state = useAppStore.getState();
+	const getWorkingRows = state.getWorkingRows;
+
+	// A draft overlay coerces unloaded stages to [] (see _captureBaseline), so
+	// during an active draft an unloaded stage is indistinguishable from empty.
+	// Treat that as incomplete coverage so the path fallback stays available.
+	let hasIncompleteCoverage =
+		state.draftSession.isActive &&
+		state.draftSession.pendingCommands.length > 0;
+
 	for (const stage of ORDER_STAGES) {
 		const rows = getWorkingRows(stage);
-		if (rows?.some((row) => row.id === referenceId)) {
+		if (rows === undefined) {
+			hasIncompleteCoverage = true;
+			continue;
+		}
+		if (rows.some((row) => row.id === referenceId)) {
 			return stage;
 		}
 	}
-	return undefined;
+
+	if (!hasIncompleteCoverage || !notificationPath) {
+		return undefined;
+	}
+
+	return ORDER_STAGES.find(
+		(stage) => ORDER_STAGE_TAB_INFO[stage].path === notificationPath,
+	);
 }
 
 export const NotificationsDropdown = () => {
@@ -54,7 +75,7 @@ export const NotificationsDropdown = () => {
 			return;
 		}
 
-		const resolvedStage = resolveNotificationStage(n.referenceId);
+		const resolvedStage = resolveNotificationStage(n.referenceId, n.path);
 		if (!resolvedStage) {
 			toast.error("Order no longer available");
 			setShowNotifications(false);

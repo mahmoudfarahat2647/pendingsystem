@@ -283,7 +283,17 @@ export const createNotificationSlice: StateCreator<
 					);
 
 					if (existing) {
-						newNotifications.push(existing);
+						if (
+							existing.path !== due.path ||
+							existing.tabName !== due.tabName
+						) {
+							hasChanges = true;
+						}
+						newNotifications.push({
+							...existing,
+							path: due.path,
+							tabName: due.tabName,
+						});
 					} else {
 						// New due item found (or updated subject causing a different key)
 						newNotifications.push({
