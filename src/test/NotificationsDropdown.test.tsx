@@ -188,6 +188,29 @@ describe("resolveNotificationStage", () => {
 		expect(resolveNotificationStage("row-1", "/booking")).toBe("booking");
 	});
 
+	it("does not fall back to path for a baseline row removed by the active draft", () => {
+		const row = createRow("row-1", "main");
+		useAppStore.setState({
+			draftSession: {
+				...useAppStore.getState().draftSession,
+				isActive: true,
+				pendingCommands: [
+					{ type: "deleteRows", ids: ["row-1"] } satisfies DraftCommand,
+				],
+				baselineByStage: {
+					orders: [],
+					main: [row],
+					call: [],
+					booking: [],
+					archive: [],
+				},
+			},
+		});
+		stubAllStagesEmpty();
+
+		expect(resolveNotificationStage("row-1", "/main-sheet")).toBeUndefined();
+	});
+
 	it("returns undefined for an unknown path when coverage is incomplete", () => {
 		stubWorkingRows({});
 		expect(resolveNotificationStage("row-1", "/unknown")).toBeUndefined();
@@ -316,6 +339,33 @@ describe("NotificationsDropdown click-time navigation", () => {
 		await openAndClickNotification();
 
 		expect(routerPush).not.toHaveBeenCalled();
+		expect(toastError).toHaveBeenCalledWith("Order no longer available");
+	});
+
+	it("skips navigation when a baseline row was removed by the active draft", async () => {
+		const row = createRow("row-1", "main");
+		useAppStore.setState({
+			draftSession: {
+				...useAppStore.getState().draftSession,
+				isActive: true,
+				pendingCommands: [
+					{ type: "deleteRows", ids: ["row-1"] } satisfies DraftCommand,
+				],
+				baselineByStage: {
+					orders: [],
+					main: [row],
+					call: [],
+					booking: [],
+					archive: [],
+				},
+			},
+		});
+		stubAllStagesEmpty();
+
+		await openAndClickNotification();
+
+		expect(routerPush).not.toHaveBeenCalled();
+		expect(useAppStore.getState().highlightedRowId).toBeNull();
 		expect(toastError).toHaveBeenCalledWith("Order no longer available");
 	});
 

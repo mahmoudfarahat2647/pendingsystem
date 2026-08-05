@@ -23,9 +23,18 @@ export function resolveNotificationStage(
 	// A draft overlay coerces unloaded stages to [] (see _captureBaseline), so
 	// during an active draft an unloaded stage is indistinguishable from empty.
 	// Treat that as incomplete coverage so the path fallback stays available.
-	let hasIncompleteCoverage =
+	const hasActiveDraft =
 		state.draftSession.isActive &&
 		state.draftSession.pendingCommands.length > 0;
+	const existedInDraftBaseline =
+		hasActiveDraft &&
+		ORDER_STAGES.some((stage) =>
+			state.draftSession.baselineByStage[stage].some(
+				(row) => row.id === referenceId,
+			),
+		);
+
+	let hasIncompleteCoverage = hasActiveDraft;
 
 	for (const stage of ORDER_STAGES) {
 		const rows = getWorkingRows(stage);
@@ -36,6 +45,11 @@ export function resolveNotificationStage(
 		if (rows.some((row) => row.id === referenceId)) {
 			return stage;
 		}
+	}
+
+	// Baseline row absent from every working stage was removed by the draft overlay.
+	if (existedInDraftBaseline) {
+		return undefined;
 	}
 
 	if (!hasIncompleteCoverage || !notificationPath) {
