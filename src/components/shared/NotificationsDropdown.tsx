@@ -12,6 +12,17 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { AppNotification } from "@/types";
 
+/**
+ * Stages that have a mounted page route and data loader in the current app.
+ * "freeze" is excluded because it has no route or page component yet, so its
+ * working-rows cache is ordinarily undefined in normal app sessions.
+ * It must be added back when the FREEZE page ships so freeze participates
+ * in coverage tracking.
+ */
+const LOADABLE_STAGES: OrderStage[] = ORDER_STAGES.filter(
+	(stage) => stage !== "freeze",
+);
+
 /** Resolve which stage currently holds the order (draft overlay or persisted cache). */
 export function resolveNotificationStage(
 	referenceId: string,
@@ -39,7 +50,9 @@ export function resolveNotificationStage(
 	for (const stage of ORDER_STAGES) {
 		const rows = getWorkingRows(stage);
 		if (rows === undefined) {
-			hasIncompleteCoverage = true;
+			if (LOADABLE_STAGES.includes(stage)) {
+				hasIncompleteCoverage = true;
+			}
 			continue;
 		}
 		if (rows.some((row) => row.id === referenceId)) {

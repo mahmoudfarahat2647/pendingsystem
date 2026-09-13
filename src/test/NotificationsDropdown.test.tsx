@@ -105,7 +105,7 @@ function stubAllStagesEmpty() {
 		call: [],
 		booking: [],
 		archive: [],
-		freeze: [],
+		freeze: undefined,
 	});
 }
 
@@ -176,6 +176,30 @@ describe("resolveNotificationStage", () => {
 	it("returns undefined when all caches are loaded, row is absent, and draft is inactive", () => {
 		stubAllStagesEmpty();
 		expect(resolveNotificationStage("row-1", "/main-sheet")).toBeUndefined();
+	});
+
+	it("returns undefined when all five loadable stages are loaded, row is absent, and freeze is undefined (regression)", () => {
+		stubWorkingRows({
+			orders: [],
+			main: [],
+			call: [],
+			booking: [],
+			archive: [],
+			freeze: undefined,
+		});
+		expect(resolveNotificationStage("row-1", "/main-sheet")).toBeUndefined();
+	});
+
+	it("finds the row in freeze stage when the freeze cache is populated", () => {
+		stubWorkingRows({
+			orders: [],
+			main: [],
+			call: [],
+			booking: [],
+			archive: [],
+			freeze: [createRow("row-1", "freeze")],
+		});
+		expect(resolveNotificationStage("row-1", "/main-sheet")).toBe("freeze");
 	});
 
 	it("falls back to path during an active draft even when every stage returns an array", () => {
@@ -289,6 +313,31 @@ describe("NotificationsDropdown click-time navigation", () => {
 
 	it("skips navigation and toasts when the row is not in any stage", async () => {
 		stubAllStagesEmpty();
+
+		await openAndClickNotification();
+
+		expect(routerPush).not.toHaveBeenCalled();
+		expect(useAppStore.getState().highlightedRowId).toBeNull();
+		expect(toastError).toHaveBeenCalledWith("Order no longer available");
+	});
+
+	it("reports the row as gone and toasts without navigating when all loadable stages are loaded and freeze is undefined (regression)", async () => {
+		useAppStore.setState({
+			notifications: [
+				createReminderNotification({
+					path: "/main-sheet",
+					tabName: "Main Sheet",
+				}),
+			],
+		});
+		stubWorkingRows({
+			orders: [],
+			main: [],
+			call: [],
+			booking: [],
+			archive: [],
+			freeze: undefined,
+		});
 
 		await openAndClickNotification();
 
