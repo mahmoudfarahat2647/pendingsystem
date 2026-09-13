@@ -2,7 +2,13 @@ import type { PartEntry, PendingRow } from "@/schemas/order.schema";
 
 export type { PartEntry, PendingRow };
 
-export type OrderStage = "orders" | "main" | "call" | "booking" | "archive";
+export type OrderStage =
+	| "orders"
+	| "main"
+	| "call"
+	| "booking"
+	| "archive"
+	| "freeze";
 
 export interface DuplicateCheckResult {
 	isDuplicate: boolean;
@@ -23,6 +29,7 @@ export interface OrderStageCounts {
 	call: number;
 	booking: number;
 	archive: number;
+	freeze: number;
 	/** Distinct VIN count within the "call" stage. */
 	callUniqueVehicles: number;
 }

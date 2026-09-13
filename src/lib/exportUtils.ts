@@ -90,6 +90,7 @@ export const exportAllSystemDataCSV = (
 		booking: "Booking",
 		call: "Call List",
 		archive: "Archive",
+		freeze: "Freeze",
 	};
 
 	const formatReminder = (reminder: PendingRow["reminder"]) => {

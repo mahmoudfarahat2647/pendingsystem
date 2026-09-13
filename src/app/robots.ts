@@ -13,6 +13,7 @@ export default function robots(): MetadataRoute.Robots {
 					"/call-list",
 					"/booking",
 					"/archive",
+					"/freeze",
 					"/api/",
 					"/mobile-order",
 				],

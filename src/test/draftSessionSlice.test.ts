@@ -23,6 +23,7 @@ const EMPTY_BASELINE: Record<OrderStage, PendingRow[]> = {
 	call: [],
 	booking: [],
 	archive: [],
+	freeze: [],
 };
 
 function createRow(

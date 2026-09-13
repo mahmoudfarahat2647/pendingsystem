@@ -1,10 +1,11 @@
 import type { OrderStage } from "@/domain/order/orderStage";
 
-const STAGE_ALIASES: Record<string, OrderStage> = {
+export const STAGE_ALIASES: Record<string, OrderStage> = {
 	archive: "archive",
 	booking: "booking",
 	call: "call",
 	"call list": "call",
+	freeze: "freeze",
 	main: "main",
 	"main sheet": "main",
 	orders: "orders",
@@ -20,6 +21,7 @@ export const ORDER_STAGE_TAB_INFO: Record<
 	call: { name: "Call List", path: "/call-list" },
 	booking: { name: "Booking", path: "/booking" },
 	archive: { name: "Archive", path: "/archive" },
+	freeze: { name: "Freeze", path: "/freeze" },
 };
 
 export function normalizeOrderStage(

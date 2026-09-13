@@ -43,6 +43,7 @@ const ALL_STAGES: OrderStage[] = [
 	"call",
 	"booking",
 	"archive",
+	"freeze",
 ];
 
 const createRow = (id: string, stage: OrderStage): PendingRow =>
@@ -104,6 +105,7 @@ function stubAllStagesEmpty() {
 		call: [],
 		booking: [],
 		archive: [],
+		freeze: [],
 	});
 }
 
@@ -203,6 +205,7 @@ describe("resolveNotificationStage", () => {
 					call: [],
 					booking: [],
 					archive: [],
+					freeze: [],
 				},
 			},
 		});
@@ -357,6 +360,7 @@ describe("NotificationsDropdown click-time navigation", () => {
 					call: [],
 					booking: [],
 					archive: [],
+					freeze: [],
 				},
 			},
 		});

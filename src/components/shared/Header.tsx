@@ -143,7 +143,7 @@ export const Header = React.memo(function Header() {
 	// Notification Check Interval (Throttled to reduce lag)
 	useEffect(() => {
 		const check = () => {
-			const stages = ["orders", "main", "call", "booking"] as const;
+			const stages = ["orders", "main", "call", "booking", "freeze"] as const;
 			const currentDataVersion = Math.max(
 				...stages.map(
 					(s) =>

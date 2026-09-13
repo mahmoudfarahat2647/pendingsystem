@@ -84,6 +84,7 @@ const mocks = vi.hoisted(() => ({
 		booking: vi.fn(),
 		call: vi.fn(),
 		archive: vi.fn(),
+		freeze: vi.fn(),
 	},
 	searchResultsHeaderProps: null as MockSearchResultsHeaderProps | null,
 	routerPush: vi.fn(),
@@ -116,6 +117,7 @@ const mocks = vi.hoisted(() => ({
 		booking: [] as PendingRow[],
 		call: [] as PendingRow[],
 		archive: [] as PendingRow[],
+		freeze: [] as PendingRow[],
 	},
 	rowModals: {
 		activeModal: null,
@@ -1677,6 +1679,7 @@ describe("SearchResultsView", () => {
 			{ sourceType: "Booking", stage: "booking", route: "/booking" },
 			{ sourceType: "Call", stage: "call", route: "/call-list" },
 			{ sourceType: "Archive", stage: "archive", route: "/archive" },
+			{ sourceType: "Freeze", stage: "freeze", route: "/freeze" },
 		] as const)("routes to $route when clicking the $sourceType badge", async ({
 			sourceType,
 			stage,
