@@ -149,14 +149,39 @@ If `SELECT 1` passes but auth still fails, the issue is in `auth.ts` config — 
 |-------|---------|
 | `orders` | All operational rows across all five stages |
 | `order_reminders` | Per-row reminder records |
+| `quick_templates` | Saved quick-fill order templates |
 | `report_settings` | Report config per user |
+| `app_settings` | Application-level settings |
+| `rate_limits` | Rate-limiting records |
 | `auth_users` | Better Auth users |
 | `auth_sessions` | Sessions (8h expiry, 5-min refresh) |
 | `auth_accounts` | Auth accounts |
 | `auth_verifications` | Auth verifications |
-| `recent_activity` | Activity log records |
-| `app_settings` | Application-level settings |
-| `rate_limits` | Rate-limiting records |
+
+#### `orders.stage` is a Postgres enum, not text
+
+The column type is `public.order_stage`, whose labels are `orders`, `main`, `call`, `booking`,
+`archive`. Adding a new workflow stage requires an `ALTER TYPE ... ADD VALUE` migration — a TypeScript-only
+change will fail at the database layer. A newly added label also cannot be used in the same transaction
+that adds it.
+
+#### Rich row fields live in `metadata` jsonb, not in columns
+
+`orders` has only ~16 real columns. Everything else — `noteHistory`, `archiveReason`, `archivedAt`,
+`bookingDate`, `bookingNote`, `partStatus`, `parts`, `vin`, `customerName`, and the rest of `PendingRow` —
+is stored inside the `metadata` jsonb column. **Adding a field to `PendingRow` usually needs no DDL at all.**
+Note that metadata is merged on write: omitting a key preserves it, and `undefined` does not reliably delete
+a JSON key — persist `null` to clear one.
+
+#### Empty legacy tables — do not write to these
+
+`bookings`, `order_notes`, `order_attachments`, and `order_links` exist but hold zero rows and are not used.
+Notes, attachments, and booking data all live in `orders.metadata` (above). Do not "restore" these tables or
+route new code through them.
+
+There is **no stage-transition history**: migration `20260129_drop_legacy_history.sql` dropped the `history`,
+`activity_log`, and `recent_activity` tables along with the order-activity trigger. Changing `orders.stage`
+overwrites the previous value and nothing records the transition.
 
 ### Supabase MCP
 
