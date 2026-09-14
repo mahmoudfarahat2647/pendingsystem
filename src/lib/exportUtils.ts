@@ -90,7 +90,7 @@ export const exportAllSystemDataCSV = (
 		booking: "Booking",
 		call: "Call List",
 		archive: "Archive",
-		freeze: "Freeze",
+		freeze: "FREEZE",
 	};
 
 	const formatReminder = (reminder: PendingRow["reminder"]) => {
@@ -98,13 +98,41 @@ export const exportAllSystemDataCSV = (
 		return `[${reminder.date} ${reminder.time}] ${reminder.subject}`;
 	};
 
-	const allData = filteredRows.map((r) => ({
-		...r,
-		source: stageMap[r.stage as string] || r.stage || "Unknown",
-		remainTime: calculateRemainingTime(r.endWarranty),
-		reminderText: formatReminder(r.reminder),
-		noteHistory: getEffectiveNoteHistory(r),
-	}));
+	const allData = filteredRows.map((r) => {
+		const rawRow: unknown = r;
+		let freezeReason = "";
+		let frozenAt = "";
+
+		if (typeof rawRow === "object" && rawRow !== null) {
+			const rowMap = rawRow as Record<string, unknown>;
+			if (typeof rowMap.freezeReason === "string") {
+				freezeReason = rowMap.freezeReason;
+			}
+			if (typeof rowMap.frozenAt === "string") {
+				frozenAt = rowMap.frozenAt;
+			}
+
+			if (typeof rowMap.metadata === "object" && rowMap.metadata !== null) {
+				const meta = rowMap.metadata as Record<string, unknown>;
+				if (!freezeReason && typeof meta.freezeReason === "string") {
+					freezeReason = meta.freezeReason;
+				}
+				if (!frozenAt && typeof meta.frozenAt === "string") {
+					frozenAt = meta.frozenAt;
+				}
+			}
+		}
+
+		return {
+			...r,
+			source: stageMap[r.stage as string] || r.stage || "Unknown",
+			remainTime: calculateRemainingTime(r.endWarranty),
+			reminderText: formatReminder(r.reminder),
+			noteHistory: getEffectiveNoteHistory(r),
+			freezeReason,
+			frozenAt,
+		};
+	});
 
 	const headers = [
 		"source",
@@ -132,6 +160,8 @@ export const exportAllSystemDataCSV = (
 		"reminderText",
 		"archiveReason",
 		"archivedAt",
+		"freezeReason",
+		"frozenAt",
 	];
 
 	const filenamePrefix = company.toLowerCase();
