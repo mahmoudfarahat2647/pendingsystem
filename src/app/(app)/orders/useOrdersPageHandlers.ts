@@ -363,9 +363,12 @@ export const useOrdersPageHandlers = () => {
 					destinationStage: "call",
 					guardFrozenVins: true,
 				});
-				toast.success(`All parts for VIN ${vin} arrived! Moved to Call List.`, {
-					duration: 5000,
-				});
+				toast.success(
+					`All parts for VIN ${vin} arrived! Auto-move queued; save changes to persist it.`,
+					{
+						duration: 5000,
+					},
+				);
 			}
 		}
 

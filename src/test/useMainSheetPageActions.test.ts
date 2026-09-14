@@ -569,7 +569,7 @@ describe("useMainSheetPageActions", () => {
 			// 3. Per-VIN toast with duration 5000
 			expect(toast.success).toHaveBeenNthCalledWith(
 				1,
-				`All parts for VIN ${vin} arrived! Moved to Call List.`,
+				`All parts for VIN ${vin} arrived! Auto-move queued; save changes to persist it.`,
 				{ duration: 5000 },
 			);
 

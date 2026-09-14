@@ -30,7 +30,8 @@ function buildStatusKey(
 export const useAutoMoveVins = () => {
 	const { data: rowData = [] } = useOrdersQuery("main");
 	const { data: freezeData = [] } = useOrdersQuery("freeze");
-	const { mutate: bulkMoveToCall } = useBulkUpdateOrderStageMutation("main");
+	const { mutateAsync: bulkMoveToCall } =
+		useBulkUpdateOrderStageMutation("main");
 
 	const isProcessingRef = useRef(false);
 	const lastStatusKeyRef = useRef("");
@@ -46,8 +47,6 @@ export const useAutoMoveVins = () => {
 		if (isProcessingRef.current) return;
 		lastStatusKeyRef.current = currentKey;
 
-		let resetTimeoutId: ReturnType<typeof setTimeout> | undefined;
-
 		const timeoutId = setTimeout(() => {
 			// 1. Group rows by normalised VIN
 			const vinGroups: Record<string, typeof rowData> = {};
@@ -59,7 +58,7 @@ export const useAutoMoveVins = () => {
 			}
 
 			// 2. Collect IDs for groups where every part is "arrived" and no part is frozen
-			const idsToMove: string[] = [];
+			const vinMoves: Array<{ vin: string; ids: string[] }> = [];
 			for (const [vin, rows] of Object.entries(vinGroups)) {
 				if (rows.length === 0) continue;
 				if (
@@ -75,32 +74,37 @@ export const useAutoMoveVins = () => {
 					(row) => (row.status ?? "").trim().toLowerCase() === "arrived",
 				);
 				if (allArrived) {
-					for (const r of rows) idsToMove.push(r.id);
-					toast.success(
-						`All parts for VIN ${vin.toUpperCase()} arrived! Moved to Call List.`,
-						{ duration: 5000 },
-					);
+					vinMoves.push({ vin, ids: rows.map((row) => row.id) });
 				}
 			}
 
-			// 3. Move if any found
-			if (idsToMove.length > 0) {
+			// 3. Persist each VIN separately so a frozen VIN cannot suppress
+			// unrelated vehicles, and only report success after persistence.
+			if (vinMoves.length > 0) {
 				isProcessingRef.current = true;
-				bulkMoveToCall({
-					ids: idsToMove,
-					stage: "call",
-					guardFrozenVins: true,
-				});
-
-				resetTimeoutId = setTimeout(() => {
+				void (async () => {
+					for (const { vin, ids } of vinMoves) {
+						try {
+							await bulkMoveToCall({
+								ids,
+								stage: "call",
+								guardFrozenVins: true,
+							});
+							toast.success(
+								`All parts for VIN ${vin.toUpperCase()} arrived! Moved to Call List.`,
+								{ duration: 5000 },
+							);
+						} catch {
+							// The mutation hook restores its optimistic cache and surfaces the error.
+						}
+					}
 					isProcessingRef.current = false;
-				}, AUTO_MOVE_DEBOUNCE_MS);
+				})();
 			}
 		}, AUTO_MOVE_DEBOUNCE_MS);
 
 		return () => {
 			clearTimeout(timeoutId);
-			clearTimeout(resetTimeoutId);
 		};
 	}, [rowData, freezeData, bulkMoveToCall]);
 };

@@ -133,63 +133,34 @@ export function createOrderRepository(
 		) {
 			if (ids.length === 0) return [];
 
-			let idsToUpdate = ids;
-
 			if (options?.guardFrozenVins) {
-				const { data: candidateRows, error: fetchErr } = await db
-					.from("orders")
-					.select("id, vin")
-					.in("id", ids);
+				const { data, error } = await db.rpc(
+					"auto_move_orders_to_stage_if_unfrozen",
+					{
+						p_ids: ids,
+						p_source_stage: previousStage ?? stage,
+						p_stage: stage,
+					},
+				);
+				if (error) handleSupabaseError(error);
 
-				if (fetchErr) handleSupabaseError(fetchErr);
-
-				const rawVins = (candidateRows || [])
-					.map((r) => r.vin?.trim())
-					.filter((vin): vin is string => Boolean(vin));
-
-				if (rawVins.length > 0) {
-					const vinVariants = Array.from(
-						new Set([
-							...rawVins,
-							...rawVins.map((v) => v.toUpperCase()),
-							...rawVins.map((v) => v.toLowerCase()),
-						]),
+				const result = (data?.[0] ?? {}) as {
+					moved_ids?: string[] | null;
+					blocked_vins?: string[] | null;
+				};
+				const blockedVins = result.blocked_vins ?? [];
+				if (blockedVins.length > 0) {
+					throw new ServiceError(
+						"AUTO_MOVE_FROZEN_VIN_BLOCKED",
+						"Auto-move blocked: one or more lines for this VIN are currently frozen.",
+						{ frozenVins: blockedVins },
 					);
-
-					const { data: frozenRows, error: freezeErr } = await db
-						.from("orders")
-						.select("vin")
-						.eq("stage", "freeze")
-						.in("vin", vinVariants);
-
-					if (freezeErr) handleSupabaseError(freezeErr);
-
-					const frozenVinSet = new Set(
-						(frozenRows || [])
-							.map((r) => r.vin?.trim().toUpperCase())
-							.filter((vin): vin is string => Boolean(vin)),
-					);
-
-					if (frozenVinSet.size > 0) {
-						const eligibleRows = (candidateRows || []).filter((r) => {
-							const v = (r.vin || "").trim().toUpperCase();
-							return !v || !frozenVinSet.has(v);
-						});
-
-						idsToUpdate = eligibleRows.map((r) => r.id);
-
-						if (idsToUpdate.length === 0) {
-							throw new ServiceError(
-								"AUTO_MOVE_FROZEN_VIN_BLOCKED",
-								"Auto-move blocked: one or more lines for this VIN are currently frozen.",
-								{ frozenVins: Array.from(frozenVinSet) },
-							);
-						}
-					}
 				}
+
+				return result.moved_ids ?? [];
 			}
 
-			if (idsToUpdate.length === 0) return [];
+			const idsToUpdate = ids;
 
 			// For large batches, process in chunks to avoid connection pool exhaustion
 			const BATCH_SIZE = 50;
