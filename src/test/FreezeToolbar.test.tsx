@@ -80,4 +80,24 @@ describe("FreezeToolbar", () => {
 		fireEvent.click(btn);
 		expect(onSelectAllByVin).toHaveBeenCalledTimes(1);
 	});
+
+	it("renders a disabled Move to button when no rows are selected", () => {
+		const onMoveTo = vi.fn();
+		const { container } = renderWithProvider(
+			<FreezeToolbar {...defaultProps} selectedRows={[]} onMoveTo={onMoveTo} />,
+		);
+		const btn = getButtonByIcon(container, "lucide-move-right");
+		expect(btn).toBeDisabled();
+	});
+
+	it("calls onMoveTo when the Move to button is clicked with a selection", () => {
+		const onMoveTo = vi.fn();
+		const { container } = renderWithProvider(
+			<FreezeToolbar {...defaultProps} onMoveTo={onMoveTo} />,
+		);
+		const btn = getButtonByIcon(container, "lucide-move-right");
+		expect(btn).not.toBeDisabled();
+		fireEvent.click(btn);
+		expect(onMoveTo).toHaveBeenCalledTimes(1);
+	});
 });

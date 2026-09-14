@@ -9,6 +9,7 @@ import {
 	buildRebookingCommands,
 	buildReorderCommands,
 	buildSendToArchiveCommands,
+	buildUnfreezeCommands,
 } from "@/lib/orderStageTransitions";
 import type { PendingRow } from "@/types";
 
@@ -295,5 +296,129 @@ describe("buildRebookingCommands", () => {
 			"Confirmed",
 		);
 		expect(cmd.updates.bookingStatus).toBe("Confirmed");
+	});
+});
+
+// ---------------------------------------------------------------------------
+describe("buildUnfreezeCommands", () => {
+	const createFrozenRow = (overrides: Partial<PendingRow> = {}): PendingRow =>
+		createMockRow({
+			stage: "freeze",
+			status: "Arrived",
+			bookingDate: "2025-06-01",
+			bookingNote: "original booking note",
+			bookingStatus: "Confirmed",
+			attachmentLink: "https://example.com/link",
+			attachmentFilePath: "freeze/row-uuid-1/invoice.pdf",
+			attachmentFilePaths: ["freeze/row-uuid-1/invoice.pdf"],
+			hasAttachment: true,
+			noteHistory: "existing history",
+			reminder: { date: "2025-08-01", time: "10:00", subject: "follow up" },
+			previousStage: "main",
+			freezeReason: "Awaiting customer approval",
+			frozenAt: "2026-09-10T10:00:00.000Z",
+			...overrides,
+		});
+
+	it("returns one patchRow per row from 'freeze' to the chosen destination", () => {
+		const rows = [
+			createFrozenRow({ id: "id-1" }),
+			createFrozenRow({ id: "id-2" }),
+		];
+		for (const destination of [
+			"orders",
+			"main",
+			"call",
+			"booking",
+			"archive",
+		] as const) {
+			const cmds = buildUnfreezeCommands(rows, destination);
+			expect(cmds).toHaveLength(2);
+			expect(cmds[0].type).toBe("patchRow");
+			expect(cmds[0].sourceStage).toBe("freeze");
+			expect(cmds[0].destinationStage).toBe(destination);
+			expect(cmds[0].updates.stage).toBe(destination);
+			expect(cmds[1].id).toBe("id-2");
+		}
+	});
+
+	it("clears freeze metadata with null (merge-safe cleared representation)", () => {
+		const [cmd] = buildUnfreezeCommands([createFrozenRow()], "main");
+		expect(cmd.updates.previousStage).toBeNull();
+		expect(cmd.updates.freezeReason).toBeNull();
+		expect(cmd.updates.frozenAt).toBeNull();
+	});
+
+	it("preserves the freeze reason into the unfreeze history note with an #unfreeze tag", () => {
+		const [cmd] = buildUnfreezeCommands([createFrozenRow()], "call");
+		expect(cmd.updates.noteHistory).toContain("existing history");
+		expect(cmd.updates.noteHistory).toContain(
+			"Unfrozen to call. Freeze reason: Awaiting customer approval #unfreeze",
+		);
+	});
+
+	it("still appends an #unfreeze note when the row has no freeze reason", () => {
+		const [cmd] = buildUnfreezeCommands(
+			[createFrozenRow({ freezeReason: undefined })],
+			"main",
+		);
+		expect(cmd.updates.noteHistory).toContain("Unfrozen to main #unfreeze");
+		expect(cmd.updates.noteHistory).not.toContain("Freeze reason:");
+	});
+
+	it("leaves status untouched", () => {
+		const [cmd] = buildUnfreezeCommands([createFrozenRow()], "main");
+		expect("status" in cmd.updates).toBe(false);
+	});
+
+	it("leaves booking date/note/status untouched", () => {
+		const [cmd] = buildUnfreezeCommands([createFrozenRow()], "booking");
+		expect("bookingDate" in cmd.updates).toBe(false);
+		expect("bookingNote" in cmd.updates).toBe(false);
+		expect("bookingStatus" in cmd.updates).toBe(false);
+	});
+
+	it("leaves attachment links/file paths untouched", () => {
+		const [cmd] = buildUnfreezeCommands([createFrozenRow()], "main");
+		expect("attachmentLink" in cmd.updates).toBe(false);
+		expect("attachmentFilePath" in cmd.updates).toBe(false);
+		expect("attachmentFilePaths" in cmd.updates).toBe(false);
+		expect("hasAttachment" in cmd.updates).toBe(false);
+	});
+
+	it("leaves notes/reminders and archive fields untouched", () => {
+		const [cmd] = buildUnfreezeCommands([createFrozenRow()], "archive");
+		expect("reminder" in cmd.updates).toBe(false);
+		expect("noteContent" in cmd.updates).toBe(false);
+		expect("actionNote" in cmd.updates).toBe(false);
+		expect("archiveReason" in cmd.updates).toBe(false);
+		expect("archivedAt" in cmd.updates).toBe(false);
+		// The only note field written is the appended history.
+		expect(cmd.updates.noteHistory).toContain("existing history");
+	});
+
+	it("does not trigger destination-specific side effects", () => {
+		const [toBooking] = buildUnfreezeCommands([createFrozenRow()], "booking");
+		expect(toBooking.updates.status).toBeUndefined();
+		expect(toBooking.updates.bookingDate).toBeUndefined();
+		expect(toBooking.updates.bookingStatus).toBeUndefined();
+
+		const [toOrders] = buildUnfreezeCommands([createFrozenRow()], "orders");
+		expect(toOrders.updates.status).toBeUndefined();
+		expect(toOrders.updates.attachmentLink).toBeUndefined();
+
+		const [toArchive] = buildUnfreezeCommands([createFrozenRow()], "archive");
+		expect(toArchive.updates.status).toBeUndefined();
+		expect(toArchive.updates.archiveReason).toBeUndefined();
+		expect(toArchive.updates.archivedAt).toBeUndefined();
+	});
+
+	it("uses empty previousValues", () => {
+		const [cmd] = buildUnfreezeCommands([createFrozenRow()], "main");
+		expect(cmd.previousValues).toEqual({});
+	});
+
+	it("returns empty array for empty input", () => {
+		expect(buildUnfreezeCommands([], "main")).toEqual([]);
 	});
 });
