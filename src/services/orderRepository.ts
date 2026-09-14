@@ -331,13 +331,36 @@ export function createOrderRepository(
 								`Bulk move failed, rolling back ${successfulIds.length} rows to ${previousStage}...`,
 							);
 							try {
+								// CAS-guard the rollback too: only revert rows that are still
+								// in `stage` (the destination we just moved them to). Without
+								// this guard, a row that a concurrent writer moved again in the
+								// meantime (e.g. another client froze it) would be silently
+								// stomped back to `previousStage` here — reintroducing the exact
+								// "stale write clobbers a concurrent freeze" bug this CAS layer
+								// exists to prevent, just in the rollback path instead of the
+								// forward one.
+								const rolledBackIds = new Set<string>();
 								await processBatch(successfulIds, BATCH_SIZE, async (batch) => {
-									await db
+									const { data: rolledBack, error: rollbackError } = await db
 										.from("orders")
 										.update({ stage: previousStage })
-										.in("id", batch);
+										.eq("stage", stage)
+										.in("id", batch)
+										.select("id");
+									if (rollbackError) handleSupabaseError(rollbackError);
+									for (const row of rolledBack ?? []) {
+										rolledBackIds.add(row.id as string);
+									}
 									return [];
 								});
+								const unrolledBackIds = successfulIds.filter(
+									(id) => !rolledBackIds.has(id),
+								);
+								if (unrolledBackIds.length > 0) {
+									logger.warn(
+										`Rollback left ${unrolledBackIds.length} row(s) in "${stage}" because they no longer matched that stage (moved by another writer in the meantime): ${unrolledBackIds.join(", ")}`,
+									);
+								}
 							} catch (rollbackErr) {
 								logger.error(
 									"Failed to rollback partial bulk update:",

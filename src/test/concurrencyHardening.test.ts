@@ -538,5 +538,61 @@ describe("Issue #202: Concurrency Hardening & Compare-and-Set", () => {
 			expect(result).toHaveLength(2);
 			expect(mockEq).toHaveBeenCalledWith("stage", "main");
 		});
+
+		it("throws BULK_STAGE_MOVE_CONFLICT for a partial mismatch spanning the batched (>50 ids) path", async () => {
+			// 60 ids -> 2 chunks (50 + 10). No chunk hits a hard DB error; instead,
+			// one id in each chunk no longer matches "main" (frozen elsewhere), so
+			// this exercises the batched branch's own unmatched-id accounting
+			// (orderRepository.ts's `allUnmatchedIds`), which is separate code from
+			// the non-batched conflict path covered by the two tests above.
+			const chunk1Ids = Array.from({ length: 50 }, (_, i) => `row-${i}`);
+			const chunk2Ids = Array.from({ length: 10 }, (_, i) => `row-${i + 50}`);
+			const allIds = [...chunk1Ids, ...chunk2Ids];
+
+			// One divergent id per chunk: row-7 (chunk 1) and row-55 (chunk 2).
+			const chunk1Matched = chunk1Ids.filter((id) => id !== "row-7");
+			const chunk2Matched = chunk2Ids.filter((id) => id !== "row-55");
+
+			const mockEq = vi.fn().mockReturnThis();
+			const mockIn = vi.fn().mockReturnThis();
+			const mockUpdate = vi.fn().mockReturnThis();
+			const mockSelect = vi
+				.fn()
+				.mockResolvedValueOnce({
+					data: chunk1Matched.map((id) => ({ id })),
+					error: null,
+				})
+				.mockResolvedValueOnce({
+					data: chunk2Matched.map((id) => ({ id })),
+					error: null,
+				});
+
+			const db = {
+				from: () => ({
+					update: mockUpdate,
+					eq: mockEq,
+					in: mockIn,
+					select: mockSelect,
+				}),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock DB
+			const repo = createOrderRepository(db as any);
+
+			await expect(
+				repo.updateOrdersStage(allIds, "call", "main"),
+			).rejects.toMatchObject({
+				code: "BULK_STAGE_MOVE_CONFLICT",
+				message:
+					'2 of 60 orders could not be moved because they are no longer in "main".',
+				details: {
+					unmatchedIds: ["row-7", "row-55"],
+					expectedStage: "main",
+				},
+			});
+
+			expect(mockSelect).toHaveBeenCalledTimes(2);
+			expect(mockEq).toHaveBeenCalledWith("stage", "main");
+		});
 	});
 });

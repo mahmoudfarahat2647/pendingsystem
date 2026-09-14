@@ -436,6 +436,37 @@ describe("draftSessionSlice", () => {
 			);
 		});
 
+		it("forwards sourceStage on a moveRows command so bulkUpdateStage gets compare-and-set guarded (Issue #202, Hole #3)", async () => {
+			seedStageData({
+				orders: [createRow(REAL_UUID, "orders")],
+			});
+			useAppStore.getState().applyCommand({
+				type: "moveRows",
+				ids: [REAL_UUID],
+				sourceStage: "orders",
+				destinationStage: "main",
+			});
+
+			const saveOrder = vi.fn().mockResolvedValue({ id: REAL_UUID });
+			const bulkUpdateStage = vi.fn().mockResolvedValue([]);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			// Dropping sourceStage here would silently disable compare-and-set on
+			// bulk moves (orderRepository.ts's updateOrdersStage only guards when
+			// previousStage is supplied), which is exactly the class of regression
+			// Issue #202 closes for patchRow — moveRows needs the same guarantee.
+			expect(bulkUpdateStage).toHaveBeenCalledWith(
+				expect.objectContaining({
+					ids: [REAL_UUID],
+					sourceStage: "orders",
+				}),
+			);
+		});
+
 		it("remaps temp ID so patchRow after createRows updates rather than duplicates", async () => {
 			seedStageData({ orders: [] });
 

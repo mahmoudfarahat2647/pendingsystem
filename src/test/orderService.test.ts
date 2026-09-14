@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { logger } from "../lib/logger";
 import { supabase } from "../lib/supabase";
 import { createOrderQueryRepository } from "../services/order/orderQueryRepository";
 import { createOrderRepository } from "../services/orderRepository";
@@ -166,16 +167,22 @@ describe("orderService", () => {
 			const mockIn = vi.fn().mockReturnThis();
 			const mockEq = vi.fn().mockReturnThis();
 
-			// First batch succeeds, second fails
+			const rolledBackIds = Array.from({ length: 50 }, (_, i) => String(i));
+
+			// First batch succeeds, second fails, rollback of batch 1 succeeds
 			const mockSelect = vi
 				.fn()
 				.mockResolvedValueOnce({
-					data: Array.from({ length: 50 }, (_, i) => ({ id: String(i) })),
+					data: rolledBackIds.map((id) => ({ id })),
 					error: null,
 				})
 				.mockResolvedValueOnce({
 					data: null,
 					error: { message: "Batch 2 failed", code: "500" },
+				})
+				.mockResolvedValueOnce({
+					data: rolledBackIds.map((id) => ({ id })),
+					error: null,
 				});
 
 			vi.mocked(supabase.from).mockReturnValue({
@@ -200,6 +207,69 @@ describe("orderService", () => {
 			// 3. Rollback update to main for successful batch 1
 			expect(mockUpdate).toHaveBeenCalledTimes(3);
 			expect(mockUpdate.mock.calls[2][0]).toEqual({ stage: "main" });
+			// Issue #202 (Hole #3, rollback path): the rollback write must itself be
+			// CAS-guarded on the stage it's reverting FROM ("archive"), not just the
+			// forward move's guard on "main" — otherwise a row a concurrent writer
+			// moved again during the failure window (e.g. froze it) gets silently
+			// stomped back to "main" by this rollback with no compare-and-set at all.
+			expect(mockEq).toHaveBeenCalledWith("stage", "main");
+			expect(mockEq).toHaveBeenCalledWith("stage", "archive");
+		});
+
+		it("does not clobber a row a concurrent writer moved out of the destination stage during rollback", async () => {
+			const mockUpdate = vi.fn().mockReturnThis();
+			const mockIn = vi.fn().mockReturnThis();
+			const mockEq = vi.fn().mockReturnThis();
+
+			const batch1Ids = Array.from({ length: 50 }, (_, i) => String(i));
+			// Rollback CAS guard matches only 49 of the 50: id "7" no longer has
+			// stage "archive" because another client froze it during the window
+			// between batch-1's commit and this rollback running.
+			const rolledBackIds = batch1Ids.filter((id) => id !== "7");
+
+			const mockSelect = vi
+				.fn()
+				.mockResolvedValueOnce({
+					data: batch1Ids.map((id) => ({ id })),
+					error: null,
+				})
+				.mockResolvedValueOnce({
+					data: null,
+					error: { message: "Batch 2 failed", code: "500" },
+				})
+				.mockResolvedValueOnce({
+					data: rolledBackIds.map((id) => ({ id })),
+					error: null,
+				});
+
+			vi.mocked(supabase.from).mockReturnValue({
+				update: mockUpdate,
+				in: mockIn,
+				eq: mockEq,
+				select: mockSelect,
+			} as never);
+
+			const warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
+
+			const ids = Array.from({ length: 60 }, (_, i) => String(i));
+
+			await expect(
+				orderService.updateOrdersStage(ids, "archive", "main"),
+			).rejects.toMatchObject({ code: "BULK_STAGE_MOVE_PARTIAL_FAILURE" });
+
+			// The rollback's compare-and-set guard is applied — it doesn't throw or
+			// crash when one row no longer matches, it just leaves that row alone
+			// and reports the discrepancy instead of silently overwriting it.
+			expect(
+				warnSpy.mock.calls.some(
+					([msg]) =>
+						typeof msg === "string" &&
+						msg.includes("Rollback left 1 row(s)") &&
+						msg.includes("7"),
+				),
+			).toBe(true);
+
+			warnSpy.mockRestore();
 		});
 
 		it("returns the IDs moved by the guarded RPC when no sibling is frozen", async () => {
