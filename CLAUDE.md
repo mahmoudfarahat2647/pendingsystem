@@ -161,7 +161,7 @@ If `SELECT 1` passes but auth still fails, the issue is in `auth.ts` config — 
 #### `orders.stage` is a Postgres enum, not text
 
 The column type is `public.order_stage`, whose labels are `orders`, `main`, `call`, `booking`,
-`archive`. Adding a new workflow stage requires an `ALTER TYPE ... ADD VALUE` migration — a TypeScript-only
+`archive`, `freeze`. Adding a new workflow stage requires an `ALTER TYPE ... ADD VALUE` migration — a TypeScript-only
 change will fail at the database layer. A newly added label also cannot be used in the same transaction
 that adds it.
 
