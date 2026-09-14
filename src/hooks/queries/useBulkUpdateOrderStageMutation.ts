@@ -20,6 +20,7 @@ import type { PendingRow } from "@/types";
 type BulkUpdateStageVariables = {
 	ids: string[];
 	stage: OrderStage;
+	sourceStage?: OrderStage;
 	silentErrorToast?: boolean;
 	guardFrozenVins?: boolean;
 };
@@ -36,10 +37,20 @@ export function useBulkUpdateOrderStageMutation(sourceStage: OrderStage) {
 
 	return useMutation({
 		mutationKey: ["bulk-update-stage", sourceStage],
-		mutationFn: ({ ids, stage, guardFrozenVins }: BulkUpdateStageVariables) =>
-			orderService.updateOrdersStage(ids, stage, sourceStage, {
-				guardFrozenVins,
-			}),
+		mutationFn: ({
+			ids,
+			stage,
+			sourceStage: varSourceStage,
+			guardFrozenVins,
+		}: BulkUpdateStageVariables) =>
+			orderService.updateOrdersStage(
+				ids,
+				stage,
+				varSourceStage ?? sourceStage,
+				{
+					guardFrozenVins,
+				},
+			),
 		onMutate: async ({ ids, stage }) => {
 			await queryClient.cancelQueries({ queryKey: ["orders"] });
 

@@ -128,13 +128,24 @@ describe("orderService", () => {
 		it("should process batches and return successful data", async () => {
 			const mockUpdate = vi.fn().mockReturnThis();
 			const mockIn = vi.fn().mockReturnThis();
-			const mockSelect = vi
-				.fn()
-				.mockResolvedValue({ data: [{ id: "1" }], error: null });
+			const mockEq = vi.fn().mockReturnThis();
+			let callIndex = 0;
+			const mockSelect = vi.fn().mockImplementation(() => {
+				callIndex++;
+				const batchIds =
+					callIndex === 1
+						? Array.from({ length: 50 }, (_, i) => String(i))
+						: Array.from({ length: 10 }, (_, i) => String(i + 50));
+				return Promise.resolve({
+					data: batchIds.map((id) => ({ id })),
+					error: null,
+				});
+			});
 
 			vi.mocked(supabase.from).mockReturnValue({
 				update: mockUpdate,
 				in: mockIn,
+				eq: mockEq,
 				select: mockSelect,
 			} as never);
 
@@ -146,17 +157,22 @@ describe("orderService", () => {
 			);
 
 			expect(mockIn).toHaveBeenCalledTimes(2); // 60 items = 50 + 10 = 2 batches
-			expect(result).toHaveLength(2); // 2 batches, each returned 1 item from mockSelect
+			expect(mockEq).toHaveBeenCalledWith("stage", "main");
+			expect(result).toHaveLength(60);
 		});
 
 		it("should rollback previously successful batches if a later batch fails", async () => {
 			const mockUpdate = vi.fn().mockReturnThis();
 			const mockIn = vi.fn().mockReturnThis();
+			const mockEq = vi.fn().mockReturnThis();
 
 			// First batch succeeds, second fails
 			const mockSelect = vi
 				.fn()
-				.mockResolvedValueOnce({ data: [{ id: "success-id" }], error: null })
+				.mockResolvedValueOnce({
+					data: Array.from({ length: 50 }, (_, i) => ({ id: String(i) })),
+					error: null,
+				})
 				.mockResolvedValueOnce({
 					data: null,
 					error: { message: "Batch 2 failed", code: "500" },
@@ -165,6 +181,7 @@ describe("orderService", () => {
 			vi.mocked(supabase.from).mockReturnValue({
 				update: mockUpdate,
 				in: mockIn,
+				eq: mockEq,
 				select: mockSelect,
 			} as never);
 

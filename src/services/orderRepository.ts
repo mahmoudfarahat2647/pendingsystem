@@ -17,7 +17,12 @@ import {
 
 type ZeroRowMatchOutcome =
 	| { type: "no-op" }
-	| { type: "conflict"; message: string }
+	| {
+			type: "conflict";
+			code?: string;
+			message: string;
+			details?: unknown;
+	  }
 	| {
 			type: "retry";
 			metadata: Record<string, unknown>;
@@ -29,6 +34,9 @@ type ZeroRowMatchOutcome =
 // reaches a toast.
 const WRITE_CONFLICT_MESSAGE =
 	"This order was just updated by someone else. Please refresh and try again.";
+
+const ROW_FROZEN_CONFLICT_MESSAGE =
+	"This order was frozen by someone else. Please refresh and try again.";
 
 // Decides why a conditional UPDATE matched 0 rows: the row moved to a
 // different stage (legitimate no-op — e.g. concurrent maintenance-scan
@@ -64,6 +72,43 @@ async function resolveZeroRowMatch({
 	}
 
 	if (expectedCurrentStage && recheck.stage !== expectedCurrentStage) {
+		// When the row has moved into freeze elsewhere, or was expected to be in freeze
+		// but was moved/unfrozen elsewhere, surface a clear, visible conflict instead of
+		// silently ignoring the update.
+		if (recheck.stage === "freeze") {
+			logger.warn(
+				`[${context}] Conflict for ${id}: row was frozen by another user (expected stage: "${expectedCurrentStage}", actual: "freeze")`,
+			);
+			return {
+				type: "conflict",
+				code: "ROW_FROZEN_ELSEWHERE",
+				message: ROW_FROZEN_CONFLICT_MESSAGE,
+				details: {
+					id,
+					expectedStage: expectedCurrentStage,
+					actualStage: "freeze",
+				},
+			};
+		}
+
+		if (expectedCurrentStage === "freeze") {
+			logger.warn(
+				`[${context}] Conflict for ${id}: row is no longer in freeze (expected stage: "freeze", actual: "${recheck.stage}")`,
+			);
+			return {
+				type: "conflict",
+				code: "STAGE_CHANGED_ELSEWHERE",
+				message: `This order is no longer in freeze (currently in ${recheck.stage}). Please refresh and try again.`,
+				details: {
+					id,
+					expectedStage: "freeze",
+					actualStage: recheck.stage,
+				},
+			};
+		}
+
+		// Other stage changes (e.g. concurrent maintenance-scan archive sweeps)
+		// legitimately remain silent no-ops.
 		logger.debug(
 			`[${context}] Skipped for ${id}: row no longer in stage "${expectedCurrentStage}"`,
 		);
@@ -74,7 +119,11 @@ async function resolveZeroRowMatch({
 		logger.warn(
 			`[${context}] Exhausted ${maxAttempts} attempts for id ${id} due to concurrent metadata writes`,
 		);
-		return { type: "conflict", message: WRITE_CONFLICT_MESSAGE };
+		return {
+			type: "conflict",
+			code: "WRITE_CONFLICT",
+			message: WRITE_CONFLICT_MESSAGE,
+		};
 	}
 
 	return {
@@ -86,7 +135,7 @@ async function resolveZeroRowMatch({
 
 type ZeroRowHandling =
 	| { action: "return-null" }
-	| { action: "throw"; message: string }
+	| { action: "throw"; code: string; message: string; details?: unknown }
 	| {
 			action: "retry";
 			metadata: Record<string, unknown>;
@@ -102,7 +151,12 @@ async function handleZeroRowMatch(
 	const outcome = await resolveZeroRowMatch(args);
 	if (outcome.type === "no-op") return { action: "return-null" };
 	if (outcome.type === "conflict")
-		return { action: "throw", message: outcome.message };
+		return {
+			action: "throw",
+			code: outcome.code ?? "WRITE_CONFLICT",
+			message: outcome.message,
+			details: outcome.details,
+		};
 	return {
 		action: "retry",
 		metadata: outcome.metadata,
@@ -210,6 +264,22 @@ export function createOrderRepository(
 
 			const idsToUpdate = ids;
 
+			// Compare-and-set bulk stage moves:
+			// When `previousStage` is provided, the UPDATE guards on `stage = previousStage`
+			// so rows that have been concurrently frozen or moved out from under the caller
+			// are not modified.
+			//
+			// Architectural Decision (Partial application vs Transactional RPC):
+			// Partial application with clear error reporting is chosen over a transactional RPC.
+			// 1. Freeze transitions carry metadata (freezeReason, frozenAt) and execute as sequential
+			//    `patchRow` commands via `saveOrder()`, each individually guarded by CAS.
+			// 2. If a command fails mid-sequence, `saveDraft()` checkpoints progress and surfaces
+			//    the conflict via `saveError`, giving the user explicit control via `skipFailedCommand`
+			//    or `discardDraft`.
+			// 3. For bulk stage moves, CAS (`.eq("stage", previousStage)`) prevents touching rows that
+			//    diverged. If any requested IDs did not match, `BULK_STAGE_MOVE_CONFLICT` is thrown,
+			//    triggering optimistic rollback and query invalidation.
+
 			// For large batches, process in chunks to avoid connection pool exhaustion
 			const BATCH_SIZE = 50;
 
@@ -217,21 +287,34 @@ export function createOrderRepository(
 				const successfulIds: string[] = [];
 				let encounteredError: Error | null = null;
 				let returnData: Record<string, unknown>[] = [];
+				const allUnmatchedIds: string[] = [];
 
 				try {
 					returnData = await processBatch(
 						idsToUpdate,
 						BATCH_SIZE,
 						async (batch) => {
-							const { data, error } = await db
-								.from("orders")
-								.update({ stage })
-								.in("id", batch)
-								.select();
+							let query = db.from("orders").update({ stage });
+							if (previousStage) {
+								query = query.eq("stage", previousStage);
+							}
+							const { data, error } = await query.in("id", batch).select();
 							if (error) handleSupabaseError(error);
 
 							if (data) {
-								successfulIds.push(...data.map((r) => r.id));
+								const batchUpdatedIds = new Set(
+									data.map((r) => r.id as string),
+								);
+								successfulIds.push(...batchUpdatedIds);
+								if (previousStage) {
+									for (const id of batch) {
+										if (!batchUpdatedIds.has(id)) {
+											allUnmatchedIds.push(id);
+										}
+									}
+								}
+							} else if (previousStage) {
+								allUnmatchedIds.push(...batch);
 							}
 							return data || [];
 						},
@@ -273,16 +356,50 @@ export function createOrderRepository(
 					);
 				}
 
+				if (previousStage && allUnmatchedIds.length > 0) {
+					const total = idsToUpdate.length;
+					const unmatchedCount = allUnmatchedIds.length;
+					const msg =
+						unmatchedCount === total
+							? `None of the ${total} orders could be moved because they are no longer in "${previousStage}".`
+							: `${unmatchedCount} of ${total} orders could not be moved because they are no longer in "${previousStage}".`;
+					throw new ServiceError("BULK_STAGE_MOVE_CONFLICT", msg, {
+						unmatchedIds: allUnmatchedIds,
+						successfulIds,
+						expectedStage: previousStage,
+					});
+				}
+
 				return returnData;
 			}
 
-			const { data, error } = await db
-				.from("orders")
-				.update({ stage })
-				.in("id", idsToUpdate)
-				.select();
+			let query = db.from("orders").update({ stage });
+			if (previousStage) {
+				query = query.eq("stage", previousStage);
+			}
+			const { data, error } = await query.in("id", idsToUpdate).select();
 			if (error) handleSupabaseError(error);
-			return data;
+
+			const updatedRows = (data ?? []) as Record<string, unknown>[];
+			if (previousStage) {
+				const updatedIdSet = new Set(updatedRows.map((r) => r.id as string));
+				const unmatchedIds = idsToUpdate.filter((id) => !updatedIdSet.has(id));
+				if (unmatchedIds.length > 0) {
+					const total = idsToUpdate.length;
+					const unmatchedCount = unmatchedIds.length;
+					const msg =
+						unmatchedCount === total
+							? `None of the ${total} orders could be moved because they are no longer in "${previousStage}".`
+							: `${unmatchedCount} of ${total} orders could not be moved because they are no longer in "${previousStage}".`;
+					throw new ServiceError("BULK_STAGE_MOVE_CONFLICT", msg, {
+						unmatchedIds,
+						successfulIds: Array.from(updatedIdSet),
+						expectedStage: previousStage,
+					});
+				}
+			}
+
+			return updatedRows;
 		},
 
 		async saveOrder(
@@ -485,7 +602,11 @@ export function createOrderRepository(
 						});
 						if (zeroRow.action === "return-null") return null;
 						if (zeroRow.action === "throw")
-							throw new ServiceError("WRITE_CONFLICT", zeroRow.message);
+							throw new ServiceError(
+								zeroRow.code,
+								zeroRow.message,
+								zeroRow.details,
+							);
 						snapshotMetadata = zeroRow.metadata;
 						snapshotUpdatedAt = zeroRow.updatedAt;
 						continue;
@@ -516,7 +637,11 @@ export function createOrderRepository(
 							});
 							if (zeroRow.action === "return-null") return null;
 							if (zeroRow.action === "throw")
-								throw new ServiceError("WRITE_CONFLICT", zeroRow.message);
+								throw new ServiceError(
+									zeroRow.code,
+									zeroRow.message,
+									zeroRow.details,
+								);
 							snapshotMetadata = zeroRow.metadata;
 							snapshotUpdatedAt = zeroRow.updatedAt;
 							continue;
