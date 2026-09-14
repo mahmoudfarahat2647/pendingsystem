@@ -7,6 +7,7 @@ import { ArchiveReasonModal } from "./ArchiveReasonModal";
 import { EditAttachmentModal } from "./EditAttachmentModal";
 import { EditNoteModal } from "./EditNoteModal";
 import { EditReminderModal } from "./EditReminderModal";
+import { FreezeReasonModal } from "./FreezeReasonModal";
 
 interface RowModalsProps {
 	activeModal: RowModalType;
@@ -21,6 +22,7 @@ interface RowModalsProps {
 	) => void;
 	onSaveAttachment: (filePaths: string[], link: string) => void;
 	onSaveArchive: (reason: string) => void;
+	onSaveFreeze?: (reason: string) => void;
 	sourceTag?: string;
 }
 
@@ -32,6 +34,7 @@ export const RowModals = ({
 	onSaveReminder,
 	onSaveAttachment,
 	onSaveArchive,
+	onSaveFreeze,
 	sourceTag,
 }: RowModalsProps) => {
 	if (!currentRow) return null;
@@ -65,6 +68,13 @@ export const RowModals = ({
 				onOpenChange={(open) => !open && onClose()}
 				onSave={onSaveArchive}
 			/>
+			{onSaveFreeze && (
+				<FreezeReasonModal
+					open={activeModal === "freeze"}
+					onOpenChange={(open) => !open && onClose()}
+					onSave={onSaveFreeze}
+				/>
+			)}
 		</>
 	);
 };

@@ -11,6 +11,7 @@ import {
 	Printer,
 	RotateCcw,
 	Send,
+	Snowflake,
 	Tag,
 	Trash2,
 	Unlock,
@@ -40,6 +41,7 @@ interface MainSheetToolbarProps {
 	selectedRows: PendingRow[];
 	onBooking: () => void;
 	onArchive: () => void;
+	onFreeze: () => void;
 	onSendToCallList: () => void;
 	onReorder: () => void;
 	onDelete: () => void;
@@ -62,6 +64,7 @@ export const MainSheetToolbar = ({
 	selectedRows = [],
 	onBooking,
 	onArchive,
+	onFreeze,
 	onSendToCallList,
 	onReorder,
 	onDelete,
@@ -173,6 +176,22 @@ export const MainSheetToolbar = ({
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>Archive</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							className="text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 h-8 w-8"
+							disabled={isLocked || selectedCount === 0}
+							onClick={onFreeze}
+						>
+							<Snowflake className="h-4 w-4" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Freeze</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

@@ -5,6 +5,7 @@ import {
 } from "@/domain/order/orderWorkflow";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
+import { buildFreezePayload } from "@/lib/freezePayloadBuilder";
 import type { PatchRowCommand, PendingRow } from "@/types";
 import { safeFormatDate } from "@/utils/safeFormatDate";
 
@@ -44,6 +45,32 @@ export function buildSendToArchiveCommands(
 		sourceStage,
 		destinationStage: "archive" as const,
 		updates: buildArchivePayload(row, reason),
+		previousValues: {},
+	}));
+}
+
+/**
+ * Returns patchRow commands to freeze the given rows.
+ *
+ * Uses buildFreezePayload as the single source of truth — every frozen row
+ * gets stage:"freeze", previousStage (the row's stage at freeze time),
+ * freezeReason, frozenAt, and an updated noteHistory regardless of which
+ * stage it came from. Granularity is exactly the rows passed in: sibling
+ * lines of the same chassis are untouched unless they are selected too.
+ *
+ * @throws FreezeReasonRequiredError when `reason` is empty or whitespace-only.
+ */
+export function buildSendToFreezeCommands(
+	rows: PendingRow[],
+	reason: string,
+	sourceStage: OrderStage,
+): PatchRowCommand[] {
+	return rows.map((row) => ({
+		type: "patchRow",
+		id: row.id,
+		sourceStage,
+		destinationStage: "freeze" as const,
+		updates: buildFreezePayload(row, reason, sourceStage),
 		previousValues: {},
 	}));
 }

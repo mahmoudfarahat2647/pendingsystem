@@ -299,6 +299,27 @@ export const createDraftSessionSlice: StateCreator<
 				}
 			}
 
+			// Freeze guard for patchRow *→freeze transitions: a freeze without a
+			// reason is rejected here at the command layer, independent of the
+			// reason modal. Same-stage freeze writes (note/attachment edits on
+			// already-frozen rows) pass through untouched.
+			if (
+				cmd.type === "patchRow" &&
+				cmd.destinationStage === "freeze" &&
+				cmd.sourceStage !== "freeze"
+			) {
+				const reason =
+					typeof cmd.updates.freezeReason === "string"
+						? cmd.updates.freezeReason
+						: "";
+				if (!reason.trim()) {
+					set(() => ({
+						lastCommandError: "A reason is required to freeze rows.",
+					}));
+					return false;
+				}
+			}
+
 			set((state) => {
 				const newSession: DraftSession = {
 					...state.draftSession,
