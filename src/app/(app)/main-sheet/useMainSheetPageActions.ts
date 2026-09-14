@@ -12,6 +12,7 @@ import {
 	buildBookingCommands,
 	buildReorderCommands,
 	buildSendToArchiveCommands,
+	buildSendToFreezeCommands,
 } from "@/lib/orderStageTransitions";
 import type { PendingRow } from "@/types";
 
@@ -52,6 +53,23 @@ export function useMainSheetPageActions(params: {
 				return row ? [row] : [];
 			});
 			for (const cmd of buildSendToArchiveCommands(rows, reason, "main")) {
+				applyCommand(cmd);
+			}
+		},
+		[effectiveRows, applyCommand],
+	);
+
+	const handleSendToFreeze = useCallback(
+		(ids: string[], reason: string) => {
+			if (!reason.trim()) {
+				toast.error("Please provide a reason for freezing");
+				return;
+			}
+			const rows = ids.flatMap((id) => {
+				const row = effectiveRows.find((r: PendingRow) => r.id === id);
+				return row ? [row] : [];
+			});
+			for (const cmd of buildSendToFreezeCommands(rows, reason, "main")) {
 				applyCommand(cmd);
 			}
 		},
@@ -172,6 +190,7 @@ export function useMainSheetPageActions(params: {
 	return {
 		handleUpdateOrder,
 		handleSendToArchive,
+		handleSendToFreeze,
 		handleConfirmBooking,
 		handleConfirmReorder,
 		handleUpdatePartStatus,

@@ -250,6 +250,58 @@ describe("useRowModals Stage Routing", () => {
 		});
 	});
 
+	describe("freeze reason modal flow", () => {
+		it("opens the freeze modal and delegates saveFreeze to onFreeze with target ids", () => {
+			const mockOnFreeze = vi.fn();
+			const row = createRow({ stage: "call" });
+			const { result } = renderHook(() =>
+				useRowModals(mockOnUpdate, mockOnArchive, mockOnFreeze),
+			);
+
+			act(() => {
+				result.current.handleFreezeClick(row, ["id-a", "id-b"]);
+			});
+
+			expect(result.current.activeModal).toBe("freeze");
+
+			act(() => {
+				result.current.saveFreeze("Waiting on parts");
+			});
+
+			expect(mockOnFreeze).toHaveBeenCalledWith(
+				["id-a", "id-b"],
+				"Waiting on parts",
+			);
+			expect(mockOnUpdate).not.toHaveBeenCalled();
+			expect(result.current.activeModal).toBeNull();
+		});
+
+		it("falls back to a single-row freeze patch when no onFreeze handler is wired", () => {
+			const row = createRow({ stage: "call" });
+			const { result } = renderHook(() =>
+				useRowModals(mockOnUpdate, mockOnArchive),
+			);
+
+			act(() => {
+				result.current.handleFreezeClick(row);
+			});
+
+			act(() => {
+				result.current.saveFreeze("Customer asked to hold");
+			});
+
+			expect(mockOnUpdate).toHaveBeenCalledWith(
+				"test-row-123",
+				expect.objectContaining({
+					stage: "freeze",
+					previousStage: "call",
+					freezeReason: "Customer asked to hold",
+				}),
+				"call",
+			);
+		});
+	});
+
 	describe("unknown stage fallback rejection", () => {
 		it("fails loudly when row has an undefined stage instead of defaulting to main", () => {
 			const row = createRow({ stage: undefined });

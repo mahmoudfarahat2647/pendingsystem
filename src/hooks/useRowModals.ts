@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { InvalidOrderStageError } from "@/domain/order/orderStage";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { hasAttachment } from "@/lib/attachment";
+import { buildFreezePayload } from "@/lib/freezePayloadBuilder";
 import { logger } from "@/lib/logger";
 import { resolveOrderStage } from "@/lib/orderStage";
 import type { OrderStage, PendingRow } from "@/types";
@@ -13,6 +14,7 @@ export type RowModalType =
 	| "reminder"
 	| "attachment"
 	| "archive"
+	| "freeze"
 	| null;
 
 export const resolveRowStage = (row: PendingRow | null): OrderStage => {
@@ -29,6 +31,7 @@ export const useRowModals = (
 		stage?: string,
 	) => Promise<unknown> | undefined,
 	onArchive?: (ids: string[], reason: string) => void,
+	onFreeze?: (ids: string[], reason: string) => void,
 ) => {
 	const [activeModal, setActiveModal] = useState<RowModalType>(null);
 	const [currentRow, setCurrentRow] = useState<PendingRow | null>(null);
@@ -56,6 +59,12 @@ export const useRowModals = (
 		setCurrentRow(row);
 		setTargetIds(ids || [row.id]);
 		setActiveModal("archive");
+	}, []);
+
+	const handleFreezeClick = useCallback((row: PendingRow, ids?: string[]) => {
+		setCurrentRow(row);
+		setTargetIds(ids || [row.id]);
+		setActiveModal("freeze");
 	}, []);
 
 	const closeModal = useCallback(() => {
@@ -157,6 +166,27 @@ export const useRowModals = (
 		[currentRow, targetIds, onArchive, onUpdate, closeModal],
 	);
 
+	const saveFreeze = useCallback(
+		(freezeReason: string) => {
+			if (onFreeze && targetIds.length > 0) {
+				onFreeze(targetIds, freezeReason);
+				closeModal();
+			} else if (currentRow) {
+				onUpdate(
+					currentRow.id,
+					buildFreezePayload(
+						currentRow,
+						freezeReason,
+						resolveRowStage(currentRow),
+					),
+					resolveRowStage(currentRow),
+				);
+				closeModal();
+			}
+		},
+		[currentRow, targetIds, onFreeze, onUpdate, closeModal],
+	);
+
 	return {
 		activeModal,
 		currentRow,
@@ -164,11 +194,13 @@ export const useRowModals = (
 		handleReminderClick,
 		handleAttachClick,
 		handleArchiveClick,
+		handleFreezeClick,
 		closeModal,
 		saveNote,
 		saveReminder,
 		saveAttachment,
 		saveArchive,
+		saveFreeze,
 		sourceTag,
 	};
 };

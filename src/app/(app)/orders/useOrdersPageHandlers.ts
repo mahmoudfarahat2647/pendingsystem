@@ -19,7 +19,10 @@ import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { hasAttachment } from "@/lib/attachment";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
-import { buildSendToArchiveCommands } from "@/lib/orderStageTransitions";
+import {
+	buildSendToArchiveCommands,
+	buildSendToFreezeCommands,
+} from "@/lib/orderStageTransitions";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
 import { calculateEndWarranty, calculateRemainingTime } from "@/lib/utils";
 import type {
@@ -100,6 +103,23 @@ export const useOrdersPageHandlers = () => {
 				return row ? [row] : [];
 			});
 			for (const cmd of buildSendToArchiveCommands(rows, reason, "orders")) {
+				applyCommand(cmd);
+			}
+		},
+		[effectiveOrdersData, applyCommand],
+	);
+
+	const handleSendToFreeze = useCallback(
+		(ids: string[], reason: string) => {
+			if (!reason.trim()) {
+				toast.error("Please provide a reason for freezing");
+				return;
+			}
+			const rows = ids.flatMap((id) => {
+				const row = effectiveOrdersData.find((r) => r.id === id);
+				return row ? [row] : [];
+			});
+			for (const cmd of buildSendToFreezeCommands(rows, reason, "orders")) {
 				applyCommand(cmd);
 			}
 		},
@@ -513,6 +533,7 @@ export const useOrdersPageHandlers = () => {
 		// Handlers
 		handleUpdateOrder,
 		handleSendToArchive,
+		handleSendToFreeze,
 		handleSaveOrder,
 		handleCommit,
 		handleConfirmCommit,

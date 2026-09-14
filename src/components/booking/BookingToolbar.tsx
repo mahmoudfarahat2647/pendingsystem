@@ -7,6 +7,7 @@ import {
 	Download,
 	Filter,
 	RotateCcw,
+	Snowflake,
 	Tag,
 	Trash2,
 } from "lucide-react";
@@ -40,6 +41,7 @@ interface BookingToolbarProps {
 	onReserve: () => void;
 	onUpdateStatus: (statusLabel: string) => void;
 	onArchive: () => void;
+	onFreeze: () => void;
 	onRebook: () => void;
 	onReorder: () => void;
 	onDelete: () => void;
@@ -58,6 +60,7 @@ export const BookingToolbar = ({
 	onReserve,
 	onUpdateStatus,
 	onArchive,
+	onFreeze,
 	onRebook,
 	onReorder,
 	onDelete,
@@ -182,6 +185,23 @@ export const BookingToolbar = ({
 					</TooltipTrigger>
 					<TooltipContent>
 						{hasMixedVins ? "Mixed customers selected" : "Archive"}
+					</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 h-8 w-8"
+							onClick={onFreeze}
+							disabled={selectedRows.length === 0 || hasMixedVins}
+						>
+							<Snowflake className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>
+						{hasMixedVins ? "Mixed customers selected" : "Freeze"}
 					</TooltipContent>
 				</Tooltip>
 

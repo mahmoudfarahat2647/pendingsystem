@@ -4,11 +4,14 @@ import {
 	getEffectiveNoteHistory,
 } from "@/domain/order/orderWorkflow";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
+import { FreezeReasonRequiredError } from "@/lib/errors";
+import { buildFreezePayload } from "@/lib/freezePayloadBuilder";
 import {
 	buildBookingCommands,
 	buildRebookingCommands,
 	buildReorderCommands,
 	buildSendToArchiveCommands,
+	buildSendToFreezeCommands,
 	buildUnfreezeCommands,
 } from "@/lib/orderStageTransitions";
 import type { PendingRow } from "@/types";
@@ -71,6 +74,105 @@ describe("buildSendToArchiveCommands", () => {
 
 	it("returns empty array for empty input", () => {
 		expect(buildSendToArchiveCommands([], "reason", "orders")).toEqual([]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+describe("buildFreezePayload", () => {
+	it("sets stage 'freeze' with previousStage, freezeReason, frozenAt, noteHistory", () => {
+		const row = createMockRow({ id: "id-1", stage: "call" });
+		const payload = buildFreezePayload(row, "Waiting on parts", "call");
+		expect(payload.stage).toBe("freeze");
+		expect(payload.previousStage).toBe("call");
+		expect(payload.freezeReason).toBe("Waiting on parts");
+		expect(typeof payload.frozenAt).toBe("string");
+		const expectedHistory = appendTaggedUserNote(
+			getEffectiveNoteHistory(row),
+			"Waiting on parts",
+			"freeze",
+		);
+		expect(payload.noteHistory).toBe(expectedHistory);
+	});
+
+	it("prefers the row's own stage for previousStage over the sourceStage arg", () => {
+		const row = createMockRow({ stage: "booking" });
+		const payload = buildFreezePayload(row, "reason", "main");
+		expect(payload.previousStage).toBe("booking");
+	});
+
+	it("falls back to sourceStage when the row carries no stage", () => {
+		const row = createMockRow({ stage: undefined });
+		const payload = buildFreezePayload(row, "reason", "main");
+		expect(payload.previousStage).toBe("main");
+	});
+
+	it("leaves the user-managed status untouched", () => {
+		const row = createMockRow({ status: "Arrived" });
+		const payload = buildFreezePayload(row, "reason", "orders");
+		expect("status" in payload).toBe(false);
+	});
+
+	it.each([
+		"",
+		"   ",
+	])("throws FreezeReasonRequiredError for blank reason %j", (reason) => {
+		const row = createMockRow();
+		expect(() => buildFreezePayload(row, reason, "orders")).toThrow(
+			FreezeReasonRequiredError,
+		);
+	});
+});
+
+// ---------------------------------------------------------------------------
+describe("buildSendToFreezeCommands", () => {
+	it("returns one patchRow per row with destinationStage 'freeze'", () => {
+		const rows = [createMockRow({ id: "id-1" }), createMockRow({ id: "id-2" })];
+		const cmds = buildSendToFreezeCommands(rows, "On hold", "main");
+		expect(cmds).toHaveLength(2);
+		expect(cmds[0].type).toBe("patchRow");
+		expect(cmds[0].sourceStage).toBe("main");
+		expect(cmds[0].destinationStage).toBe("freeze");
+		expect(cmds[1].id).toBe("id-2");
+	});
+
+	it("uses buildFreezePayload so updates include previousStage, freezeReason, frozenAt, noteHistory", () => {
+		const row = createMockRow({ id: "id-1", stage: "booking" });
+		const [cmd] = buildSendToFreezeCommands([row], "customer asked", "booking");
+		const expected = buildFreezePayload(row, "customer asked", "booking");
+		expect(cmd.updates).toMatchObject({
+			stage: "freeze",
+			previousStage: "booking",
+			freezeReason: "customer asked",
+			noteHistory: expected.noteHistory,
+		});
+		expect(typeof cmd.updates.frozenAt).toBe("string");
+	});
+
+	it("only moves the selected rows — sibling lines are untouched", () => {
+		const selected = createMockRow({ id: "selected-1", stage: "call" });
+		const cmds = buildSendToFreezeCommands([selected], "reason", "call");
+		expect(cmds).toHaveLength(1);
+		expect(cmds[0].id).toBe("selected-1");
+	});
+
+	it("respects the sourceStage parameter", () => {
+		const row = createMockRow();
+		const [cmd] = buildSendToFreezeCommands([row], "reason", "orders");
+		expect(cmd.sourceStage).toBe("orders");
+	});
+
+	it("returns empty array for empty input", () => {
+		expect(buildSendToFreezeCommands([], "reason", "orders")).toEqual([]);
+	});
+
+	it.each([
+		"",
+		"   ",
+	])("rejects a freeze with blank reason %j independent of the modal", (reason) => {
+		const rows = [createMockRow({ id: "id-1" })];
+		expect(() => buildSendToFreezeCommands(rows, reason, "call")).toThrow(
+			FreezeReasonRequiredError,
+		);
 	});
 });
 
