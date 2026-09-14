@@ -1,12 +1,15 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import {
 	type OrderStage as DomainOrderStage,
+	InvalidOrderStageError,
+	isOrderStage,
 	ORDER_STAGE_VALUES,
 } from "@/domain/order/orderStage";
 import { ORDER_STAGES } from "@/lib/constants";
 import {
 	normalizeOrderStage,
 	ORDER_STAGE_TAB_INFO,
+	resolveOrderStage,
 	STAGE_ALIASES,
 } from "@/lib/orderStage";
 import type { OrderStage as TypesOrderStage } from "@/types";
@@ -36,6 +39,45 @@ describe("normalizeOrderStage", () => {
 		expect(normalizeOrderStage("Unknown Stage")).toBeUndefined();
 		expect(normalizeOrderStage(null)).toBeUndefined();
 		expect(normalizeOrderStage(undefined)).toBeUndefined();
+	});
+});
+
+describe("resolveOrderStage", () => {
+	it("resolves canonical stages including freeze", () => {
+		for (const stage of ORDER_STAGE_VALUES) {
+			expect(resolveOrderStage(stage)).toBe(stage);
+		}
+		expect(resolveOrderStage("freeze")).toBe("freeze");
+	});
+
+	it("resolves display aliases to canonical stages", () => {
+		expect(resolveOrderStage("Main Sheet")).toBe("main");
+		expect(resolveOrderStage(" main sheet ")).toBe("main");
+		expect(resolveOrderStage("CALL LIST")).toBe("call");
+	});
+
+	it("throws InvalidOrderStageError on unknown, empty, or missing stage inputs instead of defaulting to main", () => {
+		expect(() => resolveOrderStage("unknown")).toThrow(InvalidOrderStageError);
+		expect(() => resolveOrderStage("")).toThrow(InvalidOrderStageError);
+		expect(() => resolveOrderStage(null)).toThrow(InvalidOrderStageError);
+		expect(() => resolveOrderStage(undefined)).toThrow(InvalidOrderStageError);
+	});
+});
+
+describe("isOrderStage", () => {
+	it("returns true for all ORDER_STAGE_VALUES", () => {
+		for (const stage of ORDER_STAGE_VALUES) {
+			expect(isOrderStage(stage)).toBe(true);
+		}
+	});
+
+	it("returns false for non-stage values", () => {
+		expect(isOrderStage("unknown")).toBe(false);
+		expect(isOrderStage("")).toBe(false);
+		expect(isOrderStage(null)).toBe(false);
+		expect(isOrderStage(undefined)).toBe(false);
+		expect(isOrderStage(123)).toBe(false);
+		expect(isOrderStage({})).toBe(false);
 	});
 });
 

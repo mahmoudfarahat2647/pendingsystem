@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useRowModals } from "@/hooks/useRowModals";
+import { InvalidOrderStageError } from "@/domain/order/orderStage";
+import { resolveRowStage, useRowModals } from "@/hooks/useRowModals";
 import type { PendingRow } from "@/types";
 
 vi.mock("sonner", () => ({
@@ -124,5 +125,197 @@ describe("useRowModals Stage Routing", () => {
 			}),
 			"main",
 		);
+	});
+
+	describe("freeze stage regression tests", () => {
+		it("routes note saves through freeze stage for frozen rows", async () => {
+			const row = createRow({ stage: "freeze" });
+			const { result } = renderHook(() =>
+				useRowModals(mockOnUpdate, mockOnArchive),
+			);
+
+			act(() => {
+				result.current.handleNoteClick(row);
+			});
+
+			await act(async () => {
+				await result.current.saveNote("Freeze note update");
+			});
+
+			expect(mockOnUpdate).toHaveBeenCalledWith(
+				"test-row-123",
+				{ noteHistory: "Freeze note update" },
+				"freeze",
+			);
+			expect(mockOnUpdate).not.toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				"main",
+			);
+		});
+
+		it("routes reminder saves through freeze stage for frozen rows", () => {
+			const row = createRow({ stage: "freeze" });
+			const { result } = renderHook(() =>
+				useRowModals(mockOnUpdate, mockOnArchive),
+			);
+
+			act(() => {
+				result.current.handleReminderClick(row);
+			});
+
+			const reminderData = {
+				date: "2026-10-01",
+				time: "09:00",
+				subject: "Check frozen part",
+			};
+
+			act(() => {
+				result.current.saveReminder(reminderData);
+			});
+
+			expect(mockOnUpdate).toHaveBeenCalledWith(
+				"test-row-123",
+				{ reminder: reminderData },
+				"freeze",
+			);
+			expect(mockOnUpdate).not.toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				"main",
+			);
+		});
+
+		it("routes attachment saves through freeze stage for frozen rows", async () => {
+			const row = createRow({ stage: "freeze" });
+			const { result } = renderHook(() =>
+				useRowModals(mockOnUpdate, mockOnArchive),
+			);
+
+			act(() => {
+				result.current.handleAttachClick(row);
+			});
+
+			await act(async () => {
+				await result.current.saveAttachment(
+					["freeze/test-row-123/spec.pdf"],
+					"",
+				);
+			});
+
+			expect(mockOnUpdate).toHaveBeenCalledWith(
+				"test-row-123",
+				{
+					attachmentFilePaths: ["freeze/test-row-123/spec.pdf"],
+					attachmentFilePath: "",
+					attachmentLink: "",
+					hasAttachment: true,
+				},
+				"freeze",
+			);
+			expect(mockOnUpdate).not.toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				"main",
+			);
+		});
+
+		it("routes archive saves through freeze stage for frozen rows", () => {
+			const row = createRow({ stage: "freeze" });
+			const { result } = renderHook(() =>
+				useRowModals(mockOnUpdate, undefined),
+			);
+
+			act(() => {
+				result.current.handleArchiveClick(row);
+			});
+
+			act(() => {
+				result.current.saveArchive("Permanent hold expired");
+			});
+
+			expect(mockOnUpdate).toHaveBeenCalledWith(
+				"test-row-123",
+				expect.objectContaining({
+					status: "Archived",
+					archiveReason: "Permanent hold expired",
+				}),
+				"freeze",
+			);
+			expect(mockOnUpdate).not.toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				"main",
+			);
+		});
+	});
+
+	describe("unknown stage fallback rejection", () => {
+		it("fails loudly when row has an undefined stage instead of defaulting to main", () => {
+			const row = createRow({ stage: undefined });
+			const { result } = renderHook(() =>
+				useRowModals(mockOnUpdate, mockOnArchive),
+			);
+
+			act(() => {
+				result.current.handleReminderClick(row);
+			});
+
+			expect(() => {
+				result.current.saveReminder({
+					date: "2026-10-01",
+					time: "09:00",
+					subject: "Test",
+				});
+			}).toThrow(InvalidOrderStageError);
+
+			expect(mockOnUpdate).not.toHaveBeenCalled();
+		});
+
+		it("never updates row or defaults to main when saving note on row with undefined stage", async () => {
+			const row = createRow({ stage: undefined });
+			const { result } = renderHook(() =>
+				useRowModals(mockOnUpdate, mockOnArchive),
+			);
+
+			act(() => {
+				result.current.handleNoteClick(row);
+			});
+
+			await act(async () => {
+				await result.current.saveNote("Some note");
+			});
+
+			expect(mockOnUpdate).not.toHaveBeenCalled();
+		});
+
+		it("never updates row or defaults to main when saving attachment on row with undefined stage", async () => {
+			const row = createRow({ stage: undefined });
+			const { result } = renderHook(() =>
+				useRowModals(mockOnUpdate, mockOnArchive),
+			);
+
+			act(() => {
+				result.current.handleAttachClick(row);
+			});
+
+			await act(async () => {
+				await result.current.saveAttachment(["test.pdf"], "");
+			});
+
+			expect(mockOnUpdate).not.toHaveBeenCalled();
+		});
+
+		it("fails loudly when row is null instead of defaulting to main", () => {
+			expect(() => resolveRowStage(null)).toThrow(InvalidOrderStageError);
+		});
+
+		it("fails loudly when stage is unrecognized instead of defaulting to main", () => {
+			const invalidRow = {
+				...createRow(),
+				stage: "unknown_stage" as unknown as PendingRow["stage"],
+			};
+			expect(() => resolveRowStage(invalidRow)).toThrow(InvalidOrderStageError);
+		});
 	});
 });
