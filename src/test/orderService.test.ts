@@ -779,6 +779,158 @@ describe("orderService", () => {
 		});
 	});
 
+	describe("freeze transition guard — service/command layer (#196)", () => {
+		const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
+
+		// Mirrors makeSequentialDb above: each successive `.from("orders")` call
+		// resolves the next queued response regardless of which chain methods
+		// were invoked on it.
+		function makeSequentialDb(
+			responses: Array<{ data: unknown; error: unknown }>,
+		) {
+			let call = 0;
+			const from = vi.fn(() => {
+				const response = responses[Math.min(call, responses.length - 1)];
+				call++;
+				// biome-ignore lint/suspicious/noExplicitAny: chainable test mock
+				const chain: any = {};
+				chain.select = vi.fn(() => chain);
+				chain.eq = vi.fn(() => chain);
+				chain.update = vi.fn(() => chain);
+				chain.order = vi.fn(() => chain);
+				chain.insert = vi.fn(() => chain);
+				chain.delete = vi.fn(() => chain);
+				chain.maybeSingle = vi.fn().mockResolvedValue(response);
+				chain.single = vi.fn().mockResolvedValue(response);
+				return chain;
+			});
+			return {
+				db: { from } as unknown as Parameters<typeof createOrderRepository>[0],
+				fromCalls: () => call,
+			};
+		}
+
+		it("updateOrderStage rejects a direct freeze write, independent of the modal", async () => {
+			const { db, fromCalls } = makeSequentialDb([]);
+			const repo = createOrderRepository(db);
+
+			await expect(
+				repo.updateOrderStage(VALID_UUID, "freeze"),
+			).rejects.toMatchObject({ code: "FREEZE_REASON_REQUIRED" });
+			// Rejected before any DB round-trip — the generic method can never
+			// carry freeze metadata, so there is nothing to check server-side.
+			expect(fromCalls()).toBe(0);
+		});
+
+		it("updateOrdersStage (bulk) rejects a direct freeze write for a batch of ids", async () => {
+			const { db, fromCalls } = makeSequentialDb([]);
+			const repo = createOrderRepository(db);
+
+			await expect(
+				repo.updateOrdersStage([VALID_UUID, "other-id"], "freeze"),
+			).rejects.toMatchObject({ code: "FREEZE_REASON_REQUIRED" });
+			expect(fromCalls()).toBe(0);
+		});
+
+		it("saveOrder rejects a declared cross-stage freeze transition with an empty reason, before any DB write", async () => {
+			const { db, fromCalls } = makeSequentialDb([]);
+			const repo = createOrderRepository(db);
+
+			await expect(
+				repo.saveOrder({
+					id: VALID_UUID,
+					stage: "freeze",
+					expectedCurrentStage: "main",
+					freezeReason: "   ",
+				}),
+			).rejects.toMatchObject({ code: "FREEZE_REASON_REQUIRED" });
+			expect(fromCalls()).toBe(0);
+		});
+
+		it("saveOrder allows a declared cross-stage freeze transition with a non-empty reason", async () => {
+			const { db } = makeSequentialDb([
+				// 1. initial snapshot read
+				{
+					data: { metadata: {}, updated_at: "t1", stage: "main" },
+					error: null,
+				},
+				// 2. conditional UPDATE succeeds
+				{ data: { id: VALID_UUID }, error: null },
+				// 3. final re-fetch
+				{ data: { id: VALID_UUID }, error: null },
+			]);
+			const repo = createOrderRepository(db);
+
+			const result = await repo.saveOrder({
+				id: VALID_UUID,
+				stage: "freeze",
+				expectedCurrentStage: "main",
+				freezeReason: "Waiting on customer decision",
+			});
+
+			expect(result).toEqual({ id: VALID_UUID });
+		});
+
+		it("saveOrder rejects a freeze write with no expectedCurrentStage when the live row is not already frozen (snapshot-aware check)", async () => {
+			const { db, fromCalls } = makeSequentialDb([
+				// 1. initial snapshot read — row is currently "main", not "freeze"
+				{
+					data: { metadata: {}, updated_at: "t1", stage: "main" },
+					error: null,
+				},
+			]);
+			const repo = createOrderRepository(db);
+
+			await expect(
+				repo.saveOrder({
+					id: VALID_UUID,
+					stage: "freeze",
+					freezeReason: "",
+				}),
+			).rejects.toMatchObject({ code: "FREEZE_REASON_REQUIRED" });
+			// Rejected right after the snapshot read, before any UPDATE is issued.
+			expect(fromCalls()).toBe(1);
+		});
+
+		it("saveOrder allows a same-stage write on an already-frozen row without requiring a reason (e.g. a note edit from the Freeze tab)", async () => {
+			const { db } = makeSequentialDb([
+				// 1. initial snapshot read — row is already "freeze"
+				{
+					data: { metadata: {}, updated_at: "t1", stage: "freeze" },
+					error: null,
+				},
+				// 2. conditional UPDATE succeeds
+				{ data: { id: VALID_UUID }, error: null },
+				// 3. final re-fetch
+				{ data: { id: VALID_UUID }, error: null },
+			]);
+			const repo = createOrderRepository(db);
+
+			const result = await repo.saveOrder({
+				id: VALID_UUID,
+				stage: "freeze",
+				noteHistory: "Called customer, still waiting",
+			});
+
+			expect(result).toEqual({ id: VALID_UUID });
+		});
+
+		it("saveOrder rejects inserting a brand-new row directly into freeze with no reason", async () => {
+			const { db, fromCalls } = makeSequentialDb([]);
+			const repo = createOrderRepository(db);
+
+			await expect(
+				repo.saveOrder({
+					stage: "freeze",
+					customerName: "Jane",
+				}),
+			).rejects.toMatchObject({ code: "FREEZE_REASON_REQUIRED" });
+			// Inserts have no prior row state to read, so this must be rejected
+			// before any insert is attempted.
+			expect(fromCalls()).toBe(0);
+		});
+	});
+
 	describe("saveOrder – noteHistory key purges legacy fields", () => {
 		const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
 
