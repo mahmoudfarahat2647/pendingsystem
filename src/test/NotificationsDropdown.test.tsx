@@ -105,7 +105,7 @@ function stubAllStagesEmpty() {
 		call: [],
 		booking: [],
 		archive: [],
-		freeze: undefined,
+		freeze: [],
 	});
 }
 
@@ -178,7 +178,7 @@ describe("resolveNotificationStage", () => {
 		expect(resolveNotificationStage("row-1", "/main-sheet")).toBeUndefined();
 	});
 
-	it("returns undefined when all five loadable stages are loaded, row is absent, and freeze is undefined (regression)", () => {
+	it("falls back to the notification path when freeze is unloaded while the other five stages are loaded", () => {
 		stubWorkingRows({
 			orders: [],
 			main: [],
@@ -187,7 +187,19 @@ describe("resolveNotificationStage", () => {
 			archive: [],
 			freeze: undefined,
 		});
-		expect(resolveNotificationStage("row-1", "/main-sheet")).toBeUndefined();
+		expect(resolveNotificationStage("row-1", "/main-sheet")).toBe("main");
+	});
+
+	it("falls back to /freeze for a frozen row whose freeze cache has not loaded yet", () => {
+		stubWorkingRows({
+			orders: [],
+			main: [],
+			call: [],
+			booking: [],
+			archive: [],
+			freeze: undefined,
+		});
+		expect(resolveNotificationStage("row-1", "/freeze")).toBe("freeze");
 	});
 
 	it("finds the row in freeze stage when the freeze cache is populated", () => {
@@ -321,12 +333,12 @@ describe("NotificationsDropdown click-time navigation", () => {
 		expect(toastError).toHaveBeenCalledWith("Order no longer available");
 	});
 
-	it("reports the row as gone and toasts without navigating when all loadable stages are loaded and freeze is undefined (regression)", async () => {
+	it("navigates to /freeze via path fallback for a frozen reminder whose freeze cache has not loaded yet", async () => {
 		useAppStore.setState({
 			notifications: [
 				createReminderNotification({
-					path: "/main-sheet",
-					tabName: "Main Sheet",
+					path: "/freeze",
+					tabName: "Freeze",
 				}),
 			],
 		});
@@ -341,9 +353,40 @@ describe("NotificationsDropdown click-time navigation", () => {
 
 		await openAndClickNotification();
 
-		expect(routerPush).not.toHaveBeenCalled();
-		expect(useAppStore.getState().highlightedRowId).toBeNull();
-		expect(toastError).toHaveBeenCalledWith("Order no longer available");
+		expect(routerPush).toHaveBeenCalledWith("/freeze");
+		expect(useAppStore.getState().highlightedRowId).toEqual({
+			stage: "freeze",
+			id: "row-1",
+		});
+		expect(toastError).not.toHaveBeenCalled();
+	});
+
+	it("navigates to the live freeze stage when the freeze cache holds the row", async () => {
+		useAppStore.setState({
+			notifications: [
+				createReminderNotification({
+					path: "/freeze",
+					tabName: "Freeze",
+				}),
+			],
+		});
+		stubWorkingRows({
+			orders: [],
+			main: [],
+			call: [],
+			booking: [],
+			archive: [],
+			freeze: [createRow("row-1", "freeze")],
+		});
+
+		await openAndClickNotification();
+
+		expect(routerPush).toHaveBeenCalledWith("/freeze");
+		expect(useAppStore.getState().highlightedRowId).toEqual({
+			stage: "freeze",
+			id: "row-1",
+		});
+		expect(toastError).not.toHaveBeenCalled();
 	});
 
 	it("navigates via path fallback when all stage caches are unloaded (Dashboard)", async () => {

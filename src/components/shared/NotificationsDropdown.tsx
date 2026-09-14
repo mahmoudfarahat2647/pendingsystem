@@ -14,14 +14,13 @@ import type { AppNotification } from "@/types";
 
 /**
  * Stages that have a mounted page route and data loader in the current app.
- * "freeze" is excluded because it has no route or page component yet, so its
- * working-rows cache is ordinarily undefined in normal app sessions.
- * It must be added back when the FREEZE page ships so freeze participates
- * in coverage tracking.
+ * All six stages are loadable: "freeze" ships its /freeze page component and
+ * useOrdersQuery("freeze") loader, so it participates in coverage tracking.
+ * A frozen row whose freeze cache has not loaded yet therefore keeps
+ * incomplete coverage and falls back to its /freeze notification path
+ * instead of reporting "Order no longer available".
  */
-const LOADABLE_STAGES: OrderStage[] = ORDER_STAGES.filter(
-	(stage) => stage !== "freeze",
-);
+const LOADABLE_STAGES: OrderStage[] = [...ORDER_STAGES];
 
 /** Resolve which stage currently holds the order (draft overlay or persisted cache). */
 export function resolveNotificationStage(
