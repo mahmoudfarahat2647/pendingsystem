@@ -27,15 +27,16 @@ describe("orderService", () => {
 
 	it("should fetch orders for a specific stage", async () => {
 		const mockData = [{ id: "1", stage: "main" }];
-		// biome-ignore lint/complexity/noBannedTypes: Test mock typing
-		(supabase.from as unknown as { mockReturnValue: Function }).mockReturnValue(
-			{
-				select: vi.fn().mockReturnThis(),
-				eq: vi.fn().mockReturnThis(),
-				order: vi.fn().mockReturnThis(),
-				range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-			},
-		);
+		(
+			supabase.from as unknown as {
+				mockReturnValue: (value: unknown) => void;
+			}
+		).mockReturnValue({
+			select: vi.fn().mockReturnThis(),
+			eq: vi.fn().mockReturnThis(),
+			order: vi.fn().mockReturnThis(),
+			range: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+		});
 
 		const result = await orderService.getOrders("main");
 
@@ -103,9 +104,10 @@ describe("orderService", () => {
 				.fn()
 				.mockResolvedValue({ data: [{ id: "1" }], error: null });
 
-			// biome-ignore lint/complexity/noBannedTypes: Test mock typing
 			(
-				supabase.from as unknown as { mockReturnValue: Function }
+				supabase.from as unknown as {
+					mockReturnValue: (value: unknown) => void;
+				}
 			).mockReturnValue({
 				update: mockUpdate,
 				in: mockIn,
@@ -136,9 +138,10 @@ describe("orderService", () => {
 					error: { message: "Batch 2 failed", code: "500" },
 				});
 
-			// biome-ignore lint/complexity/noBannedTypes: Test mock typing
 			(
-				supabase.from as unknown as { mockReturnValue: Function }
+				supabase.from as unknown as {
+					mockReturnValue: (value: unknown) => void;
+				}
 			).mockReturnValue({
 				update: mockUpdate,
 				in: mockIn,
@@ -264,6 +267,7 @@ describe("orderService", () => {
 				partNumber: "P1",
 				description: "D1",
 				model: "Clio", // Required field
+				freezeReason: "Awaiting customer approval",
 			},
 			order_reminders: [
 				{
@@ -289,6 +293,9 @@ describe("orderService", () => {
 		expect(result.attachmentLink).toBe("C:\\files\\quote.pdf");
 		expect(result.attachmentFilePath).toBe("orders/1/quote.pdf");
 		expect(result.hasAttachment).toBe(true);
+		expect(result).toMatchObject({
+			freezeReason: "Awaiting customer approval",
+		});
 	});
 
 	it("should auto-migrate legacy single attachment_file_path into attachmentFilePaths array", () => {

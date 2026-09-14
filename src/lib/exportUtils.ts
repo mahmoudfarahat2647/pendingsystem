@@ -1,7 +1,23 @@
 import type { AllowedCompany } from "@/domain/order/constants";
+import type { OrderStage } from "@/domain/order/orderStage";
 import { getEffectiveNoteHistory } from "@/domain/order/orderWorkflow";
+import { ORDER_STAGES } from "@/lib/constants";
 import type { PendingRow } from "@/types";
 import { calculateRemainingTime } from "./utils";
+
+/**
+ * Loads every operational stage before a full-system export. The header keeps
+ * the resulting rows in React Query, but this loader never treats its cache as
+ * a complete representation of the database.
+ */
+export const fetchAllRowsForExport = async (
+	fetchStageRows: (stage: OrderStage) => Promise<PendingRow[]>,
+): Promise<PendingRow[]> => {
+	const stageRows = await Promise.all(
+		ORDER_STAGES.map((stage) => fetchStageRows(stage)),
+	);
+	return stageRows.flat();
+};
 
 /**
  * Exports selected orders to an XLSX format optimized for logistics.

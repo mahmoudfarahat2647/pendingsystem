@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { exportAllSystemDataCSV } from "../lib/exportUtils";
+import { ORDER_STAGES } from "../lib/constants";
+import {
+	exportAllSystemDataCSV,
+	fetchAllRowsForExport,
+} from "../lib/exportUtils";
 import type { PendingRow } from "../types";
 
 describe("exportUtils", () => {
@@ -136,6 +140,18 @@ describe("exportUtils", () => {
 		expect(lastCsvContent).toContain("Alice");
 		expect(lastCsvContent).toContain("Charlie");
 		expect(lastCsvContent).not.toContain("Bob");
+	});
+
+	it("loads every stage for a system export instead of relying on loaded grid cache", async () => {
+		const fetchStageRows = vi.fn(async (stage) => [
+			{ ...mockData[0], id: `row-${stage}`, stage },
+		]);
+
+		const rows = await fetchAllRowsForExport(fetchStageRows);
+
+		expect(fetchStageRows).toHaveBeenCalledTimes(ORDER_STAGES.length);
+		expect(fetchStageRows).toHaveBeenNthCalledWith(1, "orders");
+		expect(rows.map((row) => row.stage)).toEqual(ORDER_STAGES);
 	});
 
 	it("should export only Zeekr rows when Zeekr is selected", () => {
