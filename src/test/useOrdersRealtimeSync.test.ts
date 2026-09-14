@@ -17,9 +17,12 @@ vi.mock("@tanstack/react-query", () => ({
 vi.mock("@/lib/queryClient", () => ({
 	getOrdersQueryKey: (stage: string) => ["orders", stage],
 	DASHBOARD_STATS_QUERY_KEY: ["dashboard-stats"],
+	NOTIFICATION_CANDIDATES_QUERY_KEY: ["notifications", "candidates"],
 }));
 
-let capturedInsertCallback: (() => void) | null = null;
+let capturedInsertCallback: ((payload?: unknown) => void) | null = null;
+let capturedUpdateCallback: ((payload?: unknown) => void) | null = null;
+let capturedDeleteCallback: ((payload?: unknown) => void) | null = null;
 const mockRemoveChannel = vi.fn().mockResolvedValue(undefined);
 const mockChannel = vi.fn();
 
@@ -27,14 +30,20 @@ vi.mock("@/lib/supabase-browser", () => ({
 	getSupabaseBrowserClient: () => ({
 		channel: (...args: unknown[]) => {
 			mockChannel(...args);
-			return {
-				on: (_event: string, _filter: unknown, cb: () => void) => {
-					capturedInsertCallback = cb;
-					return {
-						subscribe: () => ({}),
-					};
+			const channelObj = {
+				on: (
+					_type: string,
+					filter: { event?: string },
+					cb: (payload?: unknown) => void,
+				) => {
+					if (filter?.event === "INSERT") capturedInsertCallback = cb;
+					if (filter?.event === "UPDATE") capturedUpdateCallback = cb;
+					if (filter?.event === "DELETE") capturedDeleteCallback = cb;
+					return channelObj;
 				},
+				subscribe: () => ({}),
 			};
+			return channelObj;
 		},
 		removeChannel: mockRemoveChannel,
 	}),
@@ -57,6 +66,8 @@ describe("useOrdersRealtimeSync", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		capturedInsertCallback = null;
+		capturedUpdateCallback = null;
+		capturedDeleteCallback = null;
 		mockIsDraftActive = false;
 	});
 
@@ -94,7 +105,7 @@ describe("useOrdersRealtimeSync", () => {
 			capturedInsertCallback?.();
 		});
 
-		expect(mockInvalidateQueries).toHaveBeenCalledTimes(2);
+		expect(mockInvalidateQueries).toHaveBeenCalledTimes(3);
 		expect(mockToastInfo).not.toHaveBeenCalled();
 	});
 
@@ -105,12 +116,15 @@ describe("useOrdersRealtimeSync", () => {
 			capturedInsertCallback?.();
 		});
 
-		expect(mockInvalidateQueries).toHaveBeenCalledTimes(2);
+		expect(mockInvalidateQueries).toHaveBeenCalledTimes(3);
 		expect(mockInvalidateQueries).toHaveBeenCalledWith({
 			queryKey: ["orders", "orders"],
 		});
 		expect(mockInvalidateQueries).toHaveBeenCalledWith({
 			queryKey: ["dashboard-stats"],
+		});
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["notifications", "candidates"],
 		});
 		expect(mockToastInfo).not.toHaveBeenCalled();
 	});
@@ -143,12 +157,15 @@ describe("useOrdersRealtimeSync", () => {
 			rerender();
 		});
 
-		expect(mockInvalidateQueries).toHaveBeenCalledTimes(2);
+		expect(mockInvalidateQueries).toHaveBeenCalledTimes(3);
 		expect(mockInvalidateQueries).toHaveBeenCalledWith({
 			queryKey: ["orders", "orders"],
 		});
 		expect(mockInvalidateQueries).toHaveBeenCalledWith({
 			queryKey: ["dashboard-stats"],
+		});
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["notifications", "candidates"],
 		});
 	});
 
@@ -163,5 +180,83 @@ describe("useOrdersRealtimeSync", () => {
 		});
 
 		expect(mockInvalidateQueries).not.toHaveBeenCalled();
+	});
+
+	it("invalidates old and new stage queries on UPDATE when row stage changes", () => {
+		renderHook(() => useOrdersRealtimeSync());
+
+		act(() => {
+			capturedUpdateCallback?.({
+				new: { stage: "freeze" },
+				old: { stage: "main" },
+			});
+		});
+
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["orders", "freeze"],
+		});
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["orders", "main"],
+		});
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["dashboard-stats"],
+		});
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["notifications", "candidates"],
+		});
+	});
+
+	it("invalidates stage query on DELETE", () => {
+		renderHook(() => useOrdersRealtimeSync());
+
+		act(() => {
+			capturedDeleteCallback?.({
+				old: { stage: "freeze" },
+			});
+		});
+
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["orders", "freeze"],
+		});
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["dashboard-stats"],
+		});
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["notifications", "candidates"],
+		});
+	});
+
+	it("shows toast and defers invalidation when UPDATE arrives during active draft", () => {
+		mockIsDraftActive = true;
+		const { rerender } = renderHook(() => useOrdersRealtimeSync());
+
+		act(() => {
+			capturedUpdateCallback?.({
+				new: { stage: "freeze" },
+				old: { stage: "main" },
+			});
+		});
+
+		expect(mockToastInfo).toHaveBeenCalledTimes(1);
+		expect(mockInvalidateQueries).not.toHaveBeenCalled();
+
+		// Exit draft session
+		mockIsDraftActive = false;
+		act(() => {
+			rerender();
+		});
+
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["orders", "freeze"],
+		});
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["orders", "main"],
+		});
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["dashboard-stats"],
+		});
+		expect(mockInvalidateQueries).toHaveBeenCalledWith({
+			queryKey: ["notifications", "candidates"],
+		});
 	});
 });

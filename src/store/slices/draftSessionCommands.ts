@@ -51,6 +51,7 @@ interface SaveOrderDraftMutationVars {
 interface BulkUpdateStageDraftMutationVars {
 	ids: string[];
 	stage: OrderStage;
+	sourceStage?: OrderStage;
 	silentErrorToast?: boolean;
 	guardFrozenVins?: boolean;
 }

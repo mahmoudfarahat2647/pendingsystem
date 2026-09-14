@@ -383,6 +383,15 @@ export const createDraftSessionSlice: StateCreator<
 			get()._persistRecovery();
 		},
 
+		// Conflict handling policy for concurrent stage changes & recovery snapshots (Issue #202):
+		// When saving commands (from either a live session or a restored recovery snapshot)
+		// targeting a row that has since been frozen or moved elsewhere by another client,
+		// the policy is "surfaced for manual reconciliation" (rather than blanket rejection
+		// of the entire snapshot or silent dropping of the conflicting edit).
+		// Execution halts at the failing command index via saveCheckpoint, leaving all
+		// uncommitted commands intact. The user is presented with a clear, freeze-specific
+		// error message and can either skip just the conflicting command via skipFailedCommand()
+		// or discard the entire draft session via discardDraft().
 		saveDraft: async (mutations) => {
 			const state = get().draftSession;
 			if (state.dirty === false || state.saving) return;
@@ -391,17 +400,19 @@ export const createDraftSessionSlice: StateCreator<
 				draftSession: { ...state.draftSession, saving: true, saveError: null },
 			}));
 
+			const savedCheckpoint = state.saveCheckpoint;
+			const idMap = new Map<string, string>(
+				savedCheckpoint?.idMapEntries ?? [],
+			);
+			const startIndex = savedCheckpoint?.nextIndex ?? 0;
+			let currentIndex = startIndex;
+
 			try {
 				// Execute all pending commands in order, tracking temp→real ID mappings
 				// so that post-create commands (delete/move/patch) target the right Supabase rows.
 				// On retry after partial failure, restore idMap and skip already-executed commands.
-				const savedCheckpoint = state.saveCheckpoint;
-				const idMap = new Map<string, string>(
-					savedCheckpoint?.idMapEntries ?? [],
-				);
-				const startIndex = savedCheckpoint?.nextIndex ?? 0;
-
 				for (let i = startIndex; i < state.pendingCommands.length; i++) {
+					currentIndex = i;
 					await executeCommand(state.pendingCommands[i], mutations, idMap);
 					set((s) => ({
 						draftSession: {
@@ -438,6 +449,10 @@ export const createDraftSessionSlice: StateCreator<
 						...state.draftSession,
 						saving: false,
 						saveError: message,
+						saveCheckpoint: state.draftSession.saveCheckpoint ?? {
+							nextIndex: currentIndex,
+							idMapEntries: [...idMap.entries()],
+						},
 					},
 				}));
 				// Keep all draft state intact for retry
@@ -515,6 +530,9 @@ export const createDraftSessionSlice: StateCreator<
 			get()._clearRecovery();
 		},
 
+		// Restores a recovery snapshot into working state. If any restored commands
+		// target rows that have since been frozen or moved concurrently, the conflict
+		// will be surfaced at saveDraft() time for per-row reconciliation (skip or discard).
 		restoreFromRecovery: (snapshot: DraftRecoverySnapshot) => {
 			// Capture fresh baseline from current RQ caches
 			get()._captureBaseline();
@@ -646,10 +664,7 @@ async function executeCommand(
 			id: remapped.id,
 			updates: remapped.updates,
 			stage: remapped.destinationStage,
-			sourceStage:
-				remapped.sourceStage !== remapped.destinationStage
-					? remapped.sourceStage
-					: undefined,
+			sourceStage: remapped.sourceStage,
 		});
 	} else if (remapped.type === "createRows") {
 		for (const row of remapped.rows) {
@@ -671,6 +686,7 @@ async function executeCommand(
 		await mutations.bulkUpdateStage({
 			ids: remapped.ids,
 			stage: remapped.destinationStage,
+			sourceStage: remapped.sourceStage,
 			guardFrozenVins: remapped.guardFrozenVins,
 		});
 	} else {
