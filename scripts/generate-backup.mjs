@@ -197,6 +197,7 @@ function processOrders(rawOrders) {
 		booking: "Booking",
 		call: "Call List",
 		archive: "Archive",
+		freeze: "Freeze",
 	};
 
 	const mappedData = [];

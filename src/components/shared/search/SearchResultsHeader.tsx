@@ -64,6 +64,7 @@ export const SearchResultsHeader = ({
 									"bg-purple-500": source === "Booking",
 									"bg-blue-500": source === "Call",
 									"bg-slate-500": source === "Archive",
+									"bg-sky-500": source === "Freeze",
 								})}
 							/>
 							<span>{source}</span>

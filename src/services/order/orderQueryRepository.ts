@@ -137,6 +137,7 @@ export function createOrderQueryRepository(
 				call: 0,
 				booking: 0,
 				archive: 0,
+				freeze: 0,
 				callUniqueVehicles: 0,
 			};
 

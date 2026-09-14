@@ -426,6 +426,8 @@ export const getGlobalSearchWorkspaceColumns = (
 					colorClass = "bg-blue-500/10 text-blue-400 border-blue-500/20";
 				if (source === "Archive")
 					colorClass = "bg-slate-500/10 text-slate-400 border-slate-500/20";
+				if (source === "Freeze")
+					colorClass = "bg-sky-500/10 text-sky-400 border-sky-500/20";
 
 				return (
 					<div className="flex items-center h-full w-full">

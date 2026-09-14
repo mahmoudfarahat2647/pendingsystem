@@ -88,6 +88,7 @@ export const createDraftSessionSlice: StateCreator<
 			call: [],
 			booking: [],
 			archive: [],
+			freeze: [],
 		},
 		derivedRowsRevision: 0,
 		pendingCommands: [],
@@ -129,6 +130,11 @@ export const createDraftSessionSlice: StateCreator<
 		_deriveWorkingRows: () => {
 			const state = get().draftSession;
 			if (!state.isActive || state.pendingCommands.length === 0) {
+				for (const stage of ORDER_STAGES) {
+					if (!state.baselineByStage[stage]) {
+						state.baselineByStage[stage] = [];
+					}
+				}
 				return state.baselineByStage;
 			}
 
@@ -493,6 +499,11 @@ export const createDraftSessionSlice: StateCreator<
 			get()._captureBaseline();
 
 			const newSession = get().draftSession;
+			for (const stage of ORDER_STAGES) {
+				if (!newSession.baselineByStage[stage]) {
+					newSession.baselineByStage[stage] = [];
+				}
+			}
 
 			set(() => ({
 				draftSession: {
@@ -513,7 +524,7 @@ export const createDraftSessionSlice: StateCreator<
 			if (!state.isActive || state.pendingCommands.length === 0) {
 				return getOrdersQueryAdapter().getStageRows(stage);
 			}
-			return get()._deriveWorkingRows()[stage];
+			return get()._deriveWorkingRows()[stage] ?? [];
 		},
 
 		clearSaveResult: () => {

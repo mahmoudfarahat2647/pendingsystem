@@ -1200,6 +1200,7 @@ describe("orderService", () => {
 				call: 4,
 				booking: 1,
 				archive: 7,
+				freeze: 0,
 				callUniqueVehicles: 2,
 			});
 		});
@@ -1216,6 +1217,7 @@ describe("orderService", () => {
 				call: 0,
 				booking: 0,
 				archive: 0,
+				freeze: 0,
 				callUniqueVehicles: 0,
 			});
 		});

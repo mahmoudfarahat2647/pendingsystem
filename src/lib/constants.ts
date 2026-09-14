@@ -39,4 +39,5 @@ export const ORDER_STAGES: OrderStage[] = [
 	"call",
 	"booking",
 	"archive",
+	"freeze",
 ];

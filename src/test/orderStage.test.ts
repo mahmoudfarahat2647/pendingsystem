@@ -1,5 +1,19 @@
-import { describe, expect, it } from "vitest";
-import { normalizeOrderStage, ORDER_STAGE_TAB_INFO } from "@/lib/orderStage";
+import { describe, expect, expectTypeOf, it } from "vitest";
+import {
+	type OrderStage as DomainOrderStage,
+	ORDER_STAGE_VALUES,
+} from "@/domain/order/orderStage";
+import { ORDER_STAGES } from "@/lib/constants";
+import {
+	normalizeOrderStage,
+	ORDER_STAGE_TAB_INFO,
+	STAGE_ALIASES,
+} from "@/lib/orderStage";
+import type { OrderStage as TypesOrderStage } from "@/types";
+
+type Assert<T extends true> = T;
+type Eq<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+type _TypeParityCheck = Assert<Eq<DomainOrderStage, TypesOrderStage>>;
 
 describe("normalizeOrderStage", () => {
 	it("maps display labels to canonical stages", () => {
@@ -14,6 +28,7 @@ describe("normalizeOrderStage", () => {
 		expect(normalizeOrderStage("booking")).toBe("booking");
 		expect(normalizeOrderStage("call")).toBe("call");
 		expect(normalizeOrderStage("archive")).toBe("archive");
+		expect(normalizeOrderStage("freeze")).toBe("freeze");
 	});
 
 	it("returns undefined for empty or unknown inputs", () => {
@@ -25,7 +40,7 @@ describe("normalizeOrderStage", () => {
 });
 
 describe("ORDER_STAGE_TAB_INFO", () => {
-	it("covers all five stages including archive", () => {
+	it("covers all six stages including archive and freeze", () => {
 		expect(ORDER_STAGE_TAB_INFO.orders.path).toBe("/orders");
 		expect(ORDER_STAGE_TAB_INFO.main.path).toBe("/main-sheet");
 		expect(ORDER_STAGE_TAB_INFO.call.path).toBe("/call-list");
@@ -34,5 +49,34 @@ describe("ORDER_STAGE_TAB_INFO", () => {
 			name: "Archive",
 			path: "/archive",
 		});
+		expect(ORDER_STAGE_TAB_INFO.freeze).toEqual({
+			name: "Freeze",
+			path: "/freeze",
+		});
+	});
+});
+
+describe("stage declaration drift tests", () => {
+	it("maintains type parity between domain OrderStage and types OrderStage", () => {
+		expectTypeOf<DomainOrderStage>().toEqualTypeOf<TypesOrderStage>();
+	});
+
+	it("has exactly the canonical ORDER_STAGE_VALUES as keys of ORDER_STAGE_TAB_INFO", () => {
+		expect(Object.keys(ORDER_STAGE_TAB_INFO).sort()).toEqual(
+			[...ORDER_STAGE_VALUES].sort(),
+		);
+	});
+
+	it("ensures all STAGE_ALIASES values are valid canonical stages and every stage is reachable", () => {
+		for (const target of Object.values(STAGE_ALIASES)) {
+			expect(ORDER_STAGE_VALUES).toContain(target);
+		}
+		for (const stage of ORDER_STAGE_VALUES) {
+			expect(normalizeOrderStage(stage)).toBe(stage);
+		}
+	});
+
+	it("ensures ORDER_STAGES contains the exact same members as ORDER_STAGE_VALUES", () => {
+		expect([...ORDER_STAGES].sort()).toEqual([...ORDER_STAGE_VALUES].sort());
 	});
 });

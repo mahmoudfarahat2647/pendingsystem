@@ -151,4 +151,16 @@ describe("useWarrantyExpiryMaintenance", () => {
 		});
 		expect(mockFetchMappedOrders).toHaveBeenCalledTimes(STAGES_PER_PASS);
 	});
+
+	it("never fetches the freeze stage during maintenance passes and still makes exactly 4 stage fetches", async () => {
+		const { result } = renderHook(() => useWarrantyExpiryMaintenance());
+
+		await act(async () => {
+			await result.current.runMaintenance();
+		});
+
+		expect(mockFetchMappedOrders).toHaveBeenCalledTimes(STAGES_PER_PASS);
+		expect(mockFetchMappedOrders).toHaveBeenCalledTimes(4);
+		expect(mockFetchMappedOrders).not.toHaveBeenCalledWith("freeze");
+	});
 });

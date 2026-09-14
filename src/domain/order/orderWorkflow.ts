@@ -351,6 +351,7 @@ export function getStageDisplayName(stage: string | undefined): string {
 		booking: "Booking",
 		call: "Call List",
 		archive: "Archive",
+		freeze: "Freeze",
 	};
 
 	const lowerStage = stage.toLowerCase();

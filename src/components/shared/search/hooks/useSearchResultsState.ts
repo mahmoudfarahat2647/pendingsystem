@@ -42,6 +42,7 @@ const SOURCE_TO_STAGE: Record<string, string> = {
 	Booking: "booking",
 	Call: "call",
 	Archive: "archive",
+	Freeze: "freeze",
 };
 
 const SOURCE_TO_ROUTE: Record<string, string> = {
@@ -50,6 +51,7 @@ const SOURCE_TO_ROUTE: Record<string, string> = {
 	Booking: "/booking",
 	Call: "/call-list",
 	Archive: "/archive",
+	Freeze: "/freeze",
 };
 
 export const useSearchResultsState = () => {
@@ -92,6 +94,7 @@ export const useSearchResultsState = () => {
 	const { data: bookingData = [] } = useOrdersQuery("booking");
 	const { data: callData = [] } = useOrdersQuery("call");
 	const { data: archiveData = [] } = useOrdersQuery("archive");
+	const { data: freezeData = [] } = useOrdersQuery("freeze");
 
 	const saveOrderMutation = useSaveOrderMutation();
 	const normalizedActiveStage = normalizeOrderStage(activeStage);
@@ -106,6 +109,7 @@ export const useSearchResultsState = () => {
 		booking: useBulkUpdateOrderStageMutation("booking"),
 		call: useBulkUpdateOrderStageMutation("call"),
 		archive: useBulkUpdateOrderStageMutation("archive"),
+		freeze: useBulkUpdateOrderStageMutation("freeze"),
 	};
 
 	const bulkStageMutations = useMemo(
@@ -116,6 +120,7 @@ export const useSearchResultsState = () => {
 			bulkStageMutationsRaw.booking,
 			bulkStageMutationsRaw.call,
 			bulkStageMutationsRaw.archive,
+			bulkStageMutationsRaw.freeze,
 		],
 	);
 
@@ -155,6 +160,11 @@ export const useSearchResultsState = () => {
 				sourceType: "Archive",
 				stage: "archive" as OrderStage,
 			})),
+			...freezeData.map((r) => ({
+				...r,
+				sourceType: "Freeze",
+				stage: "freeze" as OrderStage,
+			})),
 		];
 
 		const found = all.filter((row) => {
@@ -171,6 +181,7 @@ export const useSearchResultsState = () => {
 		bookingData,
 		callData,
 		archiveData,
+		freezeData,
 		activeSources,
 	]);
 

@@ -43,6 +43,7 @@ const ALL_STAGES: OrderStage[] = [
 	"call",
 	"booking",
 	"archive",
+	"freeze",
 ];
 
 const createRow = (id: string, stage: OrderStage): PendingRow =>
@@ -104,6 +105,7 @@ function stubAllStagesEmpty() {
 		call: [],
 		booking: [],
 		archive: [],
+		freeze: undefined,
 	});
 }
 
@@ -176,6 +178,30 @@ describe("resolveNotificationStage", () => {
 		expect(resolveNotificationStage("row-1", "/main-sheet")).toBeUndefined();
 	});
 
+	it("returns undefined when all five loadable stages are loaded, row is absent, and freeze is undefined (regression)", () => {
+		stubWorkingRows({
+			orders: [],
+			main: [],
+			call: [],
+			booking: [],
+			archive: [],
+			freeze: undefined,
+		});
+		expect(resolveNotificationStage("row-1", "/main-sheet")).toBeUndefined();
+	});
+
+	it("finds the row in freeze stage when the freeze cache is populated", () => {
+		stubWorkingRows({
+			orders: [],
+			main: [],
+			call: [],
+			booking: [],
+			archive: [],
+			freeze: [createRow("row-1", "freeze")],
+		});
+		expect(resolveNotificationStage("row-1", "/main-sheet")).toBe("freeze");
+	});
+
 	it("falls back to path during an active draft even when every stage returns an array", () => {
 		useAppStore.setState({
 			draftSession: {
@@ -203,6 +229,7 @@ describe("resolveNotificationStage", () => {
 					call: [],
 					booking: [],
 					archive: [],
+					freeze: [],
 				},
 			},
 		});
@@ -294,6 +321,31 @@ describe("NotificationsDropdown click-time navigation", () => {
 		expect(toastError).toHaveBeenCalledWith("Order no longer available");
 	});
 
+	it("reports the row as gone and toasts without navigating when all loadable stages are loaded and freeze is undefined (regression)", async () => {
+		useAppStore.setState({
+			notifications: [
+				createReminderNotification({
+					path: "/main-sheet",
+					tabName: "Main Sheet",
+				}),
+			],
+		});
+		stubWorkingRows({
+			orders: [],
+			main: [],
+			call: [],
+			booking: [],
+			archive: [],
+			freeze: undefined,
+		});
+
+		await openAndClickNotification();
+
+		expect(routerPush).not.toHaveBeenCalled();
+		expect(useAppStore.getState().highlightedRowId).toBeNull();
+		expect(toastError).toHaveBeenCalledWith("Order no longer available");
+	});
+
 	it("navigates via path fallback when all stage caches are unloaded (Dashboard)", async () => {
 		useAppStore.setState({
 			notifications: [
@@ -357,6 +409,7 @@ describe("NotificationsDropdown click-time navigation", () => {
 					call: [],
 					booking: [],
 					archive: [],
+					freeze: [],
 				},
 			},
 		});
