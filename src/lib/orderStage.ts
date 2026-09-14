@@ -1,4 +1,8 @@
-import type { OrderStage } from "@/domain/order/orderStage";
+import {
+	InvalidOrderStageError,
+	isOrderStage,
+	type OrderStage,
+} from "@/domain/order/orderStage";
 
 export const STAGE_ALIASES: Record<string, OrderStage> = {
 	archive: "archive",
@@ -33,5 +37,24 @@ export function normalizeOrderStage(
 		return undefined;
 	}
 
-	return STAGE_ALIASES[normalized];
+	return (
+		STAGE_ALIASES[normalized] ??
+		(isOrderStage(normalized) ? normalized : undefined)
+	);
+}
+
+/**
+ * Resolves a stage value to a canonical OrderStage.
+ * Checks stage aliases first, then canonical ORDER_STAGE_VALUES.
+ * Throws InvalidOrderStageError if the value is missing, empty, or unrecognized.
+ */
+export function resolveOrderStage(
+	value: string | null | undefined,
+): OrderStage {
+	const resolved = normalizeOrderStage(value);
+	if (resolved) {
+		return resolved;
+	}
+
+	throw new InvalidOrderStageError(value);
 }

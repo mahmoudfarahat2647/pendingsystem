@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { InvalidOrderStageError } from "@/domain/order/orderStage";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { hasAttachment } from "@/lib/attachment";
 import { logger } from "@/lib/logger";
-import { normalizeOrderStage } from "@/lib/orderStage";
-import type { PendingRow } from "@/types";
+import { resolveOrderStage } from "@/lib/orderStage";
+import type { OrderStage, PendingRow } from "@/types";
 
 export type RowModalType =
 	| "note"
@@ -14,8 +15,12 @@ export type RowModalType =
 	| "archive"
 	| null;
 
-const resolveRowStage = (row: PendingRow | null) =>
-	normalizeOrderStage(row?.stage) ?? "main";
+export const resolveRowStage = (row: PendingRow | null): OrderStage => {
+	if (!row) {
+		throw new InvalidOrderStageError(row);
+	}
+	return resolveOrderStage(row.stage);
+};
 
 export const useRowModals = (
 	onUpdate: (
