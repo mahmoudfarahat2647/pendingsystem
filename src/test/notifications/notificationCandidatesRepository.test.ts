@@ -254,9 +254,32 @@ describe("notificationCandidatesRepository", () => {
 			(c: { method: string }) => c.method === "not",
 		);
 		expect(notCall.args).toEqual(["order_reminders.is_completed", "eq", true]);
-		const neqCall = reminderIdsBuilder.__calls.find(
-			(c: { method: string }) => c.method === "neq",
-		);
-		expect(neqCall.args).toEqual(["stage", "archive"]);
+		// Frozen rows are paused work and must be excluded exactly like
+		// archived rows — from both the reminder and warranty candidacy scans.
+		const reminderNeqArgs = reminderIdsBuilder.__calls
+			.filter((c: { method: string }) => c.method === "neq")
+			.map((c: { args: unknown[] }) => c.args);
+		expect(reminderNeqArgs).toContainEqual(["stage", "archive"]);
+		expect(reminderNeqArgs).toContainEqual(["stage", "freeze"]);
+	});
+
+	it("excludes both archived and frozen rows from warranty candidacy", async () => {
+		const { from, builders } = makeFakeDb([
+			{ data: [], error: null },
+			{ data: [], error: null },
+			{ data: [], error: null },
+			{ data: [], error: null },
+		]);
+
+		// biome-ignore lint/suspicious/noExplicitAny: fake db satisfies the subset used
+		const repo = createNotificationCandidatesRepository({ from } as any);
+		await repo.getDueNotificationCandidates();
+
+		const warrantyBuilder = builders[1];
+		const warrantyNeqArgs = warrantyBuilder.__calls
+			.filter((c: { method: string }) => c.method === "neq")
+			.map((c: { args: unknown[] }) => c.args);
+		expect(warrantyNeqArgs).toContainEqual(["stage", "archive"]);
+		expect(warrantyNeqArgs).toContainEqual(["stage", "freeze"]);
 	});
 });
