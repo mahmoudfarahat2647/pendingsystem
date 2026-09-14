@@ -136,6 +136,7 @@ export default function MainSheetPage() {
 	const {
 		handleUpdateOrder,
 		handleSendToArchive,
+		handleSendToFreeze,
 		handleConfirmBooking,
 		handleConfirmReorder,
 		handleUpdatePartStatus,
@@ -156,12 +157,14 @@ export default function MainSheetPage() {
 		handleReminderClick,
 		handleAttachClick,
 		handleArchiveClick,
+		handleFreezeClick,
 		closeModal,
 		saveNote,
 		saveReminder,
 		saveAttachment,
 		saveArchive,
-	} = useRowModals(handleUpdateOrder, handleSendToArchive);
+		saveFreeze,
+	} = useRowModals(handleUpdateOrder, handleSendToArchive, handleSendToFreeze);
 
 	const columns = useMemo(
 		() =>
@@ -222,6 +225,14 @@ export default function MainSheetPage() {
 							onArchive={() => {
 								if (selectedRows.length > 0) {
 									handleArchiveClick(
+										selectedRows[0],
+										selectedRows.map((r) => r.id),
+									);
+								}
+							}}
+							onFreeze={() => {
+								if (selectedRows.length > 0) {
+									handleFreezeClick(
 										selectedRows[0],
 										selectedRows.map((r) => r.id),
 									);
@@ -302,6 +313,7 @@ export default function MainSheetPage() {
 					onSaveReminder={saveReminder}
 					onSaveAttachment={saveAttachment}
 					onSaveArchive={saveArchive}
+					onSaveFreeze={saveFreeze}
 					sourceTag="main sheet"
 				/>
 			)}

@@ -3,10 +3,12 @@
 import type { GridApi } from "ag-grid-community";
 import { useEffect, useMemo, useState } from "react";
 import { FreezeToolbar } from "@/components/freeze/FreezeToolbar";
+import { UnfreezeMoveDialog } from "@/components/freeze/UnfreezeMoveDialog";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { getFreezeColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { RowModals } from "@/components/shared/RowModals";
+import { isOrderStage } from "@/domain/order/orderStage";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
@@ -52,10 +54,25 @@ export default function FreezePage() {
 	const [scrollDir, setScrollDir] = useState<"vertical" | "horizontal">(
 		"vertical",
 	);
+	const [isMoveDialogOpen, setMoveDialogOpen] = useState(false);
 
-	const { handleUpdateOrder } = useFreezePageActions({
+	const { handleUpdateOrder, handleConfirmUnfreeze } = useFreezePageActions({
 		applyCommand,
+		selectedRows,
+		setSelectedRows,
 	});
+
+	// Default "Move to…" destination: the first selected row's previousStage
+	// (the stage it was frozen from). Falls back to "main" when no selected
+	// row carries a valid previousStage (e.g. legacy frozen rows).
+	const moveDefaultStage = useMemo(() => {
+		for (const row of selectedRows) {
+			if (isOrderStage(row.previousStage) && row.previousStage !== "freeze") {
+				return row.previousStage;
+			}
+		}
+		return "main" as const;
+	}, [selectedRows]);
 
 	// Sync selectedRows with the latest effectiveData to prevent stale data
 	useSelectedRowsSync("freeze", effectiveData, selectedRows, setSelectedRows);
@@ -92,6 +109,7 @@ export default function FreezePage() {
 				onFilterToggle={() => setShowFilters(!showFilters)}
 				onSelectAllByVin={onSelectAllByVin}
 				isSelectAllByVinDisabled={isSelectAllByVinDisabled}
+				onMoveTo={() => setMoveDialogOpen(true)}
 			/>
 
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}
@@ -149,6 +167,18 @@ export default function FreezePage() {
 				onSaveAttachment={saveAttachment}
 				onSaveArchive={() => {}}
 				sourceTag="freeze"
+			/>
+
+			<UnfreezeMoveDialog
+				open={isMoveDialogOpen}
+				onOpenChange={setMoveDialogOpen}
+				initialStage={moveDefaultStage}
+				rowCount={selectedRows.length}
+				onCancel={() => setMoveDialogOpen(false)}
+				onConfirm={(destinationStage) => {
+					handleConfirmUnfreeze(destinationStage);
+					setMoveDialogOpen(false);
+				}}
 			/>
 		</div>
 	);

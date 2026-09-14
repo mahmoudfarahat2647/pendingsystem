@@ -111,6 +111,7 @@ export default function CallListPage() {
 	const {
 		handleUpdateOrder,
 		handleSendToArchive,
+		handleSendToFreeze,
 		handleConfirmBooking,
 		handleConfirmReorder,
 		handleUpdatePartStatus,
@@ -130,12 +131,14 @@ export default function CallListPage() {
 		handleReminderClick,
 		handleAttachClick,
 		handleArchiveClick,
+		handleFreezeClick,
 		closeModal,
 		saveNote,
 		saveReminder,
 		saveAttachment,
 		saveArchive,
-	} = useRowModals(handleUpdateOrder, handleSendToArchive);
+		saveFreeze,
+	} = useRowModals(handleUpdateOrder, handleSendToArchive, handleSendToFreeze);
 
 	const columns = useMemo(() => {
 		return getCallColumns(
@@ -169,6 +172,12 @@ export default function CallListPage() {
 				onReorder={openReorder}
 				onArchive={() =>
 					handleArchiveClick(
+						selectedRows[0],
+						selectedRows.map((r) => r.id),
+					)
+				}
+				onFreeze={() =>
+					handleFreezeClick(
 						selectedRows[0],
 						selectedRows.map((r) => r.id),
 					)
@@ -250,6 +259,7 @@ export default function CallListPage() {
 				onSaveReminder={saveReminder}
 				onSaveAttachment={saveAttachment}
 				onSaveArchive={saveArchive}
+				onSaveFreeze={saveFreeze}
 			/>
 
 			<ConfirmDialog

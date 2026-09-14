@@ -27,6 +27,7 @@ const defaultProps = {
 	onReserve: vi.fn(),
 	onUpdateStatus: vi.fn(),
 	onArchive: vi.fn(),
+	onFreeze: vi.fn(),
 	onRebook: vi.fn(),
 	onReorder: vi.fn(),
 	onDelete: vi.fn(),
@@ -101,5 +102,48 @@ describe("BookingToolbar", () => {
 		}
 		fireEvent.click(reorderButton);
 		expect(onReorder).toHaveBeenCalledTimes(1);
+	});
+
+	it("disables the Freeze button when selectedRows is empty or hasMixedVins is true", () => {
+		const { container: emptyContainer } = renderWithProvider(
+			<BookingToolbar {...defaultProps} selectedRows={[]} />,
+		);
+		const emptyFreezeButton = emptyContainer
+			.querySelector(".lucide-snowflake")
+			?.closest("button");
+		expect(emptyFreezeButton).toBeDisabled();
+
+		const { container: mixedContainer } = renderWithProvider(
+			<BookingToolbar
+				{...defaultProps}
+				selectedRows={mockSelectedRows}
+				hasMixedVins={true}
+			/>,
+		);
+		const mixedFreezeButton = mixedContainer
+			.querySelector(".lucide-snowflake")
+			?.closest("button");
+		expect(mixedFreezeButton).toBeDisabled();
+	});
+
+	it("calls onFreeze when clicking the Freeze button with a valid selection", () => {
+		const onFreeze = vi.fn();
+		const { container } = renderWithProvider(
+			<BookingToolbar
+				{...defaultProps}
+				selectedRows={mockSelectedRows}
+				hasMixedVins={false}
+				onFreeze={onFreeze}
+			/>,
+		);
+		const freezeButton = container
+			.querySelector(".lucide-snowflake")
+			?.closest("button");
+		expect(freezeButton).toBeEnabled();
+		if (!freezeButton) {
+			throw new Error("Freeze button not found");
+		}
+		fireEvent.click(freezeButton);
+		expect(onFreeze).toHaveBeenCalledTimes(1);
 	});
 });

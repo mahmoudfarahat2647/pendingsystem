@@ -68,6 +68,7 @@ export default function OrdersPage() {
 		setShowFilters,
 		handleUpdateOrder,
 		handleSendToArchive,
+		handleSendToFreeze,
 		handleSaveOrder,
 		handleCommit,
 		handleConfirmCommit,
@@ -103,12 +104,14 @@ export default function OrdersPage() {
 		handleReminderClick,
 		handleAttachClick,
 		handleArchiveClick,
+		handleFreezeClick,
 		closeModal,
 		saveNote,
 		saveReminder,
 		saveAttachment,
 		saveArchive,
-	} = useRowModals(handleUpdateOrder, handleSendToArchive);
+		saveFreeze,
+	} = useRowModals(handleUpdateOrder, handleSendToArchive, handleSendToFreeze);
 
 	const columns = useMemo(
 		() =>
@@ -151,6 +154,14 @@ export default function OrdersPage() {
 						onArchive={() => {
 							if (selectedRows.length > 0) {
 								handleArchiveClick(
+									selectedRows[0],
+									selectedRows.map((r) => r.id),
+								);
+							}
+						}}
+						onFreeze={() => {
+							if (selectedRows.length > 0) {
+								handleFreezeClick(
 									selectedRows[0],
 									selectedRows.map((r) => r.id),
 								);
@@ -267,6 +278,7 @@ export default function OrdersPage() {
 					onSaveReminder={saveReminder}
 					onSaveAttachment={saveAttachment}
 					onSaveArchive={saveArchive}
+					onSaveFreeze={saveFreeze}
 					sourceTag="orders"
 				/>
 			)}

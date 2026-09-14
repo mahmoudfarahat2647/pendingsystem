@@ -5,6 +5,7 @@ import {
 } from "@/domain/order/orderWorkflow";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { hasAttachment, sanitizeAttachmentLink } from "@/lib/attachment";
+import { buildFreezePayload } from "@/lib/freezePayloadBuilder";
 import type { PatchRowCommand, PendingRow } from "@/types";
 import { safeFormatDate } from "@/utils/safeFormatDate";
 
@@ -44,6 +45,32 @@ export function buildSendToArchiveCommands(
 		sourceStage,
 		destinationStage: "archive" as const,
 		updates: buildArchivePayload(row, reason),
+		previousValues: {},
+	}));
+}
+
+/**
+ * Returns patchRow commands to freeze the given rows.
+ *
+ * Uses buildFreezePayload as the single source of truth — every frozen row
+ * gets stage:"freeze", previousStage (the row's stage at freeze time),
+ * freezeReason, frozenAt, and an updated noteHistory regardless of which
+ * stage it came from. Granularity is exactly the rows passed in: sibling
+ * lines of the same chassis are untouched unless they are selected too.
+ *
+ * @throws FreezeReasonRequiredError when `reason` is empty or whitespace-only.
+ */
+export function buildSendToFreezeCommands(
+	rows: PendingRow[],
+	reason: string,
+	sourceStage: OrderStage,
+): PatchRowCommand[] {
+	return rows.map((row) => ({
+		type: "patchRow",
+		id: row.id,
+		sourceStage,
+		destinationStage: "freeze" as const,
+		updates: buildFreezePayload(row, reason, sourceStage),
 		previousValues: {},
 	}));
 }
@@ -157,6 +184,62 @@ export function buildBookingCommands(
 	});
 }
 
+/**
+ * Returns patchRow commands to unfreeze rows into any chosen destination stage.
+ *
+ * This is the NEUTRAL unfreeze transition for the FREEZE tab ("Move to…"
+ * picker). It intentionally does NOT reuse the reorder/booking/archive/
+ * rebooking builders above because each of those carries destination-specific
+ * side effects that would violate the unfreeze data-preservation guarantee:
+ * reorder hard-sets status="Reorder" and clears the attachment link, booking
+ * requires/overwrites booking date/note/status, archive sets archive
+ * status/reason/date, and none of them target `main` or `call`.
+ *
+ * Each command does exactly four things:
+ *   (a) moves the row to the chosen destination stage,
+ *   (b) appends a tagged freeze-history note (preserving the freeze reason),
+ *   (c) clears the freeze metadata (`previousStage`, `freezeReason`,
+ *       `frozenAt`) by persisting `null` — metadata is merged on write, so
+ *       omitting a key would preserve it and `undefined` does not reliably
+ *       delete a JSON key; `null` is the explicit cleared representation and
+ *       the schema fields are nullable to accept it on the read-back path,
+ *   (d) leaves status, booking fields, and attachments completely untouched
+ *       (they are absent from `updates`, so the merge preserves them).
+ *
+ * Naming note: the persisted metadata field `previousStage` (cleared here) is
+ * unrelated to the `previousStage?` rollback-destination parameter of
+ * `orderRepository.updateOrdersStage`. This builder takes only
+ * `destinationStage` to avoid any collision between the two concepts.
+ */
+export function buildUnfreezeCommands(
+	rows: PendingRow[],
+	destinationStage: OrderStage,
+): PatchRowCommand[] {
+	return rows.map((row) => {
+		const reason = row.freezeReason?.trim();
+		const note = reason
+			? `Unfrozen to ${destinationStage}. Freeze reason: ${reason}`
+			: `Unfrozen to ${destinationStage}`;
+		return {
+			type: "patchRow",
+			id: row.id,
+			sourceStage: "freeze" as const,
+			destinationStage,
+			updates: {
+				stage: destinationStage,
+				noteHistory: appendTaggedUserNote(
+					getEffectiveNoteHistory(row),
+					note,
+					"unfreeze",
+				),
+				previousStage: null,
+				freezeReason: null,
+				frozenAt: null,
+			},
+			previousValues: {},
+		};
+	});
+}
 /**
  * Returns patchRow commands to reschedule existing bookings.
  * Rows stay in the "booking" stage; only the date, note, and history change.

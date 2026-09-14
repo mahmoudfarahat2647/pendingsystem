@@ -13,6 +13,7 @@ import {
 	Plus,
 	Printer,
 	Send,
+	Snowflake,
 	Tag,
 	Trash2,
 } from "lucide-react";
@@ -47,6 +48,7 @@ interface OrdersToolbarProps {
 	onPrint: () => void;
 	onReserve: () => void;
 	onArchive: () => void;
+	onFreeze: () => void;
 	onShareToLogistics: () => void;
 	onExtract: () => void;
 	onSetAllRDate: () => void;
@@ -70,6 +72,7 @@ export const OrdersToolbar = ({
 	onPrint,
 	onReserve,
 	onArchive,
+	onFreeze,
 	onShareToLogistics,
 	onExtract,
 	onSetAllRDate,
@@ -216,6 +219,22 @@ export const OrdersToolbar = ({
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>Archive</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							aria-label="Freeze"
+							className="text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 h-8 w-8"
+							disabled={selectedCount === 0}
+							onClick={onFreeze}
+						>
+							<Snowflake className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Freeze</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

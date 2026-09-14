@@ -50,6 +50,7 @@ const defaultProps: CallListToolbarProps = {
 	onSendToBooking: vi.fn(),
 	onReorder: vi.fn(),
 	onArchive: vi.fn(),
+	onFreeze: vi.fn(),
 	onDelete: vi.fn(),
 	onSelectAllByVin: vi.fn(),
 	isSelectAllByVinDisabled: false,
@@ -68,6 +69,7 @@ describe("CallListToolbar", () => {
 		expect(getButtonByIcon(container, "lucide-calendar")).toBeDisabled();
 		expect(getButtonByIcon(container, "lucide-rotate-ccw")).toBeDisabled();
 		expect(getButtonByIcon(container, "lucide-archive")).toBeDisabled();
+		expect(getButtonByIcon(container, "lucide-snowflake")).toBeDisabled();
 		expect(getButtonByIcon(container, "lucide-trash2")).toBeDisabled();
 	});
 
@@ -81,6 +83,7 @@ describe("CallListToolbar", () => {
 		expect(getButtonByIcon(container, "lucide-calendar")).toBeEnabled();
 		expect(getButtonByIcon(container, "lucide-rotate-ccw")).toBeEnabled();
 		expect(getButtonByIcon(container, "lucide-archive")).toBeEnabled();
+		expect(getButtonByIcon(container, "lucide-snowflake")).toBeEnabled();
 		expect(getButtonByIcon(container, "lucide-trash2")).toBeEnabled();
 	});
 
@@ -142,6 +145,16 @@ describe("CallListToolbar", () => {
 		const btn = getButtonByIcon(container, "lucide-archive");
 		fireEvent.click(btn);
 		expect(onArchive).toHaveBeenCalledTimes(1);
+	});
+
+	it("calls onFreeze when Freeze button is clicked", () => {
+		const onFreeze = vi.fn();
+		const { container } = renderWithProvider(
+			<CallListToolbar {...defaultProps} onFreeze={onFreeze} />,
+		);
+		const btn = getButtonByIcon(container, "lucide-snowflake");
+		fireEvent.click(btn);
+		expect(onFreeze).toHaveBeenCalledTimes(1);
 	});
 
 	it("calls onDelete when Delete button is clicked", () => {

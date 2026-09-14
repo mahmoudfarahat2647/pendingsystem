@@ -104,6 +104,7 @@ describe("draftSessionSlice", () => {
 		localStorage.clear();
 		queryClient.clear();
 		resetDraftSession();
+		useAppStore.setState({ lastCommandError: null });
 	});
 
 	it("replays cross-stage patchRow commands into the destination stage", () => {
@@ -278,6 +279,100 @@ describe("draftSessionSlice", () => {
 				status: "Recovered",
 			}),
 		]);
+	});
+
+	describe("applyCommand — freeze reason guard (#196)", () => {
+		it("rejects a cross-stage patchRow into freeze with no reason, and does not record the command", () => {
+			const row = createRow("00000000-0000-4000-8000-000000000010", "main");
+			seedStageData({ main: [row] });
+
+			const accepted = useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "main",
+				destinationStage: "freeze",
+				updates: { freezeReason: "" },
+				previousValues: {},
+			});
+
+			expect(accepted).toBe(false);
+			expect(useAppStore.getState().lastCommandError).toBe(
+				"A reason is required to freeze rows.",
+			);
+			// Row must still be in its source stage — the command was never queued.
+			expect(useAppStore.getState().getWorkingRows("main")).toEqual([
+				expect.objectContaining({ id: row.id, stage: "main" }),
+			]);
+			expect(useAppStore.getState().getWorkingRows("freeze")).toEqual([]);
+			expect(useAppStore.getState().draftSession.pendingCommands).toEqual([]);
+		});
+
+		it("rejects a cross-stage patchRow into freeze with a whitespace-only reason", () => {
+			const row = createRow("00000000-0000-4000-8000-000000000011", "main");
+			seedStageData({ main: [row] });
+
+			const accepted = useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "main",
+				destinationStage: "freeze",
+				updates: { freezeReason: "   " },
+				previousValues: {},
+			});
+
+			expect(accepted).toBe(false);
+			expect(useAppStore.getState().lastCommandError).toBe(
+				"A reason is required to freeze rows.",
+			);
+		});
+
+		it("accepts a cross-stage patchRow into freeze once a non-empty reason is provided", () => {
+			const row = createRow("00000000-0000-4000-8000-000000000012", "main");
+			seedStageData({ main: [row] });
+
+			const accepted = useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "main",
+				destinationStage: "freeze",
+				updates: { freezeReason: "Waiting on customer decision" },
+				previousValues: {},
+			});
+
+			expect(accepted).toBe(true);
+			expect(useAppStore.getState().lastCommandError).toBeNull();
+			expect(useAppStore.getState().getWorkingRows("main")).toEqual([]);
+			expect(useAppStore.getState().getWorkingRows("freeze")).toEqual([
+				expect.objectContaining({
+					id: row.id,
+					stage: "freeze",
+					freezeReason: "Waiting on customer decision",
+				}),
+			]);
+		});
+
+		it("does not require a reason for a same-stage patchRow on an already-frozen row (e.g. a note edit from the Freeze tab)", () => {
+			const row = createRow("00000000-0000-4000-8000-000000000013", "freeze");
+			seedStageData({ freeze: [row] });
+
+			const accepted = useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "freeze",
+				destinationStage: "freeze",
+				updates: { noteHistory: "Called customer, still waiting" },
+				previousValues: {},
+			});
+
+			expect(accepted).toBe(true);
+			expect(useAppStore.getState().getWorkingRows("freeze")).toEqual([
+				expect.objectContaining({
+					id: row.id,
+					stage: "freeze",
+					noteHistory: "Called customer, still waiting",
+				}),
+			]);
+		});
 	});
 
 	describe("saveDraft temp ID reconciliation", () => {

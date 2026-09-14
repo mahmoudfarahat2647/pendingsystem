@@ -1520,6 +1520,120 @@ describe("SearchResultsView", () => {
 		);
 	});
 
+	describe("frozen search results", () => {
+		it("includes frozen rows with the Freeze source tag alongside the other five stages", () => {
+			const mainRow = createRow({ id: "main-1" });
+			const freezeRow = createRow({
+				id: "freeze-1",
+				stage: "freeze",
+				sourceType: "Freeze",
+			});
+			mocks.queryData.main = [mainRow];
+			mocks.queryData.freeze = [freezeRow];
+
+			renderView();
+
+			expect(getRenderedRowIds()).toEqual(
+				expect.arrayContaining(["main-1", "freeze-1"]),
+			);
+			const renderedFreeze = (mocks.gridRowData ?? []).find(
+				(row) => row.id === "freeze-1",
+			);
+			expect(renderedFreeze?.sourceType).toBe("Freeze");
+			expect(renderedFreeze?.stage).toBe("freeze");
+			expect(mocks.searchResultsHeaderProps?.counts).toEqual({
+				"Main Sheet": 1,
+				Freeze: 1,
+			});
+
+			mocks.queryData.main = [];
+			mocks.queryData.freeze = [];
+		});
+
+		it("saves a frozen row status edit with the freeze stage instead of falling back to main", async () => {
+			const freezeRow = createRow({
+				id: "freeze-1",
+				stage: "freeze",
+				sourceType: "Freeze",
+				status: "Not Arrived",
+			});
+			mocks.queryData.freeze = [freezeRow];
+
+			renderView();
+
+			await triggerCellValueChanged({
+				colDef: { field: "status" },
+				data: freezeRow,
+				newValue: "Arrived",
+				oldValue: "Not Arrived",
+			});
+
+			expect(mocks.saveMutateAsync).toHaveBeenCalledWith({
+				id: "freeze-1",
+				updates: { status: "Arrived" },
+				stage: "freeze",
+				sourceStage: "freeze",
+			});
+			expect(mocks.toastSuccess).toHaveBeenCalledWith("Status updated");
+
+			mocks.queryData.freeze = [];
+		});
+
+		it("updates a frozen row status from the toolbar without restricting the action", async () => {
+			const freezeRow = createRow({
+				id: "freeze-1",
+				stage: "freeze",
+				sourceType: "Freeze",
+			});
+			mocks.queryData.freeze = [freezeRow];
+
+			renderView();
+			await triggerSelectionChanged([freezeRow]);
+
+			fireEvent.click(screen.getByTestId("search-toolbar-status-arrived"));
+
+			await waitFor(() => {
+				expect(mocks.saveMutateAsync).toHaveBeenCalledWith({
+					id: "freeze-1",
+					updates: { status: "Arrived" },
+					stage: "freeze",
+					sourceStage: "freeze",
+				});
+			});
+			expect(mocks.toastSuccess).toHaveBeenCalledWith(
+				"Updated status for 1 rows",
+			);
+
+			mocks.queryData.freeze = [];
+		});
+
+		it("routes a frozen row to the call list preserving its freeze source stage", async () => {
+			const freezeRow = createRow({
+				id: "freeze-1",
+				stage: "freeze",
+				sourceType: "Freeze",
+			});
+			mocks.queryData.freeze = [freezeRow];
+
+			renderView();
+			await triggerSelectionChanged([freezeRow]);
+
+			fireEvent.click(screen.getByTestId("search-toolbar-call"));
+
+			await waitFor(() => {
+				expect(mocks.bulkMutations.freeze).toHaveBeenCalledWith({
+					ids: ["freeze-1"],
+					stage: "call",
+				});
+			});
+			expect(mocks.toastSuccess).toHaveBeenCalledWith(
+				"Moved 1 rows to Call List",
+			);
+
+			mocks.queryData.freeze = [];
+		});
+	});
+
 	describe("Orders missing parts guards", () => {
 		it("orders rows missing part data -> booking shows Orders error toast and no save", async () => {
 			const row = createRow({

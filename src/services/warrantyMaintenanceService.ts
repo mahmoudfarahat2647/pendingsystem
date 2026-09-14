@@ -38,7 +38,11 @@ export const warrantyMaintenanceService = {
 		let errors = 0;
 
 		for (const row of expired) {
-			if (row.stage === "archive") continue;
+			// Archived and frozen rows are never active work: archived rows are
+			// terminal, frozen rows are paused. Neither may be auto-archived by
+			// background maintenance (freeze rows are not fetched via
+			// ACTIVE_STAGES today; this guard is defense-in-depth).
+			if (row.stage === "archive" || row.stage === "freeze") continue;
 			try {
 				const payload = buildArchivePayload(row, ARCHIVE_REASON);
 				await orderService.saveOrder({

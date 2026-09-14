@@ -110,11 +110,57 @@ async function handleZeroRowMatch(
 	};
 }
 
+/**
+ * Transition guard for the freeze stage. Generic repository methods can write
+ * arbitrary stages, so a freeze that reaches this layer without a reason is
+ * rejected here — independent of the reason modal and the command builders.
+ *
+ * - `updateOrderStage` / `updateOrdersStage` write only the stage column and
+ *   can never carry freeze metadata, so any freeze through them is rejected.
+ * - `saveOrder` merges reason metadata: same-stage freeze writes (e.g. note
+ *   edits on already-frozen rows) are allowed, but a cross-stage transition
+ *   into `freeze` requires a non-empty `freezeReason` in the patch. Direct
+ *   writes without `expectedCurrentStage` are checked against the row's
+ *   current stage from the snapshot read instead.
+ */
+function freezeReasonOf(value: unknown): string {
+	return typeof value === "string" ? value : "";
+}
+
+function throwFreezeReasonRequired(): never {
+	throw new ServiceError(
+		"FREEZE_REASON_REQUIRED",
+		"A reason is required to move rows to the freeze stage.",
+	);
+}
+
+/**
+ * Early (no-DB-read) freeze check for saveOrder: a declared cross-stage
+ * transition into `freeze` must carry a non-empty `freezeReason` in the
+ * patch. Same-stage writes and writes without a declared source stage are
+ * resolved against live row state at the call sites below instead.
+ */
+function assertFreezeTransitionAllowed(args: {
+	stage: OrderStage;
+	expectedCurrentStage?: OrderStage;
+	freezeReason: unknown;
+}): void {
+	if (
+		args.stage === "freeze" &&
+		args.expectedCurrentStage &&
+		args.expectedCurrentStage !== "freeze" &&
+		!freezeReasonOf(args.freezeReason).trim()
+	) {
+		throwFreezeReasonRequired();
+	}
+}
+
 export function createOrderRepository(
 	db: typeof supabaseDefault = supabaseDefault,
 ) {
 	const service = {
 		async updateOrderStage(id: string, stage: OrderStage) {
+			if (stage === "freeze") throwFreezeReasonRequired();
 			const { data, error } = await db
 				.from("orders")
 				.update({ stage })
@@ -132,6 +178,8 @@ export function createOrderRepository(
 			options?: { guardFrozenVins?: boolean },
 		) {
 			if (ids.length === 0) return [];
+
+			if (stage === "freeze") throwFreezeReasonRequired();
 
 			if (options?.guardFrozenVins) {
 				const { data, error } = await db.rpc(
@@ -253,6 +301,12 @@ export function createOrderRepository(
 				...rest
 			} = order;
 
+			assertFreezeTransitionAllowed({
+				stage,
+				expectedCurrentStage,
+				freezeReason: rest.freezeReason,
+			});
+
 			// Builds the metadata merge + column-mapped payload against a given
 			// metadata snapshot. Re-invoked on each optimistic-concurrency retry so
 			// a retry always merges against the row's latest metadata instead of
@@ -368,11 +422,24 @@ export function createOrderRepository(
 				// this read and our write.
 				const { data: existing, error: existingError } = await db
 					.from("orders")
-					.select("metadata, updated_at")
+					.select("metadata, updated_at, stage")
 					.eq("id", id)
 					.maybeSingle();
 
 				if (existingError) handleSupabaseError(existingError);
+
+				// Snapshot-aware freeze check: a direct write that moves a live row
+				// into `freeze` without declaring expectedCurrentStage is still a
+				// transition and needs a reason. Same-stage writes on already-frozen
+				// rows (e.g. note edits from the Freeze tab) pass through.
+				if (
+					stage === "freeze" &&
+					existing &&
+					(existing.stage as string) !== "freeze" &&
+					!freezeReasonOf(rest.freezeReason).trim()
+				) {
+					throwFreezeReasonRequired();
+				}
 
 				let snapshotMetadata =
 					(existing?.metadata as Record<string, unknown>) || {};
@@ -464,6 +531,11 @@ export function createOrderRepository(
 					break;
 				}
 			} else {
+				// Inserts have no prior row state, so creating a row directly in
+				// `freeze` always counts as a transition and needs a reason.
+				if (stage === "freeze" && !freezeReasonOf(rest.freezeReason).trim()) {
+					throwFreezeReasonRequired();
+				}
 				const { dbOrder, fallbackSupabaseOrder } = buildPayload({});
 				const insertOrder = idempotencyKey
 					? { ...dbOrder, idempotency_key: idempotencyKey }
