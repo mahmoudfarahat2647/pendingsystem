@@ -22,7 +22,7 @@ npm run test:watch   # Vitest watch mode
 
 ## Architecture
 
-**pendingsystem** is a Next.js 15 App Router logistics platform for managing automotive parts across five workflow stages: `orders` -> `main` -> `call` -> `booking` -> `archive` (route folders: `orders`, `main-sheet`, `call-list`, `booking`, `archive`).
+**pendingsystem** is a Next.js 15 App Router logistics platform for managing automotive parts across five workflow stages: `orders` -> `main` -> `call` -> `booking` -> `archive` (route folders: `orders`, `main-sheet`, `call-list`, `booking`, `archive`). A sixth stage, `freeze`, is a parking area orthogonal to that pipeline — see [FREEZE Workflow](#freeze-workflow) below.
 
 ### Data Ownership
 - **React Query** is the source of truth for all live operational stage data.
@@ -61,6 +61,15 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 - **Do not** replace the action column composite `valueGetter` with `field: "id"` - it is the refresh trigger for notes, reminders, and attachment icons.
 - Use `useColumnLayoutTracker` for save/reset layout controls.
 
+### FREEZE Workflow
+`freeze` is a sixth `orders.stage` value used to park problematic or long-held lines outside the normal `orders -> main -> call -> booking -> archive` pipeline (route: `src/app/(app)/freeze/`). Status:
+
+- **Delivered (waves 1-3, merged):** stage-type foundation, DB enum value, `/freeze` route/grid/days-frozen column, sidebar entry, VIN auto-move blocking while any line is frozen, export/report labeling, row-modal stage-fallback fix, freeze action (snowflake button + required-reason modal) on Orders/Main Sheet/Call/Booking toolbars, unfreeze via a "Move to…" picker with a neutral transition builder, exclusion from active/actionable counts + live sidebar count badge, and global search integration (ice-blue badge, full actionability, notification click-through).
+- **Not yet delivered (tracked as GitHub issues, open as of 2026-09-14):** `#202` concurrency hardening (compare-and-set stage transitions, realtime `UPDATE`/`DELETE` sync — two clients can currently race on the same row) and `#204` end-to-end verification + rollout-order check. Full spec: issue `#191`.
+- **Freeze-in metadata** (`previousStage`, `freezeReason`, `frozenAt`) lives in `orders.metadata` (nullable fields — see `src/schemas/order.schema.ts`), set by `buildSendToFreezeCommands` (`src/lib/orderStageTransitions.ts`) and cleared via `null` (not omission) by the neutral `buildUnfreezeCommands` on unfreeze — clearing by omission does not work, since metadata merges on write.
+- **The freeze-reason requirement is enforced at three independent layers**, not just the modal: the pure builder, the draft-session `applyCommand` guard, and `orderRepository.ts`'s `assertFreezeTransitionAllowed` (plus a hard rejection of `stage: "freeze"` in the generic `updateOrderStage`/`updateOrdersStage`, which can never carry freeze metadata).
+- Full feature doc: `docs/features/freeze.md`.
+
 ### App Shell
 `src/app/layout.tsx` -> `src/app/(app)/layout.tsx` -> `AppShell` (Sidebar + Header + error boundary). All application routes live under `src/app/(app)/`.
 
@@ -77,7 +86,7 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 
 ### Key Cross-Cutting Components
 - **`BookingCalendarModal`** - shared booking workflow modal used across multiple stages
-- **`SearchResultsView`** - aggregates all five stage queries for global header search
+- **`SearchResultsView`** - aggregates all six stage queries (including `freeze`) for global header search
 - **`OrderFormModal`** - orchestrates create/edit with Beast Mode, multi-part, and duplicate detection
 - **`Header`** - owns debounced global search, draft-session undo/redo/save/discard controls, exports, and notification polling
 
@@ -194,6 +203,7 @@ The Supabase MCP server is active in this project. Claude can directly query tab
 - Authentication uses Better Auth (username+password only, admin-only, 8-hour sessions).
 - Theme customization tab in Settings is a placeholder only.
 - Some legacy Zustand stage arrays remain in the store for compatibility; do not expand that pattern.
+- FREEZE stage transitions are not yet safe under concurrent writes from two clients (no compare-and-set, realtime sync only handles `INSERT`) — tracked as open issue `#202`. See [FREEZE Workflow](#freeze-workflow).
 
 ## Refactor Safety Rules
 
