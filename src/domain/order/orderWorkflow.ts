@@ -132,18 +132,62 @@ export function isVinLongEnoughForDuplicateCheck(vin: string): boolean {
 	return normalized.length >= DUPLICATE_CHECK_VIN_MIN_LENGTH;
 }
 
+export function hasFrozenSibling(
+	vin: string | null | undefined,
+	rows: PendingRow[],
+): boolean {
+	const normalizedVin = normalizeVin(vin || "");
+	if (!normalizedVin) return false;
+	return rows.some(
+		(row) =>
+			normalizeVin(row.vin || "") === normalizedVin &&
+			normalizeStageKey(row.stage) === "freeze",
+	);
+}
+
+export function isVinBlockedByFreeze({
+	vin,
+	stageRows,
+	frozenRows,
+}: {
+	vin: string | null | undefined;
+	stageRows?: PendingRow[];
+	frozenRows?: PendingRow[];
+}): boolean {
+	const normalizedVin = normalizeVin(vin || "");
+	if (!normalizedVin) return false;
+
+	if (stageRows && hasFrozenSibling(normalizedVin, stageRows)) {
+		return true;
+	}
+
+	if (
+		frozenRows?.some(
+			(r) =>
+				normalizeVin(r.vin || "") === normalizedVin &&
+				(r.stage ? normalizeStageKey(r.stage) === "freeze" : true),
+		)
+	) {
+		return true;
+	}
+
+	return false;
+}
+
 export function getVinAutoMoveIds({
 	stage,
 	stageRows,
 	editedRowId,
 	editedVin,
 	nextStatus,
+	frozenRows,
 }: {
 	stage?: string | null;
 	stageRows: PendingRow[];
 	editedRowId: string;
 	editedVin?: string | null;
 	nextStatus?: string | null;
+	frozenRows?: PendingRow[];
 }): string[] {
 	const normalizedStage = normalizeStageKey(stage);
 	if (normalizedStage !== "main" && normalizedStage !== "orders") {
@@ -156,6 +200,11 @@ export function getVinAutoMoveIds({
 	}
 
 	if (normalizeStatus(nextStatus) !== "arrived") {
+		return [];
+	}
+
+	// Hard block: suppress auto-move if ANY line of this VIN is currently frozen
+	if (isVinBlockedByFreeze({ vin: normalizedVin, stageRows, frozenRows })) {
 		return [];
 	}
 

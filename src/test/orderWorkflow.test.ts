@@ -12,8 +12,10 @@ import {
 	getNormalizedVinBuckets,
 	getVinAutoMoveIds,
 	getVinBucket,
+	hasFrozenSibling,
 	hasMixedVinSelection,
 	isUuid,
+	isVinBlockedByFreeze,
 	isVinComplete,
 	isVinLongEnoughForDuplicateCheck,
 	normalizeVin,
@@ -592,6 +594,202 @@ describe("getVinAutoMoveIds", () => {
 				nextStatus: "Arrived",
 			}),
 		).toEqual(["1"]);
+	});
+
+	it("hard blocks auto-move when a line for the VIN is currently in freeze stage within stageRows", () => {
+		const rows = [
+			createMockRow({
+				id: "1",
+				stage: "main",
+				vin: "VIN111",
+				status: "Not Arrived",
+			}),
+			createMockRow({
+				id: "2",
+				stage: "main",
+				vin: "VIN111",
+				status: "Arrived",
+			}),
+			createMockRow({
+				id: "3",
+				stage: "freeze",
+				vin: "VIN111",
+				status: "Arrived",
+			}),
+		];
+
+		// Even though both parts 1 and 2 in main are arrived and part 3 in freeze is arrived,
+		// the vehicle cannot advance while any line remains frozen
+		expect(
+			getVinAutoMoveIds({
+				stage: "main",
+				stageRows: rows,
+				editedRowId: "1",
+				editedVin: "VIN111",
+				nextStatus: "Arrived",
+			}),
+		).toEqual([]);
+	});
+
+	it("hard blocks auto-move when a line for the VIN is provided in frozenRows", () => {
+		const mainRows = [
+			createMockRow({
+				id: "1",
+				stage: "main",
+				vin: "VIN222",
+				status: "Not Arrived",
+			}),
+			createMockRow({
+				id: "2",
+				stage: "main",
+				vin: "VIN222",
+				status: "Arrived",
+			}),
+		];
+		const frozenRows = [
+			createMockRow({
+				id: "f1",
+				stage: "freeze",
+				vin: "VIN222",
+				status: "Pending",
+			}),
+		];
+
+		expect(
+			getVinAutoMoveIds({
+				stage: "main",
+				stageRows: mainRows,
+				editedRowId: "1",
+				editedVin: "VIN222",
+				nextStatus: "Arrived",
+				frozenRows,
+			}),
+		).toEqual([]);
+	});
+
+	it("blocks auto-move with case-insensitive VIN matching on frozen sibling", () => {
+		const rows = [
+			createMockRow({
+				id: "1",
+				stage: "orders",
+				vin: "vin333",
+				status: "Not Arrived",
+			}),
+		];
+		const frozenRows = [
+			createMockRow({
+				id: "f1",
+				stage: "freeze",
+				vin: "VIN333",
+				status: "Pending",
+			}),
+		];
+
+		expect(
+			getVinAutoMoveIds({
+				stage: "orders",
+				stageRows: rows,
+				editedRowId: "1",
+				editedVin: "vin333",
+				nextStatus: "Arrived",
+				frozenRows,
+			}),
+		).toEqual([]);
+	});
+
+	it("resumes normal auto-move once the frozen sibling is unfrozen (removed from freeze)", () => {
+		const mainRows = [
+			createMockRow({
+				id: "1",
+				stage: "main",
+				vin: "VIN444",
+				status: "Not Arrived",
+			}),
+			createMockRow({
+				id: "2",
+				stage: "main",
+				vin: "VIN444",
+				status: "Arrived",
+			}),
+		];
+		const frozenRows = [
+			createMockRow({
+				id: "f1",
+				stage: "freeze",
+				vin: "VIN444",
+				status: "Pending",
+			}),
+		];
+
+		// Blocked while frozen sibling exists
+		expect(
+			getVinAutoMoveIds({
+				stage: "main",
+				stageRows: mainRows,
+				editedRowId: "1",
+				editedVin: "VIN444",
+				nextStatus: "Arrived",
+				frozenRows,
+			}),
+		).toEqual([]);
+
+		// Once unfrozen (empty frozenRows), auto-move returns all arrived line IDs normally
+		expect(
+			getVinAutoMoveIds({
+				stage: "main",
+				stageRows: mainRows,
+				editedRowId: "1",
+				editedVin: "VIN444",
+				nextStatus: "Arrived",
+				frozenRows: [],
+			}),
+		).toEqual(["1", "2"]);
+	});
+});
+
+describe("hasFrozenSibling and isVinBlockedByFreeze", () => {
+	it("detects a frozen row for a matching VIN in stageRows", () => {
+		const rows = [
+			createMockRow({ id: "1", vin: "VIN100", stage: "main" }),
+			createMockRow({ id: "2", vin: "VIN100", stage: "freeze" }),
+		];
+		expect(hasFrozenSibling("VIN100", rows)).toBe(true);
+		expect(hasFrozenSibling("vin100", rows)).toBe(true);
+		expect(isVinBlockedByFreeze({ vin: "VIN100", stageRows: rows })).toBe(true);
+	});
+
+	it("detects a frozen row in dedicated frozenRows array", () => {
+		const frozenRows = [
+			createMockRow({ id: "f1", vin: "VIN200", stage: "freeze" }),
+		];
+		expect(isVinBlockedByFreeze({ vin: "VIN200", frozenRows })).toBe(true);
+		expect(isVinBlockedByFreeze({ vin: "vin200", frozenRows })).toBe(true);
+	});
+
+	it("returns false when no rows for the VIN are in freeze stage", () => {
+		const rows = [
+			createMockRow({ id: "1", vin: "VIN300", stage: "main" }),
+			createMockRow({ id: "2", vin: "VIN300", stage: "orders" }),
+		];
+		expect(hasFrozenSibling("VIN300", rows)).toBe(false);
+		expect(isVinBlockedByFreeze({ vin: "VIN300", stageRows: rows })).toBe(
+			false,
+		);
+		expect(
+			isVinBlockedByFreeze({
+				vin: "VIN300",
+				stageRows: rows,
+				frozenRows: [],
+			}),
+		).toBe(false);
+	});
+
+	it("returns false for empty or blank VIN", () => {
+		const rows = [createMockRow({ id: "1", vin: "", stage: "freeze" })];
+		expect(hasFrozenSibling("", rows)).toBe(false);
+		expect(hasFrozenSibling(null, rows)).toBe(false);
+		expect(hasFrozenSibling(undefined, rows)).toBe(false);
+		expect(isVinBlockedByFreeze({ vin: "", stageRows: rows })).toBe(false);
 	});
 });
 

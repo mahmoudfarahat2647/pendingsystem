@@ -96,6 +96,34 @@ describe("orderService", () => {
 	});
 
 	describe("updateOrdersStage (bulk move)", () => {
+		it("uses one guarded RPC and rejects a VIN that became frozen", async () => {
+			const rpc = vi.fn().mockResolvedValue({
+				data: [{ moved_ids: [], blocked_vins: ["VIN-BLOCK"] }],
+				error: null,
+			});
+			const repo = createOrderRepository({
+				rpc,
+			} as unknown as Parameters<typeof createOrderRepository>[0]);
+
+			await expect(
+				repo.updateOrdersStage(
+					["123e4567-e89b-42d3-a456-426614174000"],
+					"call",
+					"main",
+					{ guardFrozenVins: true },
+				),
+			).rejects.toMatchObject({ code: "AUTO_MOVE_FROZEN_VIN_BLOCKED" });
+
+			expect(rpc).toHaveBeenCalledWith(
+				"auto_move_orders_to_stage_if_unfrozen",
+				{
+					p_ids: ["123e4567-e89b-42d3-a456-426614174000"],
+					p_source_stage: "main",
+					p_stage: "call",
+				},
+			);
+		});
+
 		it("should process batches and return successful data", async () => {
 			const mockUpdate = vi.fn().mockReturnThis();
 			const mockIn = vi.fn().mockReturnThis();
@@ -103,14 +131,11 @@ describe("orderService", () => {
 				.fn()
 				.mockResolvedValue({ data: [{ id: "1" }], error: null });
 
-			// biome-ignore lint/complexity/noBannedTypes: Test mock typing
-			(
-				supabase.from as unknown as { mockReturnValue: Function }
-			).mockReturnValue({
+			vi.mocked(supabase.from).mockReturnValue({
 				update: mockUpdate,
 				in: mockIn,
 				select: mockSelect,
-			});
+			} as never);
 
 			const ids = Array.from({ length: 60 }, (_, i) => String(i));
 			const result = await orderService.updateOrdersStage(
@@ -136,14 +161,11 @@ describe("orderService", () => {
 					error: { message: "Batch 2 failed", code: "500" },
 				});
 
-			// biome-ignore lint/complexity/noBannedTypes: Test mock typing
-			(
-				supabase.from as unknown as { mockReturnValue: Function }
-			).mockReturnValue({
+			vi.mocked(supabase.from).mockReturnValue({
 				update: mockUpdate,
 				in: mockIn,
 				select: mockSelect,
-			});
+			} as never);
 
 			const ids = Array.from({ length: 60 }, (_, i) => String(i)); // 2 batches
 
@@ -160,6 +182,22 @@ describe("orderService", () => {
 			// 3. Rollback update to main for successful batch 1
 			expect(mockUpdate).toHaveBeenCalledTimes(3);
 			expect(mockUpdate.mock.calls[2][0]).toEqual({ stage: "main" });
+		});
+
+		it("returns the IDs moved by the guarded RPC when no sibling is frozen", async () => {
+			const rpc = vi.fn().mockResolvedValue({
+				data: [{ moved_ids: ["row-1"], blocked_vins: [] }],
+				error: null,
+			});
+			const repo = createOrderRepository({
+				rpc,
+			} as unknown as Parameters<typeof createOrderRepository>[0]);
+
+			await expect(
+				repo.updateOrdersStage(["row-1"], "call", "main", {
+					guardFrozenVins: true,
+				}),
+			).resolves.toEqual(["row-1"]);
 		});
 	});
 

@@ -650,6 +650,7 @@ async function executeCommand(
 		await mutations.bulkUpdateStage({
 			ids: remapped.ids,
 			stage: remapped.destinationStage,
+			guardFrozenVins: remapped.guardFrozenVins,
 		});
 	} else {
 		const unknownType = (remapped as { type?: unknown }).type;

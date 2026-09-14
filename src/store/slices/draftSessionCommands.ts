@@ -18,6 +18,7 @@ export interface MoveRowsCommand {
 	sourceStage: OrderStage;
 	destinationStage: OrderStage;
 	fieldOverrides?: Partial<PendingRow>;
+	guardFrozenVins?: boolean;
 }
 
 interface CompositeCommand {
@@ -51,6 +52,7 @@ interface BulkUpdateStageDraftMutationVars {
 	ids: string[];
 	stage: OrderStage;
 	silentErrorToast?: boolean;
+	guardFrozenVins?: boolean;
 }
 
 export interface DraftSaveMutations {

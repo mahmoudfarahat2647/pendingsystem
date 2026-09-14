@@ -4,14 +4,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAutoMoveVins } from "@/hooks/useAutoMoveVins";
 
 // --- mocks ---
-const mockMutate = vi.fn();
+const { mockMutate, mockMutateAsync, mockToastSuccess } = vi.hoisted(() => ({
+	mockMutate: vi.fn(),
+	mockMutateAsync: vi.fn(),
+	mockToastSuccess: vi.fn(),
+}));
+
+vi.mock("sonner", () => ({
+	toast: { success: mockToastSuccess },
+}));
 
 vi.mock("@/hooks/queries/useOrdersQuery", () => ({
 	useOrdersQuery: vi.fn(),
 }));
 
 vi.mock("@/hooks/queries/useBulkUpdateOrderStageMutation", () => ({
-	useBulkUpdateOrderStageMutation: vi.fn(() => ({ mutate: mockMutate })),
+	useBulkUpdateOrderStageMutation: vi.fn(() => ({
+		mutate: mockMutate,
+		mutateAsync: mockMutateAsync,
+	})),
 }));
 
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
@@ -56,6 +67,8 @@ describe("useAutoMoveVins", () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
 		mockMutate.mockReset();
+		mockMutateAsync.mockReset();
+		mockToastSuccess.mockReset();
 	});
 
 	afterEach(() => {
@@ -68,9 +81,33 @@ describe("useAutoMoveVins", () => {
 		} as unknown as ReturnType<typeof useOrdersQuery>);
 
 		renderHook(() => useAutoMoveVins());
-		vi.runAllTimers();
+		await vi.runAllTimersAsync();
 
-		expect(mockMutate).toHaveBeenCalledWith({ ids: ["r1"], stage: "call" });
+		expect(mockMutateAsync).toHaveBeenCalledWith({
+			ids: ["r1"],
+			stage: "call",
+			guardFrozenVins: true,
+		});
+	});
+
+	it("reports a VIN move only after the guarded mutation succeeds", async () => {
+		mockMutateAsync.mockResolvedValue([{ id: "r1", stage: "call" }]);
+		mockUseOrdersQuery.mockReturnValue({
+			data: [makeRow({ id: "r1", vin: "VIN111", status: "Arrived" })],
+		} as unknown as ReturnType<typeof useOrdersQuery>);
+
+		renderHook(() => useAutoMoveVins());
+		await vi.runAllTimersAsync();
+
+		expect(mockMutateAsync).toHaveBeenCalledWith({
+			ids: ["r1"],
+			stage: "call",
+			guardFrozenVins: true,
+		});
+		expect(mockToastSuccess).toHaveBeenCalledWith(
+			"All parts for VIN VIN111 arrived! Moved to Call List.",
+			{ duration: 5000 },
+		);
 	});
 
 	it("moves a multi-part VIN when all parts are Arrived", async () => {
@@ -83,11 +120,12 @@ describe("useAutoMoveVins", () => {
 		} as unknown as ReturnType<typeof useOrdersQuery>);
 
 		renderHook(() => useAutoMoveVins());
-		vi.runAllTimers();
+		await vi.runAllTimersAsync();
 
-		expect(mockMutate).toHaveBeenCalledWith({
+		expect(mockMutateAsync).toHaveBeenCalledWith({
 			ids: expect.arrayContaining(["r1", "r2", "r3"]),
 			stage: "call",
+			guardFrozenVins: true,
 		});
 	});
 
@@ -102,7 +140,87 @@ describe("useAutoMoveVins", () => {
 		renderHook(() => useAutoMoveVins());
 		vi.runAllTimers();
 
-		expect(mockMutate).not.toHaveBeenCalled();
+		expect(mockMutateAsync).not.toHaveBeenCalled();
+	});
+
+	it("does NOT move a VIN when all its Main parts are Arrived but a frozen sibling exists", async () => {
+		mockUseOrdersQuery.mockImplementation((stage) => {
+			if (stage === "freeze") {
+				return {
+					data: [
+						makeRow({
+							id: "f1",
+							vin: "VIN111",
+							stage: "freeze",
+							status: "Arrived",
+						}),
+					],
+				} as unknown as ReturnType<typeof useOrdersQuery>;
+			}
+			return {
+				data: [
+					makeRow({
+						id: "r1",
+						vin: "VIN111",
+						stage: "main",
+						status: "Arrived",
+					}),
+				],
+			} as unknown as ReturnType<typeof useOrdersQuery>;
+		});
+
+		renderHook(() => useAutoMoveVins());
+		vi.runAllTimers();
+
+		expect(mockMutateAsync).not.toHaveBeenCalled();
+	});
+
+	it("resumes auto-move once the frozen sibling is unfrozen", async () => {
+		let isFrozen = true;
+		mockUseOrdersQuery.mockImplementation((stage) => {
+			if (stage === "freeze") {
+				return {
+					data: isFrozen
+						? [
+								makeRow({
+									id: "f1",
+									vin: "VIN111",
+									stage: "freeze",
+									status: "Pending",
+								}),
+							]
+						: [],
+				} as unknown as ReturnType<typeof useOrdersQuery>;
+			}
+			return {
+				data: [
+					makeRow({
+						id: "r1",
+						vin: "VIN111",
+						stage: "main",
+						status: "Arrived",
+					}),
+				],
+			} as unknown as ReturnType<typeof useOrdersQuery>;
+		});
+
+		const { rerender } = renderHook(() => useAutoMoveVins());
+		await vi.runAllTimersAsync();
+
+		// Initially blocked by frozen sibling
+		expect(mockMutateAsync).not.toHaveBeenCalled();
+
+		// Unfreeze the sibling
+		isFrozen = false;
+		rerender();
+		await vi.runAllTimersAsync();
+
+		// Auto-move fires normally once unfrozen
+		expect(mockMutateAsync).toHaveBeenCalledWith({
+			ids: ["r1"],
+			stage: "call",
+			guardFrozenVins: true,
+		});
 	});
 
 	it("does NOT move rows with a blank VIN", async () => {
@@ -113,7 +231,7 @@ describe("useAutoMoveVins", () => {
 		renderHook(() => useAutoMoveVins());
 		vi.runAllTimers();
 
-		expect(mockMutate).not.toHaveBeenCalled();
+		expect(mockMutateAsync).not.toHaveBeenCalled();
 	});
 
 	it("does NOT move rows when data is undefined", async () => {
@@ -124,7 +242,7 @@ describe("useAutoMoveVins", () => {
 		renderHook(() => useAutoMoveVins());
 		vi.runAllTimers();
 
-		expect(mockMutate).not.toHaveBeenCalled();
+		expect(mockMutateAsync).not.toHaveBeenCalled();
 	});
 
 	it("only moves the fully-arrived VIN, not a partially-arrived one", async () => {
@@ -140,12 +258,13 @@ describe("useAutoMoveVins", () => {
 		} as unknown as ReturnType<typeof useOrdersQuery>);
 
 		renderHook(() => useAutoMoveVins());
-		vi.runAllTimers();
+		await vi.runAllTimersAsync();
 
-		expect(mockMutate).toHaveBeenCalledOnce();
-		expect(mockMutate).toHaveBeenCalledWith({
+		expect(mockMutateAsync).toHaveBeenCalledOnce();
+		expect(mockMutateAsync).toHaveBeenCalledWith({
 			ids: expect.arrayContaining(["a1", "a2"]),
 			stage: "call",
+			guardFrozenVins: true,
 		});
 	});
 
@@ -158,7 +277,7 @@ describe("useAutoMoveVins", () => {
 		>);
 		const { rerender } = renderHook(() => useAutoMoveVins());
 		vi.runAllTimers(); // flush initial debounce; status key is now committed
-		mockMutate.mockReset();
+		mockMutateAsync.mockReset();
 
 		// Same logical content, new array reference — key-deduplication should block re-fire.
 		mockUseOrdersQuery.mockReturnValue({
@@ -167,6 +286,6 @@ describe("useAutoMoveVins", () => {
 		rerender();
 		vi.runAllTimers();
 
-		expect(mockMutate).not.toHaveBeenCalled();
+		expect(mockMutateAsync).not.toHaveBeenCalled();
 	});
 });

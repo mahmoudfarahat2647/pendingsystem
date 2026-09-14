@@ -129,31 +129,65 @@ export function createOrderRepository(
 			ids: string[],
 			stage: OrderStage,
 			previousStage?: OrderStage,
+			options?: { guardFrozenVins?: boolean },
 		) {
 			if (ids.length === 0) return [];
+
+			if (options?.guardFrozenVins) {
+				const { data, error } = await db.rpc(
+					"auto_move_orders_to_stage_if_unfrozen",
+					{
+						p_ids: ids,
+						p_source_stage: previousStage ?? stage,
+						p_stage: stage,
+					},
+				);
+				if (error) handleSupabaseError(error);
+
+				const result = (data?.[0] ?? {}) as {
+					moved_ids?: string[] | null;
+					blocked_vins?: string[] | null;
+				};
+				const blockedVins = result.blocked_vins ?? [];
+				if (blockedVins.length > 0) {
+					throw new ServiceError(
+						"AUTO_MOVE_FROZEN_VIN_BLOCKED",
+						"Auto-move blocked: one or more lines for this VIN are currently frozen.",
+						{ frozenVins: blockedVins },
+					);
+				}
+
+				return result.moved_ids ?? [];
+			}
+
+			const idsToUpdate = ids;
 
 			// For large batches, process in chunks to avoid connection pool exhaustion
 			const BATCH_SIZE = 50;
 
-			if (ids.length > BATCH_SIZE) {
+			if (idsToUpdate.length > BATCH_SIZE) {
 				const successfulIds: string[] = [];
 				let encounteredError: Error | null = null;
 				let returnData: Record<string, unknown>[] = [];
 
 				try {
-					returnData = await processBatch(ids, BATCH_SIZE, async (batch) => {
-						const { data, error } = await db
-							.from("orders")
-							.update({ stage })
-							.in("id", batch)
-							.select();
-						if (error) handleSupabaseError(error);
+					returnData = await processBatch(
+						idsToUpdate,
+						BATCH_SIZE,
+						async (batch) => {
+							const { data, error } = await db
+								.from("orders")
+								.update({ stage })
+								.in("id", batch)
+								.select();
+							if (error) handleSupabaseError(error);
 
-						if (data) {
-							successfulIds.push(...data.map((r) => r.id));
-						}
-						return data || [];
-					});
+							if (data) {
+								successfulIds.push(...data.map((r) => r.id));
+							}
+							return data || [];
+						},
+					);
 				} catch (err: unknown) {
 					encounteredError =
 						err instanceof Error ? err : new Error(String(err));
@@ -197,7 +231,7 @@ export function createOrderRepository(
 			const { data, error } = await db
 				.from("orders")
 				.update({ stage })
-				.in("id", ids)
+				.in("id", idsToUpdate)
 				.select();
 			if (error) handleSupabaseError(error);
 			return data;
