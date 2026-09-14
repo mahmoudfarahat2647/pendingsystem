@@ -13,6 +13,7 @@ import {
 	MoreVertical,
 	Phone,
 	ShoppingCart,
+	Snowflake,
 	X,
 } from "lucide-react";
 import Link from "next/link";
@@ -74,6 +75,11 @@ const navItems: NavItem[] = [
 		href: "/archive",
 		label: "Archive",
 		icon: <Archive className="h-5 w-5" />,
+	},
+	{
+		href: "/freeze",
+		label: "Freeze",
+		icon: <Snowflake className="h-5 w-5" />,
 	},
 	{
 		href: "/reports",

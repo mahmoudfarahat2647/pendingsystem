@@ -4,6 +4,7 @@ import type {
 	ColDef,
 	ICellRendererParams,
 	ValueFormatterParams,
+	ValueGetterParams,
 } from "ag-grid-community";
 import { format } from "date-fns";
 import { useEffect, useRef, useState } from "react";
@@ -300,6 +301,57 @@ export const getCallColumns = (
 					? { ...col, cellStyle: { color: "#22c55e" } }
 					: col,
 			),
+		{
+			headerName: "REQUESTER",
+			field: "requester",
+			width: 120,
+		},
+	];
+};
+
+export const getFreezeColumns = (
+	partStatuses: PartStatusDef[] = [],
+	onNoteClick?: (row: PendingRow) => void,
+	onReminderClick?: (row: PendingRow) => void,
+	onAttachClick?: (row: PendingRow) => void,
+): ColDef<PendingRow>[] => {
+	const baseColumns = getBaseColumns(
+		onNoteClick,
+		onReminderClick,
+		onAttachClick,
+		undefined,
+		partStatuses,
+	);
+	return [
+		baseColumns[0],
+		{
+			headerName: "DAYS FROZEN",
+			colId: "daysFrozen",
+			width: 120,
+			filter: "agNumberColumnFilter",
+			cellClass: "flex items-center justify-center font-medium",
+			valueGetter: (params: ValueGetterParams<PendingRow>) => {
+				const frozenAt = params.data?.frozenAt;
+				if (!frozenAt) return null;
+				const date = new Date(frozenAt);
+				if (Number.isNaN(date.getTime())) return null;
+				return Math.max(
+					0,
+					Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)),
+				);
+			},
+			valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
+				if (
+					params.value === null ||
+					params.value === undefined ||
+					params.value === ""
+				) {
+					return "";
+				}
+				return String(params.value);
+			},
+		},
+		...baseColumns.slice(1),
 		{
 			headerName: "REQUESTER",
 			field: "requester",

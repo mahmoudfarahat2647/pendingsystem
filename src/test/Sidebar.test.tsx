@@ -93,4 +93,24 @@ describe("Sidebar", () => {
 		renderWithProviders(<Sidebar />);
 		expect(screen.getByTestId("sign-out-menu")).toBeInTheDocument();
 	});
+
+	it("renders Freeze nav item between Archive and Reports, with Reports remaining last", () => {
+		renderWithProviders(<Sidebar />);
+
+		const navLinks = screen
+			.getAllByRole("link")
+			.map((link) => link.getAttribute("href"))
+			.filter((href) => href && href !== "/dashboard");
+
+		expect(navLinks).toContain("/freeze");
+
+		const archiveIndex = navLinks.indexOf("/archive");
+		const freezeIndex = navLinks.indexOf("/freeze");
+		const reportsIndex = navLinks.indexOf("/reports");
+
+		expect(archiveIndex).toBeGreaterThan(-1);
+		expect(freezeIndex).toBe(archiveIndex + 1);
+		expect(reportsIndex).toBe(freezeIndex + 1);
+		expect(reportsIndex).toBe(navLinks.length - 1);
+	});
 });
