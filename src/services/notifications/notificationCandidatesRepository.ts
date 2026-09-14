@@ -60,9 +60,11 @@ function dedupeById(
 export function createNotificationCandidatesRepository(
 	db: ReturnType<typeof createServiceClient> = createServiceClient(),
 ) {
-	// --- Reminders: any non-archived order with an uncompleted reminder due
-	// within the next minute (the +1min covers the client mapper's
-	// minute-truncated local time comparison). Two-step so the candidacy filter
+	// --- Reminders: any active-work order (neither archived nor frozen) with
+	// an uncompleted reminder due within the next minute (the +1min covers
+	// the client mapper's minute-truncated local time comparison). Frozen
+	// rows are excluded exactly like archived rows: freeze pauses a row, so
+	// it must not surface as actionable work. Two-step so the candidacy filter
 	// never shapes the embed returned for mapping (see comment above
 	// CANDIDATE_SELECT): the first query only finds which orders qualify, the
 	// second re-fetches them with the FULL unfiltered order_reminders embed.
@@ -74,6 +76,7 @@ export function createNotificationCandidatesRepository(
 			.from("orders")
 			.select("id, order_reminders!inner(id)")
 			.neq("stage", "archive")
+			.neq("stage", "freeze")
 			.not("order_reminders.is_completed", "eq", true)
 			.lte("order_reminders.remind_at", reminderCutoff)
 			.order("created_at", { ascending: true })
@@ -132,6 +135,7 @@ export function createNotificationCandidatesRepository(
 						.from("orders")
 						.select(CANDIDATE_SELECT)
 						.neq("stage", "archive")
+						.neq("stage", "freeze")
 						.filter("metadata->>endWarranty", "neq", "")
 						.filter("metadata->>endWarranty", "gte", warrantyMin)
 						.filter("metadata->>endWarranty", "lte", warrantyMax)

@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Filter } from "lucide-react";
+import { Download, Filter, MoveRight } from "lucide-react";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
@@ -20,15 +20,18 @@ export interface FreezeToolbarProps {
 	onFilterToggle: () => void;
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
+	/** Opens the "Move to…" unfreeze picker for the current selection. */
+	onMoveTo?: () => void;
 }
 
 export function FreezeToolbar({
-	selectedRows: _selectedRows = [],
+	selectedRows = [],
 	rowData = [],
 	onExtract,
 	onFilterToggle,
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
+	onMoveTo,
 }: FreezeToolbarProps) {
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("freeze");
@@ -70,6 +73,23 @@ export function FreezeToolbar({
 					onSaveAsDefault={saveAsDefault}
 					onReset={resetLayout}
 				/>
+
+				<div className="w-px h-5 bg-white/10 mx-1" />
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-sky-400/80 hover:text-sky-400 h-8 w-8"
+							onClick={onMoveTo}
+							disabled={selectedRows.length === 0 || !onMoveTo}
+						>
+							<MoveRight className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Move to… (unfreeze)</TooltipContent>
+				</Tooltip>
 			</div>
 
 			<div className="flex items-center gap-1.5">
