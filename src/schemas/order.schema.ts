@@ -139,8 +139,18 @@ const PendingRowBaseObject = z.object({
 	reminder: ReminderSchema.optional(),
 	archiveReason: z.string().optional(),
 	archivedAt: z.string().optional(),
-	frozenAt: z.string().optional(),
-	freezeReason: z.string().optional(),
+	// Freeze metadata. These fields are nullable (not just optional) so that
+	// the neutral unfreeze transition can clear them by persisting `null`:
+	// metadata is merged on write, omitting a key preserves it and `undefined`
+	// does not reliably delete a JSON key, so `null` is the explicit "cleared"
+	// representation that survives the saveOrder merge and the mapper below.
+	frozenAt: z.string().nullable().optional(),
+	freezeReason: z.string().nullable().optional(),
+	// Stage the row was frozen from (set by the freeze action, cleared on
+	// unfreeze). Named for the persisted metadata field — do not confuse with
+	// the `previousStage` rollback-destination parameter of
+	// `orderRepository.updateOrdersStage`, which is unrelated.
+	previousStage: z.enum(ORDER_STAGE_VALUES).nullable().optional(),
 	reserved: z.boolean().optional(),
 	reservedAt: z.string().optional(),
 	sourceType: z.string().optional(),
