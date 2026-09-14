@@ -60,7 +60,8 @@ const nextConfig: NextConfig = {
 		formats: ["image/avif", "image/webp"],
 	},
 	// Standalone output for smaller container sizes if needed
-	output: "standalone",
+	output:
+		process.platform === "win32" && !process.env.CI ? undefined : "standalone",
 };
 
 export default nextConfig;

@@ -47,6 +47,7 @@ import { useOrdersPageHandlers } from "./useOrdersPageHandlers";
 export default function OrdersPage() {
 	const {
 		ordersRowData,
+		freezeData,
 		gridApi,
 		setGridApi,
 		selectedRows,
@@ -209,6 +210,7 @@ export default function OrdersPage() {
 										editedRowId: params.data.id,
 										editedVin: vin,
 										nextStatus: newStatus,
+										frozenRows: freezeData,
 									});
 
 									if (vinIds.length > 0) {
@@ -217,6 +219,7 @@ export default function OrdersPage() {
 											ids: vinIds,
 											sourceStage: "orders",
 											destinationStage: "call",
+											guardFrozenVins: true,
 										});
 										toast.success(
 											`All parts for VIN ${vin} arrived! Moved to Call List.`,

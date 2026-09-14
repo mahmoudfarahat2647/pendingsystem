@@ -873,6 +873,7 @@ describe("SearchResultsView", () => {
 			ids: ["main-1", "main-2"],
 			stage: "call",
 			silentErrorToast: true,
+			guardFrozenVins: true,
 		});
 		expect(mocks.toastSuccess).toHaveBeenCalledWith(
 			"All parts for VIN VIN123 arrived! Moved to Call List.",
@@ -1396,6 +1397,7 @@ describe("SearchResultsView", () => {
 			ids: ["orders-1", "orders-2"],
 			stage: "call",
 			silentErrorToast: true,
+			guardFrozenVins: true,
 		});
 	});
 

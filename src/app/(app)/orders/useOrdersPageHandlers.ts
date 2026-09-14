@@ -33,6 +33,7 @@ export const useOrdersPageHandlers = () => {
 	// 1. Data & Store
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
+	const { data: freezeData = [] } = useOrdersQuery("freeze");
 	// Draft session for undo/redo
 	const {
 		workingRows: draftWorkingRows,
@@ -351,6 +352,7 @@ export const useOrdersPageHandlers = () => {
 				editedRowId: editedRow.id,
 				editedVin: vin,
 				nextStatus: status,
+				frozenRows: freezeData,
 			});
 
 			if (vinIds.length > 0) {
@@ -359,6 +361,7 @@ export const useOrdersPageHandlers = () => {
 					ids: vinIds,
 					sourceStage: "orders",
 					destinationStage: "call",
+					guardFrozenVins: true,
 				});
 				toast.success(`All parts for VIN ${vin} arrived! Moved to Call List.`, {
 					duration: 5000,
@@ -482,6 +485,7 @@ export const useOrdersPageHandlers = () => {
 	return {
 		// Data
 		ordersRowData: effectiveOrdersData,
+		freezeData,
 
 		// State
 		gridApi,

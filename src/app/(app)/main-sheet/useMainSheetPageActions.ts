@@ -20,8 +20,15 @@ export function useMainSheetPageActions(params: {
 	effectiveRows: PendingRow[];
 	selectedRows: PendingRow[];
 	setSelectedRows: React.Dispatch<React.SetStateAction<PendingRow[]>>;
+	freezeRows?: PendingRow[];
 }) {
-	const { applyCommand, effectiveRows, selectedRows, setSelectedRows } = params;
+	const {
+		applyCommand,
+		effectiveRows,
+		selectedRows,
+		setSelectedRows,
+		freezeRows = [],
+	} = params;
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
@@ -139,6 +146,7 @@ export function useMainSheetPageActions(params: {
 				editedRowId: editedRow.id,
 				editedVin: vin,
 				nextStatus: status,
+				frozenRows: freezeRows,
 			});
 
 			if (vinIds.length > 0) {
@@ -147,6 +155,7 @@ export function useMainSheetPageActions(params: {
 					ids: vinIds,
 					sourceStage: "main",
 					destinationStage: "call",
+					guardFrozenVins: true,
 				});
 				toast.success(`All parts for VIN ${vin} arrived! Moved to Call List.`, {
 					duration: 5000,

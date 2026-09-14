@@ -675,6 +675,7 @@ export const useSearchResultsState = () => {
 					editedRowId: event.data.id,
 					editedVin: event.data.vin,
 					nextStatus: event.newValue,
+					frozenRows: freezeData,
 				});
 
 				if (vinIds.length === 0) {
@@ -697,6 +698,7 @@ export const useSearchResultsState = () => {
 						ids: vinIds,
 						stage: "call",
 						silentErrorToast: true,
+						guardFrozenVins: true,
 					});
 					toast.success(
 						`All parts for VIN ${event.data.vin} arrived! Moved to Call List.`,
@@ -715,7 +717,7 @@ export const useSearchResultsState = () => {
 				}
 			}
 		},
-		[bulkStageMutations, handleUpdateOrder, mainData, ordersData],
+		[bulkStageMutations, freezeData, handleUpdateOrder, mainData, ordersData],
 	);
 
 	const counts = useMemo(() => {

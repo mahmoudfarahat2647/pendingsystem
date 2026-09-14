@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { isVinBlockedByFreeze } from "@/domain/order/orderWorkflow";
 import { AUTO_MOVE_DEBOUNCE_MS } from "@/lib/constants";
 import { useBulkUpdateOrderStageMutation } from "./queries/useBulkUpdateOrderStageMutation";
 import { useOrdersQuery } from "./queries/useOrdersQuery";
@@ -9,24 +10,33 @@ import { useOrdersQuery } from "./queries/useOrdersQuery";
 /** Stable key representing the subset of data that matters for auto-move decisions. */
 function buildStatusKey(
 	rows: { id: string; vin?: string | null; status?: string | null }[],
+	freezeRows: { id: string; vin?: string | null; stage?: string | null }[] = [],
 ): string {
-	return rows
+	const mainKey = rows
 		.map(
 			(r) =>
 				`${r.id}:${(r.vin ?? "").trim().toLowerCase()}:${(r.status ?? "").trim().toLowerCase()}`,
 		)
 		.join("|");
+	const freezeKey = freezeRows
+		.map(
+			(r) =>
+				`${r.id}:${(r.vin ?? "").trim().toLowerCase()}:${(r.stage ?? "").trim().toLowerCase()}`,
+		)
+		.join("|");
+	return `${mainKey}#${freezeKey}`;
 }
 
 export const useAutoMoveVins = () => {
 	const { data: rowData = [] } = useOrdersQuery("main");
+	const { data: freezeData = [] } = useOrdersQuery("freeze");
 	const { mutate: bulkMoveToCall } = useBulkUpdateOrderStageMutation("main");
 
 	const isProcessingRef = useRef(false);
 	const lastStatusKeyRef = useRef("");
 
 	useEffect(() => {
-		const currentKey = buildStatusKey(rowData);
+		const currentKey = buildStatusKey(rowData, freezeData);
 
 		// Skip if nothing relevant changed
 		if (currentKey === lastStatusKeyRef.current) return;
@@ -48,10 +58,19 @@ export const useAutoMoveVins = () => {
 				vinGroups[vin].push(row);
 			}
 
-			// 2. Collect IDs for groups where every part is "arrived"
+			// 2. Collect IDs for groups where every part is "arrived" and no part is frozen
 			const idsToMove: string[] = [];
 			for (const [vin, rows] of Object.entries(vinGroups)) {
 				if (rows.length === 0) continue;
+				if (
+					isVinBlockedByFreeze({
+						vin,
+						stageRows: rowData,
+						frozenRows: freezeData,
+					})
+				) {
+					continue;
+				}
 				const allArrived = rows.every(
 					(row) => (row.status ?? "").trim().toLowerCase() === "arrived",
 				);
@@ -67,7 +86,11 @@ export const useAutoMoveVins = () => {
 			// 3. Move if any found
 			if (idsToMove.length > 0) {
 				isProcessingRef.current = true;
-				bulkMoveToCall({ ids: idsToMove, stage: "call" });
+				bulkMoveToCall({
+					ids: idsToMove,
+					stage: "call",
+					guardFrozenVins: true,
+				});
 
 				resetTimeoutId = setTimeout(() => {
 					isProcessingRef.current = false;
@@ -79,5 +102,5 @@ export const useAutoMoveVins = () => {
 			clearTimeout(timeoutId);
 			clearTimeout(resetTimeoutId);
 		};
-	}, [rowData, bulkMoveToCall]);
+	}, [rowData, freezeData, bulkMoveToCall]);
 };

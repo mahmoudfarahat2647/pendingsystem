@@ -129,31 +129,94 @@ export function createOrderRepository(
 			ids: string[],
 			stage: OrderStage,
 			previousStage?: OrderStage,
+			options?: { guardFrozenVins?: boolean },
 		) {
 			if (ids.length === 0) return [];
+
+			let idsToUpdate = ids;
+
+			if (options?.guardFrozenVins) {
+				const { data: candidateRows, error: fetchErr } = await db
+					.from("orders")
+					.select("id, vin")
+					.in("id", ids);
+
+				if (fetchErr) handleSupabaseError(fetchErr);
+
+				const rawVins = (candidateRows || [])
+					.map((r) => r.vin?.trim())
+					.filter((vin): vin is string => Boolean(vin));
+
+				if (rawVins.length > 0) {
+					const vinVariants = Array.from(
+						new Set([
+							...rawVins,
+							...rawVins.map((v) => v.toUpperCase()),
+							...rawVins.map((v) => v.toLowerCase()),
+						]),
+					);
+
+					const { data: frozenRows, error: freezeErr } = await db
+						.from("orders")
+						.select("vin")
+						.eq("stage", "freeze")
+						.in("vin", vinVariants);
+
+					if (freezeErr) handleSupabaseError(freezeErr);
+
+					const frozenVinSet = new Set(
+						(frozenRows || [])
+							.map((r) => r.vin?.trim().toUpperCase())
+							.filter((vin): vin is string => Boolean(vin)),
+					);
+
+					if (frozenVinSet.size > 0) {
+						const eligibleRows = (candidateRows || []).filter((r) => {
+							const v = (r.vin || "").trim().toUpperCase();
+							return !v || !frozenVinSet.has(v);
+						});
+
+						idsToUpdate = eligibleRows.map((r) => r.id);
+
+						if (idsToUpdate.length === 0) {
+							throw new ServiceError(
+								"AUTO_MOVE_FROZEN_VIN_BLOCKED",
+								"Auto-move blocked: one or more lines for this VIN are currently frozen.",
+								{ frozenVins: Array.from(frozenVinSet) },
+							);
+						}
+					}
+				}
+			}
+
+			if (idsToUpdate.length === 0) return [];
 
 			// For large batches, process in chunks to avoid connection pool exhaustion
 			const BATCH_SIZE = 50;
 
-			if (ids.length > BATCH_SIZE) {
+			if (idsToUpdate.length > BATCH_SIZE) {
 				const successfulIds: string[] = [];
 				let encounteredError: Error | null = null;
 				let returnData: Record<string, unknown>[] = [];
 
 				try {
-					returnData = await processBatch(ids, BATCH_SIZE, async (batch) => {
-						const { data, error } = await db
-							.from("orders")
-							.update({ stage })
-							.in("id", batch)
-							.select();
-						if (error) handleSupabaseError(error);
+					returnData = await processBatch(
+						idsToUpdate,
+						BATCH_SIZE,
+						async (batch) => {
+							const { data, error } = await db
+								.from("orders")
+								.update({ stage })
+								.in("id", batch)
+								.select();
+							if (error) handleSupabaseError(error);
 
-						if (data) {
-							successfulIds.push(...data.map((r) => r.id));
-						}
-						return data || [];
-					});
+							if (data) {
+								successfulIds.push(...data.map((r) => r.id));
+							}
+							return data || [];
+						},
+					);
 				} catch (err: unknown) {
 					encounteredError =
 						err instanceof Error ? err : new Error(String(err));
@@ -197,7 +260,7 @@ export function createOrderRepository(
 			const { data, error } = await db
 				.from("orders")
 				.update({ stage })
-				.in("id", ids)
+				.in("id", idsToUpdate)
 				.select();
 			if (error) handleSupabaseError(error);
 			return data;

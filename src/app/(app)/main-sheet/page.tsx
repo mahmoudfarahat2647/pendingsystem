@@ -40,6 +40,7 @@ import { useMainSheetPageActions } from "./useMainSheetPageActions";
 
 export default function MainSheetPage() {
 	const { data: rowData = [] } = useOrdersQuery("main");
+	const { data: freezeData = [] } = useOrdersQuery("freeze");
 
 	// Draft session for undo/redo
 	const {
@@ -145,6 +146,7 @@ export default function MainSheetPage() {
 		effectiveRows: effectiveRowData,
 		selectedRows,
 		setSelectedRows,
+		freezeRows: freezeData,
 	});
 
 	const {

@@ -563,6 +563,7 @@ describe("useMainSheetPageActions", () => {
 				ids: [uuid1, uuid2],
 				sourceStage: "main",
 				destinationStage: "call",
+				guardFrozenVins: true,
 			});
 
 			// 3. Per-VIN toast with duration 5000

@@ -21,6 +21,7 @@ type BulkUpdateStageVariables = {
 	ids: string[];
 	stage: OrderStage;
 	silentErrorToast?: boolean;
+	guardFrozenVins?: boolean;
 };
 
 /**
@@ -35,8 +36,10 @@ export function useBulkUpdateOrderStageMutation(sourceStage: OrderStage) {
 
 	return useMutation({
 		mutationKey: ["bulk-update-stage", sourceStage],
-		mutationFn: ({ ids, stage }: BulkUpdateStageVariables) =>
-			orderService.updateOrdersStage(ids, stage, sourceStage),
+		mutationFn: ({ ids, stage, guardFrozenVins }: BulkUpdateStageVariables) =>
+			orderService.updateOrdersStage(ids, stage, sourceStage, {
+				guardFrozenVins,
+			}),
 		onMutate: async ({ ids, stage }) => {
 			await queryClient.cancelQueries({ queryKey: ["orders"] });
 

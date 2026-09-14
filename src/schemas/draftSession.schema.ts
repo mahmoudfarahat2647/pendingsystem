@@ -40,6 +40,7 @@ const MoveRowsCommandSchema = z.object({
 	sourceStage: OrderStageSchema,
 	destinationStage: OrderStageSchema,
 	fieldOverrides: z.record(z.string(), z.unknown()).optional(),
+	guardFrozenVins: z.boolean().optional(),
 });
 
 const AtomicCommandSchema = z.discriminatedUnion("type", [

@@ -70,7 +70,11 @@ describe("useAutoMoveVins", () => {
 		renderHook(() => useAutoMoveVins());
 		vi.runAllTimers();
 
-		expect(mockMutate).toHaveBeenCalledWith({ ids: ["r1"], stage: "call" });
+		expect(mockMutate).toHaveBeenCalledWith({
+			ids: ["r1"],
+			stage: "call",
+			guardFrozenVins: true,
+		});
 	});
 
 	it("moves a multi-part VIN when all parts are Arrived", async () => {
@@ -88,6 +92,7 @@ describe("useAutoMoveVins", () => {
 		expect(mockMutate).toHaveBeenCalledWith({
 			ids: expect.arrayContaining(["r1", "r2", "r3"]),
 			stage: "call",
+			guardFrozenVins: true,
 		});
 	});
 
@@ -103,6 +108,86 @@ describe("useAutoMoveVins", () => {
 		vi.runAllTimers();
 
 		expect(mockMutate).not.toHaveBeenCalled();
+	});
+
+	it("does NOT move a VIN when all its Main parts are Arrived but a frozen sibling exists", async () => {
+		mockUseOrdersQuery.mockImplementation((stage) => {
+			if (stage === "freeze") {
+				return {
+					data: [
+						makeRow({
+							id: "f1",
+							vin: "VIN111",
+							stage: "freeze",
+							status: "Arrived",
+						}),
+					],
+				} as unknown as ReturnType<typeof useOrdersQuery>;
+			}
+			return {
+				data: [
+					makeRow({
+						id: "r1",
+						vin: "VIN111",
+						stage: "main",
+						status: "Arrived",
+					}),
+				],
+			} as unknown as ReturnType<typeof useOrdersQuery>;
+		});
+
+		renderHook(() => useAutoMoveVins());
+		vi.runAllTimers();
+
+		expect(mockMutate).not.toHaveBeenCalled();
+	});
+
+	it("resumes auto-move once the frozen sibling is unfrozen", async () => {
+		let isFrozen = true;
+		mockUseOrdersQuery.mockImplementation((stage) => {
+			if (stage === "freeze") {
+				return {
+					data: isFrozen
+						? [
+								makeRow({
+									id: "f1",
+									vin: "VIN111",
+									stage: "freeze",
+									status: "Pending",
+								}),
+							]
+						: [],
+				} as unknown as ReturnType<typeof useOrdersQuery>;
+			}
+			return {
+				data: [
+					makeRow({
+						id: "r1",
+						vin: "VIN111",
+						stage: "main",
+						status: "Arrived",
+					}),
+				],
+			} as unknown as ReturnType<typeof useOrdersQuery>;
+		});
+
+		const { rerender } = renderHook(() => useAutoMoveVins());
+		vi.runAllTimers();
+
+		// Initially blocked by frozen sibling
+		expect(mockMutate).not.toHaveBeenCalled();
+
+		// Unfreeze the sibling
+		isFrozen = false;
+		rerender();
+		vi.runAllTimers();
+
+		// Auto-move fires normally once unfrozen
+		expect(mockMutate).toHaveBeenCalledWith({
+			ids: ["r1"],
+			stage: "call",
+			guardFrozenVins: true,
+		});
 	});
 
 	it("does NOT move rows with a blank VIN", async () => {
@@ -146,6 +231,7 @@ describe("useAutoMoveVins", () => {
 		expect(mockMutate).toHaveBeenCalledWith({
 			ids: expect.arrayContaining(["a1", "a2"]),
 			stage: "call",
+			guardFrozenVins: true,
 		});
 	});
 

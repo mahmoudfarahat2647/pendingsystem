@@ -103,14 +103,11 @@ describe("orderService", () => {
 				.fn()
 				.mockResolvedValue({ data: [{ id: "1" }], error: null });
 
-			// biome-ignore lint/complexity/noBannedTypes: Test mock typing
-			(
-				supabase.from as unknown as { mockReturnValue: Function }
-			).mockReturnValue({
+			vi.mocked(supabase.from).mockReturnValue({
 				update: mockUpdate,
 				in: mockIn,
 				select: mockSelect,
-			});
+			} as never);
 
 			const ids = Array.from({ length: 60 }, (_, i) => String(i));
 			const result = await orderService.updateOrdersStage(
@@ -136,14 +133,11 @@ describe("orderService", () => {
 					error: { message: "Batch 2 failed", code: "500" },
 				});
 
-			// biome-ignore lint/complexity/noBannedTypes: Test mock typing
-			(
-				supabase.from as unknown as { mockReturnValue: Function }
-			).mockReturnValue({
+			vi.mocked(supabase.from).mockReturnValue({
 				update: mockUpdate,
 				in: mockIn,
 				select: mockSelect,
-			});
+			} as never);
 
 			const ids = Array.from({ length: 60 }, (_, i) => String(i)); // 2 batches
 
@@ -160,6 +154,134 @@ describe("orderService", () => {
 			// 3. Rollback update to main for successful batch 1
 			expect(mockUpdate).toHaveBeenCalledTimes(3);
 			expect(mockUpdate.mock.calls[2][0]).toEqual({ stage: "main" });
+		});
+
+		it("should hard-block auto-move when guardFrozenVins is true and a frozen sibling exists in the database", async () => {
+			const mockSelectCandidate = vi.fn().mockReturnThis();
+			const mockInCandidate = vi.fn().mockResolvedValue({
+				data: [{ id: "row-1", vin: "VIN-BLOCK" }],
+				error: null,
+			});
+
+			const mockSelectFrozen = vi.fn().mockReturnThis();
+			const mockEqFrozen = vi.fn().mockReturnThis();
+			const mockInFrozen = vi
+				.fn()
+				.mockResolvedValue({ data: [{ vin: "VIN-BLOCK" }], error: null });
+
+			vi.mocked(supabase.from)
+				.mockReturnValueOnce({
+					select: mockSelectCandidate,
+					in: mockInCandidate,
+				} as never)
+				.mockReturnValueOnce({
+					select: mockSelectFrozen,
+					eq: mockEqFrozen,
+					in: mockInFrozen,
+				} as never);
+
+			await expect(
+				orderService.updateOrdersStage(["row-1"], "call", "main", {
+					guardFrozenVins: true,
+				}),
+			).rejects.toMatchObject({
+				code: "AUTO_MOVE_FROZEN_VIN_BLOCKED",
+				message: expect.stringContaining("frozen"),
+			});
+		});
+
+		it("should allow auto-move when guardFrozenVins is true and no frozen sibling exists in the database", async () => {
+			const mockSelectCandidate = vi.fn().mockReturnThis();
+			const mockInCandidate = vi.fn().mockResolvedValue({
+				data: [{ id: "row-1", vin: "VIN-CLEAR" }],
+				error: null,
+			});
+
+			const mockSelectFrozen = vi.fn().mockReturnThis();
+			const mockEqFrozen = vi.fn().mockReturnThis();
+			const mockInFrozen = vi.fn().mockResolvedValue({ data: [], error: null });
+
+			const mockUpdate = vi.fn().mockReturnThis();
+			const mockInUpdate = vi.fn().mockReturnThis();
+			const mockSelectUpdate = vi.fn().mockResolvedValue({
+				data: [{ id: "row-1", stage: "call" }],
+				error: null,
+			});
+
+			vi.mocked(supabase.from)
+				.mockReturnValueOnce({
+					select: mockSelectCandidate,
+					in: mockInCandidate,
+				} as never)
+				.mockReturnValueOnce({
+					select: mockSelectFrozen,
+					eq: mockEqFrozen,
+					in: mockInFrozen,
+				} as never)
+				.mockReturnValueOnce({
+					update: mockUpdate,
+					in: mockInUpdate,
+					select: mockSelectUpdate,
+				} as never);
+
+			const result = await orderService.updateOrdersStage(
+				["row-1"],
+				"call",
+				"main",
+				{
+					guardFrozenVins: true,
+				},
+			);
+
+			expect(result).toEqual([{ id: "row-1", stage: "call" }]);
+			expect(mockUpdate).toHaveBeenCalledWith({ stage: "call" });
+			expect(mockInUpdate).toHaveBeenCalledWith("id", ["row-1"]);
+		});
+
+		it("should resume auto-move when a previously frozen sibling is unfrozen in the database", async () => {
+			const mockSelectCandidate = vi.fn().mockReturnThis();
+			const mockInCandidate = vi.fn().mockResolvedValue({
+				data: [{ id: "row-1", vin: "VIN-UNFROZEN" }],
+				error: null,
+			});
+
+			const mockSelectFrozen = vi.fn().mockReturnThis();
+			const mockEqFrozen = vi.fn().mockReturnThis();
+			const mockInFrozen = vi.fn().mockResolvedValue({ data: [], error: null });
+
+			const mockUpdate = vi.fn().mockReturnThis();
+			const mockInUpdate = vi.fn().mockReturnThis();
+			const mockSelectUpdate = vi.fn().mockResolvedValue({
+				data: [{ id: "row-1", stage: "call" }],
+				error: null,
+			});
+
+			vi.mocked(supabase.from)
+				.mockReturnValueOnce({
+					select: mockSelectCandidate,
+					in: mockInCandidate,
+				} as never)
+				.mockReturnValueOnce({
+					select: mockSelectFrozen,
+					eq: mockEqFrozen,
+					in: mockInFrozen,
+				} as never)
+				.mockReturnValueOnce({
+					update: mockUpdate,
+					in: mockInUpdate,
+					select: mockSelectUpdate,
+				} as never);
+
+			const result = await orderService.updateOrdersStage(
+				["row-1"],
+				"call",
+				"main",
+				{
+					guardFrozenVins: true,
+				},
+			);
+
+			expect(result).toEqual([{ id: "row-1", stage: "call" }]);
 		});
 	});
 
