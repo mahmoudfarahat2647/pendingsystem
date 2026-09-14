@@ -140,6 +140,7 @@ const PendingRowBaseObject = z.object({
 	archiveReason: z.string().optional(),
 	archivedAt: z.string().optional(),
 	frozenAt: z.string().optional(),
+	freezeReason: z.string().optional(),
 	reserved: z.boolean().optional(),
 	reservedAt: z.string().optional(),
 	sourceType: z.string().optional(),

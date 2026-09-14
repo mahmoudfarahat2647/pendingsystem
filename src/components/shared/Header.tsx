@@ -25,13 +25,16 @@ import { useNotificationCandidatesQuery } from "@/hooks/queries/useNotificationC
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { useWarrantyExpiryMaintenance } from "@/hooks/useWarrantyExpiryMaintenance";
-import { ORDER_STAGES, SEARCH_DEBOUNCE_MS } from "@/lib/constants";
-import { exportAllSystemDataCSV } from "@/lib/exportUtils";
+import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
+import {
+	exportAllSystemDataCSV,
+	fetchAllRowsForExport,
+} from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
 import { getOrdersQueryKey } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
-import type { PendingRow } from "@/types";
 import {
 	NOTIFICATION_CHECK_INTERVAL_MS,
 	NOTIFICATION_INITIAL_DELAY_MS,
@@ -225,7 +228,7 @@ export const Header = React.memo(function Header() {
 		};
 	}, [isExportMenuOpen]);
 
-	const handleExport = (company: AllowedCompany) => {
+	const handleExport = async (company: AllowedCompany) => {
 		if (isExporting) return;
 
 		setIsExportMenuOpen(false);
@@ -233,10 +236,12 @@ export const Header = React.memo(function Header() {
 
 		const toastId = toast.loading(`Preparing full ${company} system export...`);
 		try {
-			const mappedData: PendingRow[] = ORDER_STAGES.flatMap(
-				(stage) =>
-					queryClient.getQueryData<PendingRow[]>(getOrdersQueryKey(stage)) ??
-					[],
+			const mappedData = await fetchAllRowsForExport((stage) =>
+				queryClient.fetchQuery({
+					queryKey: getOrdersQueryKey(stage),
+					queryFn: () => orderService.fetchMappedOrders(stage),
+					staleTime: 0,
+				}),
 			);
 			if (mappedData.length === 0) {
 				toast.warning("No data available to export", { id: toastId });

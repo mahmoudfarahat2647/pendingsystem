@@ -197,7 +197,7 @@ function processOrders(rawOrders) {
 		booking: "Booking",
 		call: "Call List",
 		archive: "Archive",
-		freeze: "Freeze",
+		freeze: "FREEZE",
 	};
 
 	const mappedData = [];
@@ -271,6 +271,8 @@ function processOrders(rawOrders) {
 				reminderStatus,
 				archiveReason: meta.archiveReason || "",
 				archivedAt: meta.archivedAt || "",
+				freezeReason: meta.freezeReason || "",
+				frozenAt: meta.frozenAt || "",
 				createdAt: row.created_at || "",
 				updatedAt: row.updated_at || "",
 			});
@@ -411,6 +413,8 @@ try {
 		"reminderStatus",
 		"archiveReason",
 		"archivedAt",
+		"freezeReason",
+		"frozenAt",
 		"createdAt",
 		"updatedAt",
 	];

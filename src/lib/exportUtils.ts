@@ -1,7 +1,23 @@
 import type { AllowedCompany } from "@/domain/order/constants";
+import type { OrderStage } from "@/domain/order/orderStage";
 import { getEffectiveNoteHistory } from "@/domain/order/orderWorkflow";
+import { ORDER_STAGES } from "@/lib/constants";
 import type { PendingRow } from "@/types";
 import { calculateRemainingTime } from "./utils";
+
+/**
+ * Loads every operational stage before a full-system export. The header keeps
+ * the resulting rows in React Query, but this loader never treats its cache as
+ * a complete representation of the database.
+ */
+export const fetchAllRowsForExport = async (
+	fetchStageRows: (stage: OrderStage) => Promise<PendingRow[]>,
+): Promise<PendingRow[]> => {
+	const stageRows = await Promise.all(
+		ORDER_STAGES.map((stage) => fetchStageRows(stage)),
+	);
+	return stageRows.flat();
+};
 
 /**
  * Exports selected orders to an XLSX format optimized for logistics.
@@ -90,7 +106,7 @@ export const exportAllSystemDataCSV = (
 		booking: "Booking",
 		call: "Call List",
 		archive: "Archive",
-		freeze: "Freeze",
+		freeze: "FREEZE",
 	};
 
 	const formatReminder = (reminder: PendingRow["reminder"]) => {
@@ -98,13 +114,41 @@ export const exportAllSystemDataCSV = (
 		return `[${reminder.date} ${reminder.time}] ${reminder.subject}`;
 	};
 
-	const allData = filteredRows.map((r) => ({
-		...r,
-		source: stageMap[r.stage as string] || r.stage || "Unknown",
-		remainTime: calculateRemainingTime(r.endWarranty),
-		reminderText: formatReminder(r.reminder),
-		noteHistory: getEffectiveNoteHistory(r),
-	}));
+	const allData = filteredRows.map((r) => {
+		const rawRow: unknown = r;
+		let freezeReason = "";
+		let frozenAt = "";
+
+		if (typeof rawRow === "object" && rawRow !== null) {
+			const rowMap = rawRow as Record<string, unknown>;
+			if (typeof rowMap.freezeReason === "string") {
+				freezeReason = rowMap.freezeReason;
+			}
+			if (typeof rowMap.frozenAt === "string") {
+				frozenAt = rowMap.frozenAt;
+			}
+
+			if (typeof rowMap.metadata === "object" && rowMap.metadata !== null) {
+				const meta = rowMap.metadata as Record<string, unknown>;
+				if (!freezeReason && typeof meta.freezeReason === "string") {
+					freezeReason = meta.freezeReason;
+				}
+				if (!frozenAt && typeof meta.frozenAt === "string") {
+					frozenAt = meta.frozenAt;
+				}
+			}
+		}
+
+		return {
+			...r,
+			source: stageMap[r.stage as string] || r.stage || "Unknown",
+			remainTime: calculateRemainingTime(r.endWarranty),
+			reminderText: formatReminder(r.reminder),
+			noteHistory: getEffectiveNoteHistory(r),
+			freezeReason,
+			frozenAt,
+		};
+	});
 
 	const headers = [
 		"source",
@@ -132,6 +176,8 @@ export const exportAllSystemDataCSV = (
 		"reminderText",
 		"archiveReason",
 		"archivedAt",
+		"freezeReason",
+		"frozenAt",
 	];
 
 	const filenamePrefix = company.toLowerCase();

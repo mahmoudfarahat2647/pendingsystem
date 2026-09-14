@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { exportAllSystemDataCSV } from "../lib/exportUtils";
+import { ORDER_STAGES } from "../lib/constants";
+import {
+	exportAllSystemDataCSV,
+	fetchAllRowsForExport,
+} from "../lib/exportUtils";
 import type { PendingRow } from "../types";
 
 describe("exportUtils", () => {
@@ -138,6 +142,18 @@ describe("exportUtils", () => {
 		expect(lastCsvContent).not.toContain("Bob");
 	});
 
+	it("loads every stage for a system export instead of relying on loaded grid cache", async () => {
+		const fetchStageRows = vi.fn(async (stage) => [
+			{ ...mockData[0], id: `row-${stage}`, stage },
+		]);
+
+		const rows = await fetchAllRowsForExport(fetchStageRows);
+
+		expect(fetchStageRows).toHaveBeenCalledTimes(ORDER_STAGES.length);
+		expect(fetchStageRows).toHaveBeenNthCalledWith(1, "orders");
+		expect(rows.map((row) => row.stage)).toEqual(ORDER_STAGES);
+	});
+
 	it("should export only Zeekr rows when Zeekr is selected", () => {
 		exportAllSystemDataCSV(mockData, "Zeekr");
 
@@ -157,5 +173,80 @@ describe("exportUtils", () => {
 	it("should exit early and not export if filter yields zero rows", () => {
 		exportAllSystemDataCSV([], "Renault");
 		expect(document.createElement).not.toHaveBeenCalled();
+	});
+
+	it("should include freeze rows labelled as 'FREEZE' in export output", () => {
+		const freezeRow: PendingRow = {
+			...mockData[0],
+			id: "freeze-1",
+			stage: "freeze",
+			customerName: "FrozenCustomer",
+		};
+		exportAllSystemDataCSV([freezeRow], "Renault");
+
+		expect(lastCsvContent).toContain('"FREEZE"');
+		expect(lastCsvContent).toContain('"FrozenCustomer"');
+	});
+
+	it("should label archive rows as 'Archive' in export output", () => {
+		const archiveRow: PendingRow = {
+			...mockData[0],
+			id: "archive-1",
+			stage: "archive",
+			customerName: "ArchiveCustomer",
+			archiveReason: "Completed repair",
+			archivedAt: "2026-09-01",
+		};
+		exportAllSystemDataCSV([archiveRow], "Renault");
+
+		expect(lastCsvContent).toContain('"Archive"');
+		expect(lastCsvContent).toContain('"ArchiveCustomer"');
+		expect(lastCsvContent).toContain('"Completed repair"');
+		expect(lastCsvContent).toContain('"2026-09-01"');
+	});
+
+	it("should include archiveReason, archivedAt, freezeReason, and frozenAt in headers", () => {
+		exportAllSystemDataCSV([mockData[0]], "Renault");
+
+		const headerLine = lastCsvContent.split("\n")[0];
+		expect(headerLine).toContain("archiveReason");
+		expect(headerLine).toContain("archivedAt");
+		expect(headerLine).toContain("freezeReason");
+		expect(headerLine).toContain("frozenAt");
+	});
+
+	it("should populate freezeReason and frozenAt from direct properties or metadata in CSV output", () => {
+		const rowWithDirectFreeze: PendingRow & {
+			freezeReason?: string;
+			frozenAt?: string;
+		} = {
+			...mockData[0],
+			id: "freeze-direct",
+			stage: "freeze",
+			customerName: "DirectFreezeUser",
+			freezeReason: "Awaiting customer approval",
+			frozenAt: "2026-09-14T10:00:00Z",
+		};
+
+		exportAllSystemDataCSV([rowWithDirectFreeze], "Renault");
+		expect(lastCsvContent).toContain('"Awaiting customer approval"');
+		expect(lastCsvContent).toContain('"2026-09-14T10:00:00Z"');
+
+		const rowWithMetaFreeze: PendingRow & {
+			metadata?: { freezeReason?: string; frozenAt?: string };
+		} = {
+			...mockData[0],
+			id: "freeze-meta",
+			stage: "freeze",
+			customerName: "MetaFreezeUser",
+			metadata: {
+				freezeReason: "Parts on backorder",
+				frozenAt: "2026-09-12",
+			},
+		};
+
+		exportAllSystemDataCSV([rowWithMetaFreeze], "Renault");
+		expect(lastCsvContent).toContain('"Parts on backorder"');
+		expect(lastCsvContent).toContain('"2026-09-12"');
 	});
 });
