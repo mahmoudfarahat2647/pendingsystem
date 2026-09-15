@@ -12,14 +12,17 @@ export interface QuickTemplate {
 	updatedAt: string;
 }
 
+function buildStageParam(stage?: OrderStage): string {
+	return stage ? `&stage=${stage}` : "";
+}
+
 export const quickTemplatesService = {
 	async list(
 		category: TemplateCategory,
 		stage?: OrderStage,
 	): Promise<QuickTemplate[]> {
-		const stageParam = stage ? `&stage=${stage}` : "";
 		const response = await fetch(
-			`/api/quick-templates?category=${category}${stageParam}`,
+			`/api/quick-templates?category=${category}${buildStageParam(stage)}`,
 		);
 		if (!response.ok) {
 			const err = (await response.json().catch(() => ({}))) as {
@@ -54,9 +57,8 @@ export const quickTemplatesService = {
 		category: TemplateCategory,
 		stage?: OrderStage,
 	): Promise<void> {
-		const stageParam = stage ? `&stage=${stage}` : "";
 		const response = await fetch(
-			`/api/quick-templates?id=${id}&category=${category}${stageParam}`,
+			`/api/quick-templates?id=${id}&category=${category}${buildStageParam(stage)}`,
 			{ method: "DELETE" },
 		);
 		if (!response.ok && response.status !== 204) {

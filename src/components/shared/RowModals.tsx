@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
+import { toast } from "sonner";
 import { getEffectiveNoteHistory } from "@/domain/order/orderWorkflow";
-import { type RowModalType, resolveRowStage } from "@/hooks/useRowModals";
+import type { RowModalType } from "@/hooks/useRowModals";
+import { normalizeOrderStage } from "@/lib/orderStage";
 import type { PendingRow } from "@/types";
 import { ArchiveReasonModal } from "./ArchiveReasonModal";
 import { EditAttachmentModal } from "./EditAttachmentModal";
@@ -37,18 +40,34 @@ export const RowModals = ({
 	onSaveFreeze,
 	sourceTag,
 }: RowModalsProps) => {
-	if (!currentRow) return null;
+	const isNoteModalOpen = activeModal === "note";
+	// Resolved without throwing (unlike resolveRowStage) so a row with a
+	// missing/unrecognized stage never crashes the render for ANY modal type
+	// - only the Notes modal actually depends on this value, and even there
+	// it falls back gracefully instead of blanking the page.
+	const resolvedStage = currentRow
+		? normalizeOrderStage(currentRow.stage)
+		: undefined;
+	const noteStage = resolvedStage ?? "orders";
 
-	const stage = resolveRowStage(currentRow);
+	useEffect(() => {
+		if (isNoteModalOpen && currentRow && !resolvedStage) {
+			toast.error(
+				"Could not determine this record's stage; showing default quick templates.",
+			);
+		}
+	}, [isNoteModalOpen, currentRow, resolvedStage]);
+
+	if (!currentRow) return null;
 
 	return (
 		<>
 			<EditNoteModal
-				open={activeModal === "note"}
+				open={isNoteModalOpen}
 				onOpenChange={(open) => !open && onClose()}
 				initialContent={getEffectiveNoteHistory(currentRow)}
 				onSave={onSaveNote}
-				stage={stage}
+				stage={noteStage}
 				sourceTag={sourceTag}
 			/>
 			<EditReminderModal
