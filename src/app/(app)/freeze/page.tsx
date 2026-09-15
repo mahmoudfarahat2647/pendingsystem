@@ -3,7 +3,10 @@
 import type { GridApi } from "ag-grid-community";
 import { useEffect, useMemo, useState } from "react";
 import { FreezeToolbar } from "@/components/freeze/FreezeToolbar";
-import { UnfreezeMoveDialog } from "@/components/freeze/UnfreezeMoveDialog";
+import {
+	UnfreezeMoveDialog,
+	type UnfreezeOrigin,
+} from "@/components/freeze/UnfreezeMoveDialog";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { getFreezeColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -72,6 +75,26 @@ export default function FreezePage() {
 			}
 		}
 		return "main" as const;
+	}, [selectedRows]);
+
+	// How the selection's recorded pre-freeze stage(s) should be described in
+	// the "Move to…" dialog. Independent of moveDefaultStage above, which keeps
+	// its own first-valid-stage-else-"main" default unchanged.
+	const moveOrigin = useMemo<UnfreezeOrigin>(() => {
+		const validStages = selectedRows
+			.map((row) => row.previousStage)
+			.filter(
+				(stage): stage is Exclude<typeof stage, null | undefined> =>
+					isOrderStage(stage) && stage !== "freeze",
+			);
+		const distinctStages = new Set(validStages);
+
+		if (distinctStages.size === 0) return { kind: "none" };
+		if (distinctStages.size > 1) return { kind: "mixed" };
+		if (validStages.length === selectedRows.length) {
+			return { kind: "single", stage: validStages[0] };
+		}
+		return { kind: "partial" };
 	}, [selectedRows]);
 
 	// Sync selectedRows with the latest effectiveData to prevent stale data
@@ -174,6 +197,7 @@ export default function FreezePage() {
 				onOpenChange={setMoveDialogOpen}
 				initialStage={moveDefaultStage}
 				rowCount={selectedRows.length}
+				origin={moveOrigin}
 				onCancel={() => setMoveDialogOpen(false)}
 				onConfirm={(destinationStage) => {
 					handleConfirmUnfreeze(destinationStage);
