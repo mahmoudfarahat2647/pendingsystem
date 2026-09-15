@@ -18,9 +18,6 @@ vi.mock("@/lib/auth", () => ({
 	},
 }));
 
-const _mockSelect = vi.fn();
-const _mockInsert = vi.fn();
-const _mockDelete = vi.fn();
 const mockFrom = vi.fn();
 
 vi.mock("@supabase/supabase-js", () => ({
@@ -33,6 +30,35 @@ function makeRequest(_method: string, url: string, body?: unknown) {
 		url,
 		json: () => Promise.resolve(body ?? {}),
 	} as unknown as import("next/server").NextRequest;
+}
+
+/**
+ * Chainable + awaitable stand-in for the Supabase query builder: every
+ * relevant method returns the same chain object so tests don't need to know
+ * the exact eq/is/order call depth used by the repository, and the chain
+ * itself resolves to `result` when awaited directly (delete/get) or via
+ * `.single()` (insert).
+ */
+function makeSupabaseChain(result: {
+	data?: unknown;
+	error: unknown;
+	count?: number;
+}) {
+	// A real Promise instance so `await chain` uses its native, inherited
+	// `.then` (Biome's noThenProperty rule forbids adding an own `then`
+	// property to a plain object) while still supporting the chainable
+	// eq/is/order calls the repository makes before awaiting.
+	const chain = Promise.resolve(result) as Promise<typeof result> &
+		Record<string, unknown>;
+	const self = () => chain;
+	chain.select = vi.fn(self);
+	chain.insert = vi.fn(self);
+	chain.delete = vi.fn(self);
+	chain.eq = vi.fn(self);
+	chain.is = vi.fn(self);
+	chain.order = vi.fn(self);
+	chain.single = vi.fn(() => Promise.resolve(result));
+	return chain;
 }
 
 describe("GET /api/quick-templates", () => {
@@ -58,7 +84,10 @@ describe("GET /api/quick-templates", () => {
 
 		const { GET } = await import("../app/api/quick-templates/route");
 		const res = await GET(
-			makeRequest("GET", "http://localhost/api/quick-templates?category=note"),
+			makeRequest(
+				"GET",
+				"http://localhost/api/quick-templates?category=reason",
+			),
 		);
 		expect(res.status).toBe(401);
 	});
@@ -79,7 +108,36 @@ describe("GET /api/quick-templates", () => {
 		expect(res.status).toBe(400);
 	});
 
-	it("returns list of templates for valid category", async () => {
+	it("returns 400 when note category is requested without a stage", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		const { GET } = await import("../app/api/quick-templates/route");
+		const res = await GET(
+			makeRequest("GET", "http://localhost/api/quick-templates?category=note"),
+		);
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 400 when a stage is given for a non-note category", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		const { GET } = await import("../app/api/quick-templates/route");
+		const res = await GET(
+			makeRequest(
+				"GET",
+				"http://localhost/api/quick-templates?category=reason&stage=archive",
+			),
+		);
+		expect(res.status).toBe(400);
+	});
+
+	it("returns note templates scoped to the requested stage", async () => {
 		const { auth } = await import("@/lib/auth");
 		vi.mocked(auth.api.getSession).mockResolvedValue({
 			user: { id: "u1" },
@@ -91,23 +149,20 @@ describe("GET /api/quick-templates", () => {
 				category: "note",
 				text: "Hi",
 				sort_order: 0,
+				stage: "booking",
 				created_at: "",
 				updated_at: "",
 			},
 		];
-		mockFrom.mockReturnValue({
-			select: vi.fn().mockReturnValue({
-				eq: vi.fn().mockReturnValue({
-					order: vi.fn().mockReturnValue({
-						order: vi.fn().mockResolvedValue({ data: rows, error: null }),
-					}),
-				}),
-			}),
-		});
+		const chain = makeSupabaseChain({ data: rows, error: null });
+		mockFrom.mockReturnValue(chain);
 
 		const { GET } = await import("../app/api/quick-templates/route");
 		const res = await GET(
-			makeRequest("GET", "http://localhost/api/quick-templates?category=note"),
+			makeRequest(
+				"GET",
+				"http://localhost/api/quick-templates?category=note&stage=booking",
+			),
 		);
 		expect(res.status).toBe(200);
 		expect(res.body).toEqual([
@@ -116,10 +171,43 @@ describe("GET /api/quick-templates", () => {
 				category: "note",
 				text: "Hi",
 				sortOrder: 0,
+				stage: "booking",
 				createdAt: "",
 				updatedAt: "",
 			},
 		]);
+		expect(chain.eq).toHaveBeenCalledWith("stage", "booking");
+	});
+
+	it("returns global templates for reason/reminder categories", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		const rows = [
+			{
+				id: "2",
+				category: "reason",
+				text: "Not arrived",
+				sort_order: 0,
+				stage: null,
+				created_at: "",
+				updated_at: "",
+			},
+		];
+		const chain = makeSupabaseChain({ data: rows, error: null });
+		mockFrom.mockReturnValue(chain);
+
+		const { GET } = await import("../app/api/quick-templates/route");
+		const res = await GET(
+			makeRequest(
+				"GET",
+				"http://localhost/api/quick-templates?category=reason",
+			),
+		);
+		expect(res.status).toBe(200);
+		expect(chain.is).toHaveBeenCalledWith("stage", null);
 	});
 });
 
@@ -149,6 +237,7 @@ describe("POST /api/quick-templates", () => {
 			makeRequest("POST", "http://localhost/api/quick-templates", {
 				category: "note",
 				text: "Hi",
+				stage: "booking",
 			}),
 		);
 		expect(res.status).toBe(401);
@@ -165,6 +254,40 @@ describe("POST /api/quick-templates", () => {
 			makeRequest("POST", "http://localhost/api/quick-templates", {
 				category: "note",
 				text: "",
+				stage: "booking",
+			}),
+		);
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 400 when a note template is posted without a stage", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		const { POST } = await import("../app/api/quick-templates/route");
+		const res = await POST(
+			makeRequest("POST", "http://localhost/api/quick-templates", {
+				category: "note",
+				text: "Hi",
+			}),
+		);
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 400 when a reason template is posted with a stage", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		const { POST } = await import("../app/api/quick-templates/route");
+		const res = await POST(
+			makeRequest("POST", "http://localhost/api/quick-templates", {
+				category: "reason",
+				text: "Hi",
+				stage: "archive",
 			}),
 		);
 		expect(res.status).toBe(400);
@@ -176,22 +299,19 @@ describe("POST /api/quick-templates", () => {
 			user: { id: "u1" },
 		} as never);
 
-		mockFrom.mockReturnValue({
-			insert: vi.fn().mockReturnValue({
-				select: vi.fn().mockReturnValue({
-					single: vi.fn().mockResolvedValue({
-						data: null,
-						error: { code: "23505", message: "dup" },
-					}),
-				}),
+		mockFrom.mockReturnValue(
+			makeSupabaseChain({
+				data: null,
+				error: { code: "23505", message: "dup" },
 			}),
-		});
+		);
 
 		const { POST } = await import("../app/api/quick-templates/route");
 		const res = await POST(
 			makeRequest("POST", "http://localhost/api/quick-templates", {
 				category: "note",
 				text: "Hi",
+				stage: "booking",
 			}),
 		);
 		expect(res.status).toBe(409);
@@ -211,26 +331,55 @@ describe("POST /api/quick-templates", () => {
 			category: "note",
 			text: "Hi",
 			sort_order: 0,
+			stage: "booking",
 			created_at: "",
 			updated_at: "",
 		};
-		mockFrom.mockReturnValue({
-			insert: vi.fn().mockReturnValue({
-				select: vi.fn().mockReturnValue({
-					single: vi.fn().mockResolvedValue({ data: row, error: null }),
-				}),
-			}),
-		});
+		const chain = makeSupabaseChain({ data: row, error: null });
+		mockFrom.mockReturnValue(chain);
 
 		const { POST } = await import("../app/api/quick-templates/route");
 		const res = await POST(
 			makeRequest("POST", "http://localhost/api/quick-templates", {
 				category: "note",
 				text: "Hi",
+				stage: "booking",
 			}),
 		);
 		expect(res.status).toBe(201);
 		expect((res.body as unknown as { id: string }).id).toBe("new");
+		expect(chain.insert).toHaveBeenCalledWith({
+			category: "note",
+			text: "Hi",
+			stage: "booking",
+		});
+	});
+
+	it("allows a reason template with no stage", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		const row = {
+			id: "new",
+			category: "reason",
+			text: "Not arrived",
+			sort_order: 0,
+			stage: null,
+			created_at: "",
+			updated_at: "",
+		};
+		mockFrom.mockReturnValue(makeSupabaseChain({ data: row, error: null }));
+
+		const { POST } = await import("../app/api/quick-templates/route");
+		const res = await POST(
+			makeRequest("POST", "http://localhost/api/quick-templates", {
+				category: "reason",
+				text: "Not arrived",
+			}),
+		);
+		expect(res.status).toBe(201);
 	});
 });
 
@@ -259,7 +408,7 @@ describe("DELETE /api/quick-templates", () => {
 		const res = await DELETE(
 			makeRequest(
 				"DELETE",
-				"http://localhost/api/quick-templates?id=some-uuid-1234-5678",
+				"http://localhost/api/quick-templates?id=some-uuid-1234-5678&category=note&stage=booking",
 			),
 		);
 		expect(res.status).toBe(401);
@@ -278,17 +427,11 @@ describe("DELETE /api/quick-templates", () => {
 		expect(res.status).toBe(400);
 	});
 
-	it("returns 204 on success", async () => {
+	it("returns 400 when category is missing", async () => {
 		const { auth } = await import("@/lib/auth");
 		vi.mocked(auth.api.getSession).mockResolvedValue({
 			user: { id: "u1" },
 		} as never);
-
-		mockFrom.mockReturnValue({
-			delete: vi.fn().mockReturnValue({
-				eq: vi.fn().mockResolvedValue({ error: null, count: 1 }),
-			}),
-		});
 
 		const { DELETE } = await import("../app/api/quick-templates/route");
 		const res = await DELETE(
@@ -297,6 +440,51 @@ describe("DELETE /api/quick-templates", () => {
 				"http://localhost/api/quick-templates?id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 			),
 		);
+		expect(res.status).toBe(400);
+	});
+
+	it("returns 204 on success, scoped by category and stage", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		const chain = makeSupabaseChain({ error: null, count: 1 });
+		mockFrom.mockReturnValue(chain);
+
+		const { DELETE } = await import("../app/api/quick-templates/route");
+		const res = await DELETE(
+			makeRequest(
+				"DELETE",
+				"http://localhost/api/quick-templates?id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee&category=note&stage=freeze",
+			),
+		);
 		expect(res.status).toBe(204);
+		expect(chain.eq).toHaveBeenCalledWith(
+			"id",
+			"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+		);
+		expect(chain.eq).toHaveBeenCalledWith("category", "note");
+		expect(chain.eq).toHaveBeenCalledWith("stage", "freeze");
+	});
+
+	it("cannot remove a template scoped to a different stage than requested", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		// count 0 simulates the DB filter finding no row because the id
+		// belongs to a different stage than the one requested
+		mockFrom.mockReturnValue(makeSupabaseChain({ error: null, count: 0 }));
+
+		const { DELETE } = await import("../app/api/quick-templates/route");
+		const res = await DELETE(
+			makeRequest(
+				"DELETE",
+				"http://localhost/api/quick-templates?id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee&category=note&stage=archive",
+			),
+		);
+		expect(res.status).toBe(404);
 	});
 });

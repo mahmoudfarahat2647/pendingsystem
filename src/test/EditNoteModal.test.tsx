@@ -7,6 +7,9 @@ import type { QuickTemplate } from "@/services/quickTemplatesService";
 
 const mockAddMutate = vi.fn();
 const mockRemoveMutate = vi.fn();
+const mockUseQuickTemplatesQuery = vi.fn();
+const mockUseAddQuickTemplateMutation = vi.fn();
+const mockUseRemoveQuickTemplateMutation = vi.fn();
 
 const hookState = {
 	data: [
@@ -15,6 +18,7 @@ const hookState = {
 			category: "note",
 			text: "Template A",
 			sortOrder: 0,
+			stage: "booking",
 			createdAt: "",
 			updatedAt: "",
 		},
@@ -23,6 +27,7 @@ const hookState = {
 			category: "note",
 			text: "Template B",
 			sortOrder: 0,
+			stage: "booking",
 			createdAt: "",
 			updatedAt: "",
 		},
@@ -30,9 +35,18 @@ const hookState = {
 };
 
 vi.mock("@/hooks/queries/useQuickTemplatesQuery", () => ({
-	useQuickTemplatesQuery: () => hookState,
-	useAddQuickTemplateMutation: () => ({ mutate: mockAddMutate }),
-	useRemoveQuickTemplateMutation: () => ({ mutate: mockRemoveMutate }),
+	useQuickTemplatesQuery: (...args: unknown[]) => {
+		mockUseQuickTemplatesQuery(...args);
+		return hookState;
+	},
+	useAddQuickTemplateMutation: (...args: unknown[]) => {
+		mockUseAddQuickTemplateMutation(...args);
+		return { mutate: mockAddMutate };
+	},
+	useRemoveQuickTemplateMutation: (...args: unknown[]) => {
+		mockUseRemoveQuickTemplateMutation(...args);
+		return { mutate: mockRemoveMutate };
+	},
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
@@ -122,6 +136,9 @@ describe("EditNoteModal", () => {
 	beforeEach(() => {
 		mockAddMutate.mockReset();
 		mockRemoveMutate.mockReset();
+		mockUseQuickTemplatesQuery.mockReset();
+		mockUseAddQuickTemplateMutation.mockReset();
+		mockUseRemoveQuickTemplateMutation.mockReset();
 	});
 
 	it("composes multiple templates without inline tags and saves with one trailing tag", async () => {
@@ -135,6 +152,7 @@ describe("EditNoteModal", () => {
 				onOpenChange={onOpenChange}
 				initialContent="Existing history #orders"
 				onSave={onSave}
+				stage="booking"
 				sourceTag="booking"
 			/>,
 		);
@@ -167,6 +185,7 @@ describe("EditNoteModal", () => {
 				onOpenChange={vi.fn()}
 				initialContent=""
 				onSave={onSave}
+				stage="booking"
 			/>,
 		);
 
@@ -188,6 +207,7 @@ describe("EditNoteModal", () => {
 				onOpenChange={vi.fn()}
 				initialContent=""
 				onSave={vi.fn()}
+				stage="booking"
 			/>,
 		);
 
@@ -199,5 +219,27 @@ describe("EditNoteModal", () => {
 		await user.click(screen.getByRole("button", { name: "ADD" }));
 
 		expect(mockAddMutate).toHaveBeenCalledWith("My template");
+	});
+
+	it("scopes the templates hooks to the given stage", () => {
+		render(
+			<EditNoteModal
+				open={true}
+				onOpenChange={vi.fn()}
+				initialContent=""
+				onSave={vi.fn()}
+				stage="freeze"
+			/>,
+		);
+
+		expect(mockUseQuickTemplatesQuery).toHaveBeenCalledWith("note", "freeze");
+		expect(mockUseAddQuickTemplateMutation).toHaveBeenCalledWith(
+			"note",
+			"freeze",
+		);
+		expect(mockUseRemoveQuickTemplateMutation).toHaveBeenCalledWith(
+			"note",
+			"freeze",
+		);
 	});
 });

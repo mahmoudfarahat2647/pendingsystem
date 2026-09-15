@@ -1,7 +1,7 @@
 "use client";
 
 import { getEffectiveNoteHistory } from "@/domain/order/orderWorkflow";
-import type { RowModalType } from "@/hooks/useRowModals";
+import { type RowModalType, resolveRowStage } from "@/hooks/useRowModals";
 import type { PendingRow } from "@/types";
 import { ArchiveReasonModal } from "./ArchiveReasonModal";
 import { EditAttachmentModal } from "./EditAttachmentModal";
@@ -39,6 +39,8 @@ export const RowModals = ({
 }: RowModalsProps) => {
 	if (!currentRow) return null;
 
+	const stage = resolveRowStage(currentRow);
+
 	return (
 		<>
 			<EditNoteModal
@@ -46,6 +48,7 @@ export const RowModals = ({
 				onOpenChange={(open) => !open && onClose()}
 				initialContent={getEffectiveNoteHistory(currentRow)}
 				onSave={onSaveNote}
+				stage={stage}
 				sourceTag={sourceTag}
 			/>
 			<EditReminderModal

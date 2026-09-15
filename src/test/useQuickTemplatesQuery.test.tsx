@@ -33,6 +33,7 @@ const sampleTemplates: QuickTemplate[] = [
 		category: "note",
 		text: "Template A",
 		sortOrder: 0,
+		stage: null,
 		createdAt: "",
 		updatedAt: "",
 	},
@@ -41,6 +42,7 @@ const sampleTemplates: QuickTemplate[] = [
 		category: "note",
 		text: "Template B",
 		sortOrder: 0,
+		stage: null,
 		createdAt: "",
 		updatedAt: "",
 	},
@@ -65,7 +67,7 @@ describe("useQuickTemplatesQuery", () => {
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
 		expect(result.current.data).toEqual(sampleTemplates);
-		expect(mockList).toHaveBeenCalledWith("note");
+		expect(mockList).toHaveBeenCalledWith("note", undefined);
 	});
 });
 
@@ -81,6 +83,7 @@ describe("useAddQuickTemplateMutation", () => {
 			category: "note",
 			text: "New",
 			sortOrder: 0,
+			stage: null,
 			createdAt: "",
 			updatedAt: "",
 		};
@@ -101,7 +104,7 @@ describe("useAddQuickTemplateMutation", () => {
 		});
 
 		await waitFor(() => expect(mutation.result.current.isSuccess).toBe(true));
-		expect(mockAdd).toHaveBeenCalledWith("note", "New");
+		expect(mockAdd).toHaveBeenCalledWith("note", "New", undefined);
 	});
 
 	it("rolls back optimistic update on error", async () => {
@@ -151,6 +154,108 @@ describe("useRemoveQuickTemplateMutation", () => {
 		});
 
 		await waitFor(() => expect(mutation.result.current.isSuccess).toBe(true));
-		expect(mockRemove).toHaveBeenCalledWith("1");
+		expect(mockRemove).toHaveBeenCalledWith("1", "note", undefined);
+	});
+});
+
+describe("stage scoping", () => {
+	beforeEach(() => {
+		mockList.mockReset();
+		mockAdd.mockReset();
+		mockRemove.mockReset();
+	});
+
+	it("passes stage through to the service and keeps separate query keys per stage", async () => {
+		mockList.mockResolvedValue(sampleTemplates);
+
+		const { useQuickTemplatesQuery } = await import(
+			"@/hooks/queries/useQuickTemplatesQuery"
+		);
+		const wrapper = makeWrapper();
+
+		const bookingQuery = renderHook(
+			() => useQuickTemplatesQuery("note", "booking"),
+			{ wrapper },
+		);
+		await waitFor(() =>
+			expect(bookingQuery.result.current.isSuccess).toBe(true),
+		);
+
+		expect(mockList).toHaveBeenCalledWith("note", "booking");
+	});
+
+	it("includes stage on the optimistic add entry", async () => {
+		mockList.mockResolvedValue(sampleTemplates);
+		// Hold the "add" call open so onSettled's invalidate/refetch (which
+		// would otherwise overwrite the optimistic entry with the static
+		// mockList data) can't race the assertion below.
+		let resolveAdd: ((value: QuickTemplate) => void) | undefined;
+		mockAdd.mockImplementation(
+			() =>
+				new Promise<QuickTemplate>((resolve) => {
+					resolveAdd = resolve;
+				}),
+		);
+
+		const { useQuickTemplatesQuery, useAddQuickTemplateMutation } =
+			await import("@/hooks/queries/useQuickTemplatesQuery");
+		const wrapper = makeWrapper();
+
+		const query = renderHook(() => useQuickTemplatesQuery("note", "freeze"), {
+			wrapper,
+		});
+		await waitFor(() => expect(query.result.current.isSuccess).toBe(true));
+
+		const mutation = renderHook(
+			() => useAddQuickTemplateMutation("note", "freeze"),
+			{ wrapper },
+		);
+		act(() => {
+			mutation.result.current.mutate("New");
+		});
+
+		await waitFor(() => {
+			const optimistic = query.result.current.data?.find(
+				(t) => t.text === "New",
+			);
+			expect(optimistic?.stage).toBe("freeze");
+		});
+		expect(mockAdd).toHaveBeenCalledWith("note", "New", "freeze");
+
+		resolveAdd?.({
+			id: "3",
+			category: "note",
+			text: "New",
+			sortOrder: 0,
+			stage: "freeze",
+			createdAt: "",
+			updatedAt: "",
+		});
+		await waitFor(() => expect(mutation.result.current.isSuccess).toBe(true));
+	});
+
+	it("calls service.remove with the scoped category and stage", async () => {
+		mockList.mockResolvedValue(sampleTemplates);
+		mockRemove.mockResolvedValue(undefined);
+
+		const { useQuickTemplatesQuery, useRemoveQuickTemplateMutation } =
+			await import("@/hooks/queries/useQuickTemplatesQuery");
+		const wrapper = makeWrapper();
+
+		const query = renderHook(() => useQuickTemplatesQuery("note", "archive"), {
+			wrapper,
+		});
+		await waitFor(() => expect(query.result.current.isSuccess).toBe(true));
+
+		const mutation = renderHook(
+			() => useRemoveQuickTemplateMutation("note", "archive"),
+			{ wrapper },
+		);
+		act(() => {
+			mutation.result.current.mutate("1");
+		});
+
+		await waitFor(() => expect(mutation.result.current.isSuccess).toBe(true));
+		expect(mockRemove).toHaveBeenCalledWith("1", "note", "archive");
 	});
 });

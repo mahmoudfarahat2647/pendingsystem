@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { OrderStage } from "@/domain/order/orderStage";
 import { appendTaggedUserNote } from "@/domain/order/orderWorkflow";
 import {
 	useAddQuickTemplateMutation,
@@ -36,6 +37,7 @@ interface EditNoteModalProps {
 	onOpenChange: (open: boolean) => void;
 	initialContent: string;
 	onSave: (content: string) => void;
+	stage: OrderStage;
 	sourceTag?: string;
 }
 
@@ -44,11 +46,12 @@ export const EditNoteModal = ({
 	onOpenChange,
 	initialContent,
 	onSave,
+	stage,
 	sourceTag,
 }: EditNoteModalProps) => {
-	const { data: noteTemplates = [] } = useQuickTemplatesQuery("note");
-	const addMutation = useAddQuickTemplateMutation("note");
-	const removeMutation = useRemoveQuickTemplateMutation("note");
+	const { data: noteTemplates = [] } = useQuickTemplatesQuery("note", stage);
+	const addMutation = useAddQuickTemplateMutation("note", stage);
+	const removeMutation = useRemoveQuickTemplateMutation("note", stage);
 	const [content, setContent] = useState("");
 	const [newNote, setNewNote] = useState("");
 	const [isAdding, setIsAdding] = useState(false);
