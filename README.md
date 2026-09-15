@@ -15,7 +15,7 @@ The current implementation uses:
 1. Install dependencies.
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. Copy the environment template.
@@ -46,36 +46,36 @@ The current implementation uses:
 5. Start the development server.
 
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
 6. Optionally seed the first admin user after your Better Auth tables exist.
 
    ```bash
-   npm run auth:seed-admin
+   pnpm auth:seed-admin
    ```
 
 Then open `http://localhost:3000`. Unauthenticated users are redirected to `/login`, and authenticated users land on `/dashboard`.
 
 ## Development Commands
 ```bash
-npm run dev                     # Next.js dev server
-npm run build                   # Production build
-npm run start                   # Start the production server
-npm run lint                    # Biome check
-npm run lint:fix                # Biome check with writes
-npm run lint:fix:staged         # Fix staged files
-npm run lint:fix:staged:unsafe  # Unsafe Biome fixes for staged files
-npm run type-check              # TypeScript (no emit)
-npm run test                    # Vitest run
-npm run test:watch              # Vitest watch mode
-npm run test:ui                 # Vitest UI
-npm run docs                    # Print the main doc entrypoints
-npm run docs:serve              # Serve docs from the repo root on port 8080
-npm run docs:validate           # Validate top-level docs
-npm run docs:extract            # Extract JSDoc-derived documentation data
-npm run auth:seed-admin         # Create the initial admin user
-npm run commit                  # Run the helper commit script
+pnpm dev                     # Next.js dev server
+pnpm build                   # Production build
+pnpm start                   # Start the production server
+pnpm lint                    # Biome check
+pnpm lint:fix                # Biome check with writes
+pnpm lint:fix:staged         # Fix staged files
+pnpm lint:fix:staged:unsafe  # Unsafe Biome fixes for staged files
+pnpm type-check              # TypeScript (no emit)
+pnpm test                    # Vitest run
+pnpm test:watch              # Vitest watch mode
+pnpm test:ui                 # Vitest UI
+pnpm docs                    # Print the main doc entrypoints
+pnpm docs:serve              # Serve docs from the repo root on port 8080
+pnpm docs:validate           # Validate top-level docs
+pnpm docs:extract            # Extract JSDoc-derived documentation data
+pnpm auth:seed-admin         # Create the initial admin user
+pnpm commit                  # Run the helper commit script
 ```
 
 There is currently no `e2e` or Playwright script in `package.json`; the committed automated test surface is Vitest-based.
@@ -112,11 +112,11 @@ Files under `docs/` are treated as protected reference material. Update them int
 - Run the normal quality gates before opening a PR:
 
   ```bash
-  npm run lint
-  npm run type-check
-  npm run test
-  npm run build
-  npm run docs:validate
+  pnpm lint
+  pnpm type-check
+  pnpm test
+  pnpm build
+  pnpm docs:validate
   ```
 
 Husky is configured so `git commit` runs Biome against staged files and retries with `--unsafe` if the safe pass still fails.
