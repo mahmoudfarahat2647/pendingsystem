@@ -27,7 +27,6 @@ import {
 	DialogFooter,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { authClient } from "@/lib/auth-client";
 import { getOrdersQueryKey } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
@@ -100,17 +99,6 @@ export const Sidebar = React.memo(function Sidebar() {
 	const router = useRouter();
 	const currentEditVin = useAppStore((state) => state.currentEditVin);
 	const clearCurrentEditVin = useAppStore((state) => state.clearCurrentEditVin);
-	// Live FREEZE count for the nav badge, served from the standard stage
-	// query key (["orders", "freeze"]). Because this subscribes to the React
-	// Query cache — rather than a one-time fetch — every freeze/unfreeze
-	// (which invalidates the freeze + source-stage keys via saveDraft and the
-	// stage mutations) refetches and re-renders the badge with no refresh.
-	// Counting basis: ROWS, not distinct VINs. Every other stage count in the
-	// app (dashboard KPI tiles, the stage-distribution RPC buckets) is a row
-	// count; the Call stage's unique-VIN figure is a deliberate exception for
-	// its one-call-per-vehicle workflow, which does not apply to Freeze.
-	const { data: freezeRows = [] } = useOrdersQuery("freeze");
-	const freezeCount = freezeRows.length;
 	const { data: session } = authClient.useSession();
 	const userName = session?.user?.name ?? "";
 	const userInitials = userName
@@ -221,9 +209,7 @@ export const Sidebar = React.memo(function Sidebar() {
 						const isActive =
 							pathname === item.href ||
 							(item.href === dashboardHref && pathname === "/");
-						// Only the FREEZE entry carries a live badge today; every
-						// other entry keeps its static (absent) badge.
-						const badge = item.href === "/freeze" ? freezeCount : item.badge;
+						const badge = item.badge;
 						return (
 							<li key={item.href} suppressHydrationWarning>
 								<Link
