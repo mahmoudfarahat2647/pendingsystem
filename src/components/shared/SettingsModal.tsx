@@ -13,6 +13,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import BackupReportsTab from "../reports/BackupReportsTab";
@@ -162,6 +163,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 										}
 									}}
 									className={cn(
+										FOCUS_CHAMPAGNE_VISIBLE,
 										"h-9 bg-black/40 border-white/10 text-xs text-center rounded-lg",
 										authError &&
 											"border-red-500/50 placeholder:text-red-400/50",

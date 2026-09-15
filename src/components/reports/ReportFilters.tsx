@@ -8,6 +8,8 @@ import {
 	SelectValue,
 } from "@/components/ui/origin-select";
 import type { LostSalesFilters } from "@/domain/reports/lostSalesAnalysis";
+import { FOCUS_CHAMPAGNE } from "@/lib/focusStyles";
+import { cn } from "@/lib/utils";
 
 interface ReportFiltersProps {
 	filters: LostSalesFilters;
@@ -37,7 +39,12 @@ export function ReportFilters({
 					Company
 				</span>
 				<Select value={companyValue} onValueChange={handleCompanyChange}>
-					<SelectTrigger className="bg-white/5 border-white/10 text-white hover:bg-white/10 w-[160px]">
+					<SelectTrigger
+						className={cn(
+							FOCUS_CHAMPAGNE,
+							"bg-white/5 border-white/10 text-white hover:bg-white/10 w-[160px]",
+						)}
+					>
 						<SelectValue placeholder="Select company..." />
 					</SelectTrigger>
 					<SelectContent className="bg-[#0c0c0e] border-white/10 text-white">
@@ -56,7 +63,12 @@ export function ReportFilters({
 					Period
 				</span>
 				<Select value={filters.period} onValueChange={handlePeriodChange}>
-					<SelectTrigger className="bg-white/5 border-white/10 text-white hover:bg-white/10 w-[160px]">
+					<SelectTrigger
+						className={cn(
+							FOCUS_CHAMPAGNE,
+							"bg-white/5 border-white/10 text-white hover:bg-white/10 w-[160px]",
+						)}
+					>
 						<SelectValue placeholder="Select period..." />
 					</SelectTrigger>
 					<SelectContent className="bg-[#0c0c0e] border-white/10 text-white">

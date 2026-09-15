@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
+import { cn } from "@/lib/utils";
 
 export interface ReorderReasonDialogProps {
 	open: boolean;
@@ -55,7 +57,10 @@ export function ReorderReasonDialog({
 							value={reason}
 							onChange={(e) => onReasonChange(e.target.value)}
 							placeholder={placeholder}
-							className="bg-white/5 border-white/10 text-white"
+							className={cn(
+								FOCUS_CHAMPAGNE_VISIBLE,
+								"bg-white/5 border-white/10 text-white",
+							)}
 						/>
 					</div>
 					{helperText ? (

@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
+import { cn } from "@/lib/utils";
 import { RowModals } from "./RowModals";
 import { SearchResultsGrid } from "./search/SearchResultsGrid";
 import { SearchResultsHeader } from "./search/SearchResultsHeader";
@@ -174,7 +176,10 @@ export const SearchResultsView = () => {
 								value={reorderReason}
 								onChange={(e) => setReorderReason(e.target.value)}
 								placeholder="e.g., Customer called back, error on main sheet"
-								className="bg-white/5 border-white/10 text-white"
+								className={cn(
+									FOCUS_CHAMPAGNE_VISIBLE,
+									"bg-white/5 border-white/10 text-white",
+								)}
 							/>
 						</div>
 					</div>
