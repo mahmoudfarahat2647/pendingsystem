@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { QuickTemplateScopeSchema } from "@/schemas/quickTemplates.schema";
 import {
 	type QuickTemplate,
 	quickTemplatesService,
@@ -14,6 +15,15 @@ function quickTemplatesQueryKey(
 	return ["quickTemplates", category, stage ?? null] as const;
 }
 
+/**
+ * Reuses the API's own scope rule rather than re-encoding it, so a scope the
+ * server would reject (a note without a stage) never reaches the network and
+ * can never be written under some other stage's scope.
+ */
+function isScopeValid(category: TemplateCategory, stage?: OrderStage) {
+	return QuickTemplateScopeSchema.safeParse({ category, stage }).success;
+}
+
 export function useQuickTemplatesQuery(
 	category: TemplateCategory,
 	stage?: OrderStage,
@@ -22,6 +32,7 @@ export function useQuickTemplatesQuery(
 		queryKey: quickTemplatesQueryKey(category, stage),
 		queryFn: () => quickTemplatesService.list(category, stage),
 		staleTime: 60_000,
+		enabled: isScopeValid(category, stage),
 	});
 }
 
@@ -33,8 +44,12 @@ export function useAddQuickTemplateMutation(
 	const key = quickTemplatesQueryKey(category, stage);
 
 	return useMutation({
-		mutationFn: (text: string) =>
-			quickTemplatesService.add(category, text, stage),
+		mutationFn: (text: string) => {
+			if (!isScopeValid(category, stage)) {
+				throw new Error("Cannot add a template without a resolved scope");
+			}
+			return quickTemplatesService.add(category, text, stage);
+		},
 		onMutate: async (text) => {
 			await queryClient.cancelQueries({ queryKey: key });
 			const previous = queryClient.getQueryData<QuickTemplate[]>(key);
@@ -73,8 +88,12 @@ export function useRemoveQuickTemplateMutation(
 	const key = quickTemplatesQueryKey(category, stage);
 
 	return useMutation({
-		mutationFn: (id: string) =>
-			quickTemplatesService.remove(id, category, stage),
+		mutationFn: (id: string) => {
+			if (!isScopeValid(category, stage)) {
+				throw new Error("Cannot remove a template without a resolved scope");
+			}
+			return quickTemplatesService.remove(id, category, stage);
+		},
 		onMutate: async (id) => {
 			await queryClient.cancelQueries({ queryKey: key });
 			const previous = queryClient.getQueryData<QuickTemplate[]>(key);

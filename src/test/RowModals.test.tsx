@@ -84,7 +84,7 @@ describe("RowModals", () => {
 		expect(mockToastError).not.toHaveBeenCalled();
 	});
 
-	it("warns but still renders when opening Notes on a row with an unresolvable stage", () => {
+	it("warns and passes no stage when opening Notes on a row with an unresolvable stage", () => {
 		expect(() =>
 			render(
 				<RowModals
@@ -95,11 +95,25 @@ describe("RowModals", () => {
 			),
 		).not.toThrow();
 
-		expect(editNoteModalProps).toHaveBeenCalledWith(
-			expect.objectContaining({ open: true, stage: "orders" }),
-		);
 		expect(mockToastError).toHaveBeenCalledWith(
-			"Could not determine this record's stage; showing default quick templates.",
+			"Could not determine this record's stage; quick templates are unavailable for this row.",
 		);
+	});
+
+	it("never substitutes another stage's scope when the row's stage is unresolvable", () => {
+		render(
+			<RowModals
+				activeModal="note"
+				currentRow={makeRow({ stage: "not-a-real-stage" as never })}
+				{...noopProps}
+			/>,
+		);
+
+		// Falling back to a real stage here would let the Notes modal read,
+		// add and delete that stage's quick templates (issue #216's exact bug).
+		const props = editNoteModalProps.mock.calls.at(-1)?.[0] as {
+			stage?: string;
+		};
+		expect(props.stage).toBeUndefined();
 	});
 });

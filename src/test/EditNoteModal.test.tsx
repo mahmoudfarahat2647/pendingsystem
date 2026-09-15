@@ -221,6 +221,29 @@ describe("EditNoteModal", () => {
 		expect(mockAddMutate).toHaveBeenCalledWith("My template");
 	});
 
+	it("disables the quick templates section when no stage is resolved", () => {
+		render(
+			<EditNoteModal
+				open={true}
+				onOpenChange={vi.fn()}
+				initialContent="Existing note"
+				onSave={vi.fn()}
+			/>,
+		);
+
+		// Notes themselves stay usable...
+		expect(screen.getByRole("button", { name: "SAVE NOTES" })).toBeTruthy();
+		// ...but nothing can read from or write to another stage's templates.
+		expect(screen.queryByRole("button", { name: "ADD NEW" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Template A" })).toBeNull();
+		expect(mockUseQuickTemplatesQuery).toHaveBeenCalledWith("note", undefined);
+		expect(
+			screen.getByText(
+				"Quick templates are unavailable because this record's stage could not be determined.",
+			),
+		).toBeTruthy();
+	});
+
 	it("scopes the templates hooks to the given stage", () => {
 		render(
 			<EditNoteModal
