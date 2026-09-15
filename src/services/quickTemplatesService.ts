@@ -1,3 +1,5 @@
+import type { OrderStage } from "@/domain/order/orderStage";
+
 export type TemplateCategory = "note" | "reminder" | "reason";
 
 export interface QuickTemplate {
@@ -5,13 +7,23 @@ export interface QuickTemplate {
 	category: TemplateCategory;
 	text: string;
 	sortOrder: number;
+	stage: OrderStage | null;
 	createdAt: string;
 	updatedAt: string;
 }
 
+function buildStageParam(stage?: OrderStage): string {
+	return stage ? `&stage=${stage}` : "";
+}
+
 export const quickTemplatesService = {
-	async list(category: TemplateCategory): Promise<QuickTemplate[]> {
-		const response = await fetch(`/api/quick-templates?category=${category}`);
+	async list(
+		category: TemplateCategory,
+		stage?: OrderStage,
+	): Promise<QuickTemplate[]> {
+		const response = await fetch(
+			`/api/quick-templates?category=${category}${buildStageParam(stage)}`,
+		);
 		if (!response.ok) {
 			const err = (await response.json().catch(() => ({}))) as {
 				error?: string;
@@ -21,11 +33,15 @@ export const quickTemplatesService = {
 		return (await response.json()) as QuickTemplate[];
 	},
 
-	async add(category: TemplateCategory, text: string): Promise<QuickTemplate> {
+	async add(
+		category: TemplateCategory,
+		text: string,
+		stage?: OrderStage,
+	): Promise<QuickTemplate> {
 		const response = await fetch("/api/quick-templates", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ category, text }),
+			body: JSON.stringify({ category, text, stage }),
 		});
 		if (!response.ok) {
 			const err = (await response.json().catch(() => ({}))) as {
@@ -36,10 +52,15 @@ export const quickTemplatesService = {
 		return (await response.json()) as QuickTemplate;
 	},
 
-	async remove(id: string): Promise<void> {
-		const response = await fetch(`/api/quick-templates?id=${id}`, {
-			method: "DELETE",
-		});
+	async remove(
+		id: string,
+		category: TemplateCategory,
+		stage?: OrderStage,
+	): Promise<void> {
+		const response = await fetch(
+			`/api/quick-templates?id=${id}&category=${category}${buildStageParam(stage)}`,
+			{ method: "DELETE" },
+		);
 		if (!response.ok && response.status !== 204) {
 			const err = (await response.json().catch(() => ({}))) as {
 				error?: string;

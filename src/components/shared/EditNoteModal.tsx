@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { OrderStage } from "@/domain/order/orderStage";
 import { appendTaggedUserNote } from "@/domain/order/orderWorkflow";
 import {
 	useAddQuickTemplateMutation,
@@ -36,6 +37,10 @@ interface EditNoteModalProps {
 	onOpenChange: (open: boolean) => void;
 	initialContent: string;
 	onSave: (content: string) => void;
+	/** Undefined when the row's stage could not be resolved: notes stay
+	 * editable, but quick templates are disabled rather than falling back to
+	 * another stage's templates. */
+	stage?: OrderStage;
 	sourceTag?: string;
 }
 
@@ -44,11 +49,13 @@ export const EditNoteModal = ({
 	onOpenChange,
 	initialContent,
 	onSave,
+	stage,
 	sourceTag,
 }: EditNoteModalProps) => {
-	const { data: noteTemplates = [] } = useQuickTemplatesQuery("note");
-	const addMutation = useAddQuickTemplateMutation("note");
-	const removeMutation = useRemoveQuickTemplateMutation("note");
+	const { data: noteTemplates = [] } = useQuickTemplatesQuery("note", stage);
+	const addMutation = useAddQuickTemplateMutation("note", stage);
+	const removeMutation = useRemoveQuickTemplateMutation("note", stage);
+	const templatesEnabled = stage !== undefined;
 	const [content, setContent] = useState("");
 	const [newNote, setNewNote] = useState("");
 	const [isAdding, setIsAdding] = useState(false);
@@ -182,18 +189,27 @@ export const EditNoteModal = ({
 								<h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
 									QUICK TEMPLATES
 								</h4>
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => setIsAdding(!isAdding)}
-									className="h-6 px-2 text-renault-yellow hover:text-renault-yellow/80 hover:bg-renault-yellow/10 text-[10px] font-bold"
-								>
-									<Plus className="h-3 w-3 mr-1" />
-									{isAdding ? "CANCEL" : "ADD NEW"}
-								</Button>
+								{templatesEnabled && (
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => setIsAdding(!isAdding)}
+										className="h-6 px-2 text-renault-yellow hover:text-renault-yellow/80 hover:bg-renault-yellow/10 text-[10px] font-bold"
+									>
+										<Plus className="h-3 w-3 mr-1" />
+										{isAdding ? "CANCEL" : "ADD NEW"}
+									</Button>
+								)}
 							</div>
 
-							{isAdding && (
+							{!templatesEnabled && (
+								<p className="text-[11px] text-gray-500 italic">
+									Quick templates are unavailable because this record's stage
+									could not be determined.
+								</p>
+							)}
+
+							{templatesEnabled && isAdding && (
 								<div className="flex gap-2 mb-2 animate-in slide-in-from-top-1 duration-200">
 									<Input
 										value={newTemplate}
@@ -213,7 +229,7 @@ export const EditNoteModal = ({
 							)}
 
 							<div className="grid grid-cols-2 gap-2 max-h-[120px] overflow-y-auto pr-1 scrollbar-thin">
-								{noteTemplates.map((template) => (
+								{(templatesEnabled ? noteTemplates : []).map((template) => (
 									<div
 										key={template.id}
 										className="group relative flex items-center"

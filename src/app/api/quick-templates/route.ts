@@ -1,8 +1,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import {
+	AddTemplateSchema,
+	QuickTemplateScopeSchema,
+} from "@/schemas/quickTemplates.schema";
 import {
 	addTemplate,
 	deleteTemplate,
@@ -11,25 +14,28 @@ import {
 
 export const runtime = "nodejs";
 
-const CategorySchema = z.enum(["note", "reminder", "reason"]);
-const AddTemplateSchema = z.object({
-	category: CategorySchema,
-	text: z.string().trim().min(1).max(200),
-});
+function parseScope(searchParams: URLSearchParams) {
+	return QuickTemplateScopeSchema.safeParse({
+		category: searchParams.get("category"),
+		stage: searchParams.get("stage") ?? undefined,
+	});
+}
 
 export async function GET(req: NextRequest) {
 	const session = await auth.api.getSession({ headers: req.headers });
 	if (!session?.user?.id)
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-	const categoryParse = CategorySchema.safeParse(
-		new URL(req.url).searchParams.get("category"),
-	);
-	if (!categoryParse.success)
-		return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+	const scopeParse = parseScope(new URL(req.url).searchParams);
+	if (!scopeParse.success)
+		return NextResponse.json(
+			{ error: scopeParse.error.issues[0]?.message ?? "Invalid scope" },
+			{ status: 400 },
+		);
 
 	try {
-		return NextResponse.json(await getTemplates(categoryParse.data));
+		const { category, stage } = scopeParse.data;
+		return NextResponse.json(await getTemplates(category, stage));
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : "Database error";
 		logger.error("[quick-templates GET]", message);
@@ -50,7 +56,8 @@ export async function POST(req: NextRequest) {
 		);
 
 	try {
-		const data = await addTemplate(parse.data.category, parse.data.text);
+		const { category, text, stage } = parse.data;
+		const data = await addTemplate(category, text, stage);
 		return NextResponse.json(data, { status: 201 });
 	} catch (error: unknown) {
 		if (
@@ -72,12 +79,21 @@ export async function DELETE(req: NextRequest) {
 	if (!session?.user?.id)
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-	const id = new URL(req.url).searchParams.get("id");
+	const searchParams = new URL(req.url).searchParams;
+	const id = searchParams.get("id");
 	if (!id || !/^[0-9a-f-]{36}$/.test(id))
 		return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
+	const scopeParse = parseScope(searchParams);
+	if (!scopeParse.success)
+		return NextResponse.json(
+			{ error: scopeParse.error.issues[0]?.message ?? "Invalid scope" },
+			{ status: 400 },
+		);
+
 	try {
-		const found = await deleteTemplate(id);
+		const { category, stage } = scopeParse.data;
+		const found = await deleteTemplate(id, category, stage);
 		if (!found)
 			return NextResponse.json({ error: "Not found" }, { status: 404 });
 		return NextResponse.json(null, { status: 204 });

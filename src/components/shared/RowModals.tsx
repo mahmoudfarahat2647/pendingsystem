@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
+import { toast } from "sonner";
 import { getEffectiveNoteHistory } from "@/domain/order/orderWorkflow";
 import type { RowModalType } from "@/hooks/useRowModals";
+import { normalizeOrderStage } from "@/lib/orderStage";
 import type { PendingRow } from "@/types";
 import { ArchiveReasonModal } from "./ArchiveReasonModal";
 import { EditAttachmentModal } from "./EditAttachmentModal";
@@ -37,15 +40,36 @@ export const RowModals = ({
 	onSaveFreeze,
 	sourceTag,
 }: RowModalsProps) => {
+	const isNoteModalOpen = activeModal === "note";
+	// Resolved without throwing (unlike resolveRowStage) so a row with a
+	// missing/unrecognized stage never crashes the render for ANY modal type.
+	// Deliberately NOT defaulted to a real stage: a wrong-but-valid stage
+	// would let the Notes modal read, add and delete that stage's quick
+	// templates, which is exactly the cross-tab contamination this scoping
+	// work exists to prevent. EditNoteModal disables its templates section
+	// when this is undefined.
+	const resolvedStage = currentRow
+		? normalizeOrderStage(currentRow.stage)
+		: undefined;
+
+	useEffect(() => {
+		if (isNoteModalOpen && currentRow && !resolvedStage) {
+			toast.error(
+				"Could not determine this record's stage; quick templates are unavailable for this row.",
+			);
+		}
+	}, [isNoteModalOpen, currentRow, resolvedStage]);
+
 	if (!currentRow) return null;
 
 	return (
 		<>
 			<EditNoteModal
-				open={activeModal === "note"}
+				open={isNoteModalOpen}
 				onOpenChange={(open) => !open && onClose()}
 				initialContent={getEffectiveNoteHistory(currentRow)}
 				onSave={onSaveNote}
+				stage={resolvedStage}
 				sourceTag={sourceTag}
 			/>
 			<EditReminderModal
