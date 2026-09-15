@@ -18,6 +18,32 @@ describe("ReportSettingsPatchSchema", () => {
 		expect(result.success).toBe(true);
 	});
 
+	it.each([
+		"Daily",
+		"Weekly",
+		"Weekly-0",
+		"Weekly-3",
+		"Weekly-6",
+		"Monthly",
+		"Yearly",
+	])("accepts the supported frequency %s", (frequency) => {
+		expect(ReportSettingsPatchSchema.safeParse({ frequency }).success).toBe(
+			true,
+		);
+	});
+
+	it.each([
+		"",
+		"Biweekly",
+		"Weekly-7",
+		"Weekly--1",
+		"weekly-3",
+	])("rejects the unsupported frequency %s", (frequency) => {
+		expect(ReportSettingsPatchSchema.safeParse({ frequency }).success).toBe(
+			false,
+		);
+	});
+
 	it("rejects an empty object-shaped payload with no known keys gracefully", () => {
 		const result = ReportSettingsPatchSchema.safeParse({});
 		expect(result.success).toBe(true);

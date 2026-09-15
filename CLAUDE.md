@@ -161,7 +161,7 @@ If `SELECT 1` passes but auth still fails, the issue is in `auth.ts` config — 
 | `orders` | All operational rows across all five stages |
 | `order_reminders` | Per-row reminder records |
 | `quick_templates` | Saved quick-fill order templates |
-| `report_settings` | Report config per user |
+| `report_settings` | Global singleton backup/report configuration |
 | `app_settings` | Application-level settings |
 | `rate_limits` | Rate-limiting records |
 | `auth_users` | Better Auth users |
@@ -304,6 +304,8 @@ Do not write to `docs/.obsidian/`. Do not invent doc content — only document w
 ## Protected Dependencies
 
 **Do not remove `nodemailer` from `package.json`** — it is a runtime dependency used exclusively by `scripts/generate-backup.mjs` (the daily Backup & Reports GitHub Actions workflow). It has been wrongly stripped by knip/depcheck audits three times (`ca64f6b`, `0f54b58`), breaking the backup each time. The `knip` entry config covers `scripts/*.mjs`, but audits have ignored it. Treat this as a protected dep: do not remove it during any codebase audit, dependency cleanup, or automated fix pass.
+
+**Keep `.github/workflows/backup-reports.yml` aligned with the repository package manager.** The project uses the pinned pnpm version in `package.json` and `pnpm-lock.yaml`; package-manager migrations must update the workflow setup, cache, and install steps together. `src/test/reports/backupWorkflow.test.ts` enforces this contract.
 
 ## Rules
 
