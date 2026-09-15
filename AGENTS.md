@@ -300,6 +300,10 @@ Supabase client config flows through `src/lib/env.ts`, `src/lib/supabase.ts`, an
 
 The Supabase MCP server may be available in this project. When it is available, prefer it for schema inspection, logs, SQL checks, and table queries before manually debugging connection issues.
 
+### Backup Workflow Contract
+
+`.github/workflows/backup-reports.yml` must use the pinned pnpm version from `package.json` and the committed `pnpm-lock.yaml`. Any package-manager migration must update the workflow setup, cache, and install steps together; `src/test/reports/backupWorkflow.test.ts` enforces this contract.
+
 ## Known Constraints
 
 - Authentication is username/password only, with admin-created accounts and disabled public signup.

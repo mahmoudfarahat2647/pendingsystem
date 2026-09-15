@@ -5,26 +5,38 @@ name: Backup & Reports
 
 on:
   schedule:
-    # Runs daily at 10:00 AM Cairo Time (08:00 UTC)
+    # Runs daily at 08:00 UTC (10:00 Cairo winter / 11:00 Cairo summer)
     - cron: '0 8 * * *'
   workflow_dispatch:
     # Allows manual triggering from the UI or GitHub Actions tab
 
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-reports
+  cancel-in-progress: false
+
 jobs:
   backup:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: Run backup script
         env:
@@ -35,6 +47,4 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           IS_SCHEDULE_RUN: ${{ github.event_name == 'schedule' }}
-        run: |
-          npm ls nodemailer >/dev/null 2>&1 || npm install nodemailer@^8.0.1
-          node scripts/generate-backup.mjs
+        run: node scripts/generate-backup.mjs
