@@ -49,6 +49,7 @@
 		--border: 240 3.7% 15.9%;
 		--input: 240 3.7% 15.9%;
 		--ring: 48 100% 50%;
+		--champagne: 42 41.3% 52.5%;
 	}
 }
 
@@ -79,6 +80,13 @@
 		backdrop-filter: blur(12px);
 		-webkit-backdrop-filter: blur(12px);
 		border: 1px solid rgba(255, 255, 255, 0.08);
+	}
+	.focus-tint-champagne:focus,
+	.focus-tint-champagne:focus-visible {
+		background-image: linear-gradient(
+			hsl(var(--champagne) / 0.05),
+			hsl(var(--champagne) / 0.05)
+		);
 	}
 }
 

@@ -17,6 +17,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 
 interface EditableSelectProps {
@@ -102,7 +103,7 @@ export function EditableSelect({
 										placeholder="Add new..."
 										value={newItem}
 										onChange={(e) => setNewItem(e.target.value)}
-										className="h-8 text-xs"
+										className={cn(FOCUS_CHAMPAGNE_VISIBLE, "h-8 text-xs")}
 										onKeyDown={(e) => {
 											if (e.key === "Enter") {
 												e.preventDefault();
@@ -165,7 +166,7 @@ export function EditableSelect({
 									placeholder="Add new..."
 									value={newItem}
 									onChange={(e) => setNewItem(e.target.value)}
-									className="h-8 text-xs"
+									className={cn(FOCUS_CHAMPAGNE_VISIBLE, "h-8 text-xs")}
 									onKeyDown={(e) => {
 										if (e.key === "Enter") {
 											e.preventDefault();

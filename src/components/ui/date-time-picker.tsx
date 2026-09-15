@@ -17,6 +17,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { FOCUS_CHAMPAGNE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 
 interface DateTimePickerProps {
@@ -114,7 +115,12 @@ export default function DateTimePicker({ date, setDate }: DateTimePickerProps) {
 			<div className="flex items-center gap-2">
 				<Clock className="h-4 w-4 text-muted-foreground" />
 				<Select value={time.h} onValueChange={(v) => handleTimeChange("h", v)}>
-					<SelectTrigger className="w-[62px] border-white/10 bg-[#2c2c2e] text-gray-200">
+					<SelectTrigger
+						className={cn(
+							FOCUS_CHAMPAGNE,
+							"w-[62px] border-white/10 bg-[#2c2c2e] text-gray-200",
+						)}
+					>
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent className="bg-[#1c1c1e] border-white/10 text-gray-200">
@@ -136,7 +142,12 @@ export default function DateTimePicker({ date, setDate }: DateTimePickerProps) {
 				<span className="text-gray-400">:</span>
 
 				<Select value={time.m} onValueChange={(v) => handleTimeChange("m", v)}>
-					<SelectTrigger className="w-[70px] border-white/10 bg-[#2c2c2e] text-gray-200">
+					<SelectTrigger
+						className={cn(
+							FOCUS_CHAMPAGNE,
+							"w-[70px] border-white/10 bg-[#2c2c2e] text-gray-200",
+						)}
+					>
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent className="bg-[#1c1c1e] border-white/10 text-gray-200">
@@ -156,7 +167,12 @@ export default function DateTimePicker({ date, setDate }: DateTimePickerProps) {
 					value={time.ampm}
 					onValueChange={(v) => handleTimeChange("ampm", v)}
 				>
-					<SelectTrigger className="w-[70px] border-white/10 bg-[#2c2c2e] text-gray-200">
+					<SelectTrigger
+						className={cn(
+							FOCUS_CHAMPAGNE,
+							"w-[70px] border-white/10 bg-[#2c2c2e] text-gray-200",
+						)}
+					>
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent className="bg-[#1c1c1e] border-white/10 text-gray-200">

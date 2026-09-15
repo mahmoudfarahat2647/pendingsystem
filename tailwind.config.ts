@@ -6,6 +6,7 @@ const config: Config = {
 		"./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
 		"./src/components/**/*.{js,ts,jsx,tsx,mdx}",
 		"./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+		"./src/lib/**/*.{js,ts,jsx,tsx}",
 	],
 	theme: {
 		extend: {
@@ -13,6 +14,7 @@ const config: Config = {
 				border: "hsl(var(--border))",
 				input: "hsl(var(--input))",
 				ring: "hsl(var(--ring))",
+				champagne: "hsl(var(--champagne))",
 				background: "hsl(var(--background))",
 				foreground: "hsl(var(--foreground))",
 				primary: {

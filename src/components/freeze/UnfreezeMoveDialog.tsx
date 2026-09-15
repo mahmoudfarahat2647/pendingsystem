@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/origin-select";
 import { ORDER_STAGE_VALUES, type OrderStage } from "@/domain/order/orderStage";
 import { getStageDisplayName } from "@/domain/order/orderWorkflow";
+import { FOCUS_CHAMPAGNE } from "@/lib/focusStyles";
+import { cn } from "@/lib/utils";
 
 export const UNFREEZE_DESTINATIONS: OrderStage[] = ORDER_STAGE_VALUES.filter(
 	(stage) => stage !== "freeze",
@@ -109,7 +111,10 @@ export function UnfreezeMoveDialog({
 					>
 						<SelectTrigger
 							aria-label="Destination stage"
-							className="flex-1 h-11 bg-[#2c2c2e] border-white/10 text-white"
+							className={cn(
+								FOCUS_CHAMPAGNE,
+								"flex-1 h-11 bg-[#2c2c2e] border-white/10 text-white",
+							)}
 						>
 							<SelectValue />
 						</SelectTrigger>
