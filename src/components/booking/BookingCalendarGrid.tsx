@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	addMonths,
 	eachDayOfInterval,
 	endOfMonth,
 	endOfWeek,
@@ -9,6 +10,7 @@ import {
 	isSameMonth,
 	startOfMonth,
 	startOfWeek,
+	subMonths,
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,11 +49,7 @@ export const BookingCalendarGrid = ({
 			<div className="flex items-center justify-between mb-8">
 				<button
 					type="button"
-					onClick={() =>
-						onMonthChange(
-							new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)),
-						)
-					}
+					onClick={() => onMonthChange(subMonths(monthStart, 1))}
 					className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
 				>
 					<ChevronLeft className="h-6 w-6" />
@@ -61,11 +59,7 @@ export const BookingCalendarGrid = ({
 				</h2>
 				<button
 					type="button"
-					onClick={() =>
-						onMonthChange(
-							new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)),
-						)
-					}
+					onClick={() => onMonthChange(addMonths(monthStart, 1))}
 					className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
 				>
 					<ChevronRight className="h-6 w-6" />
