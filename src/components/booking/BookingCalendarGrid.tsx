@@ -13,6 +13,10 @@ import {
 	subMonths,
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+	type BookingActivityIndex,
+	isBookingDateActive,
+} from "@/domain/booking/bookingInquiry";
 import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 
@@ -26,13 +30,13 @@ interface BookingCalendarGridProps {
 	searchMatchDates: Set<string>;
 	activeCustomerDateSet: Set<string>;
 	/**
-	 * Booking Dates holding at least one Active Booking.
+	 * Booking activity classified from the active booking stage.
 	 *
 	 * Supplied only by the Booking Inquiry. When omitted — which is how the booking flow
 	 * calls this component — every badge keeps the standard solid accent and day buttons
 	 * keep their existing markup, so the booking flow renders exactly as before.
 	 */
-	activeBookingDates?: ReadonlySet<string>;
+	activityIndex?: BookingActivityIndex;
 }
 
 export const BookingCalendarGrid = ({
@@ -44,10 +48,10 @@ export const BookingCalendarGrid = ({
 	searchQuery,
 	searchMatchDates,
 	activeCustomerDateSet,
-	activeBookingDates,
+	activityIndex,
 }: BookingCalendarGridProps) => {
 	// Inquiry mode is opt-in: without the prop, nothing below changes.
-	const isInquiry = activeBookingDates !== undefined;
+	const isInquiry = activityIndex !== undefined;
 	const monthStart = startOfMonth(currentMonth);
 	const monthEnd = endOfMonth(monthStart);
 	const startDate = startOfWeek(monthStart);
@@ -60,6 +64,7 @@ export const BookingCalendarGrid = ({
 			<div className="flex items-center justify-between mb-8">
 				<button
 					type="button"
+					aria-label={isInquiry ? "Previous month" : undefined}
 					onClick={() => onMonthChange(subMonths(monthStart, 1))}
 					className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
 				>
@@ -70,6 +75,7 @@ export const BookingCalendarGrid = ({
 				</h2>
 				<button
 					type="button"
+					aria-label={isInquiry ? "Next month" : undefined}
 					onClick={() => onMonthChange(addMonths(monthStart, 1))}
 					className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
 				>
@@ -104,9 +110,9 @@ export const BookingCalendarGrid = ({
 					// distinction survives greyscale and colour-blindness rather than
 					// resting on hue alone.
 					const isArchivedOnlyDay =
-						isInquiry &&
+						activityIndex !== undefined &&
 						dayBookings.length >= 1 &&
-						!activeBookingDates.has(dateKey);
+						!isBookingDateActive(activityIndex, dateKey);
 
 					const dayLabel = isInquiry
 						? `${format(day, "d MMMM yyyy")}, ${dayBookings.length} booked ${

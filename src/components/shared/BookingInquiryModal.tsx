@@ -123,7 +123,7 @@ export const BookingInquiryModal = ({
 								searchQuery={searchQuery}
 								searchMatchDates={searchMatchDates}
 								activeCustomerDateSet={new Set(activeCustomerHistoryDates)}
-								activeBookingDates={bookingActivityIndex.activeDates}
+								activityIndex={bookingActivityIndex}
 							/>
 						)}
 					</div>
@@ -140,7 +140,7 @@ export const BookingInquiryModal = ({
 								sidebarGroupedBookings={sidebarGroupedBookings}
 								selectedBookingId={selectedBookingId}
 								setSelectedBookingId={setSelectedBookingId}
-								activeVehicleKeys={bookingActivityIndex.activeVehicles}
+								activityIndex={bookingActivityIndex}
 							/>
 						)}
 					</div>

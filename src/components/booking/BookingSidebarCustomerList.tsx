@@ -1,5 +1,8 @@
 import { ChevronRight } from "lucide-react";
-import { bookedVehicleKey } from "@/domain/booking/bookingInquiry";
+import {
+	type BookingActivityIndex,
+	isBookedVehicleArchived,
+} from "@/domain/booking/bookingInquiry";
 import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 import { safeFormatDate } from "@/utils/safeFormatDate";
@@ -10,13 +13,13 @@ interface BookingSidebarCustomerListProps {
 	selectedBookingId: string | null;
 	setSelectedBookingId: (id: string | null) => void;
 	/**
-	 * Booked Vehicles with at least one Active Booking.
+	 * Booking activity classified from the active booking stage.
 	 *
 	 * Supplied only by the Booking Inquiry, where the calendar's colour cue is no longer
 	 * visible once a day has been opened. When omitted — how the booking flow calls this —
 	 * no tag renders and output is unchanged.
 	 */
-	activeVehicleKeys?: ReadonlySet<string>;
+	activityIndex?: BookingActivityIndex;
 }
 
 export const BookingSidebarCustomerList = ({
@@ -24,7 +27,7 @@ export const BookingSidebarCustomerList = ({
 	sidebarGroupedBookings,
 	selectedBookingId,
 	setSelectedBookingId,
-	activeVehicleKeys,
+	activityIndex,
 }: BookingSidebarCustomerListProps) => {
 	return (
 		<div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
@@ -37,10 +40,8 @@ export const BookingSidebarCustomerList = ({
 				) : (
 					sidebarGroupedBookings.map((booking) => {
 						const isArchived =
-							activeVehicleKeys !== undefined &&
-							!activeVehicleKeys.has(
-								bookedVehicleKey(booking.vin, booking.bookingDate),
-							);
+							activityIndex !== undefined &&
+							isBookedVehicleArchived(activityIndex, booking);
 
 						return (
 							<button
@@ -58,7 +59,7 @@ export const BookingSidebarCustomerList = ({
 									{/* Names are predominantly Arabic; isolate them so the adjacent
 								    Archived tag cannot reorder the line. Only applied in inquiry
 								    mode, leaving the booking flow's markup untouched. */}
-									{activeVehicleKeys !== undefined ? (
+									{activityIndex !== undefined ? (
 										<bdi>{booking.customerName}</bdi>
 									) : (
 										booking.customerName

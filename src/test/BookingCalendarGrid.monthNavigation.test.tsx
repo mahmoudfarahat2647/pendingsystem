@@ -1,7 +1,8 @@
 import "@testing-library/jest-dom";
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BookingCalendarGrid } from "@/components/booking/BookingCalendarGrid";
+import { EMPTY_BOOKING_ACTIVITY_INDEX } from "@/domain/booking/bookingInquiry";
 import type { PendingRow } from "@/types";
 
 /**
@@ -14,7 +15,7 @@ import type { PendingRow } from "@/types";
  */
 
 const renderGrid = (currentMonth: Date, onMonthChange = vi.fn()) => {
-	const view = render(
+	render(
 		<BookingCalendarGrid
 			currentMonth={currentMonth}
 			selectedDate={currentMonth}
@@ -24,14 +25,15 @@ const renderGrid = (currentMonth: Date, onMonthChange = vi.fn()) => {
 			searchQuery=""
 			searchMatchDates={new Set<string>()}
 			activeCustomerDateSet={new Set<string>()}
+			activityIndex={EMPTY_BOOKING_ACTIVITY_INDEX}
 		/>,
 	);
 
-	// The two month chevrons are the first buttons rendered, ahead of the day cells.
-	// They carry no accessible name today; naming them is part of the Booking Inquiry
-	// accessibility work in #226 and deliberately kept out of this bug fix.
-	const buttons = view.container.querySelectorAll("button");
-	return { onMonthChange, previous: buttons[0], next: buttons[1] };
+	return {
+		onMonthChange,
+		previous: screen.getByRole("button", { name: /previous month/i }),
+		next: screen.getByRole("button", { name: /next month/i }),
+	};
 };
 
 describe("BookingCalendarGrid month navigation", () => {

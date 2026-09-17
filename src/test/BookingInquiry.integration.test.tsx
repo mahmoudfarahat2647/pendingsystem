@@ -2,8 +2,10 @@ import "@testing-library/jest-dom";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { BookingCalendarGrid } from "@/components/booking/BookingCalendarGrid";
 import { BookingSidebarCustomerList } from "@/components/booking/BookingSidebarCustomerList";
 import { BookingInquiryModal } from "@/components/shared/BookingInquiryModal";
+import { EMPTY_BOOKING_ACTIVITY_INDEX } from "@/domain/booking/bookingInquiry";
 import type { PendingRow } from "@/types";
 
 /**
@@ -325,10 +327,41 @@ describe("Booking Inquiry (integration)", () => {
 
 		it("adds the isolation only once inquiry props are supplied", () => {
 			const { container } = bookingFlowList({
-				activeVehicleKeys: new Set<string>(),
+				activityIndex: EMPTY_BOOKING_ACTIVITY_INDEX,
 			});
 
 			expect(container.querySelector("bdi")).not.toBeNull();
+		});
+
+		it("keeps calendar day markup unchanged", () => {
+			render(
+				<BookingCalendarGrid
+					currentMonth={new Date(2026, 8, 16)}
+					selectedDate={new Date(2026, 8, 16)}
+					onMonthChange={vi.fn()}
+					onDateSelect={vi.fn()}
+					bookingsByDateMap={{
+						"2026-09-16": [
+							row({ id: "x2", vin: "VIN13", bookingDate: "2026-09-16" }),
+						],
+					}}
+					searchQuery=""
+					searchMatchDates={new Set<string>()}
+					activeCustomerDateSet={new Set<string>()}
+				/>,
+			);
+
+			const badge = screen.getByText("1", {
+				selector: ".bg-renault-yellow",
+			});
+			const day = badge.parentElement;
+			if (!day)
+				throw new Error("The booking badge must be inside its day button");
+
+			expect(day).not.toHaveAttribute("aria-label");
+			expect(day).not.toHaveAttribute("aria-current");
+			expect(badge.className).toContain("bg-renault-yellow");
+			expect(badge.className).not.toContain("border-dashed");
 		});
 	});
 
