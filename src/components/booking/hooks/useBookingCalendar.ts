@@ -57,9 +57,12 @@ export function useBookingCalendar({
 	const hasBookingLoadError = bookingQuery.isError || archiveQuery.isError;
 	const isBookingDataComplete =
 		bookingQuery.isSuccess && archiveQuery.isSuccess && !hasBookingLoadError;
+	// Refetch anything that has not succeeded, not merely what has errored: a query
+	// can be unsuccessful without being in an error state (paused while offline, for
+	// one), and those are exactly the cases where the caller is showing a retry.
 	const retryBookingLoad = () => {
-		if (bookingQuery.isError) void bookingQuery.refetch();
-		if (archiveQuery.isError) void archiveQuery.refetch();
+		if (!bookingQuery.isSuccess) void bookingQuery.refetch();
+		if (!archiveQuery.isSuccess) void archiveQuery.refetch();
 	};
 
 	const [currentMonth, setCurrentMonth] = useState(new Date());

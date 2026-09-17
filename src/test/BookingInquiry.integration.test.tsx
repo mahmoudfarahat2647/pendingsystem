@@ -15,21 +15,66 @@ import type { PendingRow } from "@/types";
  * query a line came from, through classification, to what is rendered.
  */
 
+interface QueryState {
+	isLoading: boolean;
+	isError: boolean;
+	isSuccess: boolean;
+}
+
+const LOADED: QueryState = {
+	isLoading: false,
+	isError: false,
+	isSuccess: true,
+};
+const FAILED: QueryState = {
+	isLoading: false,
+	isError: true,
+	isSuccess: false,
+};
+const LOADING: QueryState = {
+	isLoading: true,
+	isError: false,
+	isSuccess: false,
+};
+/** Neither loading nor errored, but not successful either — e.g. paused offline. */
+const PAUSED: QueryState = {
+	isLoading: false,
+	isError: false,
+	isSuccess: false,
+};
+
+// Status is per stage, not shared. A single shared status object cannot express a
+// mixed state, so a test claiming "archive succeeds while booking fails" would
+// silently fail both instead.
 const queryMocks = vi.hoisted(() => ({
 	rowsByStage: {} as Record<string, PendingRow[]>,
-	state: { isLoading: false, isError: false, isSuccess: true },
+	stateByStage: {} as Record<
+		string,
+		{ isLoading: boolean; isError: boolean; isSuccess: boolean }
+	>,
 	refetch: vi.fn(),
 }));
 
 vi.mock("@/hooks/queries/useOrdersQuery", () => ({
-	useOrdersQuery: (stage: string) => ({
-		data: queryMocks.rowsByStage[stage] ?? [],
-		isLoading: queryMocks.state.isLoading,
-		isError: queryMocks.state.isError,
-		isSuccess: queryMocks.state.isSuccess,
-		refetch: queryMocks.refetch,
-	}),
+	useOrdersQuery: (stage: string) => {
+		const state = queryMocks.stateByStage[stage] ?? {
+			isLoading: false,
+			isError: false,
+			isSuccess: true,
+		};
+		return {
+			data: queryMocks.rowsByStage[stage] ?? [],
+			isLoading: state.isLoading,
+			isError: state.isError,
+			isSuccess: state.isSuccess,
+			refetch: queryMocks.refetch,
+		};
+	},
 }));
+
+const setStages = (booking: QueryState, archive: QueryState) => {
+	queryMocks.stateByStage = { booking, archive };
+};
 
 vi.mock("@/components/ui/dialog", () => ({
 	Dialog: ({ open, children }: { open: boolean; children: ReactNode }) =>
@@ -63,7 +108,7 @@ describe("Booking Inquiry (integration)", () => {
 		vi.useFakeTimers({ shouldAdvanceTime: true });
 		vi.setSystemTime(new Date(2026, 8, 16, 9, 0, 0));
 		queryMocks.rowsByStage = {};
-		queryMocks.state = { isLoading: false, isError: false, isSuccess: true };
+		setStages(LOADED, LOADED);
 		vi.clearAllMocks();
 	});
 
@@ -253,8 +298,17 @@ describe("Booking Inquiry (integration)", () => {
 	});
 
 	describe("incomplete data", () => {
+		/** An archived vehicle that would be tagged if classification were trusted. */
+		const archivedOnly = () => {
+			queryMocks.rowsByStage = {
+				booking: [],
+				archive: [row({ id: "a1", vin: "VIN10", bookingDate: "2026-09-16" })],
+			};
+		};
+
 		it("refuses to classify anything while loading", () => {
-			queryMocks.state = { isLoading: true, isError: false, isSuccess: false };
+			archivedOnly();
+			setStages(LOADING, LOADED);
 
 			renderInquiry();
 
@@ -262,23 +316,57 @@ describe("Booking Inquiry (integration)", () => {
 			expect(screen.queryByText("Archived")).not.toBeInTheDocument();
 		});
 
-		it("refuses to mark anything archived when a query fails", () => {
-			// The archive query succeeds while booking fails. Without the completeness
-			// gate, every vehicle would render as finished work.
-			queryMocks.rowsByStage = {
-				booking: [],
-				archive: [row({ id: "a1", vin: "VIN10", bookingDate: "2026-09-16" })],
-			};
-			queryMocks.state = { isLoading: false, isError: true, isSuccess: false };
+		it("refuses to mark anything archived when the booking query alone fails", () => {
+			// The genuinely mixed case: archive succeeded and holds rows, booking
+			// failed. Absent the completeness gate, every vehicle would be classified
+			// as finished work purely because the active set could not be fetched.
+			archivedOnly();
+			setStages(FAILED, LOADED);
 
 			renderInquiry();
 
 			expect(screen.getByText(/incomplete data/i)).toBeInTheDocument();
+			expect(screen.getByText(/could not be loaded/i)).toBeInTheDocument();
 			expect(screen.queryByText("Archived")).not.toBeInTheDocument();
 		});
 
+		it("refuses to mark anything archived when the booking query is merely unsuccessful", () => {
+			// Neither loading nor errored, but not successful — a query paused while
+			// offline. This is the state that fell through the old "not loading and
+			// not errored" gate and rendered every booked day as archived.
+			archivedOnly();
+			setStages(PAUSED, LOADED);
+
+			renderInquiry();
+
+			expect(screen.getByText(/incomplete data/i)).toBeInTheDocument();
+			expect(screen.getByText(/has not finished loading/i)).toBeInTheDocument();
+			expect(screen.queryByText("Archived")).not.toBeInTheDocument();
+		});
+
+		it("refuses to classify when the archive query alone fails", () => {
+			queryMocks.rowsByStage = {
+				booking: [row({ id: "b1", vin: "VIN11", bookingDate: "2026-09-16" })],
+				archive: [],
+			};
+			setStages(LOADED, FAILED);
+
+			renderInquiry();
+
+			expect(screen.getByText(/incomplete data/i)).toBeInTheDocument();
+		});
+
 		it("offers a retry that refetches", () => {
-			queryMocks.state = { isLoading: false, isError: true, isSuccess: false };
+			setStages(FAILED, LOADED);
+
+			renderInquiry();
+			fireEvent.click(screen.getByRole("button", { name: /retry/i }));
+
+			expect(queryMocks.refetch).toHaveBeenCalled();
+		});
+
+		it("retries a query that is unsuccessful without having errored", () => {
+			setStages(PAUSED, LOADED);
 
 			renderInquiry();
 			fireEvent.click(screen.getByRole("button", { name: /retry/i }));

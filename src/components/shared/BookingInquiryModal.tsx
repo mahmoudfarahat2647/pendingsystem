@@ -61,14 +61,15 @@ export const BookingInquiryModal = ({
 	});
 
 	// "Absent from the active index" only means archived once the booking stage has
-	// actually loaded. While loading or after a failure we withhold the classification
-	// props entirely, so nothing is asserted to be finished work on missing data.
-	const classification = isBookingDataComplete
-		? {
-				activeBookingDates: bookingActivityIndex.activeDates,
-				activeVehicleKeys: bookingActivityIndex.activeVehicles,
-			}
-		: {};
+	// actually loaded, so the columns below render only when the data is complete.
+	//
+	// Gate on the single positive condition rather than on "not loading and not
+	// errored": React Query can report a query as neither loading nor errored while
+	// it is still not successful — a paused query offline, for instance. Falling
+	// through in that state used to hand the grid an empty active set, which reads
+	// as "no day is active" and renders every booked day as archived — precisely the
+	// false claim this gate exists to prevent.
+	const isUnavailable = !isLoadingBookings && !isBookingDataComplete;
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -90,7 +91,7 @@ export const BookingInquiryModal = ({
 									Loading bookings
 								</span>
 							</div>
-						) : hasBookingLoadError ? (
+						) : isUnavailable ? (
 							<div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-6">
 								<AlertTriangle className="h-6 w-6 text-amber-500" />
 								<div className="space-y-1">
@@ -98,8 +99,10 @@ export const BookingInquiryModal = ({
 										Incomplete data
 									</div>
 									<p className="text-xs text-gray-500 leading-relaxed">
-										Booking data could not be loaded, so what is shown here may
-										be incomplete. Nothing is marked as archived.
+										{hasBookingLoadError
+											? "Booking data could not be loaded, so what is shown here may be incomplete."
+											: "Booking data has not finished loading, so what is shown here may be incomplete."}{" "}
+										Nothing is marked as archived.
 									</p>
 								</div>
 								<button
@@ -120,16 +123,14 @@ export const BookingInquiryModal = ({
 								searchQuery={searchQuery}
 								searchMatchDates={searchMatchDates}
 								activeCustomerDateSet={new Set(activeCustomerHistoryDates)}
-								activeBookingDates={
-									classification.activeBookingDates ?? new Set<string>()
-								}
+								activeBookingDates={bookingActivityIndex.activeDates}
 							/>
 						)}
 					</div>
 
 					{/* Column 2: Customers booked on the selected day */}
 					<div className="w-[320px] bg-[#0a0a0b] border-r border-white/5 flex flex-col">
-						{isLoadingBookings || hasBookingLoadError ? (
+						{isLoadingBookings || isUnavailable ? (
 							<div className="flex-1 p-6 text-xs text-gray-700 italic">
 								{isLoadingBookings ? "Loading…" : "Unavailable"}
 							</div>
@@ -139,9 +140,7 @@ export const BookingInquiryModal = ({
 								sidebarGroupedBookings={sidebarGroupedBookings}
 								selectedBookingId={selectedBookingId}
 								setSelectedBookingId={setSelectedBookingId}
-								activeVehicleKeys={
-									classification.activeVehicleKeys ?? new Set<string>()
-								}
+								activeVehicleKeys={bookingActivityIndex.activeVehicles}
 							/>
 						)}
 					</div>
