@@ -170,14 +170,34 @@ export function useBookingCalendar({
 
 	useEffect(() => {
 		if (skipAutoSelect) return;
-		if (
-			sidebarGroupedBookings.length > 0 &&
-			(!selectedBookingId ||
-				!sidebarGroupedBookings.find((b) => b.id === selectedBookingId))
-		) {
-			setSelectedBookingId(sidebarGroupedBookings[0].id);
+		const stillPresent =
+			selectedBookingId &&
+			sidebarGroupedBookings.find((b) => b.id === selectedBookingId);
+		if (sidebarGroupedBookings.length > 0 && !stillPresent) {
+			// Default fallback: the first entry in the rebuilt list.
+			let nextId = sidebarGroupedBookings[0].id;
+			// In the Booking Inquiry (suppressHistoryJump), the previous selection is
+			// most often lost because the user clicked a Booking History date for the
+			// vehicle they were already viewing — that vehicle just isn't first in the
+			// rebuilt list. Falling back to index 0 there silently swaps in a different
+			// customer. Prefer the entry matching the outgoing VIN, looked up in
+			// allBookings since the outgoing row may no longer be in this day's group.
+			if (suppressHistoryJump && selectedBookingId) {
+				const previousRep = allBookings.find((b) => b.id === selectedBookingId);
+				const preferred = previousRep?.vin
+					? sidebarGroupedBookings.find((b) => b.vin === previousRep.vin)
+					: undefined;
+				if (preferred) nextId = preferred.id;
+			}
+			setSelectedBookingId(nextId);
 		} else if (sidebarGroupedBookings.length === 0) setSelectedBookingId(null);
-	}, [sidebarGroupedBookings, selectedBookingId, skipAutoSelect]);
+	}, [
+		sidebarGroupedBookings,
+		selectedBookingId,
+		skipAutoSelect,
+		suppressHistoryJump,
+		allBookings,
+	]);
 
 	const activeCustomerBookings = useMemo(() => {
 		const selectedRep = allBookings.find((b) => b.id === selectedBookingId);

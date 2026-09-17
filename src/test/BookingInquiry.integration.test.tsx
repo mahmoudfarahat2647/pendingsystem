@@ -235,6 +235,41 @@ describe("Booking Inquiry (integration)", () => {
 			);
 			expect(dayCell(/20 September 2026/)).not.toHaveAttribute("aria-current");
 		});
+
+		it("keeps the same vehicle selected after clicking its own Booking History date", () => {
+			// VIN20 is booked on the 10th (alone) and the 20th (alongside VIN21).
+			// VIN21's row is listed first, so the naive fallback to index 0 on the
+			// rebuilt day would silently select VIN21 instead of the vehicle whose
+			// history the user actually clicked.
+			queryMocks.rowsByStage = {
+				booking: [
+					row({ id: "b-vin21", vin: "VIN21", bookingDate: "2026-09-20" }),
+					row({ id: "b-vin20", vin: "VIN20", bookingDate: "2026-09-20" }),
+				],
+				archive: [
+					row({ id: "a-vin20", vin: "VIN20", bookingDate: "2026-09-10" }),
+				],
+			};
+
+			renderInquiry();
+
+			// Select VIN20 via the day it is alone on.
+			fireEvent.click(dayCell(/10 September 2026/));
+			expect(
+				screen.getByText(/Customer VIN20/, { selector: "h2" }),
+			).toBeInTheDocument();
+
+			// Click VIN20's own Booking History entry for the 20th — a day it shares
+			// with VIN21, who was inserted first.
+			fireEvent.click(screen.getByText(/Sep 20, 2026/));
+
+			expect(
+				screen.getByText(/Customer VIN20/, { selector: "h2" }),
+			).toBeInTheDocument();
+			expect(
+				screen.queryByText(/Customer VIN21/, { selector: "h2" }),
+			).not.toBeInTheDocument();
+		});
 	});
 
 	describe("a day with nothing booked", () => {
