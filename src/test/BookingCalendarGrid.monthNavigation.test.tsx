@@ -64,14 +64,19 @@ describe("BookingCalendarGrid month navigation", () => {
 		expect(received.getMonth()).toBe(1);
 	});
 
-	it("steps from a leap-year February onto March", () => {
-		const { onMonthChange, next } = renderGrid(new Date(2024, 1, 29));
+	it("lands on a leap-year February when stepping back from 31 March", () => {
+		// The leap year has to be the *target*, not the origin, for this to guard
+		// anything. Stepping forward from 29 February gives "29 March" under the old
+		// implementation too — no overflow, so such a test passes either way.
+		// Going backward from 31 March asks for "31 February", which the old code
+		// normalised to 2 March in a leap year.
+		const { onMonthChange, previous } = renderGrid(new Date(2024, 2, 31));
 
-		fireEvent.click(next);
+		fireEvent.click(previous);
 
 		const received = onMonthChange.mock.calls[0][0] as Date;
 		expect(received.getFullYear()).toBe(2024);
-		expect(received.getMonth()).toBe(2);
+		expect(received.getMonth()).toBe(1);
 	});
 
 	it("does not mutate the date passed in as a prop", () => {
