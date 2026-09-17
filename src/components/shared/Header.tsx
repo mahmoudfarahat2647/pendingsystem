@@ -35,6 +35,7 @@ import { getOrdersQueryKey } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
+import { BookingInquiryButton } from "./BookingInquiryButton";
 import {
 	NOTIFICATION_CHECK_INTERVAL_MS,
 	NOTIFICATION_INITIAL_DELAY_MS,
@@ -471,6 +472,8 @@ export const Header = React.memo(function Header() {
 					>
 						<RefreshCw className="h-5 w-5" />
 					</button>
+
+					<BookingInquiryButton />
 
 					<div ref={exportDropdownRef} className="relative">
 						<button

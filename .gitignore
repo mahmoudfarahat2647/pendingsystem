@@ -70,8 +70,10 @@ next-env.d.ts
 e2e/.auth/
 .playwright-cli/
 
-# documentation
-/docs/
+# documentation (Obsidian vault is local-only, but ADRs must be tracked:
+# an architecture decision record only does its job if future readers can read it)
+/docs/*
+!/docs/adr/
 
 # scripts (utility scripts ignored, but docs-sync infrastructure is tracked)
 /scripts/*

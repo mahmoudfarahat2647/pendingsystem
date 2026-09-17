@@ -1,5 +1,6 @@
 import { format, isAfter, subYears } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { buildBookingActivityIndex } from "@/domain/booking/bookingInquiry";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import type { PendingRow } from "@/types";
 
@@ -7,6 +8,15 @@ interface UseBookingCalendarOptions {
 	open: boolean;
 	initialSearchTerm: string;
 	skipAutoSelect?: boolean;
+	/**
+	 * When true, selecting a customer no longer moves the calendar to that vehicle's most
+	 * recent Booking Date. Explicit navigation (month arrows, day clicks, Booking History
+	 * dates) still moves it.
+	 *
+	 * The booking flow wants the jump — picking a customer should show you their latest
+	 * visit. A date-first inquiry does not: it would throw you off the day you just chose.
+	 */
+	suppressHistoryJump?: boolean;
 }
 
 /**
@@ -32,10 +42,28 @@ export function useBookingCalendar({
 	open,
 	initialSearchTerm,
 	skipAutoSelect = false,
+	suppressHistoryJump = false,
 }: UseBookingCalendarOptions) {
 	// Directly fetch the required data inside the hook to prevent prop-drilling
-	const { data: bookingRowData = [] } = useOrdersQuery("booking");
-	const { data: archiveRowData = [] } = useOrdersQuery("archive");
+	const bookingQuery = useOrdersQuery("booking");
+	const archiveQuery = useOrdersQuery("archive");
+	const { data: bookingRowData = [] } = bookingQuery;
+	const { data: archiveRowData = [] } = archiveQuery;
+
+	// Classification treats "absent from the active index" as archived, which is only sound
+	// once the booking source has actually loaded. Surfacing status lets callers refuse to
+	// classify — otherwise a failed booking query renders every vehicle as finished work.
+	const isLoadingBookings = bookingQuery.isLoading || archiveQuery.isLoading;
+	const hasBookingLoadError = bookingQuery.isError || archiveQuery.isError;
+	const isBookingDataComplete =
+		bookingQuery.isSuccess && archiveQuery.isSuccess && !hasBookingLoadError;
+	// Refetch anything that has not succeeded, not merely what has errored: a query
+	// can be unsuccessful without being in an error state (paused while offline, for
+	// one), and those are exactly the cases where the caller is showing a retry.
+	const retryBookingLoad = () => {
+		if (!bookingQuery.isSuccess) void bookingQuery.refetch();
+		if (!archiveQuery.isSuccess) void archiveQuery.refetch();
+	};
 
 	const [currentMonth, setCurrentMonth] = useState(new Date());
 	const [selectedDate, setSelectedDate] = useState(new Date());
@@ -71,6 +99,14 @@ export function useBookingCalendar({
 	const allBookings = useMemo(
 		() => [...bookingRowData, ...archiveRowData],
 		[bookingRowData, archiveRowData],
+	);
+
+	// Active vs Archived Booking is decided by which stage query returned the line,
+	// never by PendingRow.stage (optional in the schema, so unreliable).
+	// See docs/adr/0001-booking-inquiry-distinguishes-by-stage-not-date.md
+	const bookingActivityIndex = useMemo(
+		() => buildBookingActivityIndex(bookingRowData),
+		[bookingRowData],
 	);
 
 	const filteredBookings = useMemo(() => {
@@ -177,6 +213,7 @@ export function useBookingCalendar({
 	}, [allBookings, activeBookingRep]);
 
 	useEffect(() => {
+		if (suppressHistoryJump) return;
 		const currentVin = activeBookingRep?.vin;
 		// Guard: Only jump the calendar when a genuinely new VIN is selected.
 		// We only update prevVinRef when currentVin is defined, so transient undefined gaps
@@ -195,7 +232,7 @@ export function useBookingCalendar({
 		if (currentVin) {
 			prevVinRef.current = currentVin;
 		}
-	}, [activeCustomerHistoryDates, activeBookingRep?.vin]);
+	}, [activeCustomerHistoryDates, activeBookingRep?.vin, suppressHistoryJump]);
 
 	const handleDateSelect = (day: Date) => {
 		setSelectedDate(day);
@@ -216,6 +253,7 @@ export function useBookingCalendar({
 		setSelectedBookingId,
 		searchMatchDates,
 		bookingsByDateMap,
+		bookingActivityIndex,
 		sidebarGroupedBookings,
 		activeBookingRep,
 		activeCustomerBookings,
@@ -223,5 +261,9 @@ export function useBookingCalendar({
 		activeCustomerHistoryDates,
 		handleDateSelect,
 		isDateInPast,
+		isLoadingBookings,
+		hasBookingLoadError,
+		isBookingDataComplete,
+		retryBookingLoad,
 	};
 }

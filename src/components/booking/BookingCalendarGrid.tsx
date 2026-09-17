@@ -25,6 +25,14 @@ interface BookingCalendarGridProps {
 	searchQuery: string;
 	searchMatchDates: Set<string>;
 	activeCustomerDateSet: Set<string>;
+	/**
+	 * Booking Dates holding at least one Active Booking.
+	 *
+	 * Supplied only by the Booking Inquiry. When omitted — which is how the booking flow
+	 * calls this component — every badge keeps the standard solid accent and day buttons
+	 * keep their existing markup, so the booking flow renders exactly as before.
+	 */
+	activeBookingDates?: ReadonlySet<string>;
 }
 
 export const BookingCalendarGrid = ({
@@ -36,7 +44,10 @@ export const BookingCalendarGrid = ({
 	searchQuery,
 	searchMatchDates,
 	activeCustomerDateSet,
+	activeBookingDates,
 }: BookingCalendarGridProps) => {
+	// Inquiry mode is opt-in: without the prop, nothing below changes.
+	const isInquiry = activeBookingDates !== undefined;
 	const monthStart = startOfMonth(currentMonth);
 	const monthEnd = endOfMonth(monthStart);
 	const startDate = startOfWeek(monthStart);
@@ -89,10 +100,32 @@ export const BookingCalendarGrid = ({
 
 					const dayBookings = [...(bookingsByDateMap[dateKey] || [])];
 
+					// Archived-only days are muted AND outlined-with-dashes, so the
+					// distinction survives greyscale and colour-blindness rather than
+					// resting on hue alone.
+					const isArchivedOnlyDay =
+						isInquiry &&
+						dayBookings.length >= 1 &&
+						!activeBookingDates.has(dateKey);
+
+					const dayLabel = isInquiry
+						? `${format(day, "d MMMM yyyy")}, ${dayBookings.length} booked ${
+								dayBookings.length === 1 ? "vehicle" : "vehicles"
+							}${
+								dayBookings.length === 0
+									? ""
+									: isArchivedOnlyDay
+										? ", all archived"
+										: ", includes active bookings"
+							}`
+						: undefined;
+
 					return (
 						<button
 							type="button"
 							key={day.toString()}
+							aria-label={dayLabel}
+							aria-current={isInquiry && isSelected ? "date" : undefined}
 							onClick={() => onDateSelect(day)}
 							className={cn(
 								"relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-300 group",
@@ -114,7 +147,14 @@ export const BookingCalendarGrid = ({
 						>
 							{format(day, "d")}
 							{dayBookings.length >= 1 && !isFaded && (
-								<div className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-renault-yellow text-black text-[10px] font-bold rounded-full shadow-lg border border-[#050505] z-20">
+								<div
+									className={cn(
+										"absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full shadow-lg z-20",
+										isArchivedOnlyDay
+											? "bg-transparent text-gray-400 border border-dashed border-gray-500"
+											: "bg-renault-yellow text-black border border-[#050505]",
+									)}
+								>
 									{dayBookings.length}
 								</div>
 							)}
