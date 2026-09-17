@@ -88,6 +88,7 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 
 ### Key Cross-Cutting Components
 - **`BookingCalendarModal`** - shared booking workflow modal used across multiple stages
+- **`BookingInquiryModal`** / **`BookingInquiryButton`** - read-only Booking Inquiry calendar opened from the header on every protected route. Composes the same grid/customer-list/details components as `BookingCalendarModal` but ships no write controls, no notes, and no tooltips. Active vs Archived is decided by **which stage query returned a line**, never by `PendingRow.stage` (optional) or by whether the Booking Date has passed - see `docs/adr/0001-booking-inquiry-distinguishes-by-stage-not-date.md`. The modal **must only be rendered while open**: `useBookingCalendar` queries `booking` and `archive` unconditionally, so mounting it permanently would add two queries to every page load app-wide. Full doc: `docs/features/booking.md`
 - **`SearchResultsView`** - aggregates all six stage queries (including `freeze`) for global header search
 - **`OrderFormModal`** - orchestrates create/edit with Beast Mode, multi-part, and duplicate detection
 - **`Header`** - owns debounced global search, draft-session undo/redo/save/discard controls, exports, and notification polling
