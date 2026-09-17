@@ -1,0 +1,27 @@
+# Normalise line endings.
+#
+# The repo previously held a mix of CRLF and LF, which made `npm run lint`
+# unusable as a quality gate: a clean checkout reported 311 formatting errors,
+# so a genuinely new error was indistinguishable from the existing noise.
+# Biome formats to LF, so LF is what gets stored and checked out.
+* text=auto eol=lf
+
+# Shell scripts must keep LF or they will not execute.
+*.sh text eol=lf
+
+# Windows-native scripts want CRLF.
+*.ps1 text eol=crlf
+
+# Binaries: never touch.
+*.png binary
+*.webp binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.xlsx binary
