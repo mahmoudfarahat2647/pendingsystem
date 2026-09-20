@@ -1,5 +1,9 @@
 import type { StateCreator } from "zustand";
 import type { OrderStage } from "@/domain/order/orderStage";
+import {
+	computeReleaseFingerprint,
+	getQualifyingChassis,
+} from "@/domain/order/releaseGate";
 import { hasAttachment } from "@/lib/attachment";
 import { ORDER_STAGES } from "@/lib/constants";
 import { logger } from "@/lib/logger";
@@ -320,6 +324,40 @@ export const createDraftSessionSlice: StateCreator<
 				}
 			}
 
+			// Release-gate guard for any *→call transition (issue #242): defense
+			// in depth behind the producer-side gate. A command carrying no rows
+			// that require release, or one whose releaseAuthorization fingerprint
+			// matches the exact affected rows, is allowed through unchanged.
+			if (
+				(cmd.type === "moveRows" || cmd.type === "patchRow") &&
+				cmd.destinationStage === "call" &&
+				cmd.sourceStage !== "call"
+			) {
+				const workingRows = get()._deriveWorkingRows();
+				const affectedIds = cmd.type === "moveRows" ? cmd.ids : [cmd.id];
+				const affectedRows = ORDER_STAGES.flatMap(
+					(stage) => workingRows[stage] ?? [],
+				).filter((row) => affectedIds.includes(row.id));
+
+				const qualifying = getQualifyingChassis(affectedRows);
+				if (qualifying.length > 0) {
+					const fingerprint = computeReleaseFingerprint(affectedRows);
+					const auth = cmd.releaseAuthorization;
+					const authorizedVins = new Set(auth?.vins ?? []);
+					const covered =
+						auth != null &&
+						auth.fingerprint === fingerprint &&
+						qualifying.every((chassis) => authorizedVins.has(chassis.vin));
+					if (!covered) {
+						set(() => ({
+							lastCommandError:
+								"Release confirmation is required before moving this warranty chassis to Call List.",
+						}));
+						return false;
+					}
+				}
+			}
+
 			set((state) => {
 				const newSession: DraftSession = {
 					...state.draftSession,
@@ -544,17 +582,70 @@ export const createDraftSessionSlice: StateCreator<
 				}
 			}
 
+			// A restored recovery snapshot replays straight into saveDraft
+			// without re-entering applyCommand, so any *→call command must be
+			// re-verified here (issue #242 §4): drop it if the affected rows'
+			// VIN/warranty/mileage changed since the release was authorized,
+			// rather than silently replaying a stale release.
+			const freshBaselineRows = ORDER_STAGES.flatMap(
+				(stage) => newSession.baselineByStage[stage] ?? [],
+			);
+			const byId = new Map(freshBaselineRows.map((row) => [row.id, row]));
+			let droppedStaleRelease = false;
+
+			function isStaleCallCommand(cmd: DraftCommand): boolean {
+				if (
+					(cmd.type !== "moveRows" && cmd.type !== "patchRow") ||
+					cmd.destinationStage !== "call" ||
+					cmd.sourceStage === "call"
+				) {
+					return false;
+				}
+				const affectedIds = cmd.type === "moveRows" ? cmd.ids : [cmd.id];
+				const freshRows = affectedIds
+					.map((id) => byId.get(id))
+					.filter((row): row is PendingRow => row !== undefined);
+				const qualifying = getQualifyingChassis(freshRows);
+				if (qualifying.length === 0) return false;
+
+				const fingerprint = computeReleaseFingerprint(freshRows);
+				const auth = cmd.releaseAuthorization;
+				const authorizedVins = new Set(auth?.vins ?? []);
+				const covered =
+					auth != null &&
+					auth.fingerprint === fingerprint &&
+					qualifying.every((chassis) => authorizedVins.has(chassis.vin));
+				return !covered;
+			}
+
+			const filteredCommands = snapshot.pendingCommands.filter((cmd) => {
+				if (isStaleCallCommand(cmd)) {
+					droppedStaleRelease = true;
+					return false;
+				}
+				return true;
+			});
+
+			if (droppedStaleRelease) {
+				logger.warn(
+					"[draftSession] Dropped a stale release-authorized move to Call List while restoring a recovery snapshot — the affected chassis changed since release was confirmed.",
+				);
+			}
+
 			set(() => ({
 				draftSession: {
 					...newSession,
 					derivedRowsRevision: allocateDerivedRowsRevision(),
-					pendingCommands: snapshot.pendingCommands,
+					pendingCommands: filteredCommands,
 					past: [],
 					future: [],
-					dirty: snapshot.pendingCommands.length > 0,
-					touchedStages: new Set(getAllCommandStages(snapshot.pendingCommands)),
+					dirty: filteredCommands.length > 0,
+					touchedStages: new Set(getAllCommandStages(filteredCommands)),
 					lastTouchedAt: snapshot.updatedAt,
 				},
+				lastCommandError: droppedStaleRelease
+					? "A pending Call List move required a fresh release confirmation and was not restored."
+					: null,
 			}));
 		},
 

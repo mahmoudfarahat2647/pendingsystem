@@ -13,8 +13,10 @@ import {
 	getSelectedIds,
 	getVinAutoMoveIds,
 } from "@/domain/order/orderWorkflow";
+import { buildReleaseAuthorization } from "@/domain/order/releaseGate";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
+import { useReleaseGate } from "@/hooks/useReleaseGate";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { hasAttachment } from "@/lib/attachment";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
@@ -43,6 +45,7 @@ export const useOrdersPageHandlers = () => {
 		applyCommand,
 		saving: draftSaving,
 	} = useDraftSession("orders");
+	const { requestCallRelease } = useReleaseGate();
 
 	// Use draft working rows if available, fallback to query data
 	const effectiveOrdersData = draftWorkingRows || ordersRowData;
@@ -376,12 +379,29 @@ export const useOrdersPageHandlers = () => {
 			});
 
 			if (vinIds.length > 0) {
+				const vinRows = effectiveOrdersData.filter((r) =>
+					vinIds.includes(r.id),
+				);
+				const gateResult = await requestCallRelease({
+					rows: vinRows,
+					automatic: true,
+				});
+				if (gateResult.approvedRows.length === 0) continue;
+
+				const approvedIds = getSelectedIds(gateResult.approvedRows);
 				applyCommand({
 					type: "moveRows",
-					ids: vinIds,
+					ids: approvedIds,
 					sourceStage: "orders",
 					destinationStage: "call",
 					guardFrozenVins: true,
+					releaseAuthorization:
+						gateResult.approvedVins.length > 0
+							? buildReleaseAuthorization(
+									gateResult.approvedRows,
+									gateResult.approvedVins,
+								)
+							: undefined,
 				});
 				toast.success(
 					`All parts for VIN ${vin} arrived! Auto-move queued; save changes to persist it.`,
@@ -459,15 +479,39 @@ export const useOrdersPageHandlers = () => {
 			return;
 		}
 
-		const ids = getSelectedIds(selectedRows);
+		const gateResult = await requestCallRelease({
+			rows: selectedRows,
+			automatic: false,
+		});
+		if (gateResult.approvedRows.length === 0) {
+			if (gateResult.cancelledVins.length > 0) {
+				toast.error("Release not confirmed — no rows were moved.");
+			}
+			return;
+		}
+
+		const ids = getSelectedIds(gateResult.approvedRows);
 		applyCommand({
 			type: "moveRows",
 			ids,
 			sourceStage: "orders",
 			destinationStage: "call",
+			releaseAuthorization:
+				gateResult.approvedVins.length > 0
+					? buildReleaseAuthorization(
+							gateResult.approvedRows,
+							gateResult.approvedVins,
+						)
+					: undefined,
 		});
 		setSelectedRows([]);
-		toast.success(`${selectedRows.length} order(s) sent to Call List`);
+		if (gateResult.cancelledVins.length > 0) {
+			toast.success(
+				`${ids.length} order(s) sent to Call List (${gateResult.cancelledVins.length} chassis withheld pending release approval)`,
+			);
+		} else {
+			toast.success(`${ids.length} order(s) sent to Call List`);
+		}
 	};
 
 	const handleDeleteSelected = async () => {

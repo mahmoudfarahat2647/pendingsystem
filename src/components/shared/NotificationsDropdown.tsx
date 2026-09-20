@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { computeReleaseFollowUpDueDate } from "@/domain/order/releaseGate";
+import { useUpsertReleaseFollowUpMutation } from "@/hooks/queries/useReleaseFollowUpsQuery";
 import { ORDER_STAGES } from "@/lib/constants";
 import { ORDER_STAGE_TAB_INFO } from "@/lib/orderStage";
 import { cn } from "@/lib/utils";
@@ -87,8 +89,33 @@ export const NotificationsDropdown = () => {
 	const setPendingVinSelection = useAppStore(
 		(state) => state.setPendingVinSelection,
 	);
+	const upsertReleaseFollowUp = useUpsertReleaseFollowUpMutation();
 
 	const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+	// Release follow-up notifications are never permanently dismissed by
+	// their `X` (or by Clear All) — dismissing one instead snoozes it another
+	// two calendar months (issue #242). Every other type keeps today's
+	// dismiss-and-suppress behavior.
+	const snoozeReleaseFollowUp = (n: AppNotification) => {
+		void upsertReleaseFollowUp.mutateAsync({
+			vin: n.vin,
+			nextDueAt: computeReleaseFollowUpDueDate(),
+			referenceRowId: n.referenceId,
+		});
+	};
+
+	const dismissNotification = (n: AppNotification) => {
+		if (n.type === "release_followup") snoozeReleaseFollowUp(n);
+		removeNotification(n.id);
+	};
+
+	const dismissAllNotifications = () => {
+		for (const n of notifications) {
+			if (n.type === "release_followup") snoozeReleaseFollowUp(n);
+		}
+		clearNotifications();
+	};
 
 	const handleNotificationClick = (n: AppNotification) => {
 		markNotificationAsRead(n.id);
@@ -186,7 +213,7 @@ export const NotificationsDropdown = () => {
 								{notifications.length > 0 && (
 									<button
 										type="button"
-										onClick={clearNotifications}
+										onClick={dismissAllNotifications}
 										className="text-[10px] text-gray-500 hover:text-white uppercase font-bold transition-colors"
 									>
 										Clear All
@@ -226,7 +253,9 @@ export const NotificationsDropdown = () => {
 																		? n.cntrRdgLevel === "high"
 																			? "bg-red-500"
 																			: "bg-orange-500"
-																		: "bg-indigo-500",
+																		: n.type === "release_followup"
+																			? "bg-renault-yellow"
+																			: "bg-indigo-500",
 														)}
 													/>
 													<div className="flex-1 space-y-2">
@@ -271,10 +300,14 @@ export const NotificationsDropdown = () => {
 													type="button"
 													onClick={(e) => {
 														e.stopPropagation();
-														removeNotification(n.id);
+														dismissNotification(n);
 													}}
 													className="absolute top-2 right-2 p-1.5 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-white/5"
-													title="Remove notification"
+													title={
+														n.type === "release_followup"
+															? "Snooze for two months"
+															: "Remove notification"
+													}
 												>
 													<X className="h-3.5 w-3.5" />
 												</button>

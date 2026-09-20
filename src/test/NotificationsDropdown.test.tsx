@@ -18,6 +18,12 @@ vi.mock("sonner", () => ({
 	toast: { error: (...args: unknown[]) => toastError(...args) },
 }));
 
+vi.mock("@/hooks/queries/useReleaseFollowUpsQuery", () => ({
+	useUpsertReleaseFollowUpMutation: () => ({
+		mutateAsync: vi.fn().mockResolvedValue(undefined),
+	}),
+}));
+
 vi.mock("framer-motion", () => ({
 	AnimatePresence: ({ children }: { children: React.ReactNode }) => (
 		<>{children}</>

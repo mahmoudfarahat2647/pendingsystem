@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import type React from "react";
+import { ReleaseGateProvider } from "@/components/shared/release/ReleaseGateProvider";
 import { useAutoMoveVins } from "@/hooks/useAutoMoveVins";
 import { useAppStore } from "@/store/useStore";
 
@@ -21,15 +22,19 @@ interface MainContentWrapperProps {
 	children: React.ReactNode;
 }
 
-export const MainContentWrapper = ({ children }: MainContentWrapperProps) => {
+const AutoMoveWatcher = () => {
 	useAutoMoveVins(); // Activate the watcher
+	return null;
+};
 
+export const MainContentWrapper = ({ children }: MainContentWrapperProps) => {
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const hasSearchTerm = searchTerm && searchTerm.trim().length > 0;
 
-	if (hasSearchTerm) {
-		return <SearchResultsView />;
-	}
-
-	return <>{children}</>;
+	return (
+		<ReleaseGateProvider>
+			<AutoMoveWatcher />
+			{hasSearchTerm ? <SearchResultsView /> : children}
+		</ReleaseGateProvider>
+	);
 };

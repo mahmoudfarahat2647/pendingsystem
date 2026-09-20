@@ -1,4 +1,7 @@
+import type { ReleaseAuthorization } from "@/domain/order/releaseGate";
 import type { PartEntry, PendingRow } from "@/schemas/order.schema";
+
+export type { ReleaseAuthorization } from "@/domain/order/releaseGate";
 
 export type { PartEntry, PendingRow };
 
@@ -36,7 +39,12 @@ export interface OrderStageCounts {
 
 export interface AppNotification {
 	id: string;
-	type: "reminder" | "warranty" | "booking_followup" | "cntr_rdg_warning";
+	type:
+		| "reminder"
+		| "warranty"
+		| "booking_followup"
+		| "cntr_rdg_warning"
+		| "release_followup";
 	title: string;
 	description: string;
 	timestamp: string;
@@ -49,7 +57,7 @@ export interface AppNotification {
 	path: string;
 	/**
 	 * Unique identifier for managing automated notifications to prevent duplicates.
-	 * Format: `reminder:{id}:{date}:{time}:{subject}` | `warranty:{id}:{date}` | `cntr_rdg_warning:{id}:{level}`
+	 * Format: `reminder:{id}:{date}:{time}:{subject}` | `warranty:{id}:{date}` | `cntr_rdg_warning:{id}:{level}` | `release_followup:{vin}:{dueISO}`
 	 */
 	managedKey?: string;
 	/** Only present for cntr_rdg_warning notifications */
@@ -100,4 +108,6 @@ export interface PatchRowCommand {
 	destinationStage: OrderStage;
 	updates: Partial<PendingRow>;
 	previousValues: Partial<PendingRow>;
+	/** Release-gate authorization (issue #242) for a call-destination patch; see `computeReleaseFingerprint`. */
+	releaseAuthorization?: ReleaseAuthorization;
 }

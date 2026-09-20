@@ -22,8 +22,10 @@ import {
 } from "@/domain/order/constants";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { useNotificationCandidatesQuery } from "@/hooks/queries/useNotificationCandidatesQuery";
+import { useReleaseFollowUpsQuery } from "@/hooks/queries/useReleaseFollowUpsQuery";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
+import { useReleaseFollowUpMaintenance } from "@/hooks/useReleaseFollowUpMaintenance";
 import { useWarrantyExpiryMaintenance } from "@/hooks/useWarrantyExpiryMaintenance";
 import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 import {
@@ -65,7 +67,10 @@ export const Header = React.memo(function Header() {
 
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 	const { runMaintenance } = useWarrantyExpiryMaintenance();
+	const { runMaintenance: runReleaseFollowUpMaintenance } =
+		useReleaseFollowUpMaintenance();
 	useNotificationCandidatesQuery();
+	useReleaseFollowUpsQuery();
 	const searchTerm = useAppStore((state) => state.searchTerm);
 	const setSearchTerm = useAppStore((state) => state.setSearchTerm);
 	const [searchInput, setSearchInput] = useState(searchTerm);
@@ -171,9 +176,11 @@ export const Header = React.memo(function Header() {
 				lastRunAt: now,
 			};
 			checkNotifications();
-			// Run auto-archive maintenance on the same interval tick.
-			// The hook has its own rate-limit ref (once per hour) so this is safe.
+			// Run auto-archive and release-follow-up maintenance on the same
+			// interval tick. Both hooks have their own rate-limit ref (once per
+			// hour) so this is safe.
 			runMaintenance();
+			runReleaseFollowUpMaintenance();
 		};
 
 		// Defer first check by 3 seconds to allow app to fully render
@@ -183,7 +190,7 @@ export const Header = React.memo(function Header() {
 			clearTimeout(initialTimeout);
 			clearInterval(interval);
 		};
-	}, [checkNotifications, runMaintenance]);
+	}, [checkNotifications, runMaintenance, runReleaseFollowUpMaintenance]);
 
 	// Listen for manual notification check requests (e.g., after setting a reminder)
 	useEffect(() => {

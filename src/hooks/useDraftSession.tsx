@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { useReleaseGate } from "@/hooks/useReleaseGate";
 import { DRAFT_RECOVERY_MAX_AGE_MS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { DraftRecoverySnapshotSchema } from "@/schemas/draftSession.schema";
@@ -18,6 +19,22 @@ import { useSaveOrderMutation } from "./queries/useSaveOrderMutation";
 
 const RECOVERY_STORAGE_KEY = "pending-sys-draft-v1";
 const RECOVERY_MAX_AGE_MS = DRAFT_RECOVERY_MAX_AGE_MS;
+
+// Collects VINs authorized for release (issue #242) on any *→call command,
+// so their follow-up can be cleared once the move actually persists.
+function collectReleaseVins(cmd: DraftCommand, out: Set<string>): void {
+	if (cmd.type === "composite") {
+		for (const child of cmd.children) collectReleaseVins(child, out);
+		return;
+	}
+	if (
+		(cmd.type === "moveRows" || cmd.type === "patchRow") &&
+		cmd.destinationStage === "call" &&
+		cmd.releaseAuthorization
+	) {
+		for (const vin of cmd.releaseAuthorization.vins) out.add(vin);
+	}
+}
 
 // Mirrors getCommandStages/getAllCommandStages from draftSessionSlice (not exported there).
 function getSnapshotStages(commands: DraftCommand[]): OrderStage[] {
@@ -91,16 +108,41 @@ export function useDraftSession(stage?: OrderStage) {
 	const bulkDeleteOrdersMutation = useBulkDeleteOrdersMutation(
 		stage ?? "orders",
 	);
+	const { clearFollowUpsForVins } = useReleaseGate();
 
-	const saveDraft = useCallback(() => {
-		return saveDraftInternal({
+	const saveDraft = useCallback(async () => {
+		// Snapshot before saving: a full success clears `pendingCommands`, and a
+		// partial failure only tells us how many commands (from the start)
+		// actually persisted via `saveCheckpoint.nextIndex`.
+		const commandsSnapshot =
+			useAppStore.getState().draftSession.pendingCommands;
+
+		await saveDraftInternal({
 			saveOrder: (vars) => saveOrderMutation.mutateAsync(vars),
 			bulkUpdateStage: (vars) => bulkUpdateStageMutation.mutateAsync(vars),
 			bulkDelete: (ids) => bulkDeleteOrdersMutation.mutateAsync(ids),
 		});
+
+		// Clear the release follow-up only for VINs whose authorized move
+		// actually persisted — never merely because it was queued (issue #242:
+		// "Do not clear the follow-up merely because a move failed").
+		const after = useAppStore.getState().draftSession;
+		const persistedCount = after.saveError
+			? (after.saveCheckpoint?.nextIndex ?? 0)
+			: commandsSnapshot.length;
+		if (persistedCount > 0) {
+			const releasedVins = new Set<string>();
+			for (const cmd of commandsSnapshot.slice(0, persistedCount)) {
+				collectReleaseVins(cmd, releasedVins);
+			}
+			if (releasedVins.size > 0) {
+				void clearFollowUpsForVins(Array.from(releasedVins));
+			}
+		}
 	}, [
 		bulkDeleteOrdersMutation,
 		bulkUpdateStageMutation,
+		clearFollowUpsForVins,
 		saveDraftInternal,
 		saveOrderMutation,
 	]);

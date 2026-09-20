@@ -27,6 +27,7 @@ import { useBulkDeleteOrdersMutation } from "@/hooks/queries/useBulkDeleteOrders
 import { useBulkUpdateOrderStageMutation } from "@/hooks/queries/useBulkUpdateOrderStageMutation";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useSaveOrderMutation } from "@/hooks/queries/useSaveOrderMutation";
+import { useReleaseGate } from "@/hooks/useReleaseGate";
 import { useRowModals } from "@/hooks/useRowModals";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
@@ -102,6 +103,7 @@ export const useSearchResultsState = () => {
 	const { data: freezeData = [] } = useOrdersQuery("freeze");
 
 	const saveOrderMutation = useSaveOrderMutation();
+	const { requestCallRelease, clearFollowUpsForVins } = useReleaseGate();
 	const normalizedActiveStage = normalizeOrderStage(activeStage);
 	const deleteOrdersMutation = useBulkDeleteOrdersMutation(
 		normalizedActiveStage ?? "main",
@@ -523,16 +525,41 @@ export const useSearchResultsState = () => {
 			bulkStageMutations[activeStage as keyof typeof bulkStageMutations];
 		if (!mutation) return;
 
+		const gateResult = await requestCallRelease({
+			rows: selectedRows,
+			automatic: false,
+		});
+		if (gateResult.approvedRows.length === 0) {
+			if (gateResult.cancelledVins.length > 0) {
+				toast.error("Release not confirmed — no rows were moved.");
+			}
+			return;
+		}
+
 		try {
 			await mutation.mutateAsync({
-				ids: selectedRows.map((r) => r.id),
+				ids: gateResult.approvedRows.map((r) => r.id),
 				stage: "call",
 			});
-			toast.success(`Moved ${selectedRows.length} rows to Call List`);
+			await clearFollowUpsForVins(gateResult.approvedVins);
+			toast.success(
+				`Moved ${gateResult.approvedRows.length} rows to Call List${
+					gateResult.cancelledVins.length > 0
+						? ` (${gateResult.cancelledVins.length} chassis withheld pending release approval)`
+						: ""
+				}`,
+			);
 		} catch (_error) {
 			toast.error("Move failed");
 		}
-	}, [selectedRows, isSameSource, activeStage, bulkStageMutations]);
+	}, [
+		selectedRows,
+		isSameSource,
+		activeStage,
+		bulkStageMutations,
+		requestCallRelease,
+		clearFollowUpsForVins,
+	]);
 
 	const handleReorderConfirm = useCallback(async () => {
 		if (selectedRows.length === 0 || !isSameSource || !reorderReason.trim())
@@ -735,13 +762,24 @@ export const useSearchResultsState = () => {
 					return;
 				}
 
+				const vinRows = stageRows.filter((r) => vinIds.includes(r.id));
+				const gateResult = await requestCallRelease({
+					rows: vinRows,
+					automatic: true,
+				});
+				if (gateResult.approvedRows.length === 0) {
+					toast.success("Status updated");
+					return;
+				}
+
 				try {
 					await mutation.mutateAsync({
-						ids: vinIds,
+						ids: gateResult.approvedRows.map((r) => r.id),
 						stage: "call",
 						silentErrorToast: true,
 						guardFrozenVins: true,
 					});
+					await clearFollowUpsForVins(gateResult.approvedVins);
 					toast.success(
 						`All parts for VIN ${event.data.vin} arrived! Moved to Call List.`,
 						{ duration: 5000 },
@@ -759,7 +797,15 @@ export const useSearchResultsState = () => {
 				}
 			}
 		},
-		[bulkStageMutations, freezeData, handleUpdateOrder, mainData, ordersData],
+		[
+			bulkStageMutations,
+			freezeData,
+			handleUpdateOrder,
+			mainData,
+			ordersData,
+			requestCallRelease,
+			clearFollowUpsForVins,
+		],
 	);
 
 	const counts = useMemo(() => {

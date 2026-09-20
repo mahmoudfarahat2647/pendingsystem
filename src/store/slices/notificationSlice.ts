@@ -1,4 +1,6 @@
 import type { StateCreator } from "zustand";
+import { getNormalizedVinBuckets } from "@/domain/order/orderWorkflow";
+import { ORDER_STAGES } from "@/lib/constants";
 import { ORDER_STAGE_TAB_INFO } from "@/lib/orderStage";
 import { generateId } from "@/lib/utils";
 import type { AppNotification, PendingRow } from "@/types";
@@ -94,7 +96,8 @@ export const createNotificationSlice: StateCreator<
 
 		const adapter = getOrdersQueryAdapter();
 		const rows: PendingRow[] = adapter.getDueNotificationCandidates() ?? [];
-		const allCachesLoaded = adapter.isDueCandidatesLoaded();
+		const allCachesLoaded =
+			adapter.isDueCandidatesLoaded() && adapter.areReleaseFollowUpsLoaded();
 		const activeManagedKeys = new Set<string>();
 
 		for (const row of rows) {
@@ -245,6 +248,48 @@ export const createNotificationSlice: StateCreator<
 			});
 		}
 
+		// Release follow-up notifications (issue #242) — one per normalized VIN
+		// whose follow-up is currently due. Resolved from the release-follow-ups
+		// adapter, not from `rows`, since a follow-up can be due while none of
+		// its rows are in the notification-candidate set (e.g. it moved stage).
+		const currentlyDueReleaseFollowUps: Omit<
+			AppNotification,
+			"id" | "timestamp" | "isRead"
+		>[] = [];
+
+		const followUps = adapter.getReleaseFollowUps() ?? [];
+		const allStageRows = ORDER_STAGES.flatMap(
+			(stage) => adapter.getStageRows(stage) ?? [],
+		);
+		const vinBuckets = getNormalizedVinBuckets(allStageRows);
+		for (const followUp of followUps) {
+			const dueDate = new Date(followUp.nextDueAt);
+			if (Number.isNaN(dueDate.getTime()) || now < dueDate) continue;
+
+			const siblingRows = vinBuckets.get(followUp.vin) ?? [];
+			const representativeRow =
+				siblingRows.find((row) => row.id === followUp.referenceRowId) ??
+				siblingRows[0];
+			const tabInfo = representativeRow?.stage
+				? ORDER_STAGE_TAB_INFO[representativeRow.stage]
+				: undefined;
+
+			const managedKey = `release_followup:${followUp.vin}:${followUp.nextDueAt}`;
+			activeManagedKeys.add(managedKey);
+
+			currentlyDueReleaseFollowUps.push({
+				type: "release_followup",
+				title: "Release Follow-up Due",
+				description: `Warranty chassis VIN ${followUp.vin} may now be past 5,000 km — re-confirm release before moving to Call List.`,
+				referenceId: followUp.referenceRowId ?? followUp.vin,
+				vin: followUp.vin,
+				trackingId: representativeRow?.trackingId ?? "",
+				tabName: tabInfo?.name ?? "Orders",
+				path: tabInfo?.path ?? "/orders",
+				managedKey,
+			});
+		}
+
 		// 2. Synchronize store state
 		set((state) => {
 			// Keep non-reminder AND non-warranty notifications
@@ -254,7 +299,8 @@ export const createNotificationSlice: StateCreator<
 					n.type !== "reminder" &&
 					n.type !== "warranty" &&
 					n.type !== "booking_followup" &&
-					n.type !== "cntr_rdg_warning",
+					n.type !== "cntr_rdg_warning" &&
+					n.type !== "release_followup",
 			);
 
 			const newNotifications: AppNotification[] = [];
@@ -311,6 +357,7 @@ export const createNotificationSlice: StateCreator<
 			processDueItems(currentlyDueWarranties, "warranty");
 			processDueItems(currentlyDueFollowUps, "booking_followup");
 			processDueItems(currentlyDueCntrWarnings, "cntr_rdg_warning");
+			processDueItems(currentlyDueReleaseFollowUps, "release_followup");
 
 			// Check if any old items were removed
 			const oldManagedCount = state.notifications.filter(
@@ -318,7 +365,8 @@ export const createNotificationSlice: StateCreator<
 					n.type === "reminder" ||
 					n.type === "warranty" ||
 					n.type === "booking_followup" ||
-					n.type === "cntr_rdg_warning",
+					n.type === "cntr_rdg_warning" ||
+					n.type === "release_followup",
 			).length;
 
 			if (newNotifications.length !== oldManagedCount) {

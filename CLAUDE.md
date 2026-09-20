@@ -72,6 +72,19 @@ Use existing hooks: `useSaveOrderMutation`, `useBulkUpdateOrderStageMutation`, `
 - **The freeze-reason requirement is enforced at three independent layers**, not just the modal: the pure builder, the draft-session `applyCommand` guard, and `orderRepository.ts`'s `assertFreezeTransitionAllowed` (plus a hard rejection of `stage: "freeze"` in the generic `updateOrderStage`/`updateOrdersStage`, which can never carry freeze metadata).
 - Full feature doc: `docs/features/freeze.md`.
 
+### Release Gate (low-mileage warranty chassis)
+
+A chassis-level safety gate in front of every route into **Call List** (issue `#191`... see `#242`). A chassis requires a typed `release` confirmation only when, on at least one of its rows, **both** hold together: `repairSystem.trim() === "ضمان"` **and** mileage (`cntrRdg`) is present/valid and strictly below `5,000`. It is an AND, never an OR. Approval is per-attempt, never a permanent flag.
+
+- **Domain**: `src/domain/order/releaseGate.ts` — `rowRequiresRelease`, `getQualifyingChassis` (groups by normalized VIN; a VIN qualifies only if one row satisfies both halves — legacy rows never combine one half from each), `computeReleaseFingerprint`/`buildReleaseAuthorization`, and `addCalendarMonths`/`computeReleaseFollowUpDueDate` for the two-calendar-month cadence.
+- **Mileage note**: `PendingRow.cntrRdg` is produced by `normalizeMileageAsNumber`, which maps blank input to `0` — at the `PendingRow` layer "blank" and "genuinely 0 km" are indistinguishable, so `hasValidMileage` treats `0` as not-present (matches "blank mileage -> no release required").
+- **The gate**: `ReleaseGateProvider` (`src/components/shared/release/`) + `useReleaseGate()` (`src/hooks/useReleaseGate.ts`), mounted app-wide in `MainContentWrapper` alongside the auto-move watcher. `requestCallRelease({rows, automatic})` presents one `ReleaseConfirmationModal` at a time (queued across every caller), and automatic producers (the background `useAutoMoveVins` watcher, and inline VIN auto-moves) silently skip any VIN with an existing follow-up rather than re-prompting — manual actions (toolbars, Freeze "Move to…", Global Search) always prompt.
+- **Coverage**: every producer that can move a row into `call` — Main Sheet/Orders toolbars and inline VIN auto-move, the Orders grid inline status edit, the shared `useAutoMoveVins` watcher, Freeze "Move to… Call List", and both Global Search paths — passes through `requestCallRelease` before applying its command/mutation, on top of (not instead of) existing safeguards like `guardFrozenVins`.
+- **Draft staleness**: `MoveRowsCommand`/`PatchRowCommand` carry an optional `releaseAuthorization: {vins, fingerprint, grantedAt}`. `applyCommand` (`draftSessionSlice.ts`) rejects a `*→call` command for a qualifying chassis without a matching authorization as a third guard beside Beast Mode and the freeze-reason check; `restoreFromRecovery` re-verifies the fingerprint against the fresh baseline and drops (never silently replays) a stale one, since a recovered snapshot bypasses `applyCommand` on replay.
+- **Persistence**: `release_follow_ups` table (VIN primary key, `next_due_at`, `reference_row_id`) — RLS `Anon full access`, matching `orders`/`order_reminders`. `src/services/releaseFollowUpRepository.ts` / `releaseFollowUpService.ts`, `src/hooks/queries/useReleaseFollowUpsQuery.ts`. Cancelling a release upserts a follow-up two calendar months out; a successful release-authorized move clears it (never a failed one); `useReleaseFollowUpMaintenance` (wired in `Header.tsx` next to `useWarrantyExpiryMaintenance`) clears a follow-up once the chassis no longer satisfies the rule.
+- **Notifications**: new `release_followup` `AppNotification` type, one per normalized VIN, `managedKey = release_followup:{vin}:{dueISO}`. Reaches `notificationSlice.checkNotifications` via `ordersQueryAdapter.getReleaseFollowUps()` (store never touches React Query directly). The dropdown's `X` — and "Clear All" — snooze a `release_followup` notification another two months instead of permanently dismissing it; every other notification type keeps its existing dismiss behavior. Click-through reuses `resolveNotificationStage`.
+- Migration: `supabase/migrations/20260920_add_release_follow_ups.sql` (applied directly to the live project).
+
 ### App Shell
 `src/app/layout.tsx` -> `src/app/(app)/layout.tsx` -> `AppShell` (Sidebar + Header + error boundary). All application routes live under `src/app/(app)/`.
 
@@ -161,6 +174,7 @@ If `SELECT 1` passes but auth still fails, the issue is in `auth.ts` config — 
 |-------|---------|
 | `orders` | All operational rows across all five stages |
 | `order_reminders` | Per-row reminder records |
+| `release_follow_ups` | Chassis-level (VIN-keyed) release-gate follow-up schedule — see [Release Gate](#release-gate-low-mileage-warranty-chassis) |
 | `quick_templates` | Saved quick-fill order templates |
 | `report_settings` | Global singleton backup/report configuration |
 | `app_settings` | Application-level settings |

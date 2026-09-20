@@ -1,5 +1,8 @@
 import type { OrderStage } from "@/domain/order/orderStage";
+import type { ReleaseAuthorization } from "@/domain/order/releaseGate";
 import type { PatchRowCommand, PendingRow } from "@/types";
+
+export type { ReleaseAuthorization } from "@/domain/order/releaseGate";
 
 export interface CreateRowsCommand {
 	type: "createRows";
@@ -19,6 +22,8 @@ export interface MoveRowsCommand {
 	destinationStage: OrderStage;
 	fieldOverrides?: Partial<PendingRow>;
 	guardFrozenVins?: boolean;
+	/** Release-gate authorization (issue #242) for a call-destination move; see `computeReleaseFingerprint`. */
+	releaseAuthorization?: ReleaseAuthorization;
 }
 
 interface CompositeCommand {
