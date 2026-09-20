@@ -158,7 +158,7 @@ export const BookingCalendarGrid = ({
 										"absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full shadow-lg z-20",
 										isArchivedOnlyDay
 											? "bg-transparent text-gray-400 border border-dashed border-gray-500"
-											: "bg-renault-yellow text-black border border-[#050505]",
+											: "bg-renault-yellow text-black border border-[#1c1c1e]",
 									)}
 								>
 									{dayBookings.length}

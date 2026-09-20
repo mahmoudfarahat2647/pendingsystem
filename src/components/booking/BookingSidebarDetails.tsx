@@ -126,7 +126,7 @@ export const BookingSidebarDetails = ({
 										idx !== currentParts.length - 1 && "pb-2",
 									)}
 								>
-									<div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-white/10 border border-[#0a0a0b]" />
+									<div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-white/10 border border-[#1c1c1e]" />
 									<div className="text-gray-300 leading-relaxed font-medium">
 										{booking.description ||
 											booking.partNumber ||
