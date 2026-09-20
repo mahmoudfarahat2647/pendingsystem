@@ -72,7 +72,7 @@ export const BookingSidebarDetails = ({
 										<MessageSquare className="h-4 w-4" />
 									</button>
 								</PopoverTrigger>
-								<PopoverContent className="bg-[#0f0f11] border-white/10 text-gray-300 w-80 p-4 shadow-xl rounded-xl">
+								<PopoverContent className="bg-[#1c1c1e] border-white/10 text-gray-300 w-80 p-4 shadow-xl rounded-xl">
 									<div className="space-y-3">
 										<div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">
 											Booking Notes
