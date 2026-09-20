@@ -75,7 +75,7 @@ export const BookingInquiryModal = ({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				hideClose={true}
-				className="bg-[#0f0f11] text-gray-300 border-white/5 p-0 gap-0 overflow-hidden flex h-[90vh] rounded-[2rem] shadow-2xl font-sans w-fit max-w-[95vw]"
+				className="bg-[#1C1C1E] text-gray-300 border-white/5 p-0 gap-0 overflow-hidden flex h-[90vh] rounded-[2rem] shadow-2xl font-sans w-fit max-w-[95vw]"
 			>
 				<DialogHeader className="sr-only">
 					<DialogTitle>Booking Inquiry</DialogTitle>
