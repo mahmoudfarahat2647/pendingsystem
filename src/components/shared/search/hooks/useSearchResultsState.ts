@@ -6,7 +6,7 @@ import type {
 	SelectionChangedEvent,
 } from "ag-grid-community";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
 	getGlobalSearchWorkspaceColumns,
@@ -33,6 +33,11 @@ import { logger } from "@/lib/logger";
 import { normalizeOrderStage } from "@/lib/orderStage";
 import { buildReorderUpdates } from "@/lib/orderStageTransitions";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
+import {
+	filterRowsByValues,
+	getModelValue,
+	getRowValueFilterOptions,
+} from "@/lib/rowValueFilter";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
@@ -184,6 +189,43 @@ export const useSearchResultsState = () => {
 		freezeData,
 		activeSources,
 	]);
+
+	// Car model filter (Global Search toolbar). Options are derived from the current
+	// search results, same pattern as the Call List's repair-system filter.
+	const [selectedModels, setSelectedModels] = useState<string[]>([]);
+
+	const modelOptions = useMemo(
+		() => getRowValueFilterOptions(searchResults, getModelValue),
+		[searchResults],
+	);
+
+	// Intersect during render (not in an effect): a post-render prune would let one
+	// frame through with the new searchResults and the old selection, flashing an
+	// empty grid when the search term changes while a model chip is still selected.
+	const modelOptionValues = useMemo(
+		() => new Set(modelOptions.map((option) => option.value)),
+		[modelOptions],
+	);
+	const effectiveSelectedModels = useMemo(
+		() => selectedModels.filter((value) => modelOptionValues.has(value)),
+		[selectedModels, modelOptionValues],
+	);
+
+	const filteredResults = useMemo(
+		() =>
+			filterRowsByValues(searchResults, effectiveSelectedModels, getModelValue),
+		[searchResults, effectiveSelectedModels],
+	);
+
+	// Tidy the rendered chips once a selected model disappears from the results
+	// (e.g. the search term changed). The render-time intersection above is what
+	// keeps `filteredResults` correct in the meantime.
+	useEffect(() => {
+		setSelectedModels((current) => {
+			const next = current.filter((value) => modelOptionValues.has(value));
+			return next.length === current.length ? current : next;
+		});
+	}, [modelOptionValues]);
 
 	// Handlers
 	const syncMasterCheckboxState = useCallback((api: GridApi<PendingRow>) => {
@@ -616,17 +658,17 @@ export const useSearchResultsState = () => {
 	);
 
 	const handleExtract = useCallback(() => {
-		exportToLogisticsXLSX(searchResults).catch(() => {
+		exportToLogisticsXLSX(filteredResults).catch(() => {
 			toast.error("Export failed");
 		});
-	}, [searchResults]);
+	}, [filteredResults]);
 
 	const onBadgeNavigate = useCallback(
 		(source: string) => {
 			const targetIds =
 				selectedRows.length > 0
 					? selectedRows.filter((r) => r.sourceType === source).map((r) => r.id)
-					: searchResults
+					: filteredResults
 							.filter((r) => r.sourceType === source)
 							.map((r) => r.id);
 
@@ -640,7 +682,7 @@ export const useSearchResultsState = () => {
 		},
 		[
 			selectedRows,
-			searchResults,
+			filteredResults,
 			setPendingSearchSelection,
 			setSearchTerm,
 			router,
@@ -722,7 +764,7 @@ export const useSearchResultsState = () => {
 
 	const counts = useMemo(() => {
 		if (selectedRows.length === 0) {
-			return searchResults.reduce(
+			return filteredResults.reduce(
 				(acc, row) => {
 					const source = row.sourceType || "Unknown";
 					acc[source] = (acc[source] || 0) + 1;
@@ -732,10 +774,10 @@ export const useSearchResultsState = () => {
 			);
 		}
 
-		// Seed every source present in searchResults with 0, then accumulate
+		// Seed every source present in filteredResults with 0, then accumulate
 		// only from selectedRows. This ensures sources with 0 selected rows
 		// still appear in the map so their badge renders as "0" and is disabled.
-		const base = searchResults.reduce(
+		const base = filteredResults.reduce(
 			(acc, row) => {
 				const source = row.sourceType || "Unknown";
 				acc[source] = 0;
@@ -749,7 +791,7 @@ export const useSearchResultsState = () => {
 			if (source in acc) acc[source] += 1;
 			return acc;
 		}, base);
-	}, [searchResults, selectedRows]);
+	}, [filteredResults, selectedRows]);
 
 	return {
 		searchTerm,
@@ -765,7 +807,10 @@ export const useSearchResultsState = () => {
 		setShowDeleteConfirm,
 		isSameSource,
 		disabledReason,
-		searchResults,
+		filteredResults,
+		modelOptions,
+		selectedModels,
+		setSelectedModels,
 		counts,
 		columns,
 		partStatuses,

@@ -37,6 +37,8 @@ type MockGridProps = {
 	onGridPreDestroyed?: () => void;
 };
 
+type MockRowValueFilterOption = { label: string; value: string };
+
 type MockSearchToolbarProps = {
 	selectedCount: number;
 	isSameSource: boolean;
@@ -46,6 +48,10 @@ type MockSearchToolbarProps = {
 	onArchive: () => void;
 	onSendToCallList: () => void;
 	onReorder: () => void;
+	onExtract: () => void;
+	modelOptions: MockRowValueFilterOption[];
+	selectedModels: string[];
+	onModelsChange: (value: string[]) => void;
 };
 
 type MockBookingModalProps = {
@@ -76,6 +82,7 @@ const mocks = vi.hoisted(() => ({
 	toastError: vi.fn(),
 	toastWarning: vi.fn(),
 	printReservationLabels: vi.fn(),
+	exportToLogisticsXLSX: vi.fn(),
 	saveMutateAsync: vi.fn(),
 	deleteMutateAsync: vi.fn(),
 	bulkMutations: {
@@ -148,6 +155,10 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/printing/reservationLabels", () => ({
 	printReservationLabels: mocks.printReservationLabels,
+}));
+
+vi.mock("@/lib/exportUtils", () => ({
+	exportToLogisticsXLSX: mocks.exportToLogisticsXLSX,
 }));
 
 vi.mock("@/store/useStore", () => ({
@@ -484,6 +495,8 @@ describe("SearchResultsView", () => {
 		mocks.queryData.call = [];
 		mocks.queryData.archive = [];
 		mocks.printReservationLabels.mockReset();
+		mocks.exportToLogisticsXLSX.mockReset();
+		mocks.exportToLogisticsXLSX.mockResolvedValue(undefined);
 		mocks.saveMutateAsync.mockResolvedValue(undefined);
 		mocks.deleteMutateAsync.mockResolvedValue(undefined);
 		for (const mutation of Object.values(mocks.bulkMutations)) {
@@ -640,6 +653,133 @@ describe("SearchResultsView", () => {
 		expect(getRenderedRowIds()).toEqual(["company-real-match"]);
 	});
 
+	describe("car model filter", () => {
+		it("derives model options from the current search results", () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-1", model: "Megane IV" }),
+				createRow({ id: "main-2", model: "Clio V" }),
+				createRow({ id: "main-3", model: "Megane IV" }),
+			];
+
+			renderView();
+
+			expect(mocks.searchToolbarProps?.modelOptions).toEqual([
+				{ label: "Megane IV", value: "Megane IV" },
+				{ label: "Clio V", value: "Clio V" },
+			]);
+		});
+
+		it("narrows the grid rows, match count, and stage chips when a model is selected", async () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-megane", model: "Megane IV" }),
+			];
+			mocks.queryData.archive = [
+				createRow({
+					id: "archive-clio",
+					model: "Clio V",
+					sourceType: "Archive",
+					stage: "archive",
+				}),
+			];
+
+			renderView();
+
+			expect(getRenderedRowIds()).toEqual(
+				expect.arrayContaining(["main-megane", "archive-clio"]),
+			);
+			expect(mocks.searchResultsHeaderProps?.resultsCount).toBe(2);
+			expect(mocks.searchResultsHeaderProps?.counts).toEqual({
+				"Main Sheet": 1,
+				Archive: 1,
+			});
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onModelsChange(["Megane IV"]);
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-megane"]);
+			expect(mocks.searchResultsHeaderProps?.resultsCount).toBe(1);
+			// A source with zero surviving rows loses its key entirely rather than
+			// rendering as a "0" badge.
+			expect(mocks.searchResultsHeaderProps?.counts).toEqual({
+				"Main Sheet": 1,
+			});
+		});
+
+		it("exports only the filtered rows", async () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-megane", model: "Megane IV" }),
+				createRow({ id: "main-clio", vin: "VIN888", model: "Clio V" }),
+			];
+
+			renderView();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onModelsChange(["Megane IV"]);
+			});
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onExtract();
+			});
+
+			expect(mocks.exportToLogisticsXLSX).toHaveBeenCalledWith([
+				expect.objectContaining({ id: "main-megane" }),
+			]);
+		});
+
+		it("never renders 'No results found' from a model selection alone, since every chip matches at least one row", async () => {
+			// Options are derived from the current search results, so every
+			// selectable model is guaranteed to match >= 1 row, and a value that
+			// isn't a real option gets dropped by the render-time intersection
+			// rather than producing zero rows. "No results found" can only come
+			// from an empty search, never from the model filter.
+			mocks.queryData.main = [
+				createRow({ id: "main-megane", model: "Megane IV" }),
+			];
+
+			renderView();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onModelsChange(["Megane IV"]);
+			});
+			expect(screen.getByTestId("search-results-grid")).toBeInTheDocument();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onModelsChange(["Not A Real Model"]);
+			});
+
+			expect(screen.getByTestId("search-results-grid")).toBeInTheDocument();
+			expect(getRenderedRowIds()).toEqual(["main-megane"]);
+			expect(screen.queryByText("No results found")).not.toBeInTheDocument();
+		});
+
+		it("drops a selected model that disappears when the underlying results change, without flashing an empty grid", async () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-megane", model: "Megane IV" }),
+			];
+
+			const { rerender } = renderView();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onModelsChange(["Megane IV"]);
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-megane"]);
+
+			// Keep the same search term (so the row still matches) but replace the
+			// result set with one that no longer contains "Megane IV" — the
+			// render-time intersection should keep the grid showing the new
+			// result set instead of flashing empty before the prune effect runs.
+			mocks.queryData.main = [createRow({ id: "main-other", model: "Duster" })];
+
+			await act(async () => {
+				rerender(<SearchResultsView />);
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-other"]);
+			expect(mocks.searchToolbarProps?.selectedModels).toEqual([]);
+		});
+	});
 	it("wires the header checkbox to filtered select-all and clear-all", async () => {
 		const firstRow = createRow({ id: "main-1" });
 		const secondRow = createRow({ id: "main-2", vin: "VIN456" });
