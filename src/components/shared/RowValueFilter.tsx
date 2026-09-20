@@ -13,26 +13,32 @@ import {
 	ComboboxPopup,
 	ComboboxValue,
 } from "@/components/ui/combobox";
-import type { RepairSystemFilterOption } from "@/lib/callRepairSystemFilter";
+import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 
-interface CallRepairSystemFilterProps {
-	options: RepairSystemFilterOption[];
+interface RowValueFilterProps {
+	options: RowValueFilterOption[];
 	value: string[];
 	onChange: (value: string[]) => void;
+	placeholder: string;
+	ariaLabel: string;
+	emptyText: string;
 	className?: string;
 }
 
 /**
- * Multi-select filter UI for repair systems in the Call List toolbar.
+ * Multi-select filter UI for a single row field (repair system, car model, ...).
  * Renders as a compact chip-based combobox; options are derived from live row data.
  */
-export const CallRepairSystemFilter = ({
+export const RowValueFilter = ({
 	options,
 	value,
 	onChange,
+	placeholder,
+	ariaLabel,
+	emptyText,
 	className,
-}: CallRepairSystemFilterProps) => {
+}: RowValueFilterProps) => {
 	const selectedOptions = useMemo(
 		() => options.filter((option) => value.includes(option.value)),
 		[options, value],
@@ -40,7 +46,7 @@ export const CallRepairSystemFilter = ({
 
 	return (
 		<div className={cn("w-auto", className)}>
-			<Combobox<RepairSystemFilterOption, true>
+			<Combobox<RowValueFilterOption, true>
 				items={options}
 				isItemEqualToValue={(item, selected) => item.value === selected.value}
 				multiple
@@ -54,7 +60,7 @@ export const CallRepairSystemFilter = ({
 					startAddon={<Filter className="h-3.5 w-3.5 text-gray-400" />}
 				>
 					<ComboboxValue>
-						{(selectedValue: RepairSystemFilterOption[]) => (
+						{(selectedValue: RowValueFilterOption[]) => (
 							<>
 								{selectedValue?.map((option) => (
 									<ComboboxChip
@@ -66,11 +72,11 @@ export const CallRepairSystemFilter = ({
 									</ComboboxChip>
 								))}
 								<ComboboxChipsInput
-									aria-label="Filter repair system"
+									aria-label={ariaLabel}
 									className="min-w-12 bg-transparent py-0 text-xs text-gray-300 outline-none placeholder:text-gray-500"
 									disabled={options.length === 0}
 									placeholder={
-										selectedValue.length > 0 ? undefined : "Repair system"
+										selectedValue.length > 0 ? undefined : placeholder
 									}
 									size="sm"
 								/>
@@ -79,9 +85,9 @@ export const CallRepairSystemFilter = ({
 					</ComboboxValue>
 				</ComboboxChips>
 				<ComboboxPopup className="border-white/10 bg-[#1c1c1e] shadow-xl/20">
-					<ComboboxEmpty>No repair systems found.</ComboboxEmpty>
+					<ComboboxEmpty>{emptyText}</ComboboxEmpty>
 					<ComboboxList>
-						{(option: RepairSystemFilterOption) => (
+						{(option: RowValueFilterOption) => (
 							<ComboboxItem
 								className="text-white data-highlighted:bg-white/10 data-highlighted:text-white"
 								key={option.value}

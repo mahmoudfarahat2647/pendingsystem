@@ -11,6 +11,7 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
+import { RowValueFilter } from "@/components/shared/RowValueFilter";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -23,6 +24,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
 
@@ -41,6 +43,9 @@ interface SearchToolbarProps {
 	onUpdateStatus?: (status: string) => void;
 	partStatuses?: PartStatusDef[];
 	showFilters: boolean;
+	modelOptions: RowValueFilterOption[];
+	selectedModels: string[];
+	onModelsChange: (value: string[]) => void;
 }
 
 export const SearchToolbar = ({
@@ -58,6 +63,9 @@ export const SearchToolbar = ({
 	onUpdateStatus,
 	partStatuses = [],
 	showFilters,
+	modelOptions,
+	selectedModels,
+	onModelsChange,
 }: SearchToolbarProps) => {
 	const isReserveDisabled = selectedCount === 0;
 	const isStageActionDisabled = selectedCount === 0 || !isSameSource;
@@ -256,6 +264,17 @@ export const SearchToolbar = ({
 							: "Update Status"}
 					</TooltipContent>
 				</Tooltip>
+
+				<div className="w-px h-6 bg-white/10 mx-1" />
+
+				<RowValueFilter
+					options={modelOptions}
+					value={selectedModels}
+					onChange={onModelsChange}
+					placeholder="Car model"
+					ariaLabel="Filter car model"
+					emptyText="No car models found."
+				/>
 			</div>
 
 			<div className="flex items-center gap-2">

@@ -16,11 +16,12 @@ import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
-import {
-	filterRowsByRepairSystems,
-	getRepairSystemFilterOptions,
-} from "@/lib/callRepairSystemFilter";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
+import {
+	filterRowsByValues,
+	getRepairSystemValue,
+	getRowValueFilterOptions,
+} from "@/lib/rowValueFilter";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import { useCallListModals } from "./useCallListModals";
@@ -81,12 +82,17 @@ export default function CallListPage() {
 	);
 
 	const repairSystemOptions = useMemo(
-		() => getRepairSystemFilterOptions(effectiveData),
+		() => getRowValueFilterOptions(effectiveData, getRepairSystemValue),
 		[effectiveData],
 	);
 
 	const filteredEffectiveData = useMemo(
-		() => filterRowsByRepairSystems(effectiveData, selectedRepairSystems),
+		() =>
+			filterRowsByValues(
+				effectiveData,
+				selectedRepairSystems,
+				getRepairSystemValue,
+			),
 		[effectiveData, selectedRepairSystems],
 	);
 

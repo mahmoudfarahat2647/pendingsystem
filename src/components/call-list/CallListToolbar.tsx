@@ -12,8 +12,8 @@ import {
 	Trash2,
 } from "lucide-react";
 import { CallCustomerCounter } from "@/components/shared/CallCustomerCounter";
-import { CallRepairSystemFilter } from "@/components/shared/CallRepairSystemFilter";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { RowValueFilter } from "@/components/shared/RowValueFilter";
 import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +28,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
-import type { RepairSystemFilterOption } from "@/lib/callRepairSystemFilter";
+import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef, PendingRow } from "@/types";
 
@@ -36,7 +36,7 @@ export interface CallListToolbarProps {
 	selectedRows: PendingRow[];
 	partStatuses?: PartStatusDef[];
 	rowData?: PendingRow[];
-	repairSystemOptions: RepairSystemFilterOption[];
+	repairSystemOptions: RowValueFilterOption[];
 	selectedRepairSystems: string[];
 	onRepairSystemsChange: (value: string[]) => void;
 	onExtract: () => void;
@@ -235,10 +235,13 @@ export function CallListToolbar({
 					<TooltipContent>Freeze</TooltipContent>
 				</Tooltip>
 
-				<CallRepairSystemFilter
+				<RowValueFilter
 					options={repairSystemOptions}
 					value={selectedRepairSystems}
 					onChange={onRepairSystemsChange}
+					placeholder="Repair system"
+					ariaLabel="Filter repair system"
+					emptyText="No repair systems found."
 				/>
 			</div>
 

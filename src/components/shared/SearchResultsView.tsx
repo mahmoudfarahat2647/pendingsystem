@@ -37,7 +37,10 @@ export const SearchResultsView = () => {
 		setShowDeleteConfirm,
 		isSameSource,
 		disabledReason,
-		searchResults,
+		filteredResults,
+		modelOptions,
+		selectedModels,
+		setSelectedModels,
 		counts,
 		columns,
 		partStatuses,
@@ -75,7 +78,7 @@ export const SearchResultsView = () => {
 		<div className="flex flex-col h-full bg-[#0a0a0b] text-white">
 			<SearchResultsHeader
 				searchTerm={searchTerm}
-				resultsCount={searchResults.length}
+				resultsCount={filteredResults.length}
 				counts={counts}
 				selectedCount={selectedRows.length}
 				onClearSearch={() => setSearchTerm("")}
@@ -97,12 +100,22 @@ export const SearchResultsView = () => {
 				onUpdateStatus={handleBulkStatusUpdate}
 				partStatuses={partStatuses}
 				showFilters={showFilters}
+				modelOptions={modelOptions}
+				selectedModels={selectedModels}
+				onModelsChange={setSelectedModels}
 			/>
 
 			<div className="flex-1 p-6 overflow-hidden">
-				{searchResults.length > 0 ? (
+				{/*
+				 * `filteredResults` can only be empty when `searchResults` is too:
+				 * the model chips are derived from `searchResults` itself, so any
+				 * selected model is guaranteed to match at least one row there, and
+				 * clearing the selection falls back to `searchResults` unchanged.
+				 * A single guard on `filteredResults.length` covers both cases.
+				 */}
+				{filteredResults.length > 0 ? (
 					<SearchResultsGrid
-						rowData={searchResults}
+						rowData={filteredResults}
 						columnDefs={columns}
 						onCellValueChanged={onCellValueChanged}
 						onSelectionChanged={handleSelectionChanged}
