@@ -1,5 +1,11 @@
 import type { OrderStage } from "@/domain/order/orderStage";
-import type { PatchRowCommand, PendingRow } from "@/types";
+import type {
+	PatchRowCommand,
+	PendingRow,
+	ReleaseAuthorization,
+} from "@/types";
+
+export type { ReleaseAuthorization } from "@/types";
 
 export interface CreateRowsCommand {
 	type: "createRows";
@@ -19,6 +25,8 @@ export interface MoveRowsCommand {
 	destinationStage: OrderStage;
 	fieldOverrides?: Partial<PendingRow>;
 	guardFrozenVins?: boolean;
+	/** Release-gate authorization (issue #242) for a call-destination move; see `computeReleaseFingerprint`. */
+	releaseAuthorization?: ReleaseAuthorization;
 }
 
 interface CompositeCommand {
@@ -56,10 +64,19 @@ interface BulkUpdateStageDraftMutationVars {
 	guardFrozenVins?: boolean;
 }
 
+interface ValidateCallMoveVars {
+	ids: string[];
+	sourceStage: OrderStage;
+	releaseAuthorization?: ReleaseAuthorization;
+	updates?: Partial<PendingRow>;
+}
+
 export interface DraftSaveMutations {
 	saveOrder: (vars: SaveOrderDraftMutationVars) => Promise<unknown>;
 	bulkUpdateStage: (vars: BulkUpdateStageDraftMutationVars) => Promise<unknown>;
 	bulkDelete: (ids: string[]) => Promise<unknown>;
+	/** Revalidates a release against freshly fetched rows immediately before persistence. */
+	validateCallMove?: (vars: ValidateCallMoveVars) => Promise<void>;
 }
 
 export interface DraftSession {

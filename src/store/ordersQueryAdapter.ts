@@ -4,7 +4,9 @@ import { logger } from "@/lib/logger";
 import {
 	getOrdersQueryKey,
 	NOTIFICATION_CANDIDATES_QUERY_KEY,
+	RELEASE_FOLLOW_UPS_QUERY_KEY,
 } from "@/lib/queryClient";
+import type { ReleaseFollowUp } from "@/schemas/releaseFollowUp.schema";
 import type { PendingRow } from "@/types";
 
 /**
@@ -23,6 +25,8 @@ export interface OrdersQueryAdapter {
 	invalidateStage: (stage: OrderStage) => void;
 	getDueNotificationCandidates: () => PendingRow[] | undefined;
 	isDueCandidatesLoaded: () => boolean;
+	getReleaseFollowUps: () => ReleaseFollowUp[] | undefined;
+	areReleaseFollowUpsLoaded: () => boolean;
 }
 
 /**
@@ -37,6 +41,8 @@ const noopAdapter: OrdersQueryAdapter = {
 	invalidateStage: () => {},
 	getDueNotificationCandidates: () => undefined,
 	isDueCandidatesLoaded: () => false,
+	getReleaseFollowUps: () => undefined,
+	areReleaseFollowUpsLoaded: () => false,
 };
 
 let registered: OrdersQueryAdapter = noopAdapter;
@@ -93,6 +99,12 @@ export function createReactQueryAdapter(
 		isDueCandidatesLoaded: () =>
 			queryClient.getQueryData<PendingRow[]>(
 				NOTIFICATION_CANDIDATES_QUERY_KEY,
+			) !== undefined,
+		getReleaseFollowUps: () =>
+			queryClient.getQueryData<ReleaseFollowUp[]>(RELEASE_FOLLOW_UPS_QUERY_KEY),
+		areReleaseFollowUpsLoaded: () =>
+			queryClient.getQueryData<ReleaseFollowUp[]>(
+				RELEASE_FOLLOW_UPS_QUERY_KEY,
 			) !== undefined,
 	};
 }

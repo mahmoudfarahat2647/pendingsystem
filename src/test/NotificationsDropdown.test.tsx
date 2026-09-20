@@ -9,6 +9,7 @@ import type { AppNotification, PendingRow } from "@/types";
 
 const routerPush = vi.fn();
 const toastError = vi.fn();
+const mockSnooze = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("next/navigation", () => ({
 	useRouter: () => ({ push: routerPush }),
@@ -16,6 +17,12 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("sonner", () => ({
 	toast: { error: (...args: unknown[]) => toastError(...args) },
+}));
+
+vi.mock("@/hooks/queries/useReleaseFollowUpsQuery", () => ({
+	useUpsertReleaseFollowUpMutation: () => ({
+		mutateAsync: mockSnooze,
+	}),
 }));
 
 vi.mock("framer-motion", () => ({
@@ -265,6 +272,7 @@ describe("NotificationsDropdown click-time navigation", () => {
 	beforeEach(() => {
 		routerPush.mockReset();
 		toastError.mockReset();
+		mockSnooze.mockReset().mockResolvedValue(undefined);
 		resetDraftSessionInactive();
 		useAppStore.setState({
 			notifications: [createReminderNotification()],
@@ -493,5 +501,42 @@ describe("NotificationsDropdown click-time navigation", () => {
 		expect(routerPush).toHaveBeenCalledWith("/booking");
 		expect(writeText).toHaveBeenCalledWith("VIN1");
 		expect(useAppStore.getState().highlightedRowId).toBeNull();
+	});
+
+	it("restores a release follow-up notification when snooze persistence fails", async () => {
+		const user = userEvent.setup();
+		const releaseNotification = createReminderNotification({
+			id: "release-1",
+			type: "release_followup",
+			title: "Release Follow-up Due",
+			managedKey: "release_followup:VIN1:2026-09-20T00:00:00.000Z",
+		});
+		const removeNotification = vi.fn((id: string) => {
+			useAppStore.setState((state) => ({
+				notifications: state.notifications.filter((n) => n.id !== id),
+			}));
+		});
+		const restoreNotification = vi.fn((notification: AppNotification) => {
+			useAppStore.setState((state) => ({
+				notifications: [notification, ...state.notifications],
+			}));
+		});
+		useAppStore.setState({
+			notifications: [releaseNotification],
+			removeNotification,
+			restoreNotification,
+		});
+		mockSnooze.mockRejectedValueOnce(new Error("network down"));
+
+		render(<NotificationsDropdown />);
+		await user.click(screen.getByTitle("Notifications"));
+		await user.click(screen.getByTitle("Snooze for two months"));
+
+		expect(removeNotification).toHaveBeenCalledWith("release-1");
+		await screen.findByText("Release Follow-up Due");
+		expect(restoreNotification).toHaveBeenCalledWith(releaseNotification);
+		expect(toastError).toHaveBeenCalledWith(
+			"Could not snooze the follow-up. Please try again.",
+		);
 	});
 });

@@ -14,6 +14,13 @@ const OrderStageSchema = z.enum(ORDER_STAGE_VALUES);
 // untouched so this schema doesn't have to be kept in lockstep with PendingRow's shape.
 const DraftRowSchema = z.object({ id: z.string().min(1) }).passthrough();
 
+// Release-gate authorization (issue #242) attached to a *→call command.
+const ReleaseAuthorizationSchema = z.object({
+	vins: z.array(z.string()),
+	fingerprint: z.string(),
+	grantedAt: z.number(),
+});
+
 const PatchRowCommandSchema = z.object({
 	type: z.literal("patchRow"),
 	id: z.string().min(1),
@@ -21,6 +28,7 @@ const PatchRowCommandSchema = z.object({
 	destinationStage: OrderStageSchema,
 	updates: z.record(z.string(), z.unknown()),
 	previousValues: z.record(z.string(), z.unknown()),
+	releaseAuthorization: ReleaseAuthorizationSchema.optional(),
 });
 
 const CreateRowsCommandSchema = z.object({
@@ -41,6 +49,7 @@ const MoveRowsCommandSchema = z.object({
 	destinationStage: OrderStageSchema,
 	fieldOverrides: z.record(z.string(), z.unknown()).optional(),
 	guardFrozenVins: z.boolean().optional(),
+	releaseAuthorization: ReleaseAuthorizationSchema.optional(),
 });
 
 const AtomicCommandSchema = z.discriminatedUnion("type", [

@@ -7,7 +7,9 @@ import {
 	getSelectedIds,
 	getVinAutoMoveIds,
 } from "@/domain/order/orderWorkflow";
+import { buildReleaseAuthorization } from "@/domain/order/releaseGate";
 import type { useDraftSession } from "@/hooks/useDraftSession";
+import { useReleaseGate } from "@/hooks/useReleaseGate";
 import {
 	buildBookingCommands,
 	buildReorderCommands,
@@ -30,6 +32,8 @@ export function useMainSheetPageActions(params: {
 		setSelectedRows,
 		freezeRows = [],
 	} = params;
+
+	const { requestCallRelease } = useReleaseGate();
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
@@ -113,15 +117,40 @@ export function useMainSheetPageActions(params: {
 
 	const handleSendToCallList = async () => {
 		if (selectedRows.length === 0) return;
-		const ids = getSelectedIds(selectedRows);
+
+		const gateResult = await requestCallRelease({
+			rows: selectedRows,
+			automatic: false,
+		});
+		if (gateResult.approvedRows.length === 0) {
+			if (gateResult.cancelledVins.length > 0) {
+				toast.error("Release not confirmed — no rows were moved.");
+			}
+			return;
+		}
+
+		const ids = getSelectedIds(gateResult.approvedRows);
 		applyCommand({
 			type: "moveRows",
 			ids,
 			sourceStage: "main",
 			destinationStage: "call",
+			releaseAuthorization:
+				gateResult.approvedVins.length > 0
+					? buildReleaseAuthorization(
+							gateResult.approvedRows,
+							gateResult.approvedVins,
+						)
+					: undefined,
 		});
 		setSelectedRows([]);
-		toast.success(`${ids.length} item(s) sent to Call List`);
+		if (gateResult.cancelledVins.length > 0) {
+			toast.success(
+				`${ids.length} item(s) sent to Call List (${gateResult.cancelledVins.length} chassis withheld pending release approval)`,
+			);
+		} else {
+			toast.success(`${ids.length} item(s) sent to Call List`);
+		}
 	};
 
 	const handleConfirmDelete = async () => {
@@ -168,12 +197,27 @@ export function useMainSheetPageActions(params: {
 			});
 
 			if (vinIds.length > 0) {
+				const vinRows = effectiveRows.filter((r) => vinIds.includes(r.id));
+				const gateResult = await requestCallRelease({
+					rows: vinRows,
+					automatic: true,
+				});
+				if (gateResult.approvedRows.length === 0) continue;
+
+				const approvedIds = getSelectedIds(gateResult.approvedRows);
 				applyCommand({
 					type: "moveRows",
-					ids: vinIds,
+					ids: approvedIds,
 					sourceStage: "main",
 					destinationStage: "call",
 					guardFrozenVins: true,
+					releaseAuthorization:
+						gateResult.approvedVins.length > 0
+							? buildReleaseAuthorization(
+									gateResult.approvedRows,
+									gateResult.approvedVins,
+								)
+							: undefined,
 				});
 				toast.success(
 					`All parts for VIN ${vin} arrived! Auto-move queued; save changes to persist it.`,

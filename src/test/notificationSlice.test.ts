@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
-import { NOTIFICATION_CANDIDATES_QUERY_KEY } from "@/lib/queryClient";
+import {
+	NOTIFICATION_CANDIDATES_QUERY_KEY,
+	RELEASE_FOLLOW_UPS_QUERY_KEY,
+} from "@/lib/queryClient";
 import type { OrderStage } from "../domain/order/orderStage";
 import { createNotificationSlice } from "../store/slices/notificationSlice";
 import type { CombinedStore } from "../store/types";
@@ -58,6 +61,11 @@ const createCntrWarrantyRow = (
 describe("notificationSlice", () => {
 	const createTestStore = (rows: PendingRow[]) => {
 		queryClient.setQueryData(NOTIFICATION_CANDIDATES_QUERY_KEY, rows);
+		// Release-follow-up loaded state also gates dismissed-key pruning
+		// (see notificationSlice's `allCachesLoaded`) — seed it empty so these
+		// pre-existing tests, which don't exercise release follow-ups, behave
+		// as if that cache has loaded with nothing due.
+		queryClient.setQueryData(RELEASE_FOLLOW_UPS_QUERY_KEY, []);
 
 		return create<CombinedStore>(
 			(...a) =>

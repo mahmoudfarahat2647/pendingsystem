@@ -1,4 +1,5 @@
 import { normalizeNullableCompanyName } from "@/domain/company/company";
+import { normalizeMileageAsNumber } from "@/domain/order/mileage";
 import { hasAttachment } from "@/lib/attachment";
 import { OrderMappingError } from "@/lib/errors";
 import { PersistedOrderRowSchema } from "@/schemas/order.schema";
@@ -68,6 +69,15 @@ export function mapSupabaseOrder(row: Record<string, unknown>): PendingRow {
 
 	const resultObj = {
 		...metadata,
+		// Legacy rows did not retain whether a normalized zero came from a
+		// blank input. Treat those ambiguous zeros as blank; newly saved rows
+		// carry the explicit flag and can represent a genuine 0 km reading.
+		cntrRdgProvided:
+			typeof metadata.cntrRdgProvided === "boolean"
+				? metadata.cntrRdgProvided
+				: normalizeMileageAsNumber(
+						metadata.cntrRdg as string | number | null | undefined,
+					) > 0,
 		id: row.id,
 		trackingId: row.order_number,
 		// Prefer the dedicated column value when non-empty; otherwise keep the

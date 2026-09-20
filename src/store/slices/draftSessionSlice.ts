@@ -1,5 +1,10 @@
 import type { StateCreator } from "zustand";
 import type { OrderStage } from "@/domain/order/orderStage";
+import {
+	computeReleaseFingerprint,
+	getQualifyingChassis,
+	releaseAuthorizationCoversRows,
+} from "@/domain/order/releaseGate";
 import { hasAttachment } from "@/lib/attachment";
 import { ORDER_STAGES } from "@/lib/constants";
 import { logger } from "@/lib/logger";
@@ -320,6 +325,40 @@ export const createDraftSessionSlice: StateCreator<
 				}
 			}
 
+			// Release-gate guard for any *→call transition (issue #242): defense
+			// in depth behind the producer-side gate. A command carrying no rows
+			// that require release, or one whose releaseAuthorization fingerprint
+			// matches the exact affected rows, is allowed through unchanged.
+			if (
+				(cmd.type === "moveRows" || cmd.type === "patchRow") &&
+				cmd.destinationStage === "call" &&
+				cmd.sourceStage !== "call"
+			) {
+				const workingRows = get()._deriveWorkingRows();
+				const affectedIds = cmd.type === "moveRows" ? cmd.ids : [cmd.id];
+				const affectedRows = ORDER_STAGES.flatMap(
+					(stage) => workingRows[stage] ?? [],
+				).filter((row) => affectedIds.includes(row.id));
+
+				const qualifying = getQualifyingChassis(affectedRows);
+				if (qualifying.length > 0) {
+					const fingerprint = computeReleaseFingerprint(affectedRows);
+					const auth = cmd.releaseAuthorization;
+					const authorizedVins = new Set(auth?.vins ?? []);
+					const covered =
+						auth != null &&
+						auth.fingerprint === fingerprint &&
+						qualifying.every((chassis) => authorizedVins.has(chassis.vin));
+					if (!covered) {
+						set(() => ({
+							lastCommandError:
+								"Release confirmation is required before moving this warranty chassis to Call List.",
+						}));
+						return false;
+					}
+				}
+			}
+
 			set((state) => {
 				const newSession: DraftSession = {
 					...state.draftSession,
@@ -408,6 +447,28 @@ export const createDraftSessionSlice: StateCreator<
 			let currentIndex = startIndex;
 
 			try {
+				// Re-check every not-yet-persisted Call move against the draft's
+				// final working values. This catches edits made after the user typed
+				// `release` but before Save was pressed.
+				const finalRowsById = new Map(
+					ORDER_STAGES.flatMap(
+						(stage) => get()._deriveWorkingRows()[stage] ?? [],
+					).map((row) => [row.id, row]),
+				);
+				for (let i = startIndex; i < state.pendingCommands.length; i++) {
+					if (
+						!commandHasCurrentReleaseAuthorization(
+							state.pendingCommands[i],
+							finalRowsById,
+						)
+					) {
+						currentIndex = i;
+						throw new Error(
+							"Release authorization became stale before save. Retry the Call List move and type release again.",
+						);
+					}
+				}
+
 				// Execute all pending commands in order, tracking temp→real ID mappings
 				// so that post-create commands (delete/move/patch) target the right Supabase rows.
 				// On retry after partial failure, restore idMap and skip already-executed commands.
@@ -544,17 +605,70 @@ export const createDraftSessionSlice: StateCreator<
 				}
 			}
 
+			// A restored recovery snapshot replays straight into saveDraft
+			// without re-entering applyCommand, so any *→call command must be
+			// re-verified here (issue #242 §4): drop it if the affected rows'
+			// VIN/warranty/mileage changed since the release was authorized,
+			// rather than silently replaying a stale release.
+			const freshBaselineRows = ORDER_STAGES.flatMap(
+				(stage) => newSession.baselineByStage[stage] ?? [],
+			);
+			const byId = new Map(freshBaselineRows.map((row) => [row.id, row]));
+			let droppedStaleRelease = false;
+
+			function isStaleCallCommand(cmd: DraftCommand): boolean {
+				if (
+					(cmd.type !== "moveRows" && cmd.type !== "patchRow") ||
+					cmd.destinationStage !== "call" ||
+					cmd.sourceStage === "call"
+				) {
+					return false;
+				}
+				const affectedIds = cmd.type === "moveRows" ? cmd.ids : [cmd.id];
+				const freshRows = affectedIds
+					.map((id) => byId.get(id))
+					.filter((row): row is PendingRow => row !== undefined);
+				const qualifying = getQualifyingChassis(freshRows);
+				if (qualifying.length === 0) return false;
+
+				const fingerprint = computeReleaseFingerprint(freshRows);
+				const auth = cmd.releaseAuthorization;
+				const authorizedVins = new Set(auth?.vins ?? []);
+				const covered =
+					auth != null &&
+					auth.fingerprint === fingerprint &&
+					qualifying.every((chassis) => authorizedVins.has(chassis.vin));
+				return !covered;
+			}
+
+			const filteredCommands = snapshot.pendingCommands.filter((cmd) => {
+				if (isStaleCallCommand(cmd)) {
+					droppedStaleRelease = true;
+					return false;
+				}
+				return true;
+			});
+
+			if (droppedStaleRelease) {
+				logger.warn(
+					"[draftSession] Dropped a stale release-authorized move to Call List while restoring a recovery snapshot — the affected chassis changed since release was confirmed.",
+				);
+			}
+
 			set(() => ({
 				draftSession: {
 					...newSession,
 					derivedRowsRevision: allocateDerivedRowsRevision(),
-					pendingCommands: snapshot.pendingCommands,
+					pendingCommands: filteredCommands,
 					past: [],
 					future: [],
-					dirty: snapshot.pendingCommands.length > 0,
-					touchedStages: new Set(getAllCommandStages(snapshot.pendingCommands)),
+					dirty: filteredCommands.length > 0,
+					touchedStages: new Set(getAllCommandStages(filteredCommands)),
 					lastTouchedAt: snapshot.updatedAt,
 				},
+				lastCommandError: droppedStaleRelease
+					? "A pending Call List move required a fresh release confirmation and was not restored."
+					: null,
 			}));
 		},
 
@@ -658,6 +772,21 @@ async function executeCommand(
 	}
 
 	const remapped = remapCommand(cmd, idMap);
+	if (
+		(remapped.type === "patchRow" || remapped.type === "moveRows") &&
+		remapped.destinationStage === "call" &&
+		remapped.sourceStage !== "call"
+	) {
+		await mutations.validateCallMove?.({
+			ids: remapped.type === "moveRows" ? remapped.ids : [remapped.id],
+			sourceStage: remapped.sourceStage,
+			releaseAuthorization: remapped.releaseAuthorization,
+			updates:
+				remapped.type === "patchRow"
+					? remapped.updates
+					: remapped.fieldOverrides,
+		});
+	}
 
 	if (remapped.type === "patchRow") {
 		await mutations.saveOrder({
@@ -694,4 +823,29 @@ async function executeCommand(
 		logger.error("Unknown draft command type in executeCommand", unknownType);
 		throw new Error(`Unknown draft command type: ${String(unknownType)}`);
 	}
+}
+
+function commandHasCurrentReleaseAuthorization(
+	cmd: DraftCommand,
+	rowsById: Map<string, PendingRow>,
+): boolean {
+	if (cmd.type === "composite") {
+		return cmd.children.every((child) =>
+			commandHasCurrentReleaseAuthorization(child, rowsById),
+		);
+	}
+	if (
+		(cmd.type !== "moveRows" && cmd.type !== "patchRow") ||
+		cmd.destinationStage !== "call" ||
+		cmd.sourceStage === "call"
+	) {
+		return true;
+	}
+
+	const ids = cmd.type === "moveRows" ? cmd.ids : [cmd.id];
+	const rows = ids
+		.map((id) => rowsById.get(id))
+		.filter((row): row is PendingRow => row !== undefined);
+	if (rows.length !== ids.length) return false;
+	return releaseAuthorizationCoversRows(rows, cmd.releaseAuthorization);
 }

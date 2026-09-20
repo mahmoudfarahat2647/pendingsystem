@@ -11,6 +11,8 @@ export const NOTIFICATION_CANDIDATES_QUERY_KEY = [
 	"candidates",
 ] as const;
 
+export const RELEASE_FOLLOW_UPS_QUERY_KEY = ["release-follow-ups"] as const;
+
 /**
  * Creates a fresh, isolated `QueryClient`.
  *

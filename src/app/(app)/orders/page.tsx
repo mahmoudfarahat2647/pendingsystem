@@ -11,9 +11,12 @@ import { getOrdersColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+	getSelectedIds,
 	getVinAutoMoveIds,
 	hasMixedVinSelection,
 } from "@/domain/order/orderWorkflow";
+import { buildReleaseAuthorization } from "@/domain/order/releaseGate";
+import { useReleaseGate } from "@/hooks/useReleaseGate";
 import { useRowModals } from "@/hooks/useRowModals";
 
 const OrderFormModal = dynamic(
@@ -84,6 +87,7 @@ export default function OrdersPage() {
 		applyCommand,
 		draftSaving,
 	} = useOrdersPageHandlers();
+	const { requestCallRelease } = useReleaseGate();
 
 	const { onSelectAllByVin, isSelectAllByVinDisabled } = useSelectAllByVin(
 		selectedRows,
@@ -225,17 +229,36 @@ export default function OrdersPage() {
 									});
 
 									if (vinIds.length > 0) {
-										applyCommand({
-											type: "moveRows",
-											ids: vinIds,
-											sourceStage: "orders",
-											destinationStage: "call",
-											guardFrozenVins: true,
-										});
-										toast.success(
-											`All parts for VIN ${vin} arrived! Moved to Call List.`,
-											{ duration: 5000 },
+										const vinRows = ordersRowData.filter((r) =>
+											vinIds.includes(r.id),
 										);
+										const gateResult = await requestCallRelease({
+											rows: vinRows,
+											automatic: true,
+										});
+										if (gateResult.approvedRows.length > 0) {
+											const approvedIds = getSelectedIds(
+												gateResult.approvedRows,
+											);
+											applyCommand({
+												type: "moveRows",
+												ids: approvedIds,
+												sourceStage: "orders",
+												destinationStage: "call",
+												guardFrozenVins: true,
+												releaseAuthorization:
+													gateResult.approvedVins.length > 0
+														? buildReleaseAuthorization(
+																gateResult.approvedRows,
+																gateResult.approvedVins,
+															)
+														: undefined,
+											});
+											toast.success(
+												`All parts for VIN ${vin} arrived! Moved to Call List.`,
+												{ duration: 5000 },
+											);
+										}
 									}
 								} else if (
 									params.colDef.field === "rDate" &&

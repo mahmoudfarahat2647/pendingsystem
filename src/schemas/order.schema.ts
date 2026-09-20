@@ -72,6 +72,10 @@ const PendingRowBaseObject = z.object({
 			normalizeMileageAsNumber(val as string | number | null | undefined),
 		z.number().nonnegative().default(0),
 	),
+	// `cntrRdg` normalizes blank to 0, so retain original presence separately.
+	// Legacy rows without this flag keep the historic behavior: a positive
+	// value is present, while an ambiguous stored 0 is treated as blank.
+	cntrRdgProvided: z.boolean().optional(),
 	model: z.preprocess((val) => {
 		// Handle both string and string[] formats from database
 		if (Array.isArray(val)) {
