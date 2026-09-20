@@ -20,6 +20,7 @@ import {
 	type ReleaseGateRequest,
 	type ReleaseGateResult,
 } from "@/hooks/useReleaseGate";
+import { logger } from "@/lib/logger";
 
 interface PendingPrompt {
 	chassis: ReleaseChassis;
@@ -71,11 +72,25 @@ export function ReleaseGateProvider({ children }: { children: ReactNode }) {
 		if (!prompt) return;
 		setSubmitting(true);
 		try {
-			await upsertFollowUp.mutateAsync({
-				vin: prompt.chassis.vin,
-				nextDueAt: computeReleaseFollowUpDueDate(),
-				referenceRowId: prompt.chassis.referenceRowId,
-			});
+			// A chassis can qualify with a blank VIN (rowRequiresRelease doesn't
+			// check VIN, and draft orders may legitimately have none yet).
+			// release_follow_ups.vin is the table's primary key and the
+			// repository rejects a blank one, so there is nothing to persist —
+			// skip the upsert rather than let it throw. The trade-off is that a
+			// blank-VIN chassis has no two-month follow-up to suppress a later
+			// automatic re-prompt; it will simply be asked again.
+			if (prompt.chassis.vin) {
+				await upsertFollowUp.mutateAsync({
+					vin: prompt.chassis.vin,
+					nextDueAt: computeReleaseFollowUpDueDate(),
+					referenceRowId: prompt.chassis.referenceRowId,
+				});
+			}
+		} catch (error) {
+			logger.warn(
+				"[ReleaseGateProvider] Failed to schedule release follow-up:",
+				error,
+			);
 		} finally {
 			setSubmitting(false);
 			prompt.resolve(false);

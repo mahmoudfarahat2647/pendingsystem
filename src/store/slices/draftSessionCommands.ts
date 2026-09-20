@@ -1,8 +1,11 @@
 import type { OrderStage } from "@/domain/order/orderStage";
-import type { ReleaseAuthorization } from "@/domain/order/releaseGate";
-import type { PatchRowCommand, PendingRow } from "@/types";
+import type {
+	PatchRowCommand,
+	PendingRow,
+	ReleaseAuthorization,
+} from "@/types";
 
-export type { ReleaseAuthorization } from "@/domain/order/releaseGate";
+export type { ReleaseAuthorization } from "@/types";
 
 export interface CreateRowsCommand {
 	type: "createRows";

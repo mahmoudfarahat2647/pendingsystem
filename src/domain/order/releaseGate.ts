@@ -16,7 +16,7 @@
  * See issue #242.
  */
 import { normalizeVin } from "@/domain/order/orderWorkflow";
-import type { PendingRow } from "@/types";
+import type { PendingRow, ReleaseAuthorization } from "@/types";
 
 export const WARRANTY_REPAIR_SYSTEM = "ضمان";
 export const RELEASE_MILEAGE_THRESHOLD_KM = 5_000;
@@ -114,14 +114,6 @@ export function addCalendarMonths(date: Date, months: number): Date {
 /** Two-calendar-month follow-up due date from `from` (defaults to now). */
 export function computeReleaseFollowUpDueDate(from: Date = new Date()): Date {
 	return addCalendarMonths(from, RELEASE_FOLLOW_UP_MONTHS);
-}
-
-export interface ReleaseAuthorization {
-	/** Normalized VINs this authorization covers. */
-	vins: string[];
-	/** Fingerprint of the exact rows/values that were released — see `computeReleaseFingerprint`. */
-	fingerprint: string;
-	grantedAt: number;
 }
 
 /**

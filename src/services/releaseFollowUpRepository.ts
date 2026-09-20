@@ -1,4 +1,4 @@
-import { normalizeVin } from "@/domain/order/orderWorkflow";
+import { isUuid, normalizeVin } from "@/domain/order/orderWorkflow";
 import { supabase as supabaseDefault } from "@/lib/supabase";
 import { mapKeysToCamel } from "@/lib/utils";
 import type { ReleaseFollowUp } from "@/schemas/releaseFollowUp.schema";
@@ -44,11 +44,17 @@ export function createReleaseFollowUpRepository(
 					"Cannot schedule a release follow-up for a blank VIN",
 				);
 			}
+			// reference_row_id is a `uuid` column; a non-UUID value (e.g. a VIN
+			// used as a notification's referenceId fallback when no row id was
+			// available) would fail the write, so silently store null instead
+			// of rejecting the whole upsert over an optional navigation hint.
+			const sanitizedReferenceRowId =
+				referenceRowId && isUuid(referenceRowId) ? referenceRowId : null;
 			const { error } = await db.from("release_follow_ups").upsert(
 				{
 					vin: normalized,
 					next_due_at: nextDueAt.toISOString(),
-					reference_row_id: referenceRowId ?? null,
+					reference_row_id: sanitizedReferenceRowId,
 					updated_at: new Date().toISOString(),
 				},
 				{ onConflict: "vin" },

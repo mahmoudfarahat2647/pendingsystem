@@ -1,9 +1,21 @@
-import type { ReleaseAuthorization } from "@/domain/order/releaseGate";
 import type { PartEntry, PendingRow } from "@/schemas/order.schema";
 
-export type { ReleaseAuthorization } from "@/domain/order/releaseGate";
-
 export type { PartEntry, PendingRow };
+
+/**
+ * Release-gate authorization (issue #242) attached to a *→call draft
+ * command. Defined here (not in `domain/order/releaseGate.ts`) so that
+ * `domain/` keeps its one-way dependency on `types/` only — the domain
+ * module imports this type back from `@/types`, mirroring how it already
+ * imports `PendingRow` rather than defining its own copy.
+ */
+export interface ReleaseAuthorization {
+	/** Normalized VINs this authorization covers. */
+	vins: string[];
+	/** Fingerprint of the exact rows/values that were released. */
+	fingerprint: string;
+	grantedAt: number;
+}
 
 export type OrderStage =
 	| "orders"

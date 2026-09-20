@@ -111,11 +111,22 @@ export function useDraftSession(stage?: OrderStage) {
 	const { clearFollowUpsForVins } = useReleaseGate();
 
 	const saveDraft = useCallback(async () => {
+		// Mirror the store action's own re-entrancy guard (draftSessionSlice's
+		// `saveDraft` no-ops when `dirty === false || saving`) here too. Without
+		// this, a redundant/concurrent call that hits that no-op would still
+		// fall through to the follow-up-clearing logic below and read
+		// `draftSession` state left behind by a real save that is still
+		// in-flight (or has since failed) — wrongly treating an unrelated
+		// no-op call as a confirmed success. There is no `await` between this
+		// check and the store action's own synchronous guard+set, so this is
+		// race-free under JS's single-threaded execution.
+		const before = useAppStore.getState().draftSession;
+		if (before.dirty === false || before.saving) return;
+
 		// Snapshot before saving: a full success clears `pendingCommands`, and a
 		// partial failure only tells us how many commands (from the start)
 		// actually persisted via `saveCheckpoint.nextIndex`.
-		const commandsSnapshot =
-			useAppStore.getState().draftSession.pendingCommands;
+		const commandsSnapshot = before.pendingCommands;
 
 		await saveDraftInternal({
 			saveOrder: (vars) => saveOrderMutation.mutateAsync(vars),

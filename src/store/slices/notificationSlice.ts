@@ -281,7 +281,13 @@ export const createNotificationSlice: StateCreator<
 				type: "release_followup",
 				title: "Release Follow-up Due",
 				description: `Warranty chassis VIN ${followUp.vin} may now be past 5,000 km — re-confirm release before moving to Call List.`,
-				referenceId: followUp.referenceRowId ?? followUp.vin,
+				// Never fall back to the VIN string here: `referenceId` is
+				// documented as "ID of the row" and gets written straight back
+				// into the `reference_row_id` UUID column when this
+				// notification is later snoozed (see
+				// releaseFollowUpRepository.upsert). Prefer a live sibling
+				// row's real id over an unresolvable reference.
+				referenceId: followUp.referenceRowId ?? representativeRow?.id ?? "",
 				vin: followUp.vin,
 				trackingId: representativeRow?.trackingId ?? "",
 				tabName: tabInfo?.name ?? "Orders",
