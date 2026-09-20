@@ -64,10 +64,19 @@ interface BulkUpdateStageDraftMutationVars {
 	guardFrozenVins?: boolean;
 }
 
+interface ValidateCallMoveVars {
+	ids: string[];
+	sourceStage: OrderStage;
+	releaseAuthorization?: ReleaseAuthorization;
+	updates?: Partial<PendingRow>;
+}
+
 export interface DraftSaveMutations {
 	saveOrder: (vars: SaveOrderDraftMutationVars) => Promise<unknown>;
 	bulkUpdateStage: (vars: BulkUpdateStageDraftMutationVars) => Promise<unknown>;
 	bulkDelete: (ids: string[]) => Promise<unknown>;
+	/** Revalidates a release against freshly fetched rows immediately before persistence. */
+	validateCallMove?: (vars: ValidateCallMoveVars) => Promise<void>;
 }
 
 export interface DraftSession {

@@ -171,6 +171,44 @@ describe("release-gate draft guard (issue #242 §4)", () => {
 		expect(accepted).toBe(false);
 	});
 
+	it("rejects save when a part number changes after release confirmation", async () => {
+		const row = createRow("00000000-0000-4000-8000-00000000a008", "main");
+		seedStageData({ main: [row] });
+
+		expect(
+			useAppStore.getState().applyCommand({
+				type: "moveRows",
+				ids: [row.id],
+				sourceStage: "main",
+				destinationStage: "call",
+				releaseAuthorization: buildReleaseAuthorization(
+					[row],
+					["VF1RFA00000000001"],
+				),
+			}),
+		).toBe(true);
+		expect(
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: row.id,
+				sourceStage: "call",
+				destinationStage: "call",
+				updates: { partNumber: "PN-002" },
+				previousValues: { partNumber: "PN-001" },
+			}),
+		).toBe(true);
+
+		const bulkUpdateStage = vi.fn().mockResolvedValue(undefined);
+		await useAppStore.getState().saveDraft({
+			saveOrder: vi.fn().mockResolvedValue(undefined),
+			bulkUpdateStage,
+			bulkDelete: vi.fn().mockResolvedValue(undefined),
+		});
+
+		expect(bulkUpdateStage).not.toHaveBeenCalled();
+		expect(useAppStore.getState().draftSession.saveError).toMatch(/stale/i);
+	});
+
 	describe("restoreFromRecovery", () => {
 		it("drops a stale *->call command instead of replaying it", () => {
 			const row = createRow("00000000-0000-4000-8000-00000000a005", "main");

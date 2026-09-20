@@ -40,8 +40,11 @@ function createRow(overrides: Partial<PendingRow> = {}): PendingRow {
 }
 
 describe("hasValidMileage", () => {
-	it("treats 0 as blank (not present)", () => {
-		expect(hasValidMileage({ cntrRdg: 0 })).toBe(false);
+	it("treats a genuine numeric 0 as valid", () => {
+		expect(hasValidMileage({ cntrRdg: 0, cntrRdgProvided: true })).toBe(true);
+	});
+	it("treats a normalized blank 0 as not present", () => {
+		expect(hasValidMileage({ cntrRdg: 0, cntrRdgProvided: false })).toBe(false);
 	});
 	it("treats NaN as invalid", () => {
 		expect(hasValidMileage({ cntrRdg: Number.NaN })).toBe(false);
@@ -79,9 +82,23 @@ describe("rowRequiresRelease", () => {
 		).toBe(false);
 	});
 
-	it("warranty + blank (0) -> no release", () => {
+	it("warranty + genuine 0 -> requires release", () => {
 		expect(
-			rowRequiresRelease({ repairSystem: WARRANTY_REPAIR_SYSTEM, cntrRdg: 0 }),
+			rowRequiresRelease({
+				repairSystem: WARRANTY_REPAIR_SYSTEM,
+				cntrRdg: 0,
+				cntrRdgProvided: true,
+			}),
+		).toBe(true);
+	});
+
+	it("warranty + blank normalized to 0 -> no release", () => {
+		expect(
+			rowRequiresRelease({
+				repairSystem: WARRANTY_REPAIR_SYSTEM,
+				cntrRdg: 0,
+				cntrRdgProvided: false,
+			}),
 		).toBe(false);
 	});
 
@@ -199,6 +216,14 @@ describe("computeReleaseFingerprint", () => {
 	it("changes when mileage changes", () => {
 		const row = createRow({ id: "a", cntrRdg: 4999 });
 		const changed = createRow({ id: "a", cntrRdg: 5000 });
+		expect(computeReleaseFingerprint([row])).not.toBe(
+			computeReleaseFingerprint([changed]),
+		);
+	});
+
+	it("changes when an affected part number changes", () => {
+		const row = createRow({ id: "a", partNumber: "PN-001" });
+		const changed = createRow({ id: "a", partNumber: "PN-002" });
 		expect(computeReleaseFingerprint([row])).not.toBe(
 			computeReleaseFingerprint([changed]),
 		);

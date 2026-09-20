@@ -3,6 +3,7 @@ import type { OrderStage } from "@/domain/order/orderStage";
 import {
 	computeReleaseFingerprint,
 	getQualifyingChassis,
+	releaseAuthorizationCoversRows,
 } from "@/domain/order/releaseGate";
 import { hasAttachment } from "@/lib/attachment";
 import { ORDER_STAGES } from "@/lib/constants";
@@ -446,6 +447,28 @@ export const createDraftSessionSlice: StateCreator<
 			let currentIndex = startIndex;
 
 			try {
+				// Re-check every not-yet-persisted Call move against the draft's
+				// final working values. This catches edits made after the user typed
+				// `release` but before Save was pressed.
+				const finalRowsById = new Map(
+					ORDER_STAGES.flatMap(
+						(stage) => get()._deriveWorkingRows()[stage] ?? [],
+					).map((row) => [row.id, row]),
+				);
+				for (let i = startIndex; i < state.pendingCommands.length; i++) {
+					if (
+						!commandHasCurrentReleaseAuthorization(
+							state.pendingCommands[i],
+							finalRowsById,
+						)
+					) {
+						currentIndex = i;
+						throw new Error(
+							"Release authorization became stale before save. Retry the Call List move and type release again.",
+						);
+					}
+				}
+
 				// Execute all pending commands in order, tracking temp→real ID mappings
 				// so that post-create commands (delete/move/patch) target the right Supabase rows.
 				// On retry after partial failure, restore idMap and skip already-executed commands.
@@ -749,6 +772,21 @@ async function executeCommand(
 	}
 
 	const remapped = remapCommand(cmd, idMap);
+	if (
+		(remapped.type === "patchRow" || remapped.type === "moveRows") &&
+		remapped.destinationStage === "call" &&
+		remapped.sourceStage !== "call"
+	) {
+		await mutations.validateCallMove?.({
+			ids: remapped.type === "moveRows" ? remapped.ids : [remapped.id],
+			sourceStage: remapped.sourceStage,
+			releaseAuthorization: remapped.releaseAuthorization,
+			updates:
+				remapped.type === "patchRow"
+					? remapped.updates
+					: remapped.fieldOverrides,
+		});
+	}
 
 	if (remapped.type === "patchRow") {
 		await mutations.saveOrder({
@@ -785,4 +823,29 @@ async function executeCommand(
 		logger.error("Unknown draft command type in executeCommand", unknownType);
 		throw new Error(`Unknown draft command type: ${String(unknownType)}`);
 	}
+}
+
+function commandHasCurrentReleaseAuthorization(
+	cmd: DraftCommand,
+	rowsById: Map<string, PendingRow>,
+): boolean {
+	if (cmd.type === "composite") {
+		return cmd.children.every((child) =>
+			commandHasCurrentReleaseAuthorization(child, rowsById),
+		);
+	}
+	if (
+		(cmd.type !== "moveRows" && cmd.type !== "patchRow") ||
+		cmd.destinationStage !== "call" ||
+		cmd.sourceStage === "call"
+	) {
+		return true;
+	}
+
+	const ids = cmd.type === "moveRows" ? cmd.ids : [cmd.id];
+	const rows = ids
+		.map((id) => rowsById.get(id))
+		.filter((row): row is PendingRow => row !== undefined);
+	if (rows.length !== ids.length) return false;
+	return releaseAuthorizationCoversRows(rows, cmd.releaseAuthorization);
 }

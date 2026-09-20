@@ -55,6 +55,25 @@ export const createNotificationSlice: StateCreator<
 		});
 	},
 
+	restoreNotification: (notification) => {
+		set((state) => {
+			const dismissedManagedNotificationKeys = {
+				...state.dismissedManagedNotificationKeys,
+			};
+			if (notification.managedKey) {
+				delete dismissedManagedNotificationKeys[notification.managedKey];
+			}
+			return {
+				notifications: state.notifications.some(
+					(existing) => existing.id === notification.id,
+				)
+					? state.notifications
+					: [notification, ...state.notifications].slice(0, 100),
+				dismissedManagedNotificationKeys,
+			};
+		});
+	},
+
 	clearNotifications: () => {
 		set((state) => {
 			const newDismissed = { ...state.dismissedManagedNotificationKeys };

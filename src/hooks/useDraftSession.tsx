@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { releaseAuthorizationCoversRows } from "@/domain/order/releaseGate";
 import { useReleaseGate } from "@/hooks/useReleaseGate";
 import { DRAFT_RECOVERY_MAX_AGE_MS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { DraftRecoverySnapshotSchema } from "@/schemas/draftSession.schema";
+import { orderService } from "@/services/orderService";
 import { getOrdersQueryAdapter } from "@/store/ordersQueryAdapter";
 import type {
 	DraftCommand,
@@ -132,6 +134,30 @@ export function useDraftSession(stage?: OrderStage) {
 			saveOrder: (vars) => saveOrderMutation.mutateAsync(vars),
 			bulkUpdateStage: (vars) => bulkUpdateStageMutation.mutateAsync(vars),
 			bulkDelete: (ids) => bulkDeleteOrdersMutation.mutateAsync(ids),
+			validateCallMove: async ({
+				ids,
+				sourceStage,
+				releaseAuthorization,
+				updates,
+			}) => {
+				const currentRows = await orderService.fetchMappedOrders(sourceStage);
+				const idSet = new Set(ids);
+				const affectedRows = currentRows
+					.filter((row) => idSet.has(row.id))
+					.map((row) => ({ ...row, ...updates }));
+				if (affectedRows.length !== ids.length) {
+					throw new Error(
+						"The rows changed before the Call List move could be saved.",
+					);
+				}
+				if (
+					!releaseAuthorizationCoversRows(affectedRows, releaseAuthorization)
+				) {
+					throw new Error(
+						"Release authorization became stale. Retry the Call List move and type release again.",
+					);
+				}
+			},
 		});
 
 		// Clear the release follow-up only for VINs whose authorized move

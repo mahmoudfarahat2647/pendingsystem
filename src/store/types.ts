@@ -28,6 +28,7 @@ export interface NotificationActions {
 	) => void;
 	markNotificationAsRead: (id: string) => void;
 	removeNotification: (id: string) => void;
+	restoreNotification: (notification: AppNotification) => void;
 	clearNotifications: () => void;
 	checkNotifications: () => void;
 }

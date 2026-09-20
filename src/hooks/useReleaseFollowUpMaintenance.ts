@@ -12,7 +12,7 @@ import type { PendingRow } from "@/types";
 // Run at most once per hour — mirrors useWarrantyExpiryMaintenance's cadence.
 const MAINTENANCE_INTERVAL_MS = 60 * 60 * 1000;
 
-const ACTIVE_STAGES = ["orders", "main", "call", "booking"] as const;
+const ACTIVE_STAGES = ["orders", "main", "call", "booking", "freeze"] as const;
 
 /**
  * Clears a chassis's release follow-up once it no longer satisfies the

@@ -4,6 +4,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockUpsert = vi.fn();
 const mockClear = vi.fn();
+const mockToastError = vi.fn();
+
+vi.mock("sonner", () => ({
+	toast: { error: (...args: unknown[]) => mockToastError(...args) },
+}));
 
 vi.mock("@/hooks/queries/useReleaseFollowUpsQuery", () => ({
 	useReleaseFollowUpsQuery: () => ({ data: [] }),
@@ -46,14 +51,20 @@ const blankVinRow: PendingRow = {
 	stage: "main",
 } as PendingRow;
 
-function Harness({ onResult }: { onResult: (result: unknown) => void }) {
+function Harness({
+	onResult,
+	row = blankVinRow,
+}: {
+	onResult: (result: unknown) => void;
+	row?: PendingRow;
+}) {
 	const { requestCallRelease } = useReleaseGate();
 	return (
 		<button
 			type="button"
 			onClick={async () => {
 				const result = await requestCallRelease({
-					rows: [blankVinRow],
+					rows: [row],
 					automatic: false,
 				});
 				onResult(result);
@@ -100,5 +111,33 @@ describe("ReleaseGateProvider — blank-VIN cancel (regression)", () => {
 		};
 		expect(result.cancelledVins).toEqual([""]);
 		expect(result.approvedRows).toEqual([]);
+	});
+
+	it("keeps the prompt open and lets the user retry when follow-up persistence fails", async () => {
+		const user = userEvent.setup();
+		const onResult = vi.fn();
+		mockUpsert.mockRejectedValueOnce(new Error("network down"));
+
+		render(
+			<ReleaseGateProvider>
+				<Harness
+					onResult={onResult}
+					row={{ ...blankVinRow, vin: "VF1RFA00000000001" }}
+				/>
+			</ReleaseGateProvider>,
+		);
+
+		await user.click(screen.getByRole("button", { name: "trigger" }));
+		await user.type(screen.getByRole("textbox"), "release");
+		await user.click(await screen.findByRole("button", { name: "Cancel" }));
+
+		await waitFor(() => expect(mockToastError).toHaveBeenCalled());
+		expect(onResult).not.toHaveBeenCalled();
+		expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+		expect(screen.getByRole("textbox")).toHaveValue("");
+
+		mockUpsert.mockResolvedValueOnce(undefined);
+		await user.click(screen.getByRole("button", { name: "Cancel" }));
+		await waitFor(() => expect(onResult).toHaveBeenCalled());
 	});
 });

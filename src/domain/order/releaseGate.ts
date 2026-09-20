@@ -7,11 +7,8 @@
  *   2. mileage (cntrRdg) is a valid, present numeric value strictly below
  *      RELEASE_MILEAGE_THRESHOLD_KM.
  *
- * Mileage note: `PendingRow.cntrRdg` is produced by
- * `normalizeMileageAsNumber`, which maps a blank/missing value to `0`. At the
- * PendingRow layer "blank" and "genuinely 0 km" are indistinguishable, so
- * `hasValidMileage` treats `0` as not-present (matches the spec's
- * `blank mileage -> no release required` row). See docs/features/release-gate.md.
+ * `PendingRow.cntrRdgProvided` preserves whether the original mileage field
+ * was present, so a genuine numeric 0 remains distinguishable from blank.
  *
  * See issue #242.
  */
@@ -24,14 +21,23 @@ export const RELEASE_CONFIRMATION_WORD = "release";
 export const RELEASE_FOLLOW_UP_MONTHS = 2;
 
 /** True only when mileage is present and a valid non-negative number (not blank, not NaN). */
-export function hasValidMileage(row: Pick<PendingRow, "cntrRdg">): boolean {
+export function hasValidMileage(
+	row: Pick<PendingRow, "cntrRdg"> &
+		Partial<Pick<PendingRow, "cntrRdgProvided">>,
+): boolean {
 	const value = row.cntrRdg;
-	return typeof value === "number" && Number.isFinite(value) && value > 0;
+	return (
+		row.cntrRdgProvided !== false &&
+		typeof value === "number" &&
+		Number.isFinite(value) &&
+		value >= 0
+	);
 }
 
 /** Warranty AND valid mileage AND mileage < threshold — evaluated together on one row. */
 export function rowRequiresRelease(
-	row: Pick<PendingRow, "repairSystem" | "cntrRdg">,
+	row: Pick<PendingRow, "repairSystem" | "cntrRdg"> &
+		Partial<Pick<PendingRow, "cntrRdgProvided">>,
 ): boolean {
 	const repairSystem = (row.repairSystem ?? "").trim();
 	if (repairSystem !== WARRANTY_REPAIR_SYSTEM) return false;
@@ -124,13 +130,29 @@ export function computeReleaseFollowUpDueDate(from: Date = new Date()): Date {
  * the user typed "release" and the authorization is stale (issue #242 §4).
  */
 export function computeReleaseFingerprint(
-	rows: Pick<PendingRow, "id" | "vin" | "repairSystem" | "cntrRdg">[],
+	rows: Pick<
+		PendingRow,
+		| "id"
+		| "vin"
+		| "repairSystem"
+		| "cntrRdg"
+		| "cntrRdgProvided"
+		| "partNumber"
+		| "parts"
+	>[],
 ): string {
 	const parts = rows
-		.map(
-			(row) =>
-				`${row.id}:${normalizeVin(row.vin || "")}:${(row.repairSystem ?? "").trim()}:${row.cntrRdg}`,
-		)
+		.map((row) => {
+			const partNumbers = [
+				row.partNumber ?? "",
+				...(row.parts ?? []).map((part) => part.partNumber ?? ""),
+			]
+				.map((partNumber) => partNumber.trim())
+				.filter(Boolean)
+				.sort()
+				.join(",");
+			return `${row.id}:${normalizeVin(row.vin || "")}:${(row.repairSystem ?? "").trim()}:${row.cntrRdg}:${row.cntrRdgProvided !== false}:${partNumbers}`;
+		})
 		.sort();
 	return parts.join("|");
 }
@@ -145,4 +167,20 @@ export function buildReleaseAuthorization(
 		fingerprint: computeReleaseFingerprint(rows),
 		grantedAt: Date.now(),
 	};
+}
+
+/** True when the current rows do not need release, or the authorization still exactly covers them. */
+export function releaseAuthorizationCoversRows(
+	rows: PendingRow[],
+	authorization?: ReleaseAuthorization,
+): boolean {
+	const qualifying = getQualifyingChassis(rows);
+	if (qualifying.length === 0) return true;
+	if (!authorization) return false;
+
+	const authorizedVins = new Set(authorization.vins);
+	return (
+		authorization.fingerprint === computeReleaseFingerprint(rows) &&
+		qualifying.every((chassis) => authorizedVins.has(chassis.vin))
+	);
 }

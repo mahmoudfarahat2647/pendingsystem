@@ -86,6 +86,7 @@ export const NotificationsDropdown = () => {
 	const clearNotifications = useAppStore((state) => state.clearNotifications);
 	const setHighlightedRowId = useAppStore((state) => state.setHighlightedRowId);
 	const removeNotification = useAppStore((state) => state.removeNotification);
+	const restoreNotification = useAppStore((state) => state.restoreNotification);
 	const setPendingVinSelection = useAppStore(
 		(state) => state.setPendingVinSelection,
 	);
@@ -97,24 +98,46 @@ export const NotificationsDropdown = () => {
 	// their `X` (or by Clear All) — dismissing one instead snoozes it another
 	// two calendar months (issue #242). Every other type keeps today's
 	// dismiss-and-suppress behavior.
-	const snoozeReleaseFollowUp = (n: AppNotification) => {
-		void upsertReleaseFollowUp.mutateAsync({
+	const snoozeReleaseFollowUp = (n: AppNotification) =>
+		upsertReleaseFollowUp.mutateAsync({
 			vin: n.vin,
 			nextDueAt: computeReleaseFollowUpDueDate(),
-			referenceRowId: n.referenceId,
+			referenceRowId: n.referenceId || null,
 		});
-	};
 
-	const dismissNotification = (n: AppNotification) => {
-		if (n.type === "release_followup") snoozeReleaseFollowUp(n);
+	const dismissNotification = async (n: AppNotification) => {
 		removeNotification(n.id);
+		if (n.type !== "release_followup") return;
+
+		try {
+			await snoozeReleaseFollowUp(n);
+		} catch {
+			restoreNotification(n);
+			toast.error("Could not snooze the follow-up. Please try again.");
+		}
 	};
 
-	const dismissAllNotifications = () => {
-		for (const n of notifications) {
-			if (n.type === "release_followup") snoozeReleaseFollowUp(n);
-		}
+	const dismissAllNotifications = async () => {
+		const releaseFollowUps = notifications.filter(
+			(n) => n.type === "release_followup",
+		);
 		clearNotifications();
+
+		const results = await Promise.allSettled(
+			releaseFollowUps.map((n) => snoozeReleaseFollowUp(n)),
+		);
+		let failedCount = 0;
+		results.forEach((result, index) => {
+			if (result.status === "rejected") {
+				failedCount += 1;
+				restoreNotification(releaseFollowUps[index]);
+			}
+		});
+		if (failedCount > 0) {
+			toast.error(
+				`Could not snooze ${failedCount} release follow-up${failedCount === 1 ? "" : "s"}. Please try again.`,
+			);
+		}
 	};
 
 	const handleNotificationClick = (n: AppNotification) => {

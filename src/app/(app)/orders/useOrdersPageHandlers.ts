@@ -4,7 +4,10 @@ import type { GridApi } from "ag-grid-community";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { FormData } from "@/components/orders/form";
-import { normalizeMileageAsNumber } from "@/domain/order/mileage";
+import {
+	normalizeMileage,
+	normalizeMileageAsNumber,
+} from "@/domain/order/mileage";
 import {
 	appendTaggedUserNote,
 	filterPrintableRows,
@@ -159,6 +162,7 @@ export const useOrdersPageHandlers = () => {
 					const commonData = {
 						...formData,
 						cntrRdg: normalizeMileageAsNumber(formData.cntrRdg),
+						cntrRdgProvided: normalizeMileage(formData.cntrRdg) !== "",
 						startWarranty,
 						endWarranty,
 						remainTime,
@@ -235,6 +239,7 @@ export const useOrdersPageHandlers = () => {
 						...formData,
 						startWarranty,
 						cntrRdg: normalizeMileageAsNumber(formData.cntrRdg),
+						cntrRdgProvided: normalizeMileage(formData.cntrRdg) !== "",
 						partNumber: part.partNumber,
 						description: part.description,
 						quantity: part.quantity ?? 1,

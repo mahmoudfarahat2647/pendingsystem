@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { ReleaseConfirmationModal } from "@/components/shared/ReleaseConfirmationModal";
 import { normalizeVin } from "@/domain/order/orderWorkflow";
 import {
@@ -44,6 +45,7 @@ export function ReleaseGateProvider({ children }: { children: ReactNode }) {
 
 	const [prompt, setPrompt] = useState<PendingPrompt | null>(null);
 	const [submitting, setSubmitting] = useState(false);
+	const [inputResetKey, setInputResetKey] = useState(0);
 	const queueRef = useRef<Promise<void>>(Promise.resolve());
 
 	const openVinsWithFollowUp = useMemo(
@@ -91,11 +93,16 @@ export function ReleaseGateProvider({ children }: { children: ReactNode }) {
 				"[ReleaseGateProvider] Failed to schedule release follow-up:",
 				error,
 			);
+			toast.error(
+				"Could not schedule the two-month follow-up. Please try again.",
+			);
+			setInputResetKey((key) => key + 1);
+			return;
 		} finally {
 			setSubmitting(false);
-			prompt.resolve(false);
-			setPrompt(null);
 		}
+		prompt.resolve(false);
+		setPrompt(null);
 	}, [prompt, upsertFollowUp]);
 
 	const handleConfirm = useCallback(() => {
@@ -162,6 +169,7 @@ export function ReleaseGateProvider({ children }: { children: ReactNode }) {
 		<ReleaseGateContext.Provider value={api}>
 			{children}
 			<ReleaseConfirmationModal
+				key={inputResetKey}
 				open={prompt !== null}
 				vin={prompt?.chassis.displayVin ?? ""}
 				formattedMileage={prompt?.chassis.formattedMileage ?? ""}
