@@ -62,7 +62,7 @@ export const BookingCalendarModal = ({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				hideClose={true}
-				className="bg-[#0f0f11] text-gray-300 border-white/5 p-0 gap-0 overflow-hidden flex h-[90vh] rounded-[2rem] shadow-2xl font-sans w-fit max-w-[95vw]"
+				className="bg-[#1c1c1e] text-gray-300 border-white/5 p-0 gap-0 overflow-hidden flex h-[90vh] rounded-[2rem] shadow-2xl font-sans w-fit max-w-[95vw]"
 			>
 				<DialogHeader className="sr-only">
 					<DialogTitle>Booking Schedule</DialogTitle>
@@ -70,7 +70,7 @@ export const BookingCalendarModal = ({
 
 				<div className="flex-1 flex min-w-0">
 					{/* Column 1: Calendar & Tasks */}
-					<div className="w-[450px] p-10 flex flex-col bg-[#050505] border-r border-white/5 overflow-y-auto custom-scrollbar">
+					<div className="w-[450px] p-10 flex flex-col bg-[#1c1c1e] border-r border-white/5 overflow-y-auto custom-scrollbar">
 						<BookingCalendarGrid
 							currentMonth={currentMonth}
 							selectedDate={selectedDate}
@@ -86,7 +86,7 @@ export const BookingCalendarModal = ({
 					</div>
 
 					{/* Column 2: Scheduled Customers & History (Middle - Narrower) */}
-					<div className="w-[320px] bg-[#0a0a0b] border-r border-white/5 flex flex-col">
+					<div className="w-[320px] bg-[#1c1c1e] border-r border-white/5 flex flex-col">
 						<BookingSidebarCustomerList
 							searchQuery={searchQuery}
 							sidebarGroupedBookings={sidebarGroupedBookings}
@@ -96,7 +96,7 @@ export const BookingCalendarModal = ({
 					</div>
 
 					{/* Column 3: Customer Details & Actions (Right - Wider) */}
-					<div className="flex-1 bg-[#0a0a0b] flex flex-col w-[360px] max-w-[360px]">
+					<div className="flex-1 bg-[#1c1c1e] flex flex-col w-[360px] max-w-[360px]">
 						<BookingSidebarHeader
 							selectedRows={selectedRows}
 							preBookingStatus={preBookingStatus}

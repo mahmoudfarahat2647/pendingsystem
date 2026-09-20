@@ -30,7 +30,7 @@ export const BookingSidebarFooter = ({
 	const resolvedStatus = preBookingStatus.trim() ? preBookingStatus : undefined;
 
 	return (
-		<div className="p-6 bg-[#0a0a0b] border-t border-white/5">
+		<div className="p-6 bg-[#1c1c1e] border-t border-white/5">
 			<Button
 				onClick={() => {
 					onConfirm(selectedDateKey, bookingNote, resolvedStatus);
