@@ -1,6 +1,7 @@
 "use client";
 
 import { Search as SearchIcon, X } from "lucide-react";
+import { SEARCH_SOURCES } from "@/components/shared/search/searchSources";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -58,14 +59,10 @@ export const SearchResultsHeader = ({
 							)}
 						>
 							<span
-								className={cn("w-1.5 h-1.5 rounded-full", {
-									"bg-indigo-500": source === "Main Sheet",
-									"bg-orange-500": source === "Orders",
-									"bg-purple-500": source === "Booking",
-									"bg-blue-500": source === "Call",
-									"bg-slate-500": source === "Archive",
-									"bg-sky-500": source === "Freeze",
-								})}
+								className={cn(
+									"w-1.5 h-1.5 rounded-full",
+									SEARCH_SOURCES.find((s) => s.source === source)?.dotColor,
+								)}
 							/>
 							<span>{source}</span>
 							<span className="text-gray-500 ml-1 font-mono">{count}</span>

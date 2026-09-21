@@ -12,6 +12,10 @@ import {
 	Trash2,
 } from "lucide-react";
 import { RowValueFilter } from "@/components/shared/RowValueFilter";
+import {
+	SEARCH_SOURCES,
+	type SearchSource,
+} from "@/components/shared/search/searchSources";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -28,7 +32,7 @@ import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
 
-interface SearchToolbarProps {
+export interface SearchToolbarProps {
 	selectedCount: number;
 	isSameSource: boolean;
 	disabledReason: string;
@@ -46,6 +50,9 @@ interface SearchToolbarProps {
 	modelOptions: RowValueFilterOption[];
 	selectedModels: string[];
 	onModelsChange: (value: string[]) => void;
+	sourceOptions: SearchSource[];
+	activeSourceFilter: SearchSource | null;
+	onSourceFilterChange: (source: SearchSource | null) => void;
 }
 
 export const SearchToolbar = ({
@@ -66,6 +73,9 @@ export const SearchToolbar = ({
 	modelOptions,
 	selectedModels,
 	onModelsChange,
+	sourceOptions,
+	activeSourceFilter,
+	onSourceFilterChange,
 }: SearchToolbarProps) => {
 	const isReserveDisabled = selectedCount === 0;
 	const isStageActionDisabled = selectedCount === 0 || !isSameSource;
@@ -266,6 +276,49 @@ export const SearchToolbar = ({
 				</Tooltip>
 
 				<div className="w-px h-6 bg-white/10 mx-1" />
+
+				<div className="flex items-center gap-1.5 px-2">
+					{SEARCH_SOURCES.map(({ source, dotColor, activeRingColor }) => {
+						const isAvailable = sourceOptions.includes(source);
+						const isActive = activeSourceFilter === source;
+
+						return (
+							<Tooltip key={source}>
+								<TooltipTrigger asChild>
+									<button
+										type="button"
+										aria-label={source}
+										aria-pressed={isActive}
+										disabled={!isAvailable}
+										onClick={() => onSourceFilterChange(source)}
+										className={cn(
+											"w-3 h-3 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141416]",
+											dotColor,
+											!isAvailable && "opacity-20 cursor-default",
+											isAvailable &&
+												(isActive
+													? cn(
+															"ring-1 ring-offset-1 ring-offset-[#141416]",
+															activeRingColor,
+														)
+													: "opacity-40 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 cursor-pointer"),
+										)}
+									/>
+								</TooltipTrigger>
+								<TooltipContent>{source}</TooltipContent>
+							</Tooltip>
+						);
+					})}
+					{activeSourceFilter && (
+						<button
+							type="button"
+							onClick={() => onSourceFilterChange(null)}
+							className="text-[10px] text-gray-500 hover:text-gray-300 ml-1 font-bold uppercase tracking-wider focus-visible:outline-none focus-visible:underline"
+						>
+							Clear
+						</button>
+					)}
+				</div>
 
 				<RowValueFilter
 					options={modelOptions}

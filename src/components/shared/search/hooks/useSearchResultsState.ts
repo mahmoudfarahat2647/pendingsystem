@@ -13,6 +13,10 @@ import {
 	type SearchHeaderCheckboxState,
 } from "@/components/shared/GridConfig";
 import {
+	SEARCH_SOURCES,
+	type SearchSource,
+} from "@/components/shared/search/searchSources";
+import {
 	buildGlobalSearchString,
 	getMissingPartRows,
 } from "@/components/shared/search/searchUtils";
@@ -75,7 +79,6 @@ export const useSearchResultsState = () => {
 		useState<SearchHeaderCheckboxState>(false);
 	const masterCheckboxStateRef = useRef<SearchHeaderCheckboxState>(false);
 	const [showFilters, setShowFilters] = useState(false);
-	const [activeSources, _setActiveSources] = useState<string[]>([]);
 	const gridApiRef = useRef<GridApi<PendingRow> | null>(null);
 
 	// Toolbar State Logic
@@ -174,13 +177,10 @@ export const useSearchResultsState = () => {
 			})),
 		];
 
-		const found = all.filter((row) => {
+		return all.filter((row) => {
 			const searchString = buildGlobalSearchString(row);
 			return terms.every((term) => searchString.includes(term));
 		});
-
-		if (activeSources.length === 0) return found;
-		return found.filter((row) => activeSources.includes(row.sourceType));
 	}, [
 		searchTerm,
 		mainData,
@@ -189,16 +189,76 @@ export const useSearchResultsState = () => {
 		callData,
 		archiveData,
 		freezeData,
-		activeSources,
 	]);
 
-	// Car model filter (Global Search toolbar). Options are derived from the current
-	// search results, same pattern as the Call List's repair-system filter.
+	// Distinct sourceType values present in searchResults (pre-filter)
+	const sourceOptions = useMemo<SearchSource[]>(() => {
+		const available = new Set<string>();
+		for (const row of searchResults) {
+			if (row.sourceType) {
+				available.add(row.sourceType);
+			}
+		}
+		return SEARCH_SOURCES.map((s) => s.source).filter((source) =>
+			available.has(source),
+		);
+	}, [searchResults]);
+
+	const [activeSourceFilter, setActiveSourceFilter] =
+		useState<SearchSource | null>(null);
+
+	// Intersect during render (not in an effect): a post-render prune would let
+	// one frame through with new searchResults and a stale filter, flashing an
+	// empty grid when the search term changes while a source filter is active.
+	const sourceOptionSet = useMemo(
+		() => new Set<SearchSource>(sourceOptions),
+		[sourceOptions],
+	);
+	const effectiveSourceFilter = useMemo(
+		() =>
+			activeSourceFilter && sourceOptionSet.has(activeSourceFilter)
+				? activeSourceFilter
+				: null,
+		[activeSourceFilter, sourceOptionSet],
+	);
+
+	const sourceFilteredResults = useMemo(() => {
+		if (!effectiveSourceFilter) return searchResults;
+		return searchResults.filter(
+			(row) => row.sourceType === effectiveSourceFilter,
+		);
+	}, [searchResults, effectiveSourceFilter]);
+
+	// Tidy the active source filter once its source disappears from search results.
+	// The render-time intersection above keeps `sourceFilteredResults` correct in the meantime.
+	useEffect(() => {
+		setActiveSourceFilter((current) => {
+			if (current && !sourceOptionSet.has(current)) {
+				return null;
+			}
+			return current;
+		});
+	}, [sourceOptionSet]);
+
+	const handleSourceFilterChange = useCallback(
+		(source: SearchSource | null) => {
+			setActiveSourceFilter((current) => {
+				if (source === null || current === source) {
+					return null;
+				}
+				return source;
+			});
+		},
+		[],
+	);
+
+	// Car model filter (Global Search toolbar). Options are derived from the
+	// source-filtered results so model chips always match >=1 visible row.
 	const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
 	const modelOptions = useMemo(
-		() => getRowValueFilterOptions(searchResults, getModelValue),
-		[searchResults],
+		() => getRowValueFilterOptions(sourceFilteredResults, getModelValue),
+		[sourceFilteredResults],
 	);
 
 	// Intersect during render (not in an effect): a post-render prune would let one
@@ -215,8 +275,12 @@ export const useSearchResultsState = () => {
 
 	const filteredResults = useMemo(
 		() =>
-			filterRowsByValues(searchResults, effectiveSelectedModels, getModelValue),
-		[searchResults, effectiveSelectedModels],
+			filterRowsByValues(
+				sourceFilteredResults,
+				effectiveSelectedModels,
+				getModelValue,
+			),
+		[sourceFilteredResults, effectiveSelectedModels],
 	);
 
 	// Tidy the rendered chips once a selected model disappears from the results
@@ -854,6 +918,9 @@ export const useSearchResultsState = () => {
 		isSameSource,
 		disabledReason,
 		filteredResults,
+		sourceOptions,
+		activeSourceFilter,
+		handleSourceFilterChange,
 		modelOptions,
 		selectedModels,
 		setSelectedModels,
