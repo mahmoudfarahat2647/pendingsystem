@@ -43,6 +43,43 @@ export const exportToLogisticsXLSX = async (
 };
 
 /**
+ * CSV formula-injection sanitizer (issue #252).
+ *
+ * Audit finding: both CSV writers (`exportToCSV` here and `generateCSV` in
+ * `scripts/generate-backup.mjs`) interpolated DB/user-sourced free-text fields
+ * with only `"`-escaping and no formula neutralization. Affected fields include
+ * customerName, partNumber, description/partDescription, vin, model, mobile,
+ * requester/acceptedBy, sabNumber, repairSystem, status/bookingStatus,
+ * noteHistory/noteContent/actionNote/bookingNote, reminder subject text
+ * (reminderText/reminderSubject), archiveReason, and freezeReason. A value such
+ * as `=HYPERLINK(...)` would be executed as a formula by spreadsheet apps on
+ * open. The xlsx writers (`exportToXLSX` here, `reportExcel.ts`) build string
+ * cells via SheetJS `json_to_sheet` (cell type "s", never "f"), so a leading
+ * `=` is stored as literal text and needs no change there.
+ *
+ * Rule (OWASP CSV injection): after converting to string, if the first
+ * character is `=`, `+`, `-`, or `@`, prefix a single quote `'`. Excel/Sheets
+ * render the leading `'` as a text marker (not displayed), so legitimate data
+ * is preserved and only the formula trigger is neutralized. All other values
+ * pass through untouched; callers keep existing `"`-escaping and BOM handling.
+ */
+export const sanitizeCsvField = (value: unknown): string => {
+	if (value === null || value === undefined) return "";
+	const text =
+		typeof value === "object" ? JSON.stringify(value) : String(value);
+	// Only a trigger at char 0 executes in Excel/Sheets, so leading-whitespace payloads intentionally pass.
+	if (
+		text.startsWith("=") ||
+		text.startsWith("+") ||
+		text.startsWith("-") ||
+		text.startsWith("@")
+	) {
+		return `'${text}`;
+	}
+	return text;
+};
+
+/**
  * Exports data to a CSV file.
  */
 const exportToCSV = (
@@ -57,8 +94,10 @@ const exportToCSV = (
 	const rows = data.map((item) =>
 		columnHeaders
 			.map((header) => {
-				const val = item[header] || "";
-				return `"${String(val).replace(/"/g, '""')}"`;
+				const val = item[header] ?? "";
+				const stringVal = sanitizeCsvField(val);
+				// Always quoted, so `,`, `"`, `\n`, `\r` stay in-field (same set as the csvUtils.mjs `|| stringVal.includes("\r")` quoting guard).
+				return `"${stringVal.replace(/"/g, '""')}"`;
 			})
 			.join(","),
 	);

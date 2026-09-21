@@ -3,6 +3,7 @@ import { ORDER_STAGES } from "../lib/constants";
 import {
 	exportAllSystemDataCSV,
 	fetchAllRowsForExport,
+	sanitizeCsvField,
 } from "../lib/exportUtils";
 import type { PendingRow } from "../types";
 
@@ -248,5 +249,99 @@ describe("exportUtils", () => {
 		exportAllSystemDataCSV([rowWithMetaFreeze], "Renault");
 		expect(lastCsvContent).toContain('"Parts on backorder"');
 		expect(lastCsvContent).toContain('"2026-09-12"');
+	});
+
+	describe("CSV formula injection (#252)", () => {
+		it("prefixes =, +, -, @ leading chars with a single quote", () => {
+			expect(sanitizeCsvField('=HYPERLINK("http://evil","click")')).toBe(
+				'\'=HYPERLINK("http://evil","click")',
+			);
+			expect(sanitizeCsvField("+2+3")).toBe("'+2+3");
+			expect(sanitizeCsvField("-2+3")).toBe("'-2+3");
+			expect(sanitizeCsvField("@malicious")).toBe("'@malicious");
+		});
+
+		it("leaves normal text, numbers, and empty values untouched", () => {
+			expect(sanitizeCsvField("Brake pad")).toBe("Brake pad");
+			expect(sanitizeCsvField(" =not-leading")).toBe(" =not-leading");
+			expect(sanitizeCsvField("a=b")).toBe("a=b");
+			expect(sanitizeCsvField(42)).toBe("42");
+			expect(sanitizeCsvField(null)).toBe("");
+			expect(sanitizeCsvField(undefined)).toBe("");
+		});
+
+		it("neutralizes formula payloads in exported CSV output", () => {
+			const maliciousRow: PendingRow = {
+				...mockData[0],
+				id: "formula-1",
+				customerName: '=HYPERLINK("http://evil","click")',
+				description: "+2+3",
+				partNumber: "-2+3",
+				requester: "@malicious",
+			};
+			exportAllSystemDataCSV([maliciousRow], "Renault");
+
+			expect(lastCsvContent.startsWith("\uFEFF")).toBe(true);
+			expect(lastCsvContent).toContain("\"'=HYPERLINK");
+			expect(lastCsvContent).toContain('"\'+2+3"');
+			expect(lastCsvContent).toContain('"\'-2+3"');
+			expect(lastCsvContent).toContain('"\'@malicious"');
+			expect(lastCsvContent).not.toContain('"=HYPERLINK');
+		});
+
+		it("serializes objects via JSON.stringify like the backup writer", () => {
+			expect(sanitizeCsvField({ partNumber: "P1" })).toBe(
+				'{"partNumber":"P1"}',
+			);
+		});
+
+		it("preserves legitimate 0 and false values in CSV output", () => {
+			const falsyRow: PendingRow = {
+				...mockData[0],
+				id: "falsy-1",
+				customerName: "FalsyUser",
+				cntrRdg: 0,
+				model: false as unknown as string,
+			};
+			exportAllSystemDataCSV([falsyRow], "Renault");
+
+			const lines = lastCsvContent.replace(/^\uFEFF/, "").split("\n");
+			const headers = lines[0].split(",");
+			const rawFields = lines[1].split('","');
+			rawFields[0] = rawFields[0].replace(/^"/, "");
+			rawFields[rawFields.length - 1] = rawFields[rawFields.length - 1].replace(
+				/"$/,
+				"",
+			);
+			expect(rawFields[headers.indexOf("cntrRdg")]).toBe("0");
+			expect(rawFields[headers.indexOf("model")]).toBe("false");
+		});
+
+		it("keeps bare carriage returns inside quoted fields without splitting rows", () => {
+			const crRow: PendingRow = {
+				...mockData[0],
+				id: "cr-1",
+				customerName: "a\rb",
+			};
+			exportAllSystemDataCSV([crRow], "Renault");
+
+			expect(lastCsvContent).toContain('"a\rb"');
+			expect(lastCsvContent.replace(/^\uFEFF/, "").split("\n")).toHaveLength(2);
+		});
+
+		it("does not add a quote prefix to normal exported text", () => {
+			const normalRow: PendingRow = {
+				...mockData[0],
+				id: "normal-1",
+				customerName: "Alice",
+				description: "Brake pad",
+			};
+			exportAllSystemDataCSV([normalRow], "Renault");
+
+			expect(lastCsvContent).toContain('"Alice"');
+			expect(lastCsvContent).toContain('"Brake pad"');
+			expect(lastCsvContent).not.toContain("'Alice");
+			expect(lastCsvContent).not.toContain("'Brake pad");
+		});
 	});
 });
