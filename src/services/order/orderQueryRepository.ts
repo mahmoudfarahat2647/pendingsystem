@@ -82,6 +82,8 @@ export function createOrderQueryRepository(
 		async getOrders(stage?: OrderStage) {
 			// A secondary `.order("id")` tiebreak is required so pages don't skip
 			// or duplicate rows when `created_at` values tie at a page boundary.
+			// #248: served by orders_stage_created_at_id_idx on
+			// orders(stage, created_at DESC, id ASC).
 			const makePage =
 				<S extends string>(select: S) =>
 				(from: number, to: number) => {
@@ -190,6 +192,17 @@ export function createOrderQueryRepository(
 						.from("orders")
 						.select("id, vin, stage, metadata")
 						.ilike("vin", escapeLikePattern(normalizedVin))
+						// #248: part-number prefilter stays ILIKE exact-match so it is
+						// served by orders_partnumber_trgm_idx (GIN pg_trgm on
+						// metadata->>'partNumber'). PostgREST (postgrest-js) only
+						// filters on real columns / JSON-arrow paths, not upper(...)
+						// expressions, so the functional btree index
+						// orders_partnumber_upper_idx can't be addressed from this
+						// client query — it remains for a future RPC/direct-SQL
+						// equality path. escapeLikePattern keeps the VIN ILIKE
+						// literal (no active wildcards); the client-side
+						// toUpperCase() recheck below preserves exact match
+						// semantics.
 						.filter(
 							"metadata->>partNumber",
 							"ilike",
@@ -247,6 +260,13 @@ export function createOrderQueryRepository(
 					db
 						.from("orders")
 						.select("id, vin, stage, metadata")
+						// #248: same index story as checkHistoricalVinPartDuplicate —
+						// ILIKE exact-match served by orders_partnumber_trgm_idx
+						// (GIN pg_trgm); the functional btree index
+						// orders_partnumber_upper_idx is reserved for a future
+						// RPC/direct-SQL upper() equality path PostgREST can't
+						// express. Client-side toUpperCase() recheck below keeps
+						// exact match semantics.
 						.filter(
 							"metadata->>partNumber",
 							"ilike",
