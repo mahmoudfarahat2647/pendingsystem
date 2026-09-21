@@ -75,9 +75,10 @@ e2e/.auth/
 /docs/*
 !/docs/adr/
 
-# scripts (utility scripts ignored, but docs-sync infrastructure is tracked)
+# scripts (utility scripts ignored, but tracked infrastructure is excepted)
 /scripts/*
 !/scripts/docs-sync.sh
+!/scripts/verify-db.mjs
 !/scripts/prompts
 /scripts/prompts/*
 !/scripts/prompts/docs-triage.md

@@ -92,7 +92,7 @@ export function getQualifyingChassis(rows: PendingRow[]): ReleaseChassis[] {
 				? normalizeVin(qualifyingRow.vin)
 				: "(blank VIN)",
 			mileage: qualifyingRow.cntrRdg,
-			formattedMileage: qualifyingRow.cntrRdg.toLocaleString(),
+			formattedMileage: qualifyingRow.cntrRdg.toLocaleString("en-US"),
 			rowIds: groupRows.map((row) => row.id),
 			referenceRowId: qualifyingRow.id,
 		});

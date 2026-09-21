@@ -20,10 +20,11 @@ export async function POST() {
 		const err = error as Error & { code?: string; status?: number };
 		const message = err.message || "An internal error occurred";
 		logger.error("Backup trigger error:", message);
+		const status = err.status ?? 500;
 		return errorResponse(
 			(err.code as Parameters<typeof errorResponse>[0]) ?? "SERVER_ERROR",
-			message,
-			err.status ?? 500,
+			status >= 500 ? "Internal server error" : message,
+			status,
 		);
 	}
 }
