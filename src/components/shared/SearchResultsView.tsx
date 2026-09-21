@@ -38,6 +38,9 @@ export const SearchResultsView = () => {
 		isSameSource,
 		disabledReason,
 		filteredResults,
+		sourceOptions,
+		activeSourceFilter,
+		handleSourceFilterChange,
 		modelOptions,
 		selectedModels,
 		setSelectedModels,
@@ -103,15 +106,21 @@ export const SearchResultsView = () => {
 				modelOptions={modelOptions}
 				selectedModels={selectedModels}
 				onModelsChange={setSelectedModels}
+				sourceOptions={sourceOptions}
+				activeSourceFilter={activeSourceFilter}
+				onSourceFilterChange={handleSourceFilterChange}
 			/>
 
 			<div className="flex-1 p-6 overflow-hidden">
 				{/*
 				 * `filteredResults` can only be empty when `searchResults` is too:
-				 * the model chips are derived from `searchResults` itself, so any
-				 * selected model is guaranteed to match at least one row there, and
-				 * clearing the selection falls back to `searchResults` unchanged.
-				 * A single guard on `filteredResults.length` covers both cases.
+				 * (1) `effectiveSourceFilter` is a render-time intersection with
+				 * `sourceOptions`, so a selected source can never yield 0 rows on its
+				 * own; if absent from current results, the filter self-heals to null.
+				 * (2) `modelOptions` are derived from `sourceFilteredResults`, so any
+				 * selected model is guaranteed to match at least one row within the
+				 * selected source, and clearing selection falls back unchanged.
+				 * A single guard on `filteredResults.length` covers all cases.
 				 */}
 				{filteredResults.length > 0 ? (
 					<SearchResultsGrid

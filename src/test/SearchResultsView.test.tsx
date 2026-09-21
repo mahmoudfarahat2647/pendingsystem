@@ -8,6 +8,10 @@ import {
 } from "@testing-library/react";
 import type { ButtonHTMLAttributes } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	SEARCH_SOURCES,
+	type SearchSource,
+} from "@/components/shared/search/searchSources";
 import * as orderWorkflow from "@/domain/order/orderWorkflow";
 import { appendTaggedUserNote } from "@/domain/order/orderWorkflow";
 import type { PendingRow } from "@/types";
@@ -42,6 +46,7 @@ type MockRowValueFilterOption = { label: string; value: string };
 type MockSearchToolbarProps = {
 	selectedCount: number;
 	isSameSource: boolean;
+	disabledReason?: string;
 	onReserve: () => void;
 	onUpdateStatus: (status: string) => void;
 	onBooking: () => void;
@@ -52,6 +57,9 @@ type MockSearchToolbarProps = {
 	modelOptions: MockRowValueFilterOption[];
 	selectedModels: string[];
 	onModelsChange: (value: string[]) => void;
+	sourceOptions: SearchSource[];
+	activeSourceFilter: SearchSource | null;
+	onSourceFilterChange: (source: SearchSource | null) => void;
 };
 
 type MockBookingModalProps = {
@@ -238,6 +246,7 @@ vi.mock("@/components/shared/search/SearchToolbar", () => ({
 			<div data-testid="search-toolbar">
 				<button
 					type="button"
+					aria-label="Action Reserve"
 					data-testid="search-toolbar-reserve"
 					disabled={props.selectedCount === 0}
 					onClick={props.onReserve}
@@ -246,6 +255,7 @@ vi.mock("@/components/shared/search/SearchToolbar", () => ({
 				</button>
 				<button
 					type="button"
+					aria-label="Action Status Arrived"
 					data-testid="search-toolbar-status-arrived"
 					disabled={props.selectedCount === 0 || !props.isSameSource}
 					onClick={() => props.onUpdateStatus("Arrived")}
@@ -254,6 +264,7 @@ vi.mock("@/components/shared/search/SearchToolbar", () => ({
 				</button>
 				<button
 					type="button"
+					aria-label="Action Booking"
 					data-testid="search-toolbar-booking"
 					disabled={props.selectedCount === 0 || !props.isSameSource}
 					onClick={props.onBooking}
@@ -262,6 +273,7 @@ vi.mock("@/components/shared/search/SearchToolbar", () => ({
 				</button>
 				<button
 					type="button"
+					aria-label="Action Archive"
 					data-testid="search-toolbar-archive"
 					disabled={props.selectedCount === 0 || !props.isSameSource}
 					onClick={props.onArchive}
@@ -270,6 +282,7 @@ vi.mock("@/components/shared/search/SearchToolbar", () => ({
 				</button>
 				<button
 					type="button"
+					aria-label="Action Call"
 					data-testid="search-toolbar-call"
 					onClick={props.onSendToCallList}
 				>
@@ -277,12 +290,38 @@ vi.mock("@/components/shared/search/SearchToolbar", () => ({
 				</button>
 				<button
 					type="button"
+					aria-label="Action Reorder"
 					data-testid="search-toolbar-reorder"
 					disabled={props.selectedCount === 0 || !props.isSameSource}
 					onClick={props.onReorder}
 				>
 					Reorder
 				</button>
+				{SEARCH_SOURCES.map(({ source }) => {
+					const isAvailable = props.sourceOptions?.includes(source);
+					const isActive = props.activeSourceFilter === source;
+					return (
+						<button
+							key={source}
+							type="button"
+							aria-label={source}
+							aria-pressed={isActive}
+							disabled={!isAvailable}
+							onClick={() => props.onSourceFilterChange(source)}
+						>
+							{source}
+						</button>
+					);
+				})}
+				{props.activeSourceFilter && (
+					<button
+						type="button"
+						data-testid="search-toolbar-clear-source"
+						onClick={() => props.onSourceFilterChange(null)}
+					>
+						Clear
+					</button>
+				)}
 			</div>
 		);
 	},
@@ -494,6 +533,7 @@ describe("SearchResultsView", () => {
 		mocks.queryData.booking = [];
 		mocks.queryData.call = [];
 		mocks.queryData.archive = [];
+		mocks.queryData.freeze = [];
 		mocks.printReservationLabels.mockReset();
 		mocks.exportToLogisticsXLSX.mockReset();
 		mocks.exportToLogisticsXLSX.mockResolvedValue(undefined);
@@ -778,6 +818,312 @@ describe("SearchResultsView", () => {
 
 			expect(getRenderedRowIds()).toEqual(["main-other"]);
 			expect(mocks.searchToolbarProps?.selectedModels).toEqual([]);
+		});
+	});
+
+	describe("source filter", () => {
+		it("renders one dot per source, and dots for sources absent from current results are disabled", () => {
+			mocks.queryData.main = [createRow({ id: "main-1" })];
+			mocks.queryData.call = [
+				createRow({
+					id: "call-1",
+					sourceType: "Call",
+					stage: "call",
+				}),
+			];
+
+			renderView();
+
+			expect(mocks.searchToolbarProps?.sourceOptions).toEqual([
+				"Main Sheet",
+				"Call",
+			]);
+
+			expect(screen.getByRole("button", { name: "Main Sheet" })).toBeEnabled();
+			expect(screen.getByRole("button", { name: "Call" })).toBeEnabled();
+			expect(screen.getByRole("button", { name: "Orders" })).toBeDisabled();
+			expect(screen.getByRole("button", { name: "Booking" })).toBeDisabled();
+			expect(screen.getByRole("button", { name: "Archive" })).toBeDisabled();
+			expect(screen.getByRole("button", { name: "Freeze" })).toBeDisabled();
+		});
+
+		it("narrows the grid rows, match count, and stage badges when a source is selected", async () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-1" }),
+				createRow({ id: "main-2", vin: "VIN123-2" }),
+			];
+			mocks.queryData.archive = [
+				createRow({
+					id: "archive-1",
+					sourceType: "Archive",
+					stage: "archive",
+				}),
+			];
+
+			renderView();
+
+			expect(getRenderedRowIds()).toEqual(
+				expect.arrayContaining(["main-1", "main-2", "archive-1"]),
+			);
+			expect(mocks.searchResultsHeaderProps?.resultsCount).toBe(3);
+			expect(mocks.searchResultsHeaderProps?.counts).toEqual({
+				"Main Sheet": 2,
+				Archive: 1,
+			});
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onSourceFilterChange("Main Sheet");
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-1", "main-2"]);
+			expect(mocks.searchResultsHeaderProps?.resultsCount).toBe(2);
+			expect(mocks.searchResultsHeaderProps?.counts).toEqual({
+				"Main Sheet": 2,
+			});
+		});
+
+		it("clears when clicking the active dot, and switches when clicking another", async () => {
+			mocks.queryData.main = [createRow({ id: "main-1" })];
+			mocks.queryData.booking = [
+				createRow({
+					id: "booking-1",
+					sourceType: "Booking",
+					stage: "booking",
+				}),
+			];
+
+			renderView();
+
+			// 1. Click Main Sheet -> selects Main Sheet
+			await act(async () => {
+				fireEvent.click(screen.getByRole("button", { name: "Main Sheet" }));
+			});
+
+			expect(mocks.searchToolbarProps?.activeSourceFilter).toBe("Main Sheet");
+			expect(getRenderedRowIds()).toEqual(["main-1"]);
+
+			// 2. Click Main Sheet again -> clears filter
+			await act(async () => {
+				fireEvent.click(screen.getByRole("button", { name: "Main Sheet" }));
+			});
+
+			expect(mocks.searchToolbarProps?.activeSourceFilter).toBeNull();
+			expect(getRenderedRowIds()).toEqual(
+				expect.arrayContaining(["main-1", "booking-1"]),
+			);
+
+			// 3. Click Main Sheet then click Booking -> switches to Booking
+			await act(async () => {
+				fireEvent.click(screen.getByRole("button", { name: "Main Sheet" }));
+			});
+			expect(mocks.searchToolbarProps?.activeSourceFilter).toBe("Main Sheet");
+
+			await act(async () => {
+				fireEvent.click(screen.getByRole("button", { name: "Booking" }));
+			});
+
+			expect(mocks.searchToolbarProps?.activeSourceFilter).toBe("Booking");
+			expect(getRenderedRowIds()).toEqual(["booking-1"]);
+		});
+
+		it("resets when clicking Clear", async () => {
+			mocks.queryData.main = [createRow({ id: "main-1" })];
+			mocks.queryData.orders = [
+				createRow({
+					id: "orders-1",
+					sourceType: "Orders",
+					stage: "orders",
+				}),
+			];
+
+			renderView();
+
+			expect(screen.queryByText("Clear")).not.toBeInTheDocument();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onSourceFilterChange("Orders");
+			});
+
+			expect(mocks.searchToolbarProps?.activeSourceFilter).toBe("Orders");
+			expect(getRenderedRowIds()).toEqual(["orders-1"]);
+			expect(screen.getByText("Clear")).toBeInTheDocument();
+
+			await act(async () => {
+				fireEvent.click(screen.getByText("Clear"));
+			});
+
+			expect(mocks.searchToolbarProps?.activeSourceFilter).toBeNull();
+			expect(getRenderedRowIds()).toEqual(
+				expect.arrayContaining(["main-1", "orders-1"]),
+			);
+			expect(screen.queryByText("Clear")).not.toBeInTheDocument();
+		});
+
+		it("exports only the filtered rows", async () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-1" }),
+				createRow({ id: "main-2", vin: "VIN123-2" }),
+			];
+			mocks.queryData.archive = [
+				createRow({
+					id: "archive-1",
+					sourceType: "Archive",
+					stage: "archive",
+				}),
+			];
+
+			renderView();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onSourceFilterChange("Main Sheet");
+			});
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onExtract();
+			});
+
+			expect(mocks.exportToLogisticsXLSX).toHaveBeenCalledWith([
+				expect.objectContaining({ id: "main-1" }),
+				expect.objectContaining({ id: "main-2" }),
+			]);
+			expect(mocks.exportToLogisticsXLSX).not.toHaveBeenCalledWith(
+				expect.arrayContaining([expect.objectContaining({ id: "archive-1" })]),
+			);
+		});
+
+		it("drops a stale model chip when switching source, without flashing an empty grid", async () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-megane", model: "Megane IV" }),
+			];
+			mocks.queryData.orders = [
+				createRow({
+					id: "orders-clio",
+					model: "Clio V",
+					sourceType: "Orders",
+					stage: "orders",
+				}),
+			];
+
+			renderView();
+
+			// Initially both models are available
+			expect(mocks.searchToolbarProps?.modelOptions).toEqual([
+				{ label: "Megane IV", value: "Megane IV" },
+				{ label: "Clio V", value: "Clio V" },
+			]);
+
+			// Select Main Sheet -> model options narrows to Megane IV only
+			await act(async () => {
+				mocks.searchToolbarProps?.onSourceFilterChange("Main Sheet");
+			});
+			expect(mocks.searchToolbarProps?.modelOptions).toEqual([
+				{ label: "Megane IV", value: "Megane IV" },
+			]);
+
+			// Select model Megane IV
+			await act(async () => {
+				mocks.searchToolbarProps?.onModelsChange(["Megane IV"]);
+			});
+			expect(getRenderedRowIds()).toEqual(["main-megane"]);
+
+			// Switch source to Orders. Orders has Clio V, not Megane IV.
+			// Render-time intersection in effectiveSelectedModels drops "Megane IV"
+			// immediately, avoiding an empty grid frame.
+			await act(async () => {
+				mocks.searchToolbarProps?.onSourceFilterChange("Orders");
+			});
+
+			expect(getRenderedRowIds()).toEqual(["orders-clio"]);
+			expect(mocks.searchToolbarProps?.modelOptions).toEqual([
+				{ label: "Clio V", value: "Clio V" },
+			]);
+			expect(mocks.searchToolbarProps?.selectedModels).toEqual([]);
+		});
+
+		it("self-heals when search term changes so selected source has no matches, avoiding empty panel", async () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-alice", customerName: "Alice" }),
+			];
+			mocks.queryData.orders = [
+				createRow({
+					id: "orders-bob",
+					customerName: "Bob",
+					sourceType: "Orders",
+					stage: "orders",
+				}),
+			];
+
+			const { rerender } = renderView();
+
+			// Select Main Sheet
+			await act(async () => {
+				mocks.searchToolbarProps?.onSourceFilterChange("Main Sheet");
+			});
+			expect(getRenderedRowIds()).toEqual(["main-alice"]);
+
+			// Change search term to "Bob", which matches only the Orders row.
+			// Main Sheet has 0 matches for "Bob", so effectiveSourceFilter self-heals
+			// to null during render rather than showing an empty grid or "No results found".
+			mocks.storeState.searchTerm = "Bob";
+
+			await act(async () => {
+				rerender(<SearchResultsView />);
+			});
+
+			expect(screen.getByTestId("search-results-grid")).toBeInTheDocument();
+			expect(screen.queryByText("No results found")).not.toBeInTheDocument();
+			expect(getRenderedRowIds()).toEqual(["orders-bob"]);
+			expect(mocks.searchToolbarProps?.activeSourceFilter).toBeNull();
+		});
+
+		it("prunes selection and recomputes toolbar state when filtering rows across sources", async () => {
+			const mainRow = createRow({ id: "main-1" });
+			const ordersRow = createRow({
+				id: "orders-1",
+				sourceType: "Orders",
+				stage: "orders",
+			});
+			mocks.queryData.main = [mainRow];
+			mocks.queryData.orders = [ordersRow];
+
+			renderView();
+
+			const mainNode = createMockGridNode({ selected: true, data: mainRow });
+			const ordersNode = createMockGridNode({
+				selected: true,
+				data: ordersRow,
+			});
+			const filteredNodes = [mainNode, ordersNode];
+			const gridApi = createMockGridApi({
+				allNodes: [mainNode, ordersNode],
+				filteredNodes,
+			});
+
+			await connectGridApi(gridApi);
+			await triggerSelectionChanged([mainRow, ordersRow], gridApi);
+
+			// Two different sources selected -> isSameSource is false, booking disabled
+			expect(mocks.searchToolbarProps?.selectedCount).toBe(2);
+			expect(mocks.searchToolbarProps?.isSameSource).toBe(false);
+			expect(screen.getByTestId("search-toolbar-booking")).toBeDisabled();
+
+			// Filter to Main Sheet
+			await act(async () => {
+				mocks.searchToolbarProps?.onSourceFilterChange("Main Sheet");
+			});
+
+			// Now only mainNode is in filteredNodes, but ordersNode was selected.
+			// Simulating grid displayed rows change (post-filter pruning):
+			filteredNodes.length = 0;
+			filteredNodes.push(mainNode);
+			await triggerDisplayedRowsChanged(gridApi);
+
+			// ordersNode was deselected because it is not in displayed rows
+			expect(ordersNode.setSelected).toHaveBeenCalledWith(false);
+			expect(mocks.searchToolbarProps?.selectedCount).toBe(1);
+			expect(mocks.searchToolbarProps?.isSameSource).toBe(true);
+			expect(getMasterCheckboxState()).toBe(true);
+			expect(screen.getByTestId("search-toolbar-booking")).toBeEnabled();
 		});
 	});
 	it("wires the header checkbox to filtered select-all and clear-all", async () => {
