@@ -220,7 +220,8 @@ async function main() {
 				"Run 'pnpm install' (pg is a repo dependency via src/lib/postgres.ts) " +
 				"then re-run npm run db:verify.",
 		);
-		process.exit(0);
+		// Exit 2 = dependencies missing; live verification was NOT performed.
+		process.exit(2);
 	}
 
 	const pool = new Pool({
@@ -238,16 +239,22 @@ async function main() {
 	});
 
 	// Belt-and-braces timeout so a hung socket can't stall the script forever.
-	const withTimeout = (promise, ms, label) =>
-		Promise.race([
-			promise,
-			new Promise((_, reject) =>
-				setTimeout(
-					() => reject(new Error(`${label} timed out after ${ms}ms`)),
-					ms,
-				),
-			),
-		]);
+	// The timer is unref()'d after the promise settles so it never delays exit.
+	const withTimeout = (promise, ms, label) => {
+		let timerId;
+		const timerPromise = new Promise((_, reject) => {
+			timerId = setTimeout(
+				() => reject(new Error(`${label} timed out after ${ms}ms`)),
+				ms,
+			);
+			// unref() so the timer does not keep the event loop alive if the
+			// main promise already settled (Node.js-specific).
+			if (typeof timerId.unref === "function") timerId.unref();
+		});
+		return Promise.race([promise, timerPromise]).finally(() =>
+			clearTimeout(timerId),
+		);
+	};
 
 	try {
 		const res = await withTimeout(
@@ -317,6 +324,7 @@ async function main() {
 			`Done with ${failures} table check(s) failing — see lines above. ` +
 				"Connection itself is OK.",
 		);
+		process.exit(1);
 	} else {
 		console.log("All checks passed.");
 	}
