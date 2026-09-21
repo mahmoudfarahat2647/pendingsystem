@@ -27,7 +27,13 @@ export const warrantyMaintenanceService = {
 	}> {
 		const results = await Promise.all(
 			ACTIVE_STAGES.map((stage) =>
-				orderService.fetchMappedOrders(stage as OrderStage),
+				// #250: repairSystem is filtered in the database so only
+				// warranty rows are loaded; expiry is still evaluated in
+				// memory via findExpiredWarrantyRows below.
+				orderService.fetchMappedOrdersByRepairSystem(
+					stage as OrderStage,
+					WARRANTY_REPAIR_SYSTEM,
+				),
 			),
 		);
 		const expired = findExpiredWarrantyRows(results.flat());

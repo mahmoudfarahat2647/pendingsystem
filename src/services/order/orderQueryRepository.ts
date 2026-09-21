@@ -78,39 +78,52 @@ async function scanPages<T, R>(
 export function createOrderQueryRepository(
 	db: typeof supabaseDefault = supabaseDefault,
 ) {
+	// Shared raw-row fetch behind getOrders and the filtered warranty
+	// candidate fetch (#250). When `repairSystem` is absent the query shape
+	// is exactly the historical getOrders shape; when present, an additional
+	// server-side `metadata->>repairSystem` equality narrows the result set
+	// before any row reaches Node.js.
+	async function fetchRawOrders(stage?: OrderStage, repairSystem?: string) {
+		// A secondary `.order("id")` tiebreak is required so pages don't skip
+		// or duplicate rows when `created_at` values tie at a page boundary.
+		// #248: served by orders_stage_created_at_id_idx on
+		// orders(stage, created_at DESC, id ASC).
+		const makePage =
+			<S extends string>(select: S) =>
+			(from: number, to: number) => {
+				let q = db.from("orders").select(select);
+				if (stage) {
+					q = q.eq("stage", stage);
+				}
+				if (repairSystem) {
+					q = q.filter("metadata->>repairSystem", "eq", repairSystem);
+				}
+				return q
+					.order("created_at", { ascending: false })
+					.order("id", { ascending: true })
+					.range(from, to) as unknown as PromiseLike<{
+					data: Record<string, unknown>[] | null;
+					error: PostgrestError | null;
+				}>;
+			};
+
+		const { data, error } = await fetchAllPages(
+			makePage(ORDERS_SELECT_WITH_ATTACHMENTS),
+		);
+		if (error && isMissingAttachmentColumnError(error)) {
+			const { data: fallbackData, error: fallbackError } = await fetchAllPages(
+				makePage(ORDERS_SELECT_BASE),
+			);
+			if (fallbackError) handleSupabaseError(fallbackError);
+			return fallbackData;
+		}
+		if (error) handleSupabaseError(error);
+		return data;
+	}
+
 	return {
 		async getOrders(stage?: OrderStage) {
-			// A secondary `.order("id")` tiebreak is required so pages don't skip
-			// or duplicate rows when `created_at` values tie at a page boundary.
-			// #248: served by orders_stage_created_at_id_idx on
-			// orders(stage, created_at DESC, id ASC).
-			const makePage =
-				<S extends string>(select: S) =>
-				(from: number, to: number) => {
-					let q = db.from("orders").select(select);
-					if (stage) {
-						q = q.eq("stage", stage);
-					}
-					return q
-						.order("created_at", { ascending: false })
-						.order("id", { ascending: true })
-						.range(from, to) as unknown as PromiseLike<{
-						data: Record<string, unknown>[] | null;
-						error: PostgrestError | null;
-					}>;
-				};
-
-			const { data, error } = await fetchAllPages(
-				makePage(ORDERS_SELECT_WITH_ATTACHMENTS),
-			);
-			if (error && isMissingAttachmentColumnError(error)) {
-				const { data: fallbackData, error: fallbackError } =
-					await fetchAllPages(makePage(ORDERS_SELECT_BASE));
-				if (fallbackError) handleSupabaseError(fallbackError);
-				return fallbackData;
-			}
-			if (error) handleSupabaseError(error);
-			return data;
+			return fetchRawOrders(stage);
 		},
 
 		async fetchMappedOrders(stage: OrderStage): Promise<PendingRow[]> {
@@ -125,6 +138,29 @@ export function createOrderQueryRepository(
 				if (err instanceof OrderMappingError) throw err;
 				throw new OrderMappingError(
 					`Unexpected mapping failure in fetchMappedOrders: ${String(err)}`,
+				);
+			}
+		},
+
+		// #250: warranty-archival candidate fetch. repairSystem equality is
+		// applied in the database so the sweep never loads full stage
+		// datasets; warranty-expiry evaluation stays in memory because the
+		// effective end date (explicit endWarranty or startWarranty + 3y)
+		// cannot be expressed as a PostgREST filter.
+		async fetchMappedOrdersByRepairSystem(
+			stage: OrderStage,
+			repairSystem: string,
+		): Promise<PendingRow[]> {
+			const data = await fetchRawOrders(stage, repairSystem);
+			if (!data) return [];
+			try {
+				return data.map((row) =>
+					mapSupabaseOrder(row as Record<string, unknown>),
+				);
+			} catch (err) {
+				if (err instanceof OrderMappingError) throw err;
+				throw new OrderMappingError(
+					`Unexpected mapping failure in fetchMappedOrdersByRepairSystem: ${String(err)}`,
 				);
 			}
 		},

@@ -16,10 +16,13 @@ vi.mock("@/lib/archivePayloadBuilder", () => ({
 }));
 
 const mockFetchMappedOrders = vi.fn();
+const mockFetchMappedOrdersByRepairSystem = vi.fn();
 const mockSaveOrder = vi.fn();
 vi.mock("@/services/orderService", () => ({
 	orderService: {
 		fetchMappedOrders: (...args: unknown[]) => mockFetchMappedOrders(...args),
+		fetchMappedOrdersByRepairSystem: (...args: unknown[]) =>
+			mockFetchMappedOrdersByRepairSystem(...args),
 		saveOrder: (...args: unknown[]) => mockSaveOrder(...args),
 	},
 }));
@@ -45,7 +48,7 @@ const ACTIVE_STAGES_COUNT = 4;
 describe("warrantyMaintenanceService", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockFetchMappedOrders.mockResolvedValue([]);
+		mockFetchMappedOrdersByRepairSystem.mockResolvedValue([]);
 		mockSaveOrder.mockResolvedValue(undefined);
 	});
 
@@ -53,19 +56,42 @@ describe("warrantyMaintenanceService", () => {
 		const result = await warrantyMaintenanceService.archiveExpiredWarranties();
 
 		expect(result).toEqual({ archived: 0, errors: 0 });
-		expect(mockFetchMappedOrders).toHaveBeenCalledTimes(ACTIVE_STAGES_COUNT);
-		expect(mockFetchMappedOrders).toHaveBeenCalledTimes(4);
-		expect(mockFetchMappedOrders).not.toHaveBeenCalledWith("freeze");
-		expect(mockFetchMappedOrders).toHaveBeenCalledWith("orders");
-		expect(mockFetchMappedOrders).toHaveBeenCalledWith("main");
-		expect(mockFetchMappedOrders).toHaveBeenCalledWith("call");
-		expect(mockFetchMappedOrders).toHaveBeenCalledWith("booking");
+		expect(mockFetchMappedOrdersByRepairSystem).toHaveBeenCalledTimes(
+			ACTIVE_STAGES_COUNT,
+		);
+		expect(mockFetchMappedOrdersByRepairSystem).toHaveBeenCalledTimes(4);
+		expect(mockFetchMappedOrdersByRepairSystem).not.toHaveBeenCalledWith(
+			"freeze",
+			expect.anything(),
+		);
+		expect(mockFetchMappedOrdersByRepairSystem).toHaveBeenCalledWith(
+			"orders",
+			"ضمان",
+		);
+		expect(mockFetchMappedOrdersByRepairSystem).toHaveBeenCalledWith(
+			"main",
+			"ضمان",
+		);
+		expect(mockFetchMappedOrdersByRepairSystem).toHaveBeenCalledWith(
+			"call",
+			"ضمان",
+		);
+		expect(mockFetchMappedOrdersByRepairSystem).toHaveBeenCalledWith(
+			"booking",
+			"ضمان",
+		);
+	});
+
+	it("never performs unfiltered full-stage reads during the sweep", async () => {
+		await warrantyMaintenanceService.archiveExpiredWarranties();
+
+		expect(mockFetchMappedOrders).not.toHaveBeenCalled();
 	});
 
 	it("archives expired warranty rows found in active stages", async () => {
 		const expiredRow = makeWarrantyRow({ id: "exp-1", stage: "orders" });
-		mockFetchMappedOrders.mockImplementation(async (stage: string) =>
-			stage === "orders" ? [expiredRow] : [],
+		mockFetchMappedOrdersByRepairSystem.mockImplementation(
+			async (stage: string) => (stage === "orders" ? [expiredRow] : []),
 		);
 
 		const result = await warrantyMaintenanceService.archiveExpiredWarranties();
@@ -84,8 +110,8 @@ describe("warrantyMaintenanceService", () => {
 
 	it("handles errors during archiving and counts them", async () => {
 		const expiredRow = makeWarrantyRow({ id: "exp-2", stage: "main" });
-		mockFetchMappedOrders.mockImplementation(async (stage: string) =>
-			stage === "main" ? [expiredRow] : [],
+		mockFetchMappedOrdersByRepairSystem.mockImplementation(
+			async (stage: string) => (stage === "main" ? [expiredRow] : []),
 		);
 		mockSaveOrder.mockRejectedValue(new Error("Save failed"));
 
@@ -104,7 +130,10 @@ describe("warrantyMaintenanceService", () => {
 			repairSystem: "ضمان",
 			endWarranty: "2099-01-01",
 		});
-		mockFetchMappedOrders.mockResolvedValue([nonWarrantyRow, unexpiredRow]);
+		mockFetchMappedOrdersByRepairSystem.mockResolvedValue([
+			nonWarrantyRow,
+			unexpiredRow,
+		]);
 
 		const result = await warrantyMaintenanceService.archiveExpiredWarranties();
 
