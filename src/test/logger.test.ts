@@ -106,4 +106,77 @@ describe("logger structured logging (#254)", () => {
 
 		expect(debugSpy).not.toHaveBeenCalled();
 	});
+
+	it("serializes BigInt payloads in production without throwing", () => {
+		vi.stubEnv("NODE_ENV", "production");
+
+		expect(() => logger.warn("bigint", { value: BigInt(10) })).not.toThrow();
+
+		expect(warnSpy).toHaveBeenCalledTimes(1);
+		const record = parseJsonRecord(warnSpy.mock.calls[0]?.[0]);
+		expect(record.message).toBe("bigint");
+		expect(record.data).toEqual({ value: "10" });
+	});
+
+	it("sanitizes circular child context without throwing in production", () => {
+		vi.stubEnv("NODE_ENV", "production");
+		const circular: Record<string, unknown> = { tag: "x" };
+		circular.self = circular;
+
+		const bound = logger.child(circular);
+
+		expect(() => bound.warn("bound-circular")).not.toThrow();
+
+		expect(warnSpy).toHaveBeenCalledTimes(1);
+		const record = parseJsonRecord(warnSpy.mock.calls[0]?.[0]);
+		expect(record.message).toBe("bound-circular");
+		expect(JSON.stringify(record)).toContain("[Circular]");
+	});
+
+	it("applies chained child contexts with last-write-wins", () => {
+		vi.stubEnv("NODE_ENV", "production");
+
+		const chained = logger
+			.child({ requestId: "req-1", shared: "outer" })
+			.child({ shared: "inner", traceId: "t-1" });
+		chained.warn("chained");
+
+		expect(warnSpy).toHaveBeenCalledTimes(1);
+		const record = parseJsonRecord(warnSpy.mock.calls[0]?.[0]);
+		expect(record.requestId).toBe("req-1");
+		expect(record.shared).toBe("inner");
+		expect(record.traceId).toBe("t-1");
+	});
+
+	it("merges bound context into dev console payloads", () => {
+		vi.stubEnv("NODE_ENV", "development");
+
+		const bound = logger.child({ requestId: "req-1" });
+		bound.warn("dev-bound", { a: 1 });
+
+		expect(warnSpy).toHaveBeenCalledTimes(1);
+		expect(warnSpy.mock.calls[0]?.[0]).toBe("dev-bound");
+		expect(warnSpy.mock.calls[0]?.[1]).toEqual({
+			requestId: "req-1",
+			data: { a: 1 },
+		});
+
+		bound.warn("dev-bound-plain");
+
+		expect(warnSpy.mock.calls[1]?.[0]).toBe("dev-bound-plain");
+		expect(warnSpy.mock.calls[1]?.[1]).toEqual({ requestId: "req-1" });
+	});
+
+	it("serializes Date payloads to ISO strings in production", () => {
+		vi.stubEnv("NODE_ENV", "production");
+		const date = new Date("2024-01-02T03:04:05.000Z");
+
+		logger.warn("dated", { at: date });
+
+		expect(warnSpy).toHaveBeenCalledTimes(1);
+		const record = parseJsonRecord(warnSpy.mock.calls[0]?.[0]);
+		expect((record.data as Record<string, unknown>).at).toBe(
+			date.toISOString(),
+		);
+	});
 });
