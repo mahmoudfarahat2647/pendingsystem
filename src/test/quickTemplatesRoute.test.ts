@@ -18,6 +18,14 @@ vi.mock("@/lib/auth", () => ({
 	},
 }));
 
+vi.mock("@/lib/logger", () => ({
+	logger: {
+		debug: vi.fn(),
+		warn: vi.fn(),
+		error: vi.fn(),
+	},
+}));
+
 const mockFrom = vi.fn();
 
 vi.mock("@supabase/supabase-js", () => ({
@@ -209,6 +217,35 @@ describe("GET /api/quick-templates", () => {
 		expect(res.status).toBe(200);
 		expect(chain.is).toHaveBeenCalledWith("stage", null);
 	});
+
+	it("returns a generic 500 body without leaking DB internals", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		const rawMessage = 'relation "public.quick_templates" does not exist';
+		mockFrom.mockReturnValue(
+			makeSupabaseChain({ data: null, error: { message: rawMessage } }),
+		);
+
+		const { GET } = await import("../app/api/quick-templates/route");
+		const res = await GET(
+			makeRequest(
+				"GET",
+				"http://localhost/api/quick-templates?category=reason",
+			),
+		);
+		expect(res.status).toBe(500);
+		expect(res.body).toEqual({ error: "Internal server error" });
+		expect(JSON.stringify(res.body)).not.toContain("quick_templates");
+
+		const { logger } = await import("@/lib/logger");
+		expect(vi.mocked(logger.error)).toHaveBeenCalledWith(
+			"[quick-templates GET]",
+			rawMessage,
+		);
+	});
 });
 
 describe("POST /api/quick-templates", () => {
@@ -381,6 +418,37 @@ describe("POST /api/quick-templates", () => {
 		);
 		expect(res.status).toBe(201);
 	});
+
+	it("returns a generic 500 body without leaking DB internals", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		const rawMessage =
+			'duplicate key value violates unique constraint "quick_templates_text_idx"';
+		mockFrom.mockReturnValue(
+			makeSupabaseChain({ data: null, error: { message: rawMessage } }),
+		);
+
+		const { POST } = await import("../app/api/quick-templates/route");
+		const res = await POST(
+			makeRequest("POST", "http://localhost/api/quick-templates", {
+				category: "note",
+				text: "Hi",
+				stage: "booking",
+			}),
+		);
+		expect(res.status).toBe(500);
+		expect(res.body).toEqual({ error: "Internal server error" });
+		expect(JSON.stringify(res.body)).not.toContain("quick_templates_text_idx");
+
+		const { logger } = await import("@/lib/logger");
+		expect(vi.mocked(logger.error)).toHaveBeenCalledWith(
+			"[quick-templates POST]",
+			rawMessage,
+		);
+	});
 });
 
 describe("DELETE /api/quick-templates", () => {
@@ -486,5 +554,34 @@ describe("DELETE /api/quick-templates", () => {
 			),
 		);
 		expect(res.status).toBe(404);
+	});
+
+	it("returns a generic 500 body without leaking DB internals", async () => {
+		const { auth } = await import("@/lib/auth");
+		vi.mocked(auth.api.getSession).mockResolvedValue({
+			user: { id: "u1" },
+		} as never);
+
+		const rawMessage = 'permission denied for table "quick_templates"';
+		mockFrom.mockReturnValue(
+			makeSupabaseChain({ error: { message: rawMessage }, count: 0 }),
+		);
+
+		const { DELETE } = await import("../app/api/quick-templates/route");
+		const res = await DELETE(
+			makeRequest(
+				"DELETE",
+				"http://localhost/api/quick-templates?id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee&category=note&stage=archive",
+			),
+		);
+		expect(res.status).toBe(500);
+		expect(res.body).toEqual({ error: "Internal server error" });
+		expect(JSON.stringify(res.body)).not.toContain("quick_templates");
+
+		const { logger } = await import("@/lib/logger");
+		expect(vi.mocked(logger.error)).toHaveBeenCalledWith(
+			"[quick-templates DELETE]",
+			rawMessage,
+		);
 	});
 });

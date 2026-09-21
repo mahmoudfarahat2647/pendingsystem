@@ -39,7 +39,10 @@ export async function GET(req: NextRequest) {
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : "Database error";
 		logger.error("[quick-templates GET]", message);
-		return NextResponse.json({ error: message }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }
 
@@ -70,7 +73,10 @@ export async function POST(req: NextRequest) {
 			);
 		const message = error instanceof Error ? error.message : "Database error";
 		logger.error("[quick-templates POST]", message);
-		return NextResponse.json({ error: message }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }
 
@@ -100,6 +106,9 @@ export async function DELETE(req: NextRequest) {
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : "Database error";
 		logger.error("[quick-templates DELETE]", message);
-		return NextResponse.json({ error: message }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }
