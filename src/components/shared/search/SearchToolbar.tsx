@@ -32,7 +32,7 @@ import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
 
-interface SearchToolbarProps {
+export interface SearchToolbarProps {
 	selectedCount: number;
 	isSameSource: boolean;
 	disabledReason: string;
