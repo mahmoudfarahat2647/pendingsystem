@@ -64,7 +64,10 @@ export const exportToLogisticsXLSX = async (
  * pass through untouched; callers keep existing `"`-escaping and BOM handling.
  */
 export const sanitizeCsvField = (value: unknown): string => {
-	const text = value === null || value === undefined ? "" : String(value);
+	if (value === null || value === undefined) return "";
+	const text =
+		typeof value === "object" ? JSON.stringify(value) : String(value);
+	// Only a trigger at char 0 executes in Excel/Sheets, so leading-whitespace payloads intentionally pass.
 	if (
 		text.startsWith("=") ||
 		text.startsWith("+") ||
@@ -91,8 +94,10 @@ const exportToCSV = (
 	const rows = data.map((item) =>
 		columnHeaders
 			.map((header) => {
-				const val = item[header] || "";
-				return `"${sanitizeCsvField(val).replace(/"/g, '""')}"`;
+				const val = item[header] ?? "";
+				const stringVal = sanitizeCsvField(val);
+				// Always quoted, so `,`, `"`, `\n`, `\r` stay in-field (same set as the csvUtils.mjs `|| stringVal.includes("\r")` quoting guard).
+				return `"${stringVal.replace(/"/g, '""')}"`;
 			})
 			.join(","),
 	);
