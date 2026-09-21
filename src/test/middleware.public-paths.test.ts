@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
 	"/api/password-reset",
 	"/mobile-order",
 	"/api/mobile-order",
+	"/api/maintenance",
 ];
 
 function isPublicPath(pathname: string): boolean {
@@ -25,6 +26,11 @@ describe("public path matching", () => {
 	});
 	it("allows /api/mobile-order", () => {
 		expect(isPublicPath("/api/mobile-order")).toBe(true);
+	});
+	it("allows /api/maintenance/archive-expired-warranties", () => {
+		expect(isPublicPath("/api/maintenance/archive-expired-warranties")).toBe(
+			true,
+		);
 	});
 	it("still blocks /orders", () => {
 		expect(isPublicPath("/orders")).toBe(false);
