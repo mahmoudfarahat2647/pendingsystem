@@ -443,6 +443,25 @@ try {
 	process.exit(1);
 }
 
+// CSV formula-injection sanitizer (issue #252) — mirrors `sanitizeCsvField`
+// in src/lib/exportUtils.ts (scripts can't import TS; keep the two in sync).
+// Rule: after converting to string, prefix a single quote when the first
+// character is `=`, `+`, `-`, or `@`. See the TS source for the audit notes.
+function sanitizeCsvValue(val) {
+	if (val === null || val === undefined) return "";
+	const stringVal =
+		typeof val === "object" ? JSON.stringify(val) : String(val);
+	if (
+		stringVal.startsWith("=") ||
+		stringVal.startsWith("+") ||
+		stringVal.startsWith("-") ||
+		stringVal.startsWith("@")
+	) {
+		return `'${stringVal}`;
+	}
+	return stringVal;
+}
+
 function generateCSV(data, headers) {
 	if (data.length === 0) return "";
 	const columnHeaders = headers || Object.keys(data[0]);
@@ -452,8 +471,7 @@ function generateCSV(data, headers) {
 		const values = columnHeaders.map((header) => {
 			const val = item[header];
 			if (val === null || val === undefined) return "";
-			const stringVal =
-				typeof val === "object" ? JSON.stringify(val) : String(val);
+			const stringVal = sanitizeCsvValue(val);
 			if (
 				stringVal.includes(",") ||
 				stringVal.includes('"') ||

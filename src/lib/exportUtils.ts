@@ -43,6 +43,40 @@ export const exportToLogisticsXLSX = async (
 };
 
 /**
+ * CSV formula-injection sanitizer (issue #252).
+ *
+ * Audit finding: both CSV writers (`exportToCSV` here and `generateCSV` in
+ * `scripts/generate-backup.mjs`) interpolated DB/user-sourced free-text fields
+ * with only `"`-escaping and no formula neutralization. Affected fields include
+ * customerName, partNumber, description/partDescription, vin, model, mobile,
+ * requester/acceptedBy, sabNumber, repairSystem, status/bookingStatus,
+ * noteHistory/noteContent/actionNote/bookingNote, reminder subject text
+ * (reminderText/reminderSubject), archiveReason, and freezeReason. A value such
+ * as `=HYPERLINK(...)` would be executed as a formula by spreadsheet apps on
+ * open. The xlsx writers (`exportToXLSX` here, `reportExcel.ts`) build string
+ * cells via SheetJS `json_to_sheet` (cell type "s", never "f"), so a leading
+ * `=` is stored as literal text and needs no change there.
+ *
+ * Rule (OWASP CSV injection): after converting to string, if the first
+ * character is `=`, `+`, `-`, or `@`, prefix a single quote `'`. Excel/Sheets
+ * render the leading `'` as a text marker (not displayed), so legitimate data
+ * is preserved and only the formula trigger is neutralized. All other values
+ * pass through untouched; callers keep existing `"`-escaping and BOM handling.
+ */
+export const sanitizeCsvField = (value: unknown): string => {
+	const text = value === null || value === undefined ? "" : String(value);
+	if (
+		text.startsWith("=") ||
+		text.startsWith("+") ||
+		text.startsWith("-") ||
+		text.startsWith("@")
+	) {
+		return `'${text}`;
+	}
+	return text;
+};
+
+/**
  * Exports data to a CSV file.
  */
 const exportToCSV = (
@@ -58,7 +92,7 @@ const exportToCSV = (
 		columnHeaders
 			.map((header) => {
 				const val = item[header] || "";
-				return `"${String(val).replace(/"/g, '""')}"`;
+				return `"${sanitizeCsvField(val).replace(/"/g, '""')}"`;
 			})
 			.join(","),
 	);
