@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createOrderQueryRepository } from "@/services/order/orderQueryRepository";
 
 // Issue #248 regression coverage: the part-number lookups keep their ILIKE
-// exact-match query shape (served by orders_partnumber_trgm_idx; PostgREST
-// can't address the upper() functional index from the client), so these
+// exact-match query shape (served by orders_partnumber_trgm_idx; an upper()
+// functional index is deferred since PostgREST can't address upper() from
+// the client), so these
 // tests lock the observable duplicate-detection / description-conflict
 // behavior — case-insensitive exact match, exclude-id handling, guards —
 // rather than performance.
@@ -18,17 +19,22 @@ type Row = {
 function makeDb(rows: Row[] | null, error: unknown = null) {
 	const ilike = vi.fn().mockReturnThis();
 	const filter = vi.fn().mockReturnThis();
+	const eq = vi.fn().mockReturnThis();
+	const order = vi.fn().mockReturnThis();
 	const range = vi.fn().mockResolvedValue({ data: rows, error });
 	const chainable = {
 		select: vi.fn().mockReturnThis(),
+		eq,
 		ilike,
 		filter,
-		order: vi.fn().mockReturnThis(),
+		order,
 		range,
 	};
 	const from = vi.fn().mockReturnValue(chainable);
 	return {
 		db: { from } as unknown as Parameters<typeof createOrderQueryRepository>[0],
+		eq,
+		order,
 		ilike,
 		filter,
 		range,
@@ -247,6 +253,21 @@ describe("orderQueryRepository part-number indexes (#248) — behavior unchanged
 				"ilike",
 				"PART\\_A\\%",
 			);
+		});
+	});
+
+	describe("getOrders", () => {
+		it("issues the stage + ordering shape served by the composite index", async () => {
+			const { db, eq, order } = makeDb([]);
+			const repo = createOrderQueryRepository(db);
+
+			await repo.getOrders("orders");
+
+			expect(eq).toHaveBeenCalledWith("stage", "orders");
+			expect(order).toHaveBeenCalledWith("created_at", {
+				ascending: false,
+			});
+			expect(order).toHaveBeenCalledWith("id", { ascending: true });
 		});
 	});
 });

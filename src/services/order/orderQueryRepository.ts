@@ -196,10 +196,10 @@ export function createOrderQueryRepository(
 						// served by orders_partnumber_trgm_idx (GIN pg_trgm on
 						// metadata->>'partNumber'). PostgREST (postgrest-js) only
 						// filters on real columns / JSON-arrow paths, not upper(...)
-						// expressions, so the functional btree index
-						// orders_partnumber_upper_idx can't be addressed from this
-						// client query — it remains for a future RPC/direct-SQL
-						// equality path. escapeLikePattern keeps the VIN ILIKE
+						// expressions, so an upper() functional btree index can't
+						// be addressed from this client query — deferred:
+						// reintroduce with the RPC/direct-SQL upper()=equality
+						// path. escapeLikePattern keeps the VIN ILIKE
 						// literal (no active wildcards); the client-side
 						// toUpperCase() recheck below preserves exact match
 						// semantics.
@@ -262,11 +262,10 @@ export function createOrderQueryRepository(
 						.select("id, vin, stage, metadata")
 						// #248: same index story as checkHistoricalVinPartDuplicate —
 						// ILIKE exact-match served by orders_partnumber_trgm_idx
-						// (GIN pg_trgm); the functional btree index
-						// orders_partnumber_upper_idx is reserved for a future
-						// RPC/direct-SQL upper() equality path PostgREST can't
-						// express. Client-side toUpperCase() recheck below keeps
-						// exact match semantics.
+						// (GIN pg_trgm); an upper() functional btree index is
+						// deferred (reintroduce with the RPC/direct-SQL upper()
+						// equality path PostgREST can't express). Client-side
+						// toUpperCase() recheck below keeps exact match semantics.
 						.filter(
 							"metadata->>partNumber",
 							"ilike",
