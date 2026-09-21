@@ -75,6 +75,21 @@ async function scanPages<T, R>(
 	return { result: undefined, error: null };
 }
 
+function mapOrderRows(
+	data: Record<string, unknown>[] | null,
+	operation: string,
+): PendingRow[] {
+	if (!data) return [];
+	try {
+		return data.map((row) => mapSupabaseOrder(row));
+	} catch (err) {
+		if (err instanceof OrderMappingError) throw err;
+		throw new OrderMappingError(
+			`Unexpected mapping failure in ${operation}: ${String(err)}`,
+		);
+	}
+}
+
 export function createOrderQueryRepository(
 	db: typeof supabaseDefault = supabaseDefault,
 ) {
@@ -83,7 +98,15 @@ export function createOrderQueryRepository(
 	// is exactly the historical getOrders shape; when present, an additional
 	// server-side `metadata->>repairSystem` equality narrows the result set
 	// before any row reaches Node.js.
-	async function fetchRawOrders(stage?: OrderStage, repairSystem?: string) {
+	type WarrantyExpiryFilter =
+		| { kind: "explicit-end"; before: string }
+		| { kind: "fallback-start"; beforeOrOn: string };
+
+	async function fetchRawOrders(
+		stage?: OrderStage,
+		repairSystem?: string,
+		warrantyExpiry?: WarrantyExpiryFilter,
+	) {
 		// A secondary `.order("id")` tiebreak is required so pages don't skip
 		// or duplicate rows when `created_at` values tie at a page boundary.
 		// #248: served by orders_stage_created_at_id_idx on
@@ -97,6 +120,25 @@ export function createOrderQueryRepository(
 				}
 				if (repairSystem) {
 					q = q.filter("metadata->>repairSystem", "eq", repairSystem);
+				}
+				if (warrantyExpiry?.kind === "explicit-end") {
+					q = q
+						.not("metadata->>endWarranty", "is", null)
+						.filter("metadata->>endWarranty", "neq", "")
+						.or(
+							`metadata->>endWarranty.lt.${warrantyExpiry.before},metadata->>endWarranty.not.like.____-__-__`,
+						);
+				}
+				if (warrantyExpiry?.kind === "fallback-start") {
+					q = q
+						.or("metadata->>endWarranty.is.null,metadata->>endWarranty.eq.")
+						.not("metadata->>startWarranty", "is", null)
+						.filter("metadata->>startWarranty", "neq", "")
+						.filter(
+							"metadata->>startWarranty",
+							"lte",
+							warrantyExpiry.beforeOrOn,
+						);
 				}
 				return q
 					.order("created_at", { ascending: false })
@@ -129,40 +171,51 @@ export function createOrderQueryRepository(
 		async fetchMappedOrders(stage: OrderStage): Promise<PendingRow[]> {
 			const queryRepo = createOrderQueryRepository(db);
 			const data = await queryRepo.getOrders(stage);
-			if (!data) return [];
-			try {
-				return data.map((row) =>
-					mapSupabaseOrder(row as Record<string, unknown>),
-				);
-			} catch (err) {
-				if (err instanceof OrderMappingError) throw err;
-				throw new OrderMappingError(
-					`Unexpected mapping failure in fetchMappedOrders: ${String(err)}`,
-				);
-			}
+			return mapOrderRows(data, "fetchMappedOrders");
 		},
 
 		// #250: warranty-archival candidate fetch. repairSystem equality is
 		// applied in the database so the sweep never loads full stage
-		// datasets; warranty-expiry evaluation stays in memory because the
-		// effective end date (explicit endWarranty or startWarranty + 3y)
-		// cannot be expressed as a PostgREST filter.
+		// datasets. When expiredAsOf is supplied, separate explicit-end and
+		// fallback-start queries push a conservative expiry candidate filter
+		// into PostgREST; the maintenance service still performs the exact
+		// domain check before archiving.
 		async fetchMappedOrdersByRepairSystem(
 			stage: OrderStage,
 			repairSystem: string,
+			expiredAsOf?: Date,
 		): Promise<PendingRow[]> {
-			const data = await fetchRawOrders(stage, repairSystem);
-			if (!data) return [];
-			try {
-				return data.map((row) =>
-					mapSupabaseOrder(row as Record<string, unknown>),
+			let data: Record<string, unknown>[] | null;
+			if (expiredAsOf) {
+				const formatLocalDate = (date: Date) =>
+					[
+						date.getFullYear(),
+						String(date.getMonth() + 1).padStart(2, "0"),
+						String(date.getDate()).padStart(2, "0"),
+					].join("-");
+				const warrantyStartCutoff = new Date(expiredAsOf);
+				warrantyStartCutoff.setFullYear(warrantyStartCutoff.getFullYear() - 3);
+				const [explicitEndRows, fallbackStartRows] = await Promise.all([
+					fetchRawOrders(stage, repairSystem, {
+						kind: "explicit-end",
+						before: formatLocalDate(expiredAsOf),
+					}),
+					fetchRawOrders(stage, repairSystem, {
+						kind: "fallback-start",
+						beforeOrOn: formatLocalDate(warrantyStartCutoff),
+					}),
+				]);
+				data = Array.from(
+					new Map(
+						[...(explicitEndRows ?? []), ...(fallbackStartRows ?? [])].map(
+							(row) => [String(row.id), row],
+						),
+					).values(),
 				);
-			} catch (err) {
-				if (err instanceof OrderMappingError) throw err;
-				throw new OrderMappingError(
-					`Unexpected mapping failure in fetchMappedOrdersByRepairSystem: ${String(err)}`,
-				);
+			} else {
+				data = await fetchRawOrders(stage, repairSystem);
 			}
+			return mapOrderRows(data, "fetchMappedOrdersByRepairSystem");
 		},
 
 		async getDashboardStats(): Promise<OrderStageCounts> {

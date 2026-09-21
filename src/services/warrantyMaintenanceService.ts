@@ -25,14 +25,16 @@ export const warrantyMaintenanceService = {
 		archived: number;
 		errors: number;
 	}> {
+		const expiredAsOf = new Date();
 		const results = await Promise.all(
 			ACTIVE_STAGES.map((stage) =>
-				// #250: repairSystem is filtered in the database so only
-				// warranty rows are loaded; expiry is still evaluated in
-				// memory via findExpiredWarrantyRows below.
+				// #250: repairSystem and conservative expiry candidacy are filtered
+				// in the database. findExpiredWarrantyRows remains the final domain
+				// check so archive behavior stays unchanged.
 				orderService.fetchMappedOrdersByRepairSystem(
 					stage as OrderStage,
 					WARRANTY_REPAIR_SYSTEM,
+					expiredAsOf,
 				),
 			),
 		);

@@ -63,23 +63,32 @@ describe("warrantyMaintenanceService", () => {
 		expect(mockFetchMappedOrdersByRepairSystem).not.toHaveBeenCalledWith(
 			"freeze",
 			expect.anything(),
+			expect.any(Date),
 		);
 		expect(mockFetchMappedOrdersByRepairSystem).toHaveBeenCalledWith(
 			"orders",
 			"ضمان",
+			expect.any(Date),
 		);
 		expect(mockFetchMappedOrdersByRepairSystem).toHaveBeenCalledWith(
 			"main",
 			"ضمان",
+			expect.any(Date),
 		);
 		expect(mockFetchMappedOrdersByRepairSystem).toHaveBeenCalledWith(
 			"call",
 			"ضمان",
+			expect.any(Date),
 		);
 		expect(mockFetchMappedOrdersByRepairSystem).toHaveBeenCalledWith(
 			"booking",
 			"ضمان",
+			expect.any(Date),
 		);
+		const expiryDates = mockFetchMappedOrdersByRepairSystem.mock.calls.map(
+			([, , expiredAsOf]) => expiredAsOf,
+		);
+		expect(new Set(expiryDates).size).toBe(1);
 	});
 
 	it("never performs unfiltered full-stage reads during the sweep", async () => {

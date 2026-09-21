@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createOrderQueryRepository } from "@/services/order/orderQueryRepository";
 
@@ -78,6 +79,63 @@ describe("orderQueryRepository fetchMappedOrdersByRepairSystem (#250)", () => {
 		expect(rows).toHaveLength(1);
 		expect(rows[0].id).toBe("row-1");
 		expect(rows[0].repairSystem).toBe("ضمان");
+	});
+
+	it("transfers only database-filtered expiry candidates", async () => {
+		const expired = makeRawRow("expired", "orders");
+		const future = {
+			...makeRawRow("future", "orders"),
+			metadata: { repairSystem: "ضمان", endWarranty: "2099-01-01" },
+		};
+		const requests: URL[] = [];
+		const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+			const url = new URL(
+				input instanceof Request ? input.url : input.toString(),
+			);
+			requests.push(url);
+			const orFilter = url.searchParams.get("or") ?? "";
+			const startWarrantyFilters = url.searchParams.getAll(
+				"metadata->>startWarranty",
+			);
+			const rows = orFilter.includes("endWarranty.lt.2026-09-21")
+				? [expired]
+				: startWarrantyFilters.includes("lte.2023-09-21")
+					? []
+					: [expired, future];
+
+			return new Response(JSON.stringify(rows), {
+				status: 200,
+				headers: {
+					"Content-Type": "application/json",
+					"Content-Range": rows.length > 0 ? `0-${rows.length - 1}/*` : "*/0",
+				},
+			});
+		});
+		const db = createClient("https://example.supabase.co", "test-key", {
+			auth: { persistSession: false },
+			global: { fetch: fetchMock },
+		});
+		const repo = createOrderQueryRepository(db);
+		const fetchCandidates = repo.fetchMappedOrdersByRepairSystem as unknown as (
+			stage: "orders",
+			repairSystem: string,
+			asOf: Date,
+		) => Promise<Array<{ id: string }>>;
+
+		const rows = await fetchCandidates("orders", "ضمان", new Date(2026, 8, 21));
+
+		expect(requests).toHaveLength(2);
+		const serializedFilters = requests.flatMap((url) => [
+			url.searchParams.get("or") ?? "",
+			...url.searchParams.getAll("metadata->>startWarranty"),
+		]);
+		expect(serializedFilters).toEqual(
+			expect.arrayContaining([
+				expect.stringContaining("endWarranty.lt.2026-09-21"),
+				expect.stringContaining("lte.2023-09-21"),
+			]),
+		);
+		expect(rows.map((row) => row.id)).toEqual(["expired"]);
 	});
 
 	it("pages through the full filtered result set", async () => {
