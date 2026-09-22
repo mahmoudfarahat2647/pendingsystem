@@ -11,7 +11,20 @@ export function parseDateLocal(dateInput: string | Date): Date {
 	const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateInput);
 	if (dateOnlyMatch) {
 		const [, year, month, day] = dateOnlyMatch;
-		return new Date(Number(year), Number(month) - 1, Number(day));
+		const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+
+		// The Date constructor normalizes overflow (for example, 2026-02-30
+		// becomes March 2). Date-only values are calendar data, so reject an
+		// impossible ISO date instead of silently displaying a different day.
+		if (
+			parsed.getFullYear() !== Number(year) ||
+			parsed.getMonth() !== Number(month) - 1 ||
+			parsed.getDate() !== Number(day)
+		) {
+			return new Date(Number.NaN);
+		}
+
+		return parsed;
 	}
 
 	return new Date(dateInput);

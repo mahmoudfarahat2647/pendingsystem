@@ -69,6 +69,12 @@ describe("formatDate", () => {
 		expect(formatDate("not-a-date", "en", undefined, "N/A")).toBe("N/A");
 	});
 
+	it("returns the fallback for impossible date-only ISO values instead of normalizing them", () => {
+		expect(formatDate("2026-02-30", "en")).toBe("—");
+		expect(formatDate("2025-02-29", "ar", undefined, "N/A")).toBe("N/A");
+		expect(formatDate("2024-02-29", "en", { day: "numeric" })).toBe("29");
+	});
+
 	it("accepts a Date instance directly", () => {
 		const fixed = new Date(2026, 5, 10); // June 10 2026, local midnight
 		expect(formatDate(fixed, "en")).toBe("June 10, 2026");
