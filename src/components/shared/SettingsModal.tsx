@@ -1,7 +1,6 @@
 "use client";
 
 import {
-	Globe,
 	Lock,
 	Palette,
 	PencilLine,
@@ -14,12 +13,10 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useTranslation } from "@/hooks/useTranslation";
 import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import BackupReportsTab from "../reports/BackupReportsTab";
-import { LanguageTab } from "./settings/LanguageTab";
 import { PartStatusTab } from "./settings/PartStatusTab";
 import { PermissionTab } from "./settings/PermissionTab";
 import { ThemeTab } from "./settings/ThemeTab";
@@ -33,8 +30,7 @@ type TabType =
 	| "part-statuses"
 	| "theme-color"
 	| "backup-reports"
-	| "permission"
-	| "language";
+	| "permission";
 
 // Client-side only settings password (defaults to env var or falls back for development)
 const _getSettingsPassword = (): string | undefined => {
@@ -53,7 +49,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 	const isLocked = useAppStore((state) => state.isLocked);
 	const setIsLocked = useAppStore((state) => state.setIsLocked);
-	const { t } = useTranslation();
 
 	const navItems = [
 		{ id: "part-statuses", label: "Statuses", icon: Tag },
@@ -61,7 +56,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 		{ id: "backup-reports", label: "Backup & Reports", icon: Shield },
 		{ id: "permission", label: "Permission", icon: PencilLine },
-		{ id: "language", label: t("settings.language.navLabel"), icon: Globe },
 	];
 
 	const handleUnlock = (attempt: string) => {
@@ -90,7 +84,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 					<div className="p-6 flex items-center gap-2 border-b border-white/5">
 						<SettingsIcon className="h-5 w-5 text-gray-400" />
 						<DialogTitle className="font-bold text-lg tracking-tight">
-							{t("settings.title")}
+							Settings
 						</DialogTitle>
 					</div>
 					<nav className="flex-1 p-3 space-y-1">
@@ -217,8 +211,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 								{activeTab === "backup-reports" && "Backup & Reports Settings"}
 								{activeTab === "permission" && "Grid Edit Permission"}
-								{activeTab === "language" &&
-									t("settings.language.sectionTitle")}
 							</h3>
 							<p className="text-xs text-gray-400">
 								{activeTab === "part-statuses" &&
@@ -230,8 +222,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									"Configure automated reports and manage data backups."}
 								{activeTab === "permission" &&
 									"Control whether grid cells can be edited directly on non-Orders stages."}
-								{activeTab === "language" &&
-									t("settings.language.sectionDescription")}
 							</p>
 						</div>
 					</header>
@@ -250,8 +240,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 						{activeTab === "permission" && (
 							<PermissionTab isLocked={isLocked} />
 						)}
-
-						{activeTab === "language" && <LanguageTab />}
 					</div>
 				</div>
 			</DialogContent>
