@@ -41,6 +41,10 @@ export const SearchResultsView = () => {
 		sourceOptions,
 		activeSourceFilter,
 		handleSourceFilterChange,
+		availableCompanies,
+		selectedCompanies,
+		handleCompanyFilterChange,
+		handleCompanyFilterClear,
 		modelOptions,
 		selectedModels,
 		setSelectedModels,
@@ -109,6 +113,10 @@ export const SearchResultsView = () => {
 				sourceOptions={sourceOptions}
 				activeSourceFilter={activeSourceFilter}
 				onSourceFilterChange={handleSourceFilterChange}
+				availableCompanies={availableCompanies}
+				selectedCompanies={selectedCompanies}
+				onCompanyFilterChange={handleCompanyFilterChange}
+				onCompanyFilterClear={handleCompanyFilterClear}
 			/>
 
 			<div className="flex-1 p-6 overflow-hidden">
@@ -117,9 +125,13 @@ export const SearchResultsView = () => {
 				 * (1) `effectiveSourceFilter` is a render-time intersection with
 				 * `sourceOptions`, so a selected source can never yield 0 rows on its
 				 * own; if absent from current results, the filter self-heals to null.
-				 * (2) `modelOptions` are derived from `sourceFilteredResults`, so any
+				 * (2) `availableCompanies` is likewise a render-time intersection
+				 * against `sourceFilteredResults`, so a selected company can never
+				 * yield 0 rows on its own either.
+				 * (3) `modelOptions` are derived from `companyFilteredResults`, so any
 				 * selected model is guaranteed to match at least one row within the
-				 * selected source, and clearing selection falls back unchanged.
+				 * selected source and company, and clearing selection falls back
+				 * unchanged.
 				 * A single guard on `filteredResults.length` covers all cases.
 				 */}
 				{filteredResults.length > 0 ? (

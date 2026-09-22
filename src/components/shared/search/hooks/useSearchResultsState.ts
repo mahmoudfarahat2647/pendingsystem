@@ -20,6 +20,7 @@ import {
 	buildGlobalSearchString,
 	getMissingPartRows,
 } from "@/components/shared/search/searchUtils";
+import { ALLOWED_COMPANIES } from "@/domain/order/constants";
 import type { OrderStage } from "@/domain/order/orderStage";
 import {
 	appendTaggedUserNote,
@@ -40,6 +41,7 @@ import { buildReorderUpdates } from "@/lib/orderStageTransitions";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import {
 	filterRowsByValues,
+	getCompanyValue,
 	getModelValue,
 	getRowValueFilterOptions,
 } from "@/lib/rowValueFilter";
@@ -252,13 +254,75 @@ export const useSearchResultsState = () => {
 		[],
 	);
 
+	// Company filter (Global Search toolbar). Buttons are always rendered from the
+	// fixed ALLOWED_COMPANIES list; availability is derived from the source-filtered
+	// results so a company with no matching row renders disabled, mirroring how
+	// `sourceOptions` gates the stage dots. Multi-select: both selected behaves the
+	// same as neither.
+	const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
+
+	const availableCompanies = useMemo<string[]>(() => {
+		const available = new Set<string>();
+		for (const row of sourceFilteredResults) {
+			const company = getCompanyValue(row);
+			if (typeof company === "string" && company) {
+				available.add(company);
+			}
+		}
+		return ALLOWED_COMPANIES.filter((company) => available.has(company));
+	}, [sourceFilteredResults]);
+
+	// Intersect during render (not in an effect): a post-render prune would let one
+	// frame through with the new searchResults and the old selection, flashing an
+	// empty grid when the search term changes while a company button is still active.
+	const availableCompanySet = useMemo(
+		() => new Set(availableCompanies),
+		[availableCompanies],
+	);
+	const effectiveSelectedCompanies = useMemo(
+		() => selectedCompanies.filter((value) => availableCompanySet.has(value)),
+		[selectedCompanies, availableCompanySet],
+	);
+
+	const companyFilteredResults = useMemo(
+		() =>
+			filterRowsByValues(
+				sourceFilteredResults,
+				effectiveSelectedCompanies,
+				getCompanyValue,
+			),
+		[sourceFilteredResults, effectiveSelectedCompanies],
+	);
+
+	// Tidy the active company selection once a selected company disappears from
+	// the results. The render-time intersection above keeps `companyFilteredResults`
+	// correct in the meantime.
+	useEffect(() => {
+		setSelectedCompanies((current) => {
+			const next = current.filter((value) => availableCompanySet.has(value));
+			return next.length === current.length ? current : next;
+		});
+	}, [availableCompanySet]);
+
+	const handleCompanyFilterChange = useCallback((company: string) => {
+		setSelectedCompanies((current) =>
+			current.includes(company)
+				? current.filter((value) => value !== company)
+				: [...current, company],
+		);
+	}, []);
+
+	const handleCompanyFilterClear = useCallback(() => {
+		setSelectedCompanies([]);
+	}, []);
+
 	// Car model filter (Global Search toolbar). Options are derived from the
-	// source-filtered results so model chips always match >=1 visible row.
+	// company-filtered results so model chips always match >=1 visible row.
 	const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
 	const modelOptions = useMemo(
-		() => getRowValueFilterOptions(sourceFilteredResults, getModelValue),
-		[sourceFilteredResults],
+		() => getRowValueFilterOptions(companyFilteredResults, getModelValue),
+		[companyFilteredResults],
 	);
 
 	// Intersect during render (not in an effect): a post-render prune would let one
@@ -276,11 +340,11 @@ export const useSearchResultsState = () => {
 	const filteredResults = useMemo(
 		() =>
 			filterRowsByValues(
-				sourceFilteredResults,
+				companyFilteredResults,
 				effectiveSelectedModels,
 				getModelValue,
 			),
-		[sourceFilteredResults, effectiveSelectedModels],
+		[companyFilteredResults, effectiveSelectedModels],
 	);
 
 	// Tidy the rendered chips once a selected model disappears from the results
@@ -921,6 +985,10 @@ export const useSearchResultsState = () => {
 		sourceOptions,
 		activeSourceFilter,
 		handleSourceFilterChange,
+		availableCompanies,
+		selectedCompanies,
+		handleCompanyFilterChange,
+		handleCompanyFilterClear,
 		modelOptions,
 		selectedModels,
 		setSelectedModels,
