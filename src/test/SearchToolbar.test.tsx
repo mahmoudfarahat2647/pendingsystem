@@ -8,6 +8,7 @@ import {
 } from "@/components/shared/search/SearchToolbar";
 import { SEARCH_SOURCES } from "@/components/shared/search/searchSources";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ALLOWED_COMPANIES } from "@/domain/order/constants";
 
 const renderWithProvider = (ui: React.ReactElement) => {
 	return render(<TooltipProvider>{ui}</TooltipProvider>);
@@ -34,6 +35,10 @@ const defaultProps: SearchToolbarProps = {
 	sourceOptions: [],
 	activeSourceFilter: null,
 	onSourceFilterChange: vi.fn(),
+	availableCompanies: [],
+	selectedCompanies: [],
+	onCompanyFilterChange: vi.fn(),
+	onCompanyFilterClear: vi.fn(),
 };
 
 describe("SearchToolbar", () => {
@@ -154,6 +159,136 @@ describe("SearchToolbar", () => {
 
 			expect(onSourceFilterChange).toHaveBeenCalledTimes(1);
 			expect(onSourceFilterChange).toHaveBeenCalledWith(null);
+		});
+	});
+
+	describe("company filter buttons", () => {
+		it("renders one button per ALLOWED_COMPANIES entry", () => {
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					availableCompanies={[...ALLOWED_COMPANIES]}
+				/>,
+			);
+
+			for (const company of ALLOWED_COMPANIES) {
+				expect(
+					screen.getByRole("button", { name: `Filter ${company}` }),
+				).toBeInTheDocument();
+			}
+		});
+
+		it("disables buttons for companies absent from availableCompanies", () => {
+			renderWithProvider(
+				<SearchToolbar {...defaultProps} availableCompanies={["Zeekr"]} />,
+			);
+
+			expect(
+				screen.getByRole("button", { name: "Filter Zeekr" }),
+			).not.toBeDisabled();
+			expect(
+				screen.getByRole("button", { name: "Filter Renault" }),
+			).toBeDisabled();
+		});
+
+		it('marks a selected company with aria-pressed="true" and others with "false"', () => {
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					availableCompanies={[...ALLOWED_COMPANIES]}
+					selectedCompanies={["Zeekr"]}
+				/>,
+			);
+
+			expect(
+				screen
+					.getByRole("button", { name: "Filter Zeekr" })
+					.getAttribute("aria-pressed"),
+			).toBe("true");
+			expect(
+				screen
+					.getByRole("button", { name: "Filter Renault" })
+					.getAttribute("aria-pressed"),
+			).toBe("false");
+		});
+
+		it("calls onCompanyFilterChange with the company when an available button is clicked", () => {
+			const onCompanyFilterChange = vi.fn();
+
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					availableCompanies={["Zeekr"]}
+					onCompanyFilterChange={onCompanyFilterChange}
+				/>,
+			);
+
+			fireEvent.click(screen.getByRole("button", { name: "Filter Zeekr" }));
+
+			expect(onCompanyFilterChange).toHaveBeenCalledTimes(1);
+			expect(onCompanyFilterChange).toHaveBeenCalledWith("Zeekr");
+		});
+
+		it("does not call onCompanyFilterChange when a disabled button is clicked", () => {
+			const onCompanyFilterChange = vi.fn();
+
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					availableCompanies={[]}
+					onCompanyFilterChange={onCompanyFilterChange}
+				/>,
+			);
+
+			fireEvent.click(screen.getByRole("button", { name: "Filter Renault" }));
+
+			expect(onCompanyFilterChange).not.toHaveBeenCalled();
+		});
+
+		it("renders the Clear control only when a company is selected", () => {
+			renderWithProvider(
+				<SearchToolbar {...defaultProps} selectedCompanies={[]} />,
+			);
+
+			expect(screen.queryByText("Clear")).not.toBeInTheDocument();
+
+			renderWithProvider(
+				<SearchToolbar {...defaultProps} selectedCompanies={["Zeekr"]} />,
+			);
+
+			expect(screen.getByText("Clear")).toBeInTheDocument();
+		});
+
+		it("calls onCompanyFilterClear when Clear is clicked", () => {
+			const onCompanyFilterClear = vi.fn();
+
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					selectedCompanies={["Zeekr"]}
+					onCompanyFilterClear={onCompanyFilterClear}
+				/>,
+			);
+
+			fireEvent.click(screen.getByText("Clear"));
+
+			expect(onCompanyFilterClear).toHaveBeenCalledTimes(1);
+		});
+
+		it("has an accessible name distinct from the source filter's Clear control", () => {
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					activeSourceFilter="Main Sheet"
+					selectedCompanies={["Zeekr"]}
+				/>,
+			);
+
+			// Both Clear controls can render at once; their accessible names must
+			// differ so a screen reader doesn't announce "Clear" twice.
+			expect(
+				screen.getByRole("button", { name: "Clear company filter" }),
+			).toBeInTheDocument();
 		});
 	});
 });

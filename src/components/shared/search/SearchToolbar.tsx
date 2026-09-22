@@ -11,6 +11,7 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import { RowValueFilter } from "@/components/shared/RowValueFilter";
 import {
 	SEARCH_SOURCES,
@@ -28,6 +29,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ALLOWED_COMPANIES } from "@/domain/order/constants";
 import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
@@ -53,6 +55,10 @@ export interface SearchToolbarProps {
 	sourceOptions: SearchSource[];
 	activeSourceFilter: SearchSource | null;
 	onSourceFilterChange: (source: SearchSource | null) => void;
+	availableCompanies: string[];
+	selectedCompanies: string[];
+	onCompanyFilterChange: (company: string) => void;
+	onCompanyFilterClear: () => void;
 }
 
 export const SearchToolbar = ({
@@ -76,6 +82,10 @@ export const SearchToolbar = ({
 	sourceOptions,
 	activeSourceFilter,
 	onSourceFilterChange,
+	availableCompanies,
+	selectedCompanies,
+	onCompanyFilterChange,
+	onCompanyFilterClear,
 }: SearchToolbarProps) => {
 	const isReserveDisabled = selectedCount === 0;
 	const isStageActionDisabled = selectedCount === 0 || !isSameSource;
@@ -313,6 +323,50 @@ export const SearchToolbar = ({
 						<button
 							type="button"
 							onClick={() => onSourceFilterChange(null)}
+							className="text-[10px] text-gray-500 hover:text-gray-300 ml-1 font-bold uppercase tracking-wider focus-visible:outline-none focus-visible:underline"
+						>
+							Clear
+						</button>
+					)}
+				</div>
+
+				<div className="w-px h-6 bg-white/10 mx-1" />
+
+				<div className="flex items-center gap-1.5 px-2">
+					{ALLOWED_COMPANIES.map((company) => {
+						const isAvailable = availableCompanies.includes(company);
+						const isActive = selectedCompanies.includes(company);
+
+						return (
+							<Tooltip key={company}>
+								<TooltipTrigger asChild>
+									<button
+										type="button"
+										aria-label={`Filter ${company}`}
+										aria-pressed={isActive}
+										disabled={!isAvailable}
+										onClick={() => onCompanyFilterChange(company)}
+										className={cn(
+											"flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141416]",
+											!isAvailable && "opacity-20 cursor-default",
+											isAvailable &&
+												(isActive
+													? "ring-1 ring-offset-1 ring-offset-[#141416] ring-white/70"
+													: "opacity-40 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 cursor-pointer"),
+										)}
+									>
+										<CompanyLogo company={company} height={18} />
+									</button>
+								</TooltipTrigger>
+								<TooltipContent>{company}</TooltipContent>
+							</Tooltip>
+						);
+					})}
+					{selectedCompanies.length > 0 && (
+						<button
+							type="button"
+							aria-label="Clear company filter"
+							onClick={onCompanyFilterClear}
 							className="text-[10px] text-gray-500 hover:text-gray-300 ml-1 font-bold uppercase tracking-wider focus-visible:outline-none focus-visible:underline"
 						>
 							Clear

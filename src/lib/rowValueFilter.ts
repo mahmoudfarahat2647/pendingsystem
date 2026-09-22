@@ -1,3 +1,4 @@
+import { normalizeCompanyName } from "@/domain/company/company";
 import type { PendingRow } from "@/types";
 
 export interface RowValueFilterOption {
@@ -12,6 +13,14 @@ export const getRepairSystemValue: RowValueAccessor = (row) => row.repairSystem;
 
 /** Reads the car model off a row. Exported so call sites keep a stable identity for memo deps. */
 export const getModelValue: RowValueAccessor = (row) => row.model;
+
+/**
+ * Reads the canonical company off a row. Normalizing here (rather than reading
+ * `row.company` raw) is what makes legacy aliases like "renalt" or "r" match the
+ * "Renault" filter option. Exported so call sites keep a stable identity for memo deps.
+ */
+export const getCompanyValue: RowValueAccessor = (row) =>
+	normalizeCompanyName(row.company);
 
 const normalizeValue = (value: unknown): string =>
 	typeof value === "string" ? value.trim() : "";

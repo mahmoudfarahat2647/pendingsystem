@@ -12,6 +12,7 @@ import {
 	SEARCH_SOURCES,
 	type SearchSource,
 } from "@/components/shared/search/searchSources";
+import { ALLOWED_COMPANIES } from "@/domain/order/constants";
 import * as orderWorkflow from "@/domain/order/orderWorkflow";
 import { appendTaggedUserNote } from "@/domain/order/orderWorkflow";
 import type { PendingRow } from "@/types";
@@ -60,6 +61,10 @@ type MockSearchToolbarProps = {
 	sourceOptions: SearchSource[];
 	activeSourceFilter: SearchSource | null;
 	onSourceFilterChange: (source: SearchSource | null) => void;
+	availableCompanies: string[];
+	selectedCompanies: string[];
+	onCompanyFilterChange: (company: string) => void;
+	onCompanyFilterClear: () => void;
 };
 
 type MockBookingModalProps = {
@@ -320,6 +325,31 @@ vi.mock("@/components/shared/search/SearchToolbar", () => ({
 						onClick={() => props.onSourceFilterChange(null)}
 					>
 						Clear
+					</button>
+				)}
+				{ALLOWED_COMPANIES.map((company) => {
+					const isAvailable = props.availableCompanies?.includes(company);
+					const isActive = props.selectedCompanies?.includes(company);
+					return (
+						<button
+							key={company}
+							type="button"
+							aria-label={`Filter ${company}`}
+							aria-pressed={isActive}
+							disabled={!isAvailable}
+							onClick={() => props.onCompanyFilterChange(company)}
+						>
+							{company}
+						</button>
+					);
+				})}
+				{props.selectedCompanies && props.selectedCompanies.length > 0 && (
+					<button
+						type="button"
+						data-testid="search-toolbar-clear-company"
+						onClick={() => props.onCompanyFilterClear()}
+					>
+						Clear Company
 					</button>
 				)}
 			</div>
@@ -1124,6 +1154,164 @@ describe("SearchResultsView", () => {
 			expect(mocks.searchToolbarProps?.isSameSource).toBe(true);
 			expect(getMasterCheckboxState()).toBe(true);
 			expect(screen.getByTestId("search-toolbar-booking")).toBeEnabled();
+		});
+	});
+
+	describe("company filter", () => {
+		it("marks a company disabled when absent from the current results", () => {
+			mocks.queryData.main = [createRow({ id: "main-1", company: "Zeekr" })];
+
+			renderView();
+
+			expect(mocks.searchToolbarProps?.availableCompanies).toEqual(["Zeekr"]);
+		});
+
+		it("narrows the grid to the selected company", async () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-zeekr", company: "Zeekr" }),
+				createRow({
+					id: "main-renault",
+					company: "Renault",
+				}),
+			];
+
+			renderView();
+
+			expect(getRenderedRowIds()).toEqual(
+				expect.arrayContaining(["main-zeekr", "main-renault"]),
+			);
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onCompanyFilterChange("Zeekr");
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-zeekr"]);
+		});
+
+		it("still filters when only one company has matching rows and it's selected, even with a blank-company row present", async () => {
+			// Guards against comparing the selection to `availableCompanies` (which
+			// would be length 1 here) instead of the fixed ALLOWED_COMPANIES list:
+			// selecting the one available company must not be mistaken for "every
+			// company selected" and fall through to showing everything.
+			mocks.queryData.main = [
+				createRow({ id: "main-zeekr", company: "Zeekr" }),
+				createRow({ id: "main-blank", company: "" }),
+			];
+
+			renderView();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onCompanyFilterChange("Zeekr");
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-zeekr"]);
+		});
+
+		it("matches a legacy company alias to the Renault button", async () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-legacy", company: "renalt" }),
+				createRow({ id: "main-zeekr", company: "Zeekr" }),
+			];
+
+			renderView();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onCompanyFilterChange("Renault");
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-legacy"]);
+		});
+
+		it("selecting both companies is equivalent to selecting neither, including rows with no company", async () => {
+			// A row with a blank/unrecognized company is included when neither
+			// button is selected. Selecting both must not hide it: "both selected"
+			// is treated as no filter rather than an OR-match against only the two
+			// allowed company values.
+			mocks.queryData.main = [
+				createRow({ id: "main-zeekr", company: "Zeekr" }),
+				createRow({ id: "main-renault", company: "Renault" }),
+				createRow({ id: "main-blank", company: "" }),
+			];
+
+			renderView();
+
+			expect(getRenderedRowIds()).toEqual(
+				expect.arrayContaining(["main-zeekr", "main-renault", "main-blank"]),
+			);
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onCompanyFilterChange("Zeekr");
+			});
+			await act(async () => {
+				mocks.searchToolbarProps?.onCompanyFilterChange("Renault");
+			});
+
+			expect(getRenderedRowIds()).toEqual(
+				expect.arrayContaining(["main-zeekr", "main-renault", "main-blank"]),
+			);
+		});
+
+		it("composes with the stage and car model filters as AND", async () => {
+			mocks.queryData.main = [
+				createRow({
+					id: "main-zeekr-megane",
+					company: "Zeekr",
+					model: "Megane IV",
+				}),
+				createRow({
+					id: "main-zeekr-clio",
+					company: "Zeekr",
+					model: "Clio V",
+				}),
+			];
+			mocks.queryData.archive = [
+				createRow({
+					id: "archive-zeekr-megane",
+					company: "Zeekr",
+					model: "Megane IV",
+					sourceType: "Archive",
+					stage: "archive",
+				}),
+			];
+
+			renderView();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onCompanyFilterChange("Zeekr");
+			});
+			await act(async () => {
+				mocks.searchToolbarProps?.onSourceFilterChange("Main Sheet");
+			});
+			await act(async () => {
+				mocks.searchToolbarProps?.onModelsChange(["Megane IV"]);
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-zeekr-megane"]);
+		});
+
+		it("drops a selected company that disappears when the underlying results change, without flashing an empty grid", async () => {
+			mocks.queryData.main = [
+				createRow({ id: "main-zeekr", company: "Zeekr" }),
+			];
+
+			const { rerender } = renderView();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onCompanyFilterChange("Zeekr");
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-zeekr"]);
+
+			mocks.queryData.main = [
+				createRow({ id: "main-renault", company: "Renault" }),
+			];
+
+			await act(async () => {
+				rerender(<SearchResultsView />);
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-renault"]);
+			expect(mocks.searchToolbarProps?.selectedCompanies).toEqual([]);
 		});
 	});
 	it("wires the header checkbox to filtered select-all and clear-all", async () => {
