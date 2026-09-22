@@ -274,5 +274,21 @@ describe("SearchToolbar", () => {
 
 			expect(onCompanyFilterClear).toHaveBeenCalledTimes(1);
 		});
+
+		it("has an accessible name distinct from the source filter's Clear control", () => {
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					activeSourceFilter="Main Sheet"
+					selectedCompanies={["Zeekr"]}
+				/>,
+			);
+
+			// Both Clear controls can render at once; their accessible names must
+			// differ so a screen reader doesn't announce "Clear" twice.
+			expect(
+				screen.getByRole("button", { name: "Clear company filter" }),
+			).toBeInTheDocument();
+		});
 	});
 });

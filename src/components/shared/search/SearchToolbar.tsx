@@ -365,6 +365,7 @@ export const SearchToolbar = ({
 					{selectedCompanies.length > 0 && (
 						<button
 							type="button"
+							aria-label="Clear company filter"
 							onClick={onCompanyFilterClear}
 							className="text-[10px] text-gray-500 hover:text-gray-300 ml-1 font-bold uppercase tracking-wider focus-visible:outline-none focus-visible:underline"
 						>

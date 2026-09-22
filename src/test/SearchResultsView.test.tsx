@@ -1188,6 +1188,25 @@ describe("SearchResultsView", () => {
 			expect(getRenderedRowIds()).toEqual(["main-zeekr"]);
 		});
 
+		it("still filters when only one company has matching rows and it's selected, even with a blank-company row present", async () => {
+			// Guards against comparing the selection to `availableCompanies` (which
+			// would be length 1 here) instead of the fixed ALLOWED_COMPANIES list:
+			// selecting the one available company must not be mistaken for "every
+			// company selected" and fall through to showing everything.
+			mocks.queryData.main = [
+				createRow({ id: "main-zeekr", company: "Zeekr" }),
+				createRow({ id: "main-blank", company: "" }),
+			];
+
+			renderView();
+
+			await act(async () => {
+				mocks.searchToolbarProps?.onCompanyFilterChange("Zeekr");
+			});
+
+			expect(getRenderedRowIds()).toEqual(["main-zeekr"]);
+		});
+
 		it("matches a legacy company alias to the Renault button", async () => {
 			mocks.queryData.main = [
 				createRow({ id: "main-legacy", company: "renalt" }),
@@ -1203,13 +1222,22 @@ describe("SearchResultsView", () => {
 			expect(getRenderedRowIds()).toEqual(["main-legacy"]);
 		});
 
-		it("selecting both companies is equivalent to selecting neither", async () => {
+		it("selecting both companies is equivalent to selecting neither, including rows with no company", async () => {
+			// A row with a blank/unrecognized company is included when neither
+			// button is selected. Selecting both must not hide it: "both selected"
+			// is treated as no filter rather than an OR-match against only the two
+			// allowed company values.
 			mocks.queryData.main = [
 				createRow({ id: "main-zeekr", company: "Zeekr" }),
 				createRow({ id: "main-renault", company: "Renault" }),
+				createRow({ id: "main-blank", company: "" }),
 			];
 
 			renderView();
+
+			expect(getRenderedRowIds()).toEqual(
+				expect.arrayContaining(["main-zeekr", "main-renault", "main-blank"]),
+			);
 
 			await act(async () => {
 				mocks.searchToolbarProps?.onCompanyFilterChange("Zeekr");
@@ -1219,7 +1247,7 @@ describe("SearchResultsView", () => {
 			});
 
 			expect(getRenderedRowIds()).toEqual(
-				expect.arrayContaining(["main-zeekr", "main-renault"]),
+				expect.arrayContaining(["main-zeekr", "main-renault", "main-blank"]),
 			);
 		});
 

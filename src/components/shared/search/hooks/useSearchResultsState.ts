@@ -257,8 +257,10 @@ export const useSearchResultsState = () => {
 	// Company filter (Global Search toolbar). Buttons are always rendered from the
 	// fixed ALLOWED_COMPANIES list; availability is derived from the source-filtered
 	// results so a company with no matching row renders disabled, mirroring how
-	// `sourceOptions` gates the stage dots. Multi-select: both selected behaves the
-	// same as neither.
+	// `sourceOptions` gates the stage dots. Multi-select: selecting every entry in
+	// ALLOWED_COMPANIES is treated as no filter (see `isEveryCompanySelected` below),
+	// so rows with a blank/unrecognized company aren't hidden just because both
+	// buttons happen to be on.
 	const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
 
 	const availableCompanies = useMemo<string[]>(() => {
@@ -284,15 +286,24 @@ export const useSearchResultsState = () => {
 		[selectedCompanies, availableCompanySet],
 	);
 
-	const companyFilteredResults = useMemo(
-		() =>
-			filterRowsByValues(
-				sourceFilteredResults,
-				effectiveSelectedCompanies,
-				getCompanyValue,
-			),
-		[sourceFilteredResults, effectiveSelectedCompanies],
-	);
+	// Compared against the fixed ALLOWED_COMPANIES list (not `availableCompanies`):
+	// when only one company has any matching rows, selecting that single button
+	// must still filter down to it, not fall through to "no filter".
+	const isEveryCompanySelected =
+		effectiveSelectedCompanies.length === ALLOWED_COMPANIES.length;
+
+	const companyFilteredResults = useMemo(() => {
+		if (isEveryCompanySelected) return sourceFilteredResults;
+		return filterRowsByValues(
+			sourceFilteredResults,
+			effectiveSelectedCompanies,
+			getCompanyValue,
+		);
+	}, [
+		sourceFilteredResults,
+		effectiveSelectedCompanies,
+		isEveryCompanySelected,
+	]);
 
 	// Tidy the active company selection once a selected company disappears from
 	// the results. The render-time intersection above keeps `companyFilteredResults`
