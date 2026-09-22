@@ -27,9 +27,11 @@ import {
 	DialogFooter,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "@/hooks/useTranslation";
 import { authClient } from "@/lib/auth-client";
 import { getOrdersQueryKey } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import type { TranslationKey } from "@/locales";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import { Logo } from "./Logo";
@@ -38,7 +40,7 @@ import { SidebarUserMenu } from "./SidebarUserMenu";
 
 interface NavItem {
 	href: string;
-	label: string;
+	labelKey: TranslationKey;
 	icon: React.ReactNode;
 	badge?: number;
 }
@@ -48,42 +50,42 @@ const dashboardHref = "/dashboard";
 const navItems: NavItem[] = [
 	{
 		href: dashboardHref,
-		label: "Dashboard",
+		labelKey: "nav.dashboard",
 		icon: <LayoutDashboard className="h-5 w-5" />,
 	},
 	{
 		href: "/orders",
-		label: "Orders",
+		labelKey: "nav.orders",
 		icon: <ShoppingCart className="h-5 w-5" />,
 	},
 	{
 		href: "/main-sheet",
-		label: "Main Sheet",
+		labelKey: "nav.mainSheet",
 		icon: <FileSpreadsheet className="h-5 w-5" />,
 	},
 	{
 		href: "/call-list",
-		label: "Call",
+		labelKey: "nav.call",
 		icon: <Phone className="h-5 w-5" />,
 	},
 	{
 		href: "/booking",
-		label: "Booking",
+		labelKey: "nav.booking",
 		icon: <Calendar className="h-5 w-5" />,
 	},
 	{
 		href: "/archive",
-		label: "Archive",
+		labelKey: "nav.archive",
 		icon: <Archive className="h-5 w-5" />,
 	},
 	{
 		href: "/freeze",
-		label: "Freeze",
+		labelKey: "nav.freeze",
 		icon: <Snowflake className="h-5 w-5" />,
 	},
 	{
 		href: "/reports",
-		label: "Reports",
+		labelKey: "nav.reports",
 		icon: <BarChart3 className="h-5 w-5" />,
 	},
 ];
@@ -99,6 +101,7 @@ export const Sidebar = React.memo(function Sidebar() {
 	const router = useRouter();
 	const currentEditVin = useAppStore((state) => state.currentEditVin);
 	const clearCurrentEditVin = useAppStore((state) => state.clearCurrentEditVin);
+	const { t } = useTranslation();
 	const { data: session } = authClient.useSession();
 	const userName = session?.user?.name ?? "";
 	const userInitials = userName
@@ -210,6 +213,7 @@ export const Sidebar = React.memo(function Sidebar() {
 							pathname === item.href ||
 							(item.href === dashboardHref && pathname === "/");
 						const badge = item.badge;
+						const label = t(item.labelKey);
 						return (
 							<li key={item.href} suppressHydrationWarning>
 								<Link
@@ -222,7 +226,7 @@ export const Sidebar = React.memo(function Sidebar() {
 											: "text-gray-400 hover:text-white hover:bg-white/5",
 										isCollapsed && "justify-center px-2",
 									)}
-									title={isCollapsed ? item.label : undefined}
+									title={isCollapsed ? label : undefined}
 									onClick={(e) => handleNavigation(item.href, e)}
 								>
 									{/* Icon */}
@@ -241,7 +245,7 @@ export const Sidebar = React.memo(function Sidebar() {
 											className="relative z-10 text-sm tracking-wide"
 											suppressHydrationWarning
 										>
-											{item.label}
+											{label}
 										</span>
 									)}
 

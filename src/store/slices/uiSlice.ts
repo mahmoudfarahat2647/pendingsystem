@@ -1,4 +1,5 @@
 import type { StateCreator } from "zustand";
+import { DEFAULT_LOCALE, normalizeLocale } from "@/domain/locale/locale";
 import { generateId } from "@/lib/utils";
 import type { CombinedStore, UIActions, UIState } from "../types";
 
@@ -41,6 +42,7 @@ const initialState: UIState = {
 	currentEditVin: null,
 	currentEditId: null,
 	pendingSearchSelection: null,
+	locale: DEFAULT_LOCALE,
 };
 
 export const createUISlice: StateCreator<
@@ -155,4 +157,12 @@ export const createUISlice: StateCreator<
 	},
 
 	setPendingSearchSelection: (val) => set({ pendingSearchSelection: val }),
+
+	// Locale is a UI-local presentation preference — no reload, no Supabase,
+	// no React Query. See #263 acceptance criteria. `set()` always updates the
+	// in-memory value even if the persist middleware's storage write later
+	// fails (e.g. quota-limited localStorage) — the persist store already
+	// wraps `storage` defensively (see useStore.ts), so switching language
+	// never blocks on disk I/O.
+	setLocale: (locale) => set({ locale: normalizeLocale(locale) }),
 });
