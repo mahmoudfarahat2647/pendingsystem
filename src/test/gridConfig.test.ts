@@ -1,4 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import {
+	PartStatusRenderer,
+	StatusRenderer,
+} from "@/components/grid/renderers";
 import { defaultGridOptions } from "../components/grid/config/defaultOptions";
 import {
 	getBaseColumns,
@@ -33,6 +37,50 @@ describe("Grid Column Configuration Selection Fix", () => {
 	});
 
 	describe("getBaseColumns", () => {
+		it("keeps status grid values and filter keys canonical in every locale", () => {
+			const statuses = [
+				{ id: "hold", label: "Hold", color: "bg-yellow-500" },
+				{ id: "custom", label: "VIP", color: "bg-blue-500" },
+			];
+			const columns = getBaseColumns(
+				undefined,
+				undefined,
+				undefined,
+				undefined,
+				statuses,
+			);
+			const statusCol = columns.find((column) => column.field === "status");
+
+			expect(statusCol?.cellRenderer).toBe(StatusRenderer);
+			expect(statusCol?.filterValueGetter).toBeUndefined();
+			expect(statusCol?.valueFormatter).toBeUndefined();
+
+			const holdCell = StatusRenderer({
+				value: "Hold",
+				partStatuses: statuses,
+			} as never);
+			expect(holdCell.props.children).toBe("Hold");
+			expect(holdCell.props.title).toBe("Hold");
+
+			const customCell = StatusRenderer({
+				value: "VIP",
+				partStatuses: statuses,
+			} as never);
+			expect(customCell.props.children).toBe("VIP");
+			expect(customCell.props.title).toBe("VIP");
+		});
+
+		it("keeps booking status tooltips canonical in the grid", () => {
+			const cell = PartStatusRenderer({
+				value: "Confirmed",
+				partStatuses: [
+					{ id: "confirmed", label: "Confirmed", color: "bg-green-500" },
+				],
+			} as never);
+
+			expect(cell.props.title).toBe("Confirmed");
+		});
+
 		it("should expose ACTIONS as the first configured column", () => {
 			const columns = getBaseColumns();
 			const actionsCol = columns[0];

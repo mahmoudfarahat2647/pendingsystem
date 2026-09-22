@@ -1,6 +1,9 @@
 import { format } from "date-fns";
 import React from "react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStatusLabelByValue } from "@/lib/locale/statusLabel";
 import { calculateRemainingTime, cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 interface InfoLabelProps {
@@ -8,6 +11,8 @@ interface InfoLabelProps {
 }
 
 export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
+	const { locale } = useTranslation();
+	const partStatuses = useAppStore((state) => state.partStatuses);
 	const {
 		customerName = "-",
 		vin = "-",
@@ -21,6 +26,9 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 	} = data || {};
 
 	const remainTime = endWarranty ? calculateRemainingTime(endWarranty) : "-";
+	const displayStatus = data?.status
+		? resolveStatusLabelByValue(data.status, partStatuses, locale)
+		: "-";
 
 	const fmtDate = (d: string) => {
 		if (!d) return "—";
@@ -105,7 +113,7 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								stats :
 							</span>
 							<span className="text-sm font-medium text-gray-200 tracking-wide truncate">
-								{data?.status || "-"}
+								{displayStatus}
 							</span>
 						</div>
 					</div>
