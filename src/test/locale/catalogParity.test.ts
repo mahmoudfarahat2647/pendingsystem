@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { translate } from "@/locales";
 import { ar } from "@/locales/ar";
 import { en } from "@/locales/en";
@@ -40,9 +40,28 @@ describe("translation catalog parity", () => {
 		}
 	});
 
-	it("falls back to English for a key missing from a locale's catalog", () => {
-		const result = translate("ar", "settings.language.sectionTitle" as never);
-		expect(result).toBe(ar.settings.language.sectionTitle);
+	it("falls back to English for a key missing from a locale's catalog", async () => {
+		// Inject an Arabic catalog with this key deliberately removed so the
+		// lookup genuinely exercises the English-fallback branch, rather than
+		// resolving a key that is actually present in both real catalogs.
+		vi.resetModules();
+		vi.doMock("@/locales/ar", () => {
+			const partial = structuredClone(ar) as unknown as Record<string, unknown>;
+			const language = (partial.settings as Record<string, unknown>)
+				.language as Record<string, unknown>;
+			delete language.sectionTitle;
+			return { ar: partial };
+		});
+
+		const { translate: translateWithMissingArKey } = await import("@/locales");
+		const result = translateWithMissingArKey(
+			"ar",
+			"settings.language.sectionTitle" as never,
+		);
+		expect(result).toBe(en.settings.language.sectionTitle);
+
+		vi.doUnmock("@/locales/ar");
+		vi.resetModules();
 	});
 
 	it("falls back to the key itself when missing from every catalog, without throwing", () => {
