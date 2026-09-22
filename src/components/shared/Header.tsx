@@ -26,7 +26,6 @@ import { useReleaseFollowUpsQuery } from "@/hooks/queries/useReleaseFollowUpsQue
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { useReleaseFollowUpMaintenance } from "@/hooks/useReleaseFollowUpMaintenance";
-import { useTranslation } from "@/hooks/useTranslation";
 import { useWarrantyExpiryMaintenance } from "@/hooks/useWarrantyExpiryMaintenance";
 import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 import {
@@ -66,7 +65,6 @@ export const Header = React.memo(function Header() {
 		lastRunAt: number;
 	}>({ dataVersion: 0, lastRunAt: 0 });
 
-	const { t } = useTranslation();
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 	const { runMaintenance } = useWarrantyExpiryMaintenance();
 	const { runMaintenance: runReleaseFollowUpMaintenance } =
@@ -297,7 +295,7 @@ export const Header = React.memo(function Header() {
 						id="global-search"
 						type="text"
 						suppressHydrationWarning
-						placeholder={t("shell.searchPlaceholder")}
+						placeholder="Search system (Cmd+K)..."
 						value={searchInput}
 						onChange={(e) => setSearchInput(e.target.value)}
 						onFocus={() => {

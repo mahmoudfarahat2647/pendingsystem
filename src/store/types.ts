@@ -1,5 +1,4 @@
 import type { GridState } from "ag-grid-community";
-import type { Locale } from "@/domain/locale/locale";
 import type { OrderStage } from "@/domain/order/orderStage";
 import type {
 	AppNotification,
@@ -48,8 +47,6 @@ export interface UIState {
 	currentEditVin: string | null;
 	currentEditId: string | null;
 	pendingSearchSelection: { stage: string; ids: string[] } | null;
-	/** UI-local language preference. Persisted; never routed through Supabase/React Query. */
-	locale: Locale;
 }
 
 export interface UIActions {
@@ -75,7 +72,6 @@ export interface UIActions {
 	setPendingSearchSelection: (
 		val: { stage: string; ids: string[] } | null,
 	) => void;
-	setLocale: (locale: Locale) => void;
 }
 
 interface GridSliceState {
