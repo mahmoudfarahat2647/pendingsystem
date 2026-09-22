@@ -62,6 +62,21 @@ export const ar: TranslationCatalog = {
 		draftSaveFailed: "فشل حفظ المسودة. يرجى المحاولة مرة أخرى.",
 		saveFailedPrefix: "فشل الحفظ:",
 		skipThisChange: "تخطي هذا التغيير",
+		missingRequiredFieldsFor: "الحقول المطلوبة غير مكتملة لـ:",
+		partNumberAndDescriptionRequiredFor: "رقم القطعة والوصف مطلوبان لـ:",
+		attachmentRequiredFor: "مرفق مطلوب لـ:",
+		freezeReasonRequired: "سبب التجميد مطلوب.",
+		releaseConfirmationRequired:
+			"تأكيد release مطلوب قبل نقل شاسيه الضمان إلى قائمة الاتصال.",
+		staleReleaseMoveNotRestored:
+			"نقل معلّق إلى قائمة الاتصال يحتاج تأكيد release جديد، لذلك لم تتم استعادته.",
+		recoveryUnsavedChanges: "لديك {count} تغييرات غير محفوظة من جلستك السابقة.",
+		recoveryRestore: "استعادة",
+		recoveryDiscard: "تجاهل",
+		recoveryStillLoading:
+			"بياناتك ما زالت قيد التحميل — جرّب الاستعادة بعد قليل.",
+		recoveryRestoreFailed:
+			"تعذرت استعادة تغييراتك غير المحفوظة لأن البيانات المحفوظة غير صالحة.",
 		saveOrderErrorPrefix: "خطأ في حفظ الطلب:",
 		moveOrdersErrorPrefix: "فشل نقل الطلبات:",
 		deleteOrdersErrorPrefix: "فشل حذف الطلبات:",

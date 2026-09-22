@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { toast } from "sonner";
 import { normalizeCompanyName } from "@/domain/company/company";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -37,6 +38,10 @@ interface UseOrderSubmitProps {
 export function useOrderSubmit(props: UseOrderSubmitProps) {
 	const clearCurrentEditVin = useAppStore((state) => state.clearCurrentEditVin);
 	const { t } = useTranslation();
+	// Duplicate checks are async. Keep the current translator in a ref so a
+	// completion after a language switch reports in the language now on screen.
+	const currentTranslation = useRef(t);
+	currentTranslation.current = t;
 
 	const handleLocalSubmit = async () => {
 		const isBeastMode = props.validationMode === "beast";
@@ -137,7 +142,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 				// The duplicate check couldn't complete (e.g. transient DB error).
 				// Fail closed: block submission rather than risk creating a real
 				// VIN+part duplicate that the check failed to catch.
-				toast.error(t("toast.duplicateCheckFailed"));
+				toast.error(currentTranslation.current("toast.duplicateCheckFailed"));
 				return;
 			} finally {
 				props.setIsCheckingDuplicates(false);

@@ -98,8 +98,21 @@ interface GridSliceActions {
 export interface DraftSessionState {
 	draftSession: DraftSession;
 	lastSaveResult: "success" | "error" | null;
-	lastCommandError: string | null;
+	lastCommandError: DraftCommandError | null;
 }
+
+/**
+ * A product-owned draft command error. Keep the copy as a stable key so the
+ * presentation layer can render it in the locale active when the command
+ * finishes; identifiers remain raw operational data.
+ */
+export type DraftCommandError =
+	| { key: "missingRequiredFieldsFor"; identifier: string }
+	| { key: "partNumberAndDescriptionRequiredFor"; identifier: string }
+	| { key: "attachmentRequiredFor"; identifier: string }
+	| { key: "freezeReasonRequired" }
+	| { key: "releaseConfirmationRequired" }
+	| { key: "staleReleaseMoveNotRestored" };
 
 export interface DraftSessionActions {
 	applyCommand: (cmd: DraftCommand) => boolean;

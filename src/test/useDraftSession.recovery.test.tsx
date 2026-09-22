@@ -20,7 +20,17 @@ vi.mock("@/hooks/useTranslation", () => ({
 		locale: "en",
 		dir: "ltr",
 		setLocale: vi.fn(),
-		t: (key: string) => key,
+		t: (key: string) =>
+			({
+				"toast.recoveryUnsavedChanges":
+					"You have {count} unsaved changes from your last session.",
+				"toast.recoveryRestore": "Restore",
+				"toast.recoveryDiscard": "Discard",
+				"toast.recoveryStillLoading":
+					"Your data is still loading — try Restore in a moment.",
+				"toast.recoveryRestoreFailed":
+					"Could not restore your unsaved changes — the saved data was invalid.",
+			})[key] ?? key,
 	}),
 }));
 

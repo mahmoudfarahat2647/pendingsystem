@@ -72,9 +72,20 @@ function getSnapshotStages(commands: DraftCommand[]): OrderStage[] {
 
 let activeRecoveryToastId: string | number | null = null;
 let activeRecoveryToastKey: string | null = null;
+let activeRecoveryToastLocale: string | null = null;
 // Synchronous lock set before localStorage is read to prevent duplicate recovery
 // offers in React Strict Mode (where effects are invoked twice on mount).
 let recoveryLockActive = false;
+
+const commandErrorTranslationKeys = {
+	missingRequiredFieldsFor: "toast.missingRequiredFieldsFor",
+	partNumberAndDescriptionRequiredFor:
+		"toast.partNumberAndDescriptionRequiredFor",
+	attachmentRequiredFor: "toast.attachmentRequiredFor",
+	freezeReasonRequired: "toast.freezeReasonRequired",
+	releaseConfirmationRequired: "toast.releaseConfirmationRequired",
+	staleReleaseMoveNotRestored: "toast.staleReleaseMoveNotRestored",
+} as const;
 
 function clearRecoveryToastOffer() {
 	if (activeRecoveryToastId !== null) {
@@ -83,10 +94,11 @@ function clearRecoveryToastOffer() {
 	}
 
 	activeRecoveryToastKey = null;
+	activeRecoveryToastLocale = null;
 }
 
 export function useDraftSession(stage?: OrderStage) {
-	const { t } = useTranslation();
+	const { locale, t } = useTranslation();
 	const draftSession = useAppStore((state) => state.draftSession);
 	const applyCommand = useAppStore((state) => state.applyCommand);
 	const undoDraft = useAppStore((state) => state.undoDraft);
@@ -188,9 +200,14 @@ export function useDraftSession(stage?: OrderStage) {
 
 	useEffect(() => {
 		if (!lastCommandError) return;
-		toast.error(lastCommandError);
+		const staticCopy = t(commandErrorTranslationKeys[lastCommandError.key]);
+		const message =
+			"identifier" in lastCommandError
+				? `${staticCopy} ${lastCommandError.identifier}`
+				: staticCopy;
+		toast.error(message);
 		clearCommandError();
-	}, [lastCommandError, clearCommandError]);
+	}, [lastCommandError, clearCommandError, t]);
 
 	useEffect(() => {
 		if (!lastSaveResult) return;
@@ -240,6 +257,7 @@ export function useDraftSession(stage?: OrderStage) {
 		const raw = localStorage.getItem(RECOVERY_STORAGE_KEY);
 		if (!raw) {
 			clearRecoveryToastOffer();
+			recoveryLockActive = false;
 			return;
 		}
 
@@ -252,6 +270,7 @@ export function useDraftSession(stage?: OrderStage) {
 				);
 				localStorage.removeItem(RECOVERY_STORAGE_KEY);
 				clearRecoveryToastOffer();
+				recoveryLockActive = false;
 				return;
 			}
 			// The schema intentionally validates structure loosely (row/patch payloads are
@@ -262,12 +281,14 @@ export function useDraftSession(stage?: OrderStage) {
 				snapshot.workspaceId !== draftSession.workspaceId ||
 				!snapshot.pendingCommands?.length
 			) {
+				recoveryLockActive = false;
 				return;
 			}
 
 			if (Date.now() - snapshot.updatedAt > RECOVERY_MAX_AGE_MS) {
 				localStorage.removeItem(RECOVERY_STORAGE_KEY);
 				clearRecoveryToastOffer();
+				recoveryLockActive = false;
 				return;
 			}
 
@@ -276,19 +297,25 @@ export function useDraftSession(stage?: OrderStage) {
 				snapshot.updatedAt,
 				snapshot.pendingCommands.length,
 			].join(":");
-			if (activeRecoveryToastKey === snapshotKey) {
+			if (
+				activeRecoveryToastKey === snapshotKey &&
+				activeRecoveryToastLocale === locale
+			) {
+				recoveryLockActive = false;
 				return;
 			}
 
 			clearRecoveryToastOffer();
 			activeRecoveryToastKey = snapshotKey;
+			activeRecoveryToastLocale = locale;
 			activeRecoveryToastId = toast.custom(
-				(t) => (
+				(toastId) => (
 					<div className="flex flex-col gap-3 rounded-lg border border-slate-700 bg-slate-900 p-4">
 						<p className="text-sm text-white">
-							You have{" "}
-							<strong>{snapshot.pendingCommands.length} unsaved changes</strong>{" "}
-							from your last session.
+							{t("toast.recoveryUnsavedChanges").replace(
+								"{count}",
+								String(snapshot.pendingCommands.length),
+							)}
 						</p>
 						<div className="flex gap-2">
 							<button
@@ -300,10 +327,7 @@ export function useDraftSession(stage?: OrderStage) {
 										adapter.isStageLoaded(s),
 									);
 									if (!allLoaded) {
-										toast(
-											"Your data is still loading — try Restore in a moment.",
-											{ duration: 4000 },
-										);
+										toast(t("toast.recoveryStillLoading"), { duration: 4000 });
 										return;
 									}
 									clearRecoveryToastOffer();
@@ -311,26 +335,24 @@ export function useDraftSession(stage?: OrderStage) {
 										restoreFromRecovery(snapshot);
 									} catch (error) {
 										logger.error("Failed to restore draft snapshot:", error);
-										toast.error(
-											"Could not restore your unsaved changes — the saved data was invalid.",
-										);
+										toast.error(t("toast.recoveryRestoreFailed"));
 									}
-									toast.dismiss(t);
+									toast.dismiss(toastId);
 								}}
 								className="rounded bg-blue-600 px-3 py-1 text-sm text-white transition-colors hover:bg-blue-700"
 							>
-								Restore
+								{t("toast.recoveryRestore")}
 							</button>
 							<button
 								type="button"
 								onClick={() => {
 									clearRecoveryToastOffer();
 									discardDraft();
-									toast.dismiss(t);
+									toast.dismiss(toastId);
 								}}
 								className="rounded bg-slate-700 px-3 py-1 text-sm text-white transition-colors hover:bg-slate-600"
 							>
-								Discard
+								{t("toast.recoveryDiscard")}
 							</button>
 						</div>
 					</div>
@@ -340,13 +362,14 @@ export function useDraftSession(stage?: OrderStage) {
 		} catch (error) {
 			clearRecoveryToastOffer();
 			logger.warn("Failed to parse recovery snapshot:", error);
+			recoveryLockActive = false;
 		}
 
 		return () => {
 			// Release lock on cleanup so the component can re-evaluate on the next mount.
 			recoveryLockActive = false;
 		};
-	}, [draftSession.workspaceId, discardDraft, restoreFromRecovery]);
+	}, [draftSession.workspaceId, discardDraft, locale, restoreFromRecovery, t]);
 
 	const workingRows = useMemo(
 		() => (stage ? getWorkingRows(stage) : undefined),

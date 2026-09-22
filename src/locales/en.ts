@@ -64,6 +64,23 @@ export const en: TranslationCatalog = {
 		draftSaveFailed: "Draft save failed. Please try again.",
 		saveFailedPrefix: "Save failed:",
 		skipThisChange: "Skip this change",
+		missingRequiredFieldsFor: "Missing required fields for:",
+		partNumberAndDescriptionRequiredFor:
+			"Part number and description required for:",
+		attachmentRequiredFor: "Attachment required for:",
+		freezeReasonRequired: "A reason is required to freeze rows.",
+		releaseConfirmationRequired:
+			"Release confirmation is required before moving this warranty chassis to Call List.",
+		staleReleaseMoveNotRestored:
+			"A pending Call List move required a fresh release confirmation and was not restored.",
+		recoveryUnsavedChanges:
+			"You have {count} unsaved changes from your last session.",
+		recoveryRestore: "Restore",
+		recoveryDiscard: "Discard",
+		recoveryStillLoading:
+			"Your data is still loading — try Restore in a moment.",
+		recoveryRestoreFailed:
+			"Could not restore your unsaved changes — the saved data was invalid.",
 		saveOrderErrorPrefix: "Error saving order:",
 		moveOrdersErrorPrefix: "Failed to move orders:",
 		deleteOrdersErrorPrefix: "Failed to delete orders:",

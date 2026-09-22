@@ -80,6 +80,17 @@ export interface TranslationCatalog {
 		draftSaveFailed: string;
 		saveFailedPrefix: string;
 		skipThisChange: string;
+		missingRequiredFieldsFor: string;
+		partNumberAndDescriptionRequiredFor: string;
+		attachmentRequiredFor: string;
+		freezeReasonRequired: string;
+		releaseConfirmationRequired: string;
+		staleReleaseMoveNotRestored: string;
+		recoveryUnsavedChanges: string;
+		recoveryRestore: string;
+		recoveryDiscard: string;
+		recoveryStillLoading: string;
+		recoveryRestoreFailed: string;
 		saveOrderErrorPrefix: string;
 		moveOrdersErrorPrefix: string;
 		deleteOrdersErrorPrefix: string;

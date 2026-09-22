@@ -282,7 +282,10 @@ export const createDraftSessionSlice: StateCreator<
 					if (!result.success) {
 						get().triggerBeastMode(row.id, Date.now());
 						set(() => ({
-							lastCommandError: `Missing required fields for: ${row.trackingId || row.id}`,
+							lastCommandError: {
+								key: "missingRequiredFieldsFor",
+								identifier: row.trackingId || row.id,
+							},
 						}));
 						return false;
 					}
@@ -290,14 +293,20 @@ export const createDraftSessionSlice: StateCreator<
 					// Also validate partNumber, description, attachment
 					if (!row.partNumber || !row.description) {
 						set(() => ({
-							lastCommandError: `Part number and description required for: ${row.trackingId || row.id}`,
+							lastCommandError: {
+								key: "partNumberAndDescriptionRequiredFor",
+								identifier: row.trackingId || row.id,
+							},
 						}));
 						return false;
 					}
 
 					if (!hasAttachment(row)) {
 						set(() => ({
-							lastCommandError: `Attachment required for: ${row.trackingId || row.id}`,
+							lastCommandError: {
+								key: "attachmentRequiredFor",
+								identifier: row.trackingId || row.id,
+							},
 						}));
 						return false;
 					}
@@ -319,7 +328,7 @@ export const createDraftSessionSlice: StateCreator<
 						: "";
 				if (!reason.trim()) {
 					set(() => ({
-						lastCommandError: "A reason is required to freeze rows.",
+						lastCommandError: { key: "freezeReasonRequired" },
 					}));
 					return false;
 				}
@@ -351,8 +360,7 @@ export const createDraftSessionSlice: StateCreator<
 						qualifying.every((chassis) => authorizedVins.has(chassis.vin));
 					if (!covered) {
 						set(() => ({
-							lastCommandError:
-								"Release confirmation is required before moving this warranty chassis to Call List.",
+							lastCommandError: { key: "releaseConfirmationRequired" },
 						}));
 						return false;
 					}
@@ -667,7 +675,7 @@ export const createDraftSessionSlice: StateCreator<
 					lastTouchedAt: snapshot.updatedAt,
 				},
 				lastCommandError: droppedStaleRelease
-					? "A pending Call List move required a fresh release confirmation and was not restored."
+					? { key: "staleReleaseMoveNotRestored" }
 					: null,
 			}));
 		},

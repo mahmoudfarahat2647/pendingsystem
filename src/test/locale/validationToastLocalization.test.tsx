@@ -1,7 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import {
+	act,
+	render,
+	renderHook,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useOrderSubmit } from "@/components/orders/form/hooks/useOrderForm/useOrderSubmit";
 import { IdentityFields } from "@/components/orders/form/IdentityFields";
 import type { FormData } from "@/components/orders/form/types";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
@@ -35,14 +42,17 @@ const toastMocks = vi.hoisted(() => ({
 	error: vi.fn(),
 	success: vi.fn(),
 	dismiss: vi.fn(),
+	custom: vi.fn(),
+	plain: vi.fn(),
 }));
 
 vi.mock("sonner", () => ({
-	toast: {
+	toast: Object.assign(toastMocks.plain, {
 		error: toastMocks.error,
 		success: toastMocks.success,
 		dismiss: toastMocks.dismiss,
-	},
+		custom: toastMocks.custom,
+	}),
 }));
 
 vi.mock("@/hooks/queries/useSaveOrderMutation", () => ({
@@ -77,6 +87,8 @@ beforeEach(() => {
 	toastMocks.error.mockClear();
 	toastMocks.success.mockClear();
 	toastMocks.dismiss.mockClear();
+	toastMocks.custom.mockClear();
+	toastMocks.plain.mockClear();
 	useAppStore.setState({ locale: "en", lastSaveResult: null });
 	useAppStore.setState((state) => ({
 		draftSession: {
@@ -230,5 +242,112 @@ describe("an async action completing after a locale switch reports in the active
 		switchLocale("en");
 		await Promise.resolve();
 		expect(toastMocks.error).toHaveBeenCalledTimes(1);
+	});
+
+	it("uses the current locale when a pending duplicate check fails", async () => {
+		let rejectCheck: ((reason?: unknown) => void) | undefined;
+		const pendingDuplicateCheck = new Promise<never>((_, reject) => {
+			rejectCheck = reject;
+		});
+		const checkHistoricalDuplicate = vi.fn(() => pendingDuplicateCheck);
+		const wrapper = ({ children }: { children: ReactNode }) => (
+			<LocaleProvider>{children}</LocaleProvider>
+		);
+
+		const { result } = renderHook(
+			() =>
+				useOrderSubmit({
+					formData: {
+						customerName: "Mahmoud",
+						vin: "VF1BB0A0F12345678",
+						mobile: "01000000000",
+						cntrRdg: "",
+						model: "",
+						repairSystem: "",
+						startWarranty: "",
+						requester: "",
+						sabNumber: "",
+						acceptedBy: "",
+						company: "",
+						rDate: "",
+					},
+					parts: [
+						{
+							id: "part-1",
+							partNumber: "12345",
+							description: "Part",
+							quantity: 1,
+						},
+					],
+					validationMode: "easy",
+					isEditMode: false,
+					selectedRows: [],
+					hasValidationErrors: false,
+					partValidationWarnings: {},
+					checkHistoricalDuplicate,
+					setValidationMode: vi.fn(),
+					setBeastModeTimer: vi.fn(),
+					setBeastModeErrors: vi.fn(),
+					setIsCheckingDuplicates: vi.fn(),
+					setDuplicateWarning: vi.fn(),
+					onSubmit: vi.fn(),
+				}),
+			{ wrapper },
+		);
+
+		let submitPromise: Promise<void> | undefined;
+		act(() => {
+			submitPromise = result.current.handleLocalSubmit();
+		});
+		await waitFor(() => expect(checkHistoricalDuplicate).toHaveBeenCalled());
+
+		switchLocale("ar");
+		await act(async () => {
+			rejectCheck?.(new Error("Network failed"));
+			await submitPromise;
+		});
+
+		expect(toastMocks.error).toHaveBeenCalledWith(
+			"تعذر التحقق من القطع المكررة. يرجى المحاولة مرة أخرى.",
+		);
+	});
+
+	it("updates recovery copy and actions when the locale changes", async () => {
+		const workspaceId = useAppStore.getState().draftSession.workspaceId;
+		localStorage.setItem(
+			"pending-sys-draft-v1",
+			JSON.stringify({
+				workspaceId,
+				updatedAt: Date.now(),
+				pendingCommands: [
+					{
+						type: "patchRow",
+						id: "row-1",
+						sourceStage: "orders",
+						destinationStage: "orders",
+						updates: {},
+						previousValues: {},
+					},
+				],
+			}),
+		);
+		let renderer: ((toastId: string | number) => ReactNode) | undefined;
+		toastMocks.custom.mockImplementation((renderToast) => {
+			renderer = renderToast;
+			return "recovery-toast";
+		});
+
+		renderWithProviders(<DraftStuckToastDriver />);
+		await waitFor(() => expect(renderer).toBeDefined());
+		const englishToast = render(renderer?.("recovery-toast") as ReactNode);
+		expect(englishToast.getByText("Restore")).toBeInTheDocument();
+		expect(englishToast.getByText("Discard")).toBeInTheDocument();
+		englishToast.unmount();
+
+		switchLocale("ar");
+		await waitFor(() => expect(toastMocks.custom).toHaveBeenCalledTimes(2));
+		const arabicToast = render(renderer?.("recovery-toast") as ReactNode);
+		expect(arabicToast.getByText("استعادة")).toBeInTheDocument();
+		expect(arabicToast.getByText("تجاهل")).toBeInTheDocument();
 	});
 });

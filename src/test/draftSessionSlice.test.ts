@@ -296,9 +296,9 @@ describe("draftSessionSlice", () => {
 			});
 
 			expect(accepted).toBe(false);
-			expect(useAppStore.getState().lastCommandError).toBe(
-				"A reason is required to freeze rows.",
-			);
+			expect(useAppStore.getState().lastCommandError).toEqual({
+				key: "freezeReasonRequired",
+			});
 			// Row must still be in its source stage — the command was never queued.
 			expect(useAppStore.getState().getWorkingRows("main")).toEqual([
 				expect.objectContaining({ id: row.id, stage: "main" }),
@@ -321,9 +321,9 @@ describe("draftSessionSlice", () => {
 			});
 
 			expect(accepted).toBe(false);
-			expect(useAppStore.getState().lastCommandError).toBe(
-				"A reason is required to freeze rows.",
-			);
+			expect(useAppStore.getState().lastCommandError).toEqual({
+				key: "freezeReasonRequired",
+			});
 		});
 
 		it("accepts a cross-stage patchRow into freeze once a non-empty reason is provided", () => {

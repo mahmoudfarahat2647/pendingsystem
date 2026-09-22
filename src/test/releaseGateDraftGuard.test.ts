@@ -114,7 +114,9 @@ describe("release-gate draft guard (issue #242 §4)", () => {
 		});
 
 		expect(accepted).toBe(false);
-		expect(useAppStore.getState().lastCommandError).toMatch(/release/i);
+		expect(useAppStore.getState().lastCommandError).toEqual({
+			key: "releaseConfirmationRequired",
+		});
 		expect(useAppStore.getState().getWorkingRows("call")).toEqual([]);
 	});
 
@@ -231,7 +233,9 @@ describe("release-gate draft guard (issue #242 §4)", () => {
 			useAppStore.getState().restoreFromRecovery(snapshot);
 
 			expect(useAppStore.getState().draftSession.pendingCommands).toEqual([]);
-			expect(useAppStore.getState().lastCommandError).toMatch(/release/i);
+			expect(useAppStore.getState().lastCommandError).toEqual({
+				key: "staleReleaseMoveNotRestored",
+			});
 		});
 
 		it("replays a *->call command whose authorization still matches", () => {
