@@ -43,9 +43,9 @@ describe("resolveStatusLabel", () => {
 		expect(
 			resolveStatusLabel({ id: "confirmed", label: "Confirmed" }, "ar"),
 		).toBe(ar.statuses.bookingStatus.confirmed);
-		expect(resolveStatusLabel({ id: "completed", label: "Completed" }, "ar")).toBe(
-			ar.statuses.bookingStatus.completed,
-		);
+		expect(
+			resolveStatusLabel({ id: "completed", label: "Completed" }, "ar"),
+		).toBe(ar.statuses.bookingStatus.completed);
 	});
 
 	it("renders a customized built-in status label byte-for-byte unchanged in both locales", () => {
@@ -56,12 +56,8 @@ describe("resolveStatusLabel", () => {
 		// Even an operator-entered Arabic string for a built-in id stays verbatim
 		// once it no longer equals the canonical English default.
 		const operatorArabicLabel = { id: "arrive", label: "وصلت الشحنة" };
-		expect(resolveStatusLabel(operatorArabicLabel, "en")).toBe(
-			"وصلت الشحنة",
-		);
-		expect(resolveStatusLabel(operatorArabicLabel, "ar")).toBe(
-			"وصلت الشحنة",
-		);
+		expect(resolveStatusLabel(operatorArabicLabel, "en")).toBe("وصلت الشحنة");
+		expect(resolveStatusLabel(operatorArabicLabel, "ar")).toBe("وصلت الشحنة");
 	});
 
 	it("never translates a fully custom, operator-created status", () => {
@@ -94,7 +90,10 @@ describe("resolveStatusLabel", () => {
 });
 
 describe("resolveStatusLabelByValue", () => {
-	const statuses = [...BUILT_IN_PART_STATUS_DEFAULTS, { id: "cust1", label: "VIP" }];
+	const statuses = [
+		...BUILT_IN_PART_STATUS_DEFAULTS,
+		{ id: "cust1", label: "VIP" },
+	];
 
 	it("resolves a matching built-in default value through translation", () => {
 		expect(resolveStatusLabelByValue("Hold", statuses, "ar")).toBe(

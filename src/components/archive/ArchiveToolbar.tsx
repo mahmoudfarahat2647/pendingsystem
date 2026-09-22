@@ -135,8 +135,8 @@ export function ArchiveToolbar({
 												style={dotStyle}
 											/>
 											<span className="text-xs">
-											{resolveStatusLabel(status, locale)}
-										</span>
+												{resolveStatusLabel(status, locale)}
+											</span>
 										</DropdownMenuItem>
 									);
 								})}

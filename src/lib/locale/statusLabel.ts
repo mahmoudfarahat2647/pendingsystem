@@ -22,8 +22,9 @@
  * catalog (`src/locales/`), which is pure data + lookup logic with no
  * service/store/UI dependencies of its own.
  */
-import { BUILT_IN_STATUS_DEFAULT_LABELS } from "@/domain/status/statusDefaults";
+
 import type { Locale } from "@/domain/locale/locale";
+import { BUILT_IN_STATUS_DEFAULT_LABELS } from "@/domain/status/statusDefaults";
 import { translate } from "@/locales";
 import type { TranslationKey } from "@/locales/types";
 
@@ -40,18 +41,19 @@ export interface StatusLabelSource {
  * locale-catalog types) — kept in sync by the `statusLabelKeys` coverage
  * test in `src/test/locale/statusLabel.test.ts`.
  */
-const BUILT_IN_STATUS_TRANSLATION_KEYS: Readonly<Record<string, TranslationKey>> =
-	{
-		no_stats: "statuses.partStatus.noStats",
-		hold: "statuses.partStatus.hold",
-		reserve: "statuses.partStatus.reserve",
-		branch: "statuses.partStatus.branch",
-		arrive: "statuses.partStatus.arrive",
-		confirmed: "statuses.bookingStatus.confirmed",
-		pending: "statuses.bookingStatus.pending",
-		cancelled: "statuses.bookingStatus.cancelled",
-		completed: "statuses.bookingStatus.completed",
-	};
+const BUILT_IN_STATUS_TRANSLATION_KEYS: Readonly<
+	Record<string, TranslationKey>
+> = {
+	no_stats: "statuses.partStatus.noStats",
+	hold: "statuses.partStatus.hold",
+	reserve: "statuses.partStatus.reserve",
+	branch: "statuses.partStatus.branch",
+	arrive: "statuses.partStatus.arrive",
+	confirmed: "statuses.bookingStatus.confirmed",
+	pending: "statuses.bookingStatus.pending",
+	cancelled: "statuses.bookingStatus.cancelled",
+	completed: "statuses.bookingStatus.completed",
+};
 
 /**
  * Resolves how a status's label should be *presented* in the given locale.
