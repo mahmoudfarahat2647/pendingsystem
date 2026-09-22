@@ -1,8 +1,34 @@
-# Source-level evidence (ag-grid-community 32.3.3)
+# Source-level evidence (ag-grid-community 32.3.9)
 
-Extracted directly from the `ag-grid-community@32.3.3` package installed from the
-public npm registry (the same major/minor pinned in pendingsystem's
-`package.json`: `"ag-grid-community": "^32.3.3"`).
+Extracted directly from the `ag-grid-community@32.3.9` package installed from the
+public npm registry — the **exact version `pnpm-lock.yaml` resolves** for the
+`^32.3.3` range in pendingsystem's `package.json` (confirmed via
+`grep -n "ag-grid-community@" pnpm-lock.yaml`, which shows
+`ag-grid-community@32.3.9:`). The original pass of this doc/prototype tested
+`32.3.3` directly rather than the resolved `32.3.9` — see the "Version
+correction" note below. All findings on this page were re-verified against the
+`32.3.9` package's own shipped `.d.ts`/bundled source and hold unchanged.
+
+## Version correction (review 5274566894 on PR #282)
+
+The initial spike tested `ag-grid-community@32.3.3` (matching the caret range
+in `package.json`) instead of `32.3.9` (what the lockfile actually resolves
+and what the app actually installs). Re-running against `32.3.9` specifically:
+
+- `localeText` and `enableRtl` are **still** both listed in
+  `INITIAL_GRID_OPTION_KEYS` in `32.3.9`'s shipped `propertyKeys.d.ts`, with
+  identical `@initial` JSDoc tags on both properties in `gridOptions.d.ts`, and
+  an identical `updateGridOptions()` warn-but-don't-block implementation in the
+  bundled `main.cjs.js` (byte-identical warning string and control flow to what
+  was previously checked against `32.3.3`). This is expected — a patch-version
+  bump (`32.3.3` → `32.3.9`) is very unlikely to change a documented public API
+  contract, and it did not here. **The core conclusion is unchanged**: both
+  properties are initial-only and require full grid recreation to change live.
+- The one file-path detail worth noting: the type declarations in the
+  installed package live under `dist/types/core/...`, not
+  `dist/types/src/...` as the very first draft of this note assumed before
+  verification — this is a path detail, not a functional finding, and is
+  corrected in the code excerpts below.
 
 ## 1. `localeText` and `enableRtl` are both `@initial`-only GridOptions
 
@@ -99,24 +125,31 @@ because "recreation" in `DataGrid.tsx`'s pattern rebuilds from the external
 ## How to reproduce
 
 ```bash
-npm install ag-grid-community@32.3.3 jsdom
+npm install ag-grid-community@32.3.9 jsdom
 node prototype.mjs
 ```
 
 `output.txt` in this folder is the captured stdout from exactly this
-`prototype.mjs`, run against `ag-grid-community@32.3.3` fetched from the
+`prototype.mjs`, run against `ag-grid-community@32.3.9` fetched from the
 public npm registry.
 
-## Known harness limitation
+## Known harness limitation (only `scroll` remains open)
 
-`columnSizing` (column width) prints as `undefined` in the captured state in
-this jsdom-headless harness — `getState()`'s column-sizing snapshot depends on
-computed layout (actual rendered widths), which jsdom does not compute the way
-a real browser does. This is a limitation of the headless harness, not
-evidence about the grid's capability: `columnSizing` is a documented member of
-`GridState` (`dist/types/core/interfaces/gridState.d.ts`) returned by
-`getState()` and accepted by `initialState`, restored through the exact same
-mechanism proven to work for `sort`/`filter`/`columnPinning`/`rowSelection` in
-TEST 3. The grid ticket should re-verify this one specific sub-case in a real
-browser (e.g. Playwright) before relying on it, since it is the one piece this
+After the review-5274566894 fixes (correct `GridState` field names —
+`columnSizingModel` not `columnSizingState`, `focusedCell` not `focus` — a
+real filter type on the `part` column, `pagination: true` plus a deliberate
+non-default page, and an `await` after each `requestAnimationFrame`-deferred
+grid operation), `columnSizing`, `filter`, `pagination`, and `focusedCell` all
+now capture and restore **real, non-default values** in this headless jsdom
+harness (see `output.txt`, TEST 3) — none of these remain an open item.
+
+`scroll` is the one field that genuinely could not be exercised here:
+`GridStateService.getScrollState()`/its cached-state entry only updates on a
+real `bodyScrollEnd` event fired against an actual scrollable viewport with
+real pixel dimensions, which jsdom does not provide. `scroll` is a documented
+member of `GridState` (`dist/types/core/interfaces/gridState.d.ts`) returned
+by `getState()` and accepted by `initialState`, restored through the exact
+same `initialState` mechanism proven to work for the other state slices in
+TEST 3 — but this specific sub-case needs a real-browser (e.g. Playwright)
+check before the grid ticket relies on it, since it is the one piece this
 harness could not directly observe.

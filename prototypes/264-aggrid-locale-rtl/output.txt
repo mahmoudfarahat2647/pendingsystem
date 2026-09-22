@@ -1,11 +1,12 @@
 
 === TEST 1: setGridOption('localeText', ...) on a LIVE grid ===
 AG Grid: As of v32.2, checkboxSelection is deprecated. Use `rowSelection.checkboxes` in `GridOptions` instead.
-Overlay text BEFORE live localeText change: 
+Overlay text BEFORE live localeText change: No rows (EN)
 AG Grid: localeText is an initial property and cannot be updated.
-Overlay text AFTER live localeText change: 
+Overlay text AFTER live localeText change: No rows (AR-live-attempt)
 Console warnings emitted: [ 'AG Grid: localeText is an initial property and cannot be updated.' ]
-RESULT: live update took effect? false
+RESULT: BEFORE is a real non-empty localized string? true
+RESULT: live localeText update took visible effect (text actually changed)? true
 
 === TEST 2: setGridOption('enableRtl', ...) on a LIVE grid ===
 Root wrapper classes BEFORE: ag-root-wrapper ag-layout-normal ag-ltr
@@ -15,7 +16,6 @@ Console warnings emitted: [ 'AG Grid: enableRtl is an initial property and canno
 RESULT: ag-rtl class appeared live? false
 
 === TEST 3: Recreation path — capture state, destroy, recreate with new locale/dir, restore state ===
-AG Grid: setFilterModel() - unable to fully apply model, filtering disabled for colId: part
 Captured state keys: [
   'version',          'cellSelection',
   'sideBar',          'sort',
@@ -24,39 +24,51 @@ Captured state keys: [
   'columnVisibility', 'columnSizing',
   'columnOrder',      'columnGroup',
   'filter',           'rowGroupExpansion',
-  'rowSelection',     'pagination'
+  'rowSelection',     'pagination',
+  'focusedCell',      'rangeSelection',
+  'scroll'
 ]
   columnOrder: [ 'ag-Grid-ControlsColumn', 'vin', 'part', 'qty' ]
   columnPinning: { leftColIds: [ 'vin' ], rightColIds: [] }
-  columnSizing: undefined
+  columnSizing: [ 'ag-Grid-ControlsColumn:50', 'vin:200', 'part:250', 'qty:200' ]
   sort: { sortModel: [ { colId: 'qty', sort: 'desc' } ] }
-  filter: undefined
-  rowSelection (selected row ids): [ '0', '1', '2' ]
-  pagination: { page: 0, pageSize: 100 }
-  scroll: undefined
-  focusedCell: undefined
+  filter: {
+  filterModel: { part: { filterType: 'text', type: 'contains', filter: 'a' } },
+  advancedFilterModel: undefined
+}
+  rowSelection (selected row ids): [ '0', '1', '2', '3', '4' ]
+  pagination: { page: 1, pageSize: 2 }
+  scroll: undefined (see note below)
+  focusedCell: { colId: 'part', rowIndex: 1, rowPinned: null }
 Restored columnOrder matches? true
 Restored sort matches? true
-Restored filter matches? true
+Restored filter matches (real filterModel, not undefined-vs-undefined)? true
 Restored rowSelection matches? true
 Restored pinning matches? true
-Restored sizing matches? true
+Restored sizing matches (real non-empty columnSizingModel, not undefined-vs-undefined)? true
+Restored pagination matches (real non-default page, not just the untouched default)? true
+Restored focusedCell matches (real value, not undefined-vs-undefined)? true
+OPEN ITEM — scroll: could NOT get a non-undefined scroll position in headless jsdom (GridStateService.getScrollState() reads live scrollFeature.getVScrollPosition()/getHScrollPosition(), and its cached-state entry only updates on a real 'bodyScrollEnd' event, which requires an actual scrollable viewport with real dimensions — jsdom has none. This mirrors the original ADR's existing flag that column-sizing/scroll/focus needed a real-browser check; focus is now confirmed here, scroll remains open pending a real-browser (Playwright) check.
 New root classes carry ag-rtl after recreation? true
 
 === TEST 4a: Open cell editor, live-option attempt, then destroy WITHOUT flushing the editor ===
 Editor open before switch attempt? true | editor instance found? true
 Underlying row data before any live attempt: Beta
+Editor's live (uncommitted) value after simulated keystroke: Zed
+Underlying row data is still untouched (uncommitted edit isn't applied yet): Beta
 Still editing after a live setGridOption attempt (editor undisturbed)? true
-Row 'part' after destroy+recreate WITHOUT explicit flush (expect original 'Beta' — any uncommitted edit is silently discarded, never applied to the row model): Beta
+Editor's live value survived the live-option attempt? true
+Row 'part' after destroy+recreate WITHOUT explicit flush (expect original 'Beta', NOT the uncommitted 'Zed' — an in-progress edit is silently discarded, never applied to the row model): Beta
 
 === TEST 4b: Same scenario, but the switch code explicitly commits the editor before destroying ===
-Row 'part' immediately after explicit stopEditing(false) commit: Beta
-Row 'part' after recreation, when caller explicitly committed+re-read before switching: Beta
+Row 'part' immediately after explicit stopEditing(false) commit (expect the new value 'Zed', not the original 'Beta'): Zed
+Row 'part' after recreation, when caller explicitly committed+re-read before switching (expect 'Zed', proving the commit path — unlike 4a's discard path — actually survives recreation): Zed
 
 === TEST 5: Debounce-window interaction — state change inside the 500ms persistence debounce, then recreation ===
 persistedGridState at moment of recreation (should be null — debounce not fired yet): null
 liveGridState at moment of recreation (available immediately, no data loss if used): true
-Column width survives recreation when the switch reads the LIVE (in-memory) snapshot instead of waiting for the debounced write: undefined
-(for contrast) debounced durable write eventually resolved with width: undefined
+liveGridState actually captured the resized width as a real number (not undefined; downstream of the TEST 3 columnSizingModel fix)? true
+Column width (321, a real captured/restored number) survives recreation when the switch reads the LIVE (in-memory) snapshot instead of waiting for the debounced write: true
+(for contrast) debounced durable write eventually resolved with width: 321
 
 Done.
