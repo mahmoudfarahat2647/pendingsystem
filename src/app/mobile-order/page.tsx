@@ -150,6 +150,7 @@ export default function MobileOrderPage() {
 					<input
 						id="customerName"
 						type="text"
+						dir="auto"
 						value={fields.customerName}
 						onChange={(e) => setField("customerName", e.target.value)}
 						className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -165,6 +166,7 @@ export default function MobileOrderPage() {
 					<input
 						id="mobile"
 						type="tel"
+						dir="ltr"
 						value={fields.mobile}
 						onChange={(e) => setField("mobile", e.target.value)}
 						className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -180,6 +182,7 @@ export default function MobileOrderPage() {
 					<input
 						id="vin"
 						type="text"
+						dir="ltr"
 						value={fields.vin}
 						onChange={(e) => setField("vin", e.target.value)}
 						className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -195,6 +198,7 @@ export default function MobileOrderPage() {
 					<input
 						id="sabNumber"
 						type="text"
+						dir="ltr"
 						value={fields.sabNumber}
 						onChange={(e) => setField("sabNumber", e.target.value)}
 						className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -209,6 +213,7 @@ export default function MobileOrderPage() {
 					</label>
 					<select
 						id="model"
+						dir="auto"
 						value={fields.model}
 						onChange={(e) => setField("model", e.target.value)}
 						className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -224,6 +229,7 @@ export default function MobileOrderPage() {
 					{fields.model === "__custom__" && (
 						<input
 							type="text"
+							dir="auto"
 							value={customModel}
 							onChange={(e) => setCustomModel(e.target.value)}
 							className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -239,6 +245,7 @@ export default function MobileOrderPage() {
 					</label>
 					<select
 						id="repairSystem"
+						dir="auto"
 						value={fields.repairSystem}
 						onChange={(e) => setField("repairSystem", e.target.value)}
 						className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -254,6 +261,7 @@ export default function MobileOrderPage() {
 					{fields.repairSystem === "__custom__" && (
 						<input
 							type="text"
+							dir="auto"
 							value={customRepair}
 							onChange={(e) => setCustomRepair(e.target.value)}
 							className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -269,6 +277,7 @@ export default function MobileOrderPage() {
 						<div key={part.id} className="flex gap-2 items-start">
 							<input
 								type="text"
+								dir="ltr"
 								value={part.partNumber}
 								onChange={(e) =>
 									updatePart(part.id, "partNumber", e.target.value)
@@ -278,6 +287,7 @@ export default function MobileOrderPage() {
 							/>
 							<input
 								type="text"
+								dir="auto"
 								value={part.description}
 								onChange={(e) =>
 									updatePart(part.id, "description", e.target.value)

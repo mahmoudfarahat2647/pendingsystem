@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { LtrIsolate } from "@/components/shared/bidi/LtrIsolate";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -157,7 +158,7 @@ export const Sidebar = React.memo(function Sidebar() {
 		<aside
 			suppressHydrationWarning
 			className={cn(
-				"flex flex-col border-r transition-all duration-300 will-change-[width] z-50",
+				"flex flex-col border-e transition-all duration-300 will-change-[width] z-50",
 				"bg-black/80 backdrop-blur-md border-white/10",
 				isCollapsed ? "w-20" : "w-72",
 			)}
@@ -253,7 +254,7 @@ export const Sidebar = React.memo(function Sidebar() {
 									{!isCollapsed && badge !== undefined && (
 										<span
 											className={cn(
-												"ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border relative z-10",
+												"ms-auto text-[10px] font-bold px-2 py-0.5 rounded-full border relative z-10",
 												isActive
 													? "bg-black/20 border-black/10 text-black"
 													: "bg-renault-yellow/10 border-renault-yellow/20 text-renault-yellow",
@@ -294,7 +295,7 @@ export const Sidebar = React.memo(function Sidebar() {
 						suppressHydrationWarning
 						onClick={() => setSettingsOpen(true)}
 						className={cn(
-							"flex-1 flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-all text-left",
+							"flex-1 flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-all text-start",
 							isCollapsed && "justify-center",
 						)}
 					>
@@ -309,7 +310,7 @@ export const Sidebar = React.memo(function Sidebar() {
 							<span className="text-xs font-bold text-renault-yellow">
 								{userInitials || "U"}
 							</span>
-							<div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full"></div>
+							<div className="absolute bottom-0 end-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full"></div>
 						</div>
 						{!isCollapsed && (
 							<div className="flex-1 min-w-0">
@@ -358,8 +359,10 @@ export const Sidebar = React.memo(function Sidebar() {
 					</DialogTitle>
 					<DialogDescription className="text-slate-400 text-sm">
 						You have an active edit for VIN{" "}
-						<span className="text-white font-mono">{currentEditVin}</span>.
-						Navigating to another tab will discard your changes.
+						<LtrIsolate className="text-white font-mono">
+							{currentEditVin}
+						</LtrIsolate>
+						. Navigating to another tab will discard your changes.
 					</DialogDescription>
 					<DialogFooter className="mt-4">
 						<Button
@@ -367,14 +370,14 @@ export const Sidebar = React.memo(function Sidebar() {
 							onClick={cancelNavigation}
 							className="text-slate-400 hover:text-white"
 						>
-							<X className="h-4 w-4 mr-2" />
+							<X className="h-4 w-4 me-2" />
 							Cancel
 						</Button>
 						<Button
 							onClick={confirmNavigation}
 							className="bg-amber-500 hover:bg-amber-400 text-black"
 						>
-							<AlertTriangle className="h-4 w-4 mr-2" />
+							<AlertTriangle className="h-4 w-4 me-2" />
 							Discard & Continue
 						</Button>
 					</DialogFooter>

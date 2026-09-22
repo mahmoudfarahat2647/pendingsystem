@@ -1,4 +1,5 @@
 import { MessageSquare, Phone, X } from "lucide-react";
+import { LtrIsolate } from "@/components/shared/bidi/LtrIsolate";
 import { Input } from "@/components/ui/input";
 import type { BookingStatus, PendingRow } from "@/types";
 
@@ -26,7 +27,7 @@ export const BookingSidebarHeader = ({
 			<button
 				type="button"
 				onClick={onClose}
-				className="absolute right-4 top-4 z-50 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+				className="absolute end-4 top-4 z-50 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200"
 			>
 				<X className="h-4 w-4" />
 			</button>
@@ -37,7 +38,7 @@ export const BookingSidebarHeader = ({
 			<button
 				type="button"
 				onClick={onClose}
-				className="absolute right-4 top-4 z-50 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+				className="absolute end-4 top-4 z-50 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200"
 			>
 				<X className="h-4 w-4" />
 			</button>
@@ -55,18 +56,19 @@ export const BookingSidebarHeader = ({
 			<div className="grid gap-3">
 				<div className="flex items-center gap-3 px-3 py-3 bg-indigo-500/[0.06] border border-indigo-500/20 rounded-xl">
 					<Phone className="h-4 w-4 text-indigo-400 shrink-0" />
-					<span className="text-xl font-bold tracking-wider text-white">
+					<LtrIsolate className="text-xl font-bold tracking-wider text-white">
 						{selectedRows[0]?.mobile || "—"}
-					</span>
+					</LtrIsolate>
 				</div>
 
 				<div className="relative">
-					<MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-500/50 pointer-events-none z-10" />
+					<MessageSquare className="absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-500/50 pointer-events-none z-10" />
 					<Input
 						value={bookingNote}
 						onChange={(e) => setBookingNote(e.target.value)}
 						placeholder="Add initial note..."
-						className="w-full pl-10 pr-3 h-9 bg-white/[0.02] border-indigo-500/20 rounded-lg focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/30 text-sm text-gray-300 placeholder:text-gray-600 transition-all"
+						dir="auto"
+						className="w-full ps-10 pe-3 h-9 bg-white/[0.02] border-indigo-500/20 rounded-lg focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/30 text-sm text-gray-300 placeholder:text-gray-600 transition-all"
 					/>
 				</div>
 			</div>

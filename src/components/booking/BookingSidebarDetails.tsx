@@ -60,7 +60,7 @@ export const BookingSidebarDetails = ({
 						{activeBookingRep ? "Details" : "Preview New Booking"}
 					</div>
 					<div className="flex items-center gap-2">
-						<h2 className="text-xl font-light text-white">
+						<h2 dir="auto" className="text-xl font-light text-white">
 							{currentRep?.customerName}
 						</h2>
 						{consolidatedNotes.length > 0 && activeBookingRep && (
@@ -83,6 +83,7 @@ export const BookingSidebarDetails = ({
 												<div
 													key={note}
 													className="text-sm italic text-gray-400 bg-white/[0.02] p-2 rounded border border-white/5"
+													dir="auto"
 												>
 													"{note}"
 												</div>
@@ -123,16 +124,27 @@ export const BookingSidebarDetails = ({
 								<div
 									key={booking.id}
 									className={cn(
-										"relative pl-4 border-l border-white/10",
+										"relative ps-4 border-s border-white/10",
 										idx !== currentParts.length - 1 && "pb-2",
 									)}
 								>
-									<div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-white/10 border border-[#1c1c1e]" />
-									<div className="text-gray-300 leading-relaxed font-medium">
-										{booking.description ||
-											booking.partNumber ||
-											"No part info"}
-									</div>
+									<div className="absolute -start-[5px] top-1.5 w-2 h-2 rounded-full bg-white/10 border border-[#1c1c1e]" />
+									{booking.description ? (
+										<div
+											dir="auto"
+											className="text-gray-300 leading-relaxed font-medium"
+										>
+											{booking.description}
+										</div>
+									) : booking.partNumber ? (
+										<LtrIsolate className="text-gray-300 leading-relaxed font-medium">
+											{booking.partNumber}
+										</LtrIsolate>
+									) : (
+										<div className="text-gray-300 leading-relaxed font-medium">
+											No part info
+										</div>
+									)}
 								</div>
 							))}
 						</div>

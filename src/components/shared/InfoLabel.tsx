@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import React from "react";
+import { LtrIsolate } from "@/components/shared/bidi/LtrIsolate";
 import { calculateRemainingTime, cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
 
@@ -39,8 +40,8 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 
 			<div className="w-full bg-[#0a0a0b]/90 backdrop-blur-xl rounded-lg border border-white/10 p-3 shadow-xl relative overflow-hidden">
 				{/* Ambient Background Glow */}
-				<div className="absolute top-0 right-0 w-96 h-96 bg-renault-yellow/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-				<div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+				<div className="absolute top-0 end-0 w-96 h-96 bg-renault-yellow/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+				<div className="absolute bottom-0 start-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
 				<div
 					className="grid grid-cols-1 md:grid-cols-3 gap-y-2 gap-x-6 relative z-10 font-[family-name:var(--font-geist-sans)]"
@@ -52,7 +53,10 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-16 shrink-0">
 								name :
 							</span>
-							<span className="text-sm font-medium text-gray-100 tracking-wide truncate shadow-black drop-shadow-sm">
+							<span
+								dir="auto"
+								className="text-sm font-medium text-gray-100 tracking-wide truncate shadow-black drop-shadow-sm"
+							>
 								{customerName}
 							</span>
 						</div>
@@ -60,15 +64,18 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-16 shrink-0">
 								vin :
 							</span>
-							<span className="text-sm font-black text-green-500 tracking-widest font-mono truncate drop-shadow-md">
+							<LtrIsolate className="text-sm font-black text-green-500 tracking-widest font-mono truncate drop-shadow-md">
 								{vin}
-							</span>
+							</LtrIsolate>
 						</div>
 						<div className="flex items-baseline gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-16 shrink-0">
 								model :
 							</span>
-							<span className="text-sm font-bold text-cyan-400 tracking-wide truncate drop-shadow-sm">
+							<span
+								dir="auto"
+								className="text-sm font-bold text-cyan-400 tracking-wide truncate drop-shadow-sm"
+							>
 								{model}
 							</span>
 						</div>
@@ -76,9 +83,9 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-16 shrink-0">
 								mobile :
 							</span>
-							<span className="text-sm font-mono text-gray-300 tracking-wide truncate">
+							<LtrIsolate className="text-sm font-mono text-gray-300 tracking-wide truncate">
 								{mobile}
-							</span>
+							</LtrIsolate>
 						</div>
 					</div>
 
@@ -88,7 +95,10 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
 								part des. :
 							</span>
-							<span className="text-sm font-medium text-gray-200 tracking-wide truncate">
+							<span
+								dir="auto"
+								className="text-sm font-medium text-gray-200 tracking-wide truncate"
+							>
 								{description}
 							</span>
 						</div>
@@ -96,15 +106,18 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
 								part no. :
 							</span>
-							<span className="text-sm font-mono text-gray-300 tracking-wider truncate bg-white/5 px-1 rounded">
+							<LtrIsolate className="text-sm font-mono text-gray-300 tracking-wider truncate bg-white/5 px-1 rounded">
 								{partNumber}
-							</span>
+							</LtrIsolate>
 						</div>
 						<div className="flex items-baseline gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
 								stats :
 							</span>
-							<span className="text-sm font-medium text-gray-200 tracking-wide truncate">
+							<span
+								dir="auto"
+								className="text-sm font-medium text-gray-200 tracking-wide truncate"
+							>
 								{data?.status || "-"}
 							</span>
 						</div>
@@ -131,7 +144,10 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
 								system :
 							</span>
-							<span className="text-sm font-medium text-gray-200 tracking-wide truncate">
+							<span
+								dir="auto"
+								className="text-sm font-medium text-gray-200 tracking-wide truncate"
+							>
 								{repairSystem}
 							</span>
 						</div>
@@ -144,9 +160,9 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 									<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
 										icm start :
 									</span>
-									<span className="text-sm font-mono text-cyan-400 tracking-wide truncate">
+									<LtrIsolate className="text-sm font-mono text-cyan-400 tracking-wide truncate">
 										{fmtDate(startWarranty)}
-									</span>
+									</LtrIsolate>
 								</div>
 								<div
 									className="flex items-baseline gap-2"
@@ -155,9 +171,9 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 									<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
 										icm end :
 									</span>
-									<span className="text-sm font-mono text-cyan-400 tracking-wide truncate">
+									<LtrIsolate className="text-sm font-mono text-cyan-400 tracking-wide truncate">
 										{fmtDate(endWarranty)}
-									</span>
+									</LtrIsolate>
 								</div>
 							</>
 						)}
