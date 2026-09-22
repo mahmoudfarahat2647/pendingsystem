@@ -40,6 +40,58 @@ export interface TranslationCatalog {
 			arabic: string;
 		};
 	};
+	/**
+	 * Presentation-boundary copy for `OrderFormSchema`/`BeastModeSchema` (see
+	 * `src/schemas/form.schema.ts`). The schemas themselves stay locale-agnostic
+	 * — their canonical English messages are the "structured error identity"
+	 * that `src/locales/validationMessages.ts` maps to these keys. `generic` is
+	 * the fallback for any message the mapping does not recognize (#268).
+	 */
+	validation: {
+		customerNameRequired: string;
+		vinRequired: string;
+		mobileRequired: string;
+		invalidMileageFormat: string;
+		companyRequired: string;
+		invalidCompany: string;
+		warrantyMileageExceeded: string;
+		kmReadingRequired: string;
+		vehicleModelRequired: string;
+		repairSystemRequired: string;
+		sabNumberRequired: string;
+		requesterRequired: string;
+		acceptedByRequired: string;
+		generic: string;
+	};
+	/**
+	 * Product-owned toast copy and action labels (#268). Operational data
+	 * embedded in a toast (a raw error message, a VIN, a part number) is never
+	 * a catalog key — only the surrounding static copy is.
+	 */
+	toast: {
+		identityFieldsUpdated: string;
+		beastModeMissingInfo: string;
+		duplicatePartNumbersRemove: string;
+		vinPartDuplicateReview: string;
+		descriptionConflictResolve: string;
+		beastModePartRequired: string;
+		duplicateCheckFailed: string;
+		draftSaveSuccess: string;
+		draftSaveFailed: string;
+		saveFailedPrefix: string;
+		skipThisChange: string;
+		saveOrderErrorPrefix: string;
+		moveOrdersErrorPrefix: string;
+		deleteOrdersErrorPrefix: string;
+	};
+	/** Static copy inside the order form's part-level validation warnings. */
+	warnings: {
+		duplicatePartInOrder: string;
+		orderAlreadyExists: string;
+		orderAlreadyExistsDb: string;
+		inLocationConnector: string;
+		existingNameLabel: string;
+	};
 }
 
 type Join<K extends string, P extends string> = P extends "" ? K : `${K}.${P}`;

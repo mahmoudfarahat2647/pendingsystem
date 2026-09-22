@@ -1,3 +1,4 @@
+import type { TranslationKey } from "@/locales";
 import type { PartEntry, PendingRow } from "@/types";
 
 export interface FormData {
@@ -28,4 +29,7 @@ export type PartWarning = {
 	type: "mismatch" | "duplicate" | "same-order-duplicate";
 	value: string;
 	location?: string;
+	/** Localized key for the static portion of `value` (#268); see
+	 * `useOrderValidation.ts`'s `partValidationWarnings` for how it's set. */
+	messageKey?: TranslationKey;
 };

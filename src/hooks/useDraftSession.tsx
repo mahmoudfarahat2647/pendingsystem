@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { releaseAuthorizationCoversRows } from "@/domain/order/releaseGate";
 import { useReleaseGate } from "@/hooks/useReleaseGate";
+import { useTranslation } from "@/hooks/useTranslation";
 import { DRAFT_RECOVERY_MAX_AGE_MS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { DraftRecoverySnapshotSchema } from "@/schemas/draftSession.schema";
@@ -85,6 +86,7 @@ function clearRecoveryToastOffer() {
 }
 
 export function useDraftSession(stage?: OrderStage) {
+	const { t } = useTranslation();
 	const draftSession = useAppStore((state) => state.draftSession);
 	const applyCommand = useAppStore((state) => state.applyCommand);
 	const undoDraft = useAppStore((state) => state.undoDraft);
@@ -192,29 +194,38 @@ export function useDraftSession(stage?: OrderStage) {
 
 	useEffect(() => {
 		if (!lastSaveResult) return;
+		// Resolved against the currently active locale at the moment this
+		// effect fires, not whatever locale was active when saveDraft() was
+		// called — so a save started before a locale switch still reports in
+		// the language now active (#268). `t` changes identity on every locale
+		// switch (see LocaleProvider), so this effect re-fires... but only
+		// when `lastSaveResult` is genuinely still pending; once cleared below
+		// it stays `null` and a mere locale switch does not resurface it.
 		if (lastSaveResult === "success")
-			toast.success("Draft saved successfully.");
-		else toast.error("Draft save failed. Please try again.");
+			toast.success(t("toast.draftSaveSuccess"));
+		else toast.error(t("toast.draftSaveFailed"));
 		clearSaveResult();
-	}, [lastSaveResult, clearSaveResult]);
+	}, [lastSaveResult, clearSaveResult, t]);
 
 	// When saveDraft() stops partway through and is stuck retrying the same
 	// failing command (saveCheckpoint is set alongside saveError), offer a way
-	// to discard just that one command instead of the whole draft.
+	// to discard just that one command instead of the whole draft. `saveError`
+	// is the operational error text itself and stays untranslated; only the
+	// prefix and the action label are localized copy (#268).
 	useEffect(() => {
 		if (!saveError || !saveCheckpoint) return;
-		toast.error(`Save failed: ${saveError}`, {
+		toast.error(`${t("toast.saveFailedPrefix")} ${saveError}`, {
 			id: "draft-save-stuck",
 			duration: Number.POSITIVE_INFINITY,
 			action: {
-				label: "Skip this change",
+				label: t("toast.skipThisChange"),
 				onClick: () => {
 					skipFailedCommand();
 					toast.dismiss("draft-save-stuck");
 				},
 			},
 		});
-	}, [saveError, saveCheckpoint, skipFailedCommand]);
+	}, [saveError, saveCheckpoint, skipFailedCommand, t]);
 
 	useEffect(() => {
 		if (typeof window === "undefined") {

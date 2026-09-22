@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateAppSettingsMutation } from "@/hooks/mutations/useUpdateAppSettingsMutation";
 import { useAppSettingsQuery } from "@/hooks/queries/useAppSettingsQuery";
+import { useTranslation } from "@/hooks/useTranslation";
 import { cn, generateId } from "@/lib/utils";
 import type { PartEntry } from "@/types";
 import type { FormData, PartWarning } from "./types";
@@ -68,6 +69,7 @@ export const PartsSection = ({
 	validationMode,
 	descriptionRefs,
 }: PartsSectionProps) => {
+	const { t } = useTranslation();
 	// Parts bulk import state — owned here, not in the hook
 	const [isBulkMode, setIsBulkMode] = useState(false);
 	const [bulkText, setBulkText] = useState("");
@@ -309,10 +311,20 @@ export const PartsSection = ({
 														<div className="flex items-center gap-1.5 text-red-400">
 															<AlertCircle className="h-3 w-3" />
 															<span className="text-[9px] font-bold uppercase tracking-tight">
-																{partValidationWarnings[part.id].type ===
-																"duplicate"
-																	? `${partValidationWarnings[part.id].value} in ${partValidationWarnings[part.id].location}`
-																	: `Existing Name: "${partValidationWarnings[part.id].value}"`}
+																{(() => {
+																	const warning =
+																		partValidationWarnings[part.id];
+																	// Static copy is translated; `location` and a
+																	// "mismatch" warning's existing-description
+																	// text are operational data and stay as-is
+																	// (#268: translate only the surrounding copy).
+																	const displayValue = warning.messageKey
+																		? t(warning.messageKey)
+																		: warning.value;
+																	return warning.type === "duplicate"
+																		? `${displayValue} ${t("warnings.inLocationConnector")} ${warning.location}`
+																		: `${t("warnings.existingNameLabel")} "${displayValue}"`;
+																})()}
 															</span>
 														</div>
 														{partValidationWarnings[part.id].type ===

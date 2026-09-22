@@ -11,6 +11,19 @@ const toastMocks = vi.hoisted(() => ({
 	plain: vi.fn(),
 }));
 
+// This test exercises draft-session/recovery behavior, not translation —
+// stub useTranslation with an identity `t` so string assertions below stay
+// keyed to the (untranslated) catalog key. Localization of these same toasts
+// is covered by src/test/locale/validationToastLocalization.test.tsx (#268).
+vi.mock("@/hooks/useTranslation", () => ({
+	useTranslation: () => ({
+		locale: "en",
+		dir: "ltr",
+		setLocale: vi.fn(),
+		t: (key: string) => key,
+	}),
+}));
+
 vi.mock("sonner", () => ({
 	toast: Object.assign(toastMocks.plain, {
 		custom: toastMocks.custom,

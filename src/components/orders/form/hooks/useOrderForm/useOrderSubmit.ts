@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { normalizeCompanyName } from "@/domain/company/company";
+import { useTranslation } from "@/hooks/useTranslation";
 import { BeastModeSchema } from "@/schemas/form.schema";
 import { useAppStore } from "@/store/useStore";
 import type { DuplicateCheckResult, PartEntry, PendingRow } from "@/types";
@@ -35,6 +36,7 @@ interface UseOrderSubmitProps {
 
 export function useOrderSubmit(props: UseOrderSubmitProps) {
 	const clearCurrentEditVin = useAppStore((state) => state.clearCurrentEditVin);
+	const { t } = useTranslation();
 
 	const handleLocalSubmit = async () => {
 		const isBeastMode = props.validationMode === "beast";
@@ -53,7 +55,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 				}
 				props.setBeastModeErrors(missingFields);
 
-				toast.error("Missing Info: Please complete the highlighted fields.", {
+				toast.error(t("toast.beastModeMissingInfo"), {
 					id: "beast-mode-validation-error",
 				});
 				return;
@@ -64,9 +66,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 					props.partValidationWarnings,
 				).some((w) => w.type === "same-order-duplicate");
 				if (hasSameOrderDup) {
-					toast.error(
-						"Duplicate part numbers in this order. Please remove duplicates.",
-					);
+					toast.error(t("toast.duplicatePartNumbersRemove"));
 					return;
 				}
 
@@ -74,9 +74,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 					(w) => w.type === "duplicate",
 				);
 				if (hasVinPartDup) {
-					toast.error(
-						"This VIN + part combination already exists. Please review.",
-					);
+					toast.error(t("toast.vinPartDuplicateReview"));
 					return;
 				}
 
@@ -84,9 +82,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 					(w) => w.type === "mismatch",
 				);
 				if (hasMismatch) {
-					toast.error(
-						"Description conflicts must be resolved. Please use the existing description.",
-					);
+					toast.error(t("toast.descriptionConflictResolve"));
 					return;
 				}
 			}
@@ -96,9 +92,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 				(p) => p.partNumber.trim() !== "" && p.description.trim() !== "",
 			);
 			if (!hasValidPart) {
-				toast.error(
-					"Part number and description are required. Please complete the components section.",
-				);
+				toast.error(t("toast.beastModePartRequired"));
 				return;
 			}
 		} else {
@@ -108,9 +102,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 				(w) => w.type === "same-order-duplicate",
 			);
 			if (hasSameOrderDup) {
-				toast.error(
-					"Duplicate part numbers in this order. Please remove duplicates.",
-				);
+				toast.error(t("toast.duplicatePartNumbersRemove"));
 				return;
 			}
 
@@ -145,9 +137,7 @@ export function useOrderSubmit(props: UseOrderSubmitProps) {
 				// The duplicate check couldn't complete (e.g. transient DB error).
 				// Fail closed: block submission rather than risk creating a real
 				// VIN+part duplicate that the check failed to catch.
-				toast.error(
-					"Could not verify duplicate parts. Please try submitting again.",
-				);
+				toast.error(t("toast.duplicateCheckFailed"));
 				return;
 			} finally {
 				props.setIsCheckingDuplicates(false);

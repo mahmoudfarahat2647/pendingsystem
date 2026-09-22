@@ -8,6 +8,8 @@ import {
 } from "@/domain/order/orderWorkflow";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { logger } from "@/lib/logger";
+import type { TranslationKey } from "@/locales";
+import { resolveValidationMessageKey } from "@/locales";
 import { BeastModeSchema, OrderFormSchema } from "@/schemas/form.schema";
 import { useAppStore } from "@/store/useStore";
 import type { DuplicateCheckResult, PartEntry, PendingRow } from "@/types";
@@ -42,10 +44,13 @@ export function useOrderValidation({
 	// Store selectors
 	const beastModeTriggers = useAppStore((state) => state.beastModeTriggers);
 
-	// Basic errors state
-	const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
-		{},
-	);
+	// Basic errors state. Values are translation keys, not raw message text —
+	// re-rendering with a new locale re-translates them without re-validating
+	// (#268 acceptance criteria: visible validation messages re-render on
+	// locale switch without re-running submission or mutating form state).
+	const [errors, setErrors] = useState<
+		Partial<Record<keyof FormData, TranslationKey>>
+	>({});
 
 	// Validation mode state
 	const [validationMode, setValidationMode] = useState<"easy" | "beast">(
@@ -218,6 +223,12 @@ export function useOrderValidation({
 				type: "mismatch" | "duplicate" | "same-order-duplicate";
 				value: string;
 				location?: string;
+				// Localized presentation key for the static portion of `value`.
+				// Set only when `value` is fixed copy (not "mismatch", whose
+				// `value` is another order's actual description — operational
+				// data that must stay untranslated). Consumers render
+				// `messageKey ? t(messageKey) : value` (#268).
+				messageKey?: TranslationKey;
 			}
 		> = {};
 
@@ -238,6 +249,7 @@ export function useOrderValidation({
 				warnings[part.id] = {
 					type: "same-order-duplicate",
 					value: "Duplicate part number in this order",
+					messageKey: "warnings.duplicatePartInOrder",
 				};
 				return;
 			}
@@ -264,6 +276,7 @@ export function useOrderValidation({
 						type: "duplicate",
 						value: "The order already exists",
 						location: duplicateResult.location,
+						messageKey: "warnings.orderAlreadyExists",
 					};
 					return;
 				}
@@ -290,6 +303,7 @@ export function useOrderValidation({
 					type: "duplicate",
 					value: "The order already exists (DB)",
 					location: asyncWarning.location,
+					messageKey: "warnings.orderAlreadyExistsDb",
 				};
 			}
 		});
@@ -319,9 +333,11 @@ export function useOrderValidation({
 		const result = OrderFormSchema.safeParse(formData);
 		if (!result.success) {
 			const fieldErrors = result.error.flatten().fieldErrors;
-			const newErrors: Partial<Record<keyof FormData, string>> = {};
+			const newErrors: Partial<Record<keyof FormData, TranslationKey>> = {};
 			for (const [key, messages] of Object.entries(fieldErrors)) {
-				newErrors[key as keyof FormData] = messages?.[0] || "";
+				newErrors[key as keyof FormData] = resolveValidationMessageKey(
+					messages?.[0],
+				);
 			}
 			setErrors(newErrors);
 			return false;

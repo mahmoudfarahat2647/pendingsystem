@@ -7,6 +7,7 @@ import type { TranslationCatalog, TranslationKey } from "./types";
 export const CATALOGS: Record<Locale, TranslationCatalog> = { en, ar };
 
 export type { TranslationCatalog, TranslationKey };
+export { resolveValidationMessageKey } from "./validationMessages";
 
 function getByPath(source: TranslationCatalog, path: string): unknown {
 	return path.split(".").reduce<unknown>((acc, segment) => {

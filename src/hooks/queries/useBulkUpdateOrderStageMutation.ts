@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { useTranslation } from "@/hooks/useTranslation";
 import { ORDER_STAGES } from "@/lib/constants";
 import {
 	type BulkStageContext,
@@ -34,6 +35,7 @@ type BulkUpdateStageVariables = {
  */
 export function useBulkUpdateOrderStageMutation(sourceStage: OrderStage) {
 	const queryClient = useQueryClient();
+	const { t } = useTranslation();
 
 	return useMutation({
 		mutationKey: ["bulk-update-stage", sourceStage],
@@ -111,7 +113,9 @@ export function useBulkUpdateOrderStageMutation(sourceStage: OrderStage) {
 				restoreOrdersCache(queryClient, context.previousOrdersCache);
 			}
 			if (!variables.silentErrorToast) {
-				toast.error(`Failed to move orders: ${getErrorMessage(error)}`);
+				toast.error(
+					`${t("toast.moveOrdersErrorPrefix")} ${getErrorMessage(error)}`,
+				);
 			}
 		},
 		onSettled: async (_data, _error, variables, context) => {

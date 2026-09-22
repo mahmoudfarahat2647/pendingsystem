@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { useTranslation } from "@/hooks/useTranslation";
 import { ORDER_STAGES } from "@/lib/constants";
 import {
 	type DeleteContext,
@@ -24,6 +25,7 @@ import type { PendingRow } from "@/types";
  */
 export function useBulkDeleteOrdersMutation(sourceStage: OrderStage) {
 	const queryClient = useQueryClient();
+	const { t } = useTranslation();
 
 	return useMutation({
 		mutationKey: ["bulk-delete-orders", sourceStage],
@@ -55,7 +57,9 @@ export function useBulkDeleteOrdersMutation(sourceStage: OrderStage) {
 			if (context?.previousOrdersCache) {
 				restoreOrdersCache(queryClient, context.previousOrdersCache);
 			}
-			toast.error(`Failed to delete orders: ${getErrorMessage(error)}`);
+			toast.error(
+				`${t("toast.deleteOrdersErrorPrefix")} ${getErrorMessage(error)}`,
+			);
 		},
 		onSettled: async (_data, _error, _ids, context) => {
 			const stagesToRefresh = context?.touchedStages ?? ORDER_STAGES;

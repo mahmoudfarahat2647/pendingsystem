@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { OrderStage } from "@/domain/order/orderStage";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
 	getErrorMessage,
 	type OrdersCacheSnapshot,
@@ -22,6 +23,7 @@ import type { PendingRow } from "@/types";
  */
 export function useSaveOrderMutation() {
 	const queryClient = useQueryClient();
+	const { t } = useTranslation();
 
 	return useMutation({
 		mutationFn: ({
@@ -98,7 +100,9 @@ export function useSaveOrderMutation() {
 			if (context?.previousOrdersCache) {
 				restoreOrdersCache(queryClient, context.previousOrdersCache);
 			}
-			toast.error(`Error saving order: ${getErrorMessage(error)}`);
+			toast.error(
+				`${t("toast.saveOrderErrorPrefix")} ${getErrorMessage(error)}`,
+			);
 		},
 		onSettled: (_data, _error, variables) => {
 			// Invalidate destination

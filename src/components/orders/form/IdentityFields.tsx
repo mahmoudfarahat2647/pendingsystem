@@ -13,13 +13,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { ALLOWED_COMPANIES } from "@/domain/order/constants";
 import { useUpdateAppSettingsMutation } from "@/hooks/mutations/useUpdateAppSettingsMutation";
 import { useAppSettingsQuery } from "@/hooks/queries/useAppSettingsQuery";
+import { useTranslation } from "@/hooks/useTranslation";
 import { cn, normalizeMileage } from "@/lib/utils";
+import type { TranslationKey } from "@/locales";
 import type { FormData } from "./types";
 
 interface IdentityFieldsProps {
 	formData: FormData;
 	onFieldChange: (updated: Partial<FormData>) => void;
-	errors: Partial<Record<keyof FormData, string>>;
+	errors: Partial<Record<keyof FormData, TranslationKey>>;
 	getFieldError: (field: keyof FormData) => boolean;
 	isEditMode: boolean;
 }
@@ -36,6 +38,7 @@ export const IdentityFields = ({
 	getFieldError,
 	isEditMode,
 }: IdentityFieldsProps) => {
+	const { t } = useTranslation();
 	const { data: appSettings, isPlaceholderData: settingsLoading } =
 		useAppSettingsQuery();
 	const updateAppSettings = useUpdateAppSettingsMutation();
@@ -60,7 +63,7 @@ export const IdentityFields = ({
 			});
 			setPersonalBulkText("");
 			setIsPersonalBulkMode(false);
-			toast.success("Identity fields updated");
+			toast.success(t("toast.identityFieldsUpdated"));
 		}
 	};
 
@@ -164,7 +167,7 @@ export const IdentityFields = ({
 									/>
 									{errors.customerName && (
 										<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
-											{errors.customerName}
+											{t(errors.customerName)}
 										</p>
 									)}
 								</div>
@@ -213,7 +216,7 @@ export const IdentityFields = ({
 									</div>
 									{errors.company && (
 										<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
-											{errors.company}
+											{t(errors.company)}
 										</p>
 									)}
 								</div>
@@ -239,7 +242,7 @@ export const IdentityFields = ({
 									/>
 									{errors.vin && (
 										<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
-											{errors.vin}
+											{t(errors.vin)}
 										</p>
 									)}
 								</div>
@@ -266,7 +269,7 @@ export const IdentityFields = ({
 									/>
 									{getFieldError("cntrRdg") && (
 										<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1 leading-tight">
-											{errors.cntrRdg ?? "KM reading is required"}
+											{t(errors.cntrRdg ?? "validation.kmReadingRequired")}
 										</p>
 									)}
 								</div>
@@ -362,7 +365,7 @@ export const IdentityFields = ({
 									</div>
 									{getFieldError("model") && (
 										<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
-											{errors.model ?? "Vehicle model is required"}
+											{t(errors.model ?? "validation.vehicleModelRequired")}
 										</p>
 									)}
 								</div>
@@ -437,7 +440,10 @@ export const IdentityFields = ({
 									</div>
 									{getFieldError("repairSystem") && (
 										<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
-											{errors.repairSystem ?? "Repair system is required"}
+											{t(
+												errors.repairSystem ??
+													"validation.repairSystemRequired",
+											)}
 										</p>
 									)}
 								</div>
