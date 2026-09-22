@@ -1,0 +1,62 @@
+
+=== TEST 1: setGridOption('localeText', ...) on a LIVE grid ===
+AG Grid: As of v32.2, checkboxSelection is deprecated. Use `rowSelection.checkboxes` in `GridOptions` instead.
+Overlay text BEFORE live localeText change: 
+AG Grid: localeText is an initial property and cannot be updated.
+Overlay text AFTER live localeText change: 
+Console warnings emitted: [ 'AG Grid: localeText is an initial property and cannot be updated.' ]
+RESULT: live update took effect? false
+
+=== TEST 2: setGridOption('enableRtl', ...) on a LIVE grid ===
+Root wrapper classes BEFORE: ag-root-wrapper ag-layout-normal ag-ltr
+AG Grid: enableRtl is an initial property and cannot be updated.
+Root wrapper classes AFTER live enableRtl=true attempt: ag-root-wrapper ag-layout-normal ag-ltr
+Console warnings emitted: [ 'AG Grid: enableRtl is an initial property and cannot be updated.' ]
+RESULT: ag-rtl class appeared live? false
+
+=== TEST 3: Recreation path — capture state, destroy, recreate with new locale/dir, restore state ===
+AG Grid: setFilterModel() - unable to fully apply model, filtering disabled for colId: part
+Captured state keys: [
+  'version',          'cellSelection',
+  'sideBar',          'sort',
+  'rowGroup',         'aggregation',
+  'pivot',            'columnPinning',
+  'columnVisibility', 'columnSizing',
+  'columnOrder',      'columnGroup',
+  'filter',           'rowGroupExpansion',
+  'rowSelection',     'pagination'
+]
+  columnOrder: [ 'ag-Grid-ControlsColumn', 'vin', 'part', 'qty' ]
+  columnPinning: { leftColIds: [ 'vin' ], rightColIds: [] }
+  columnSizing: undefined
+  sort: { sortModel: [ { colId: 'qty', sort: 'desc' } ] }
+  filter: undefined
+  rowSelection (selected row ids): [ '0', '1', '2' ]
+  pagination: { page: 0, pageSize: 100 }
+  scroll: undefined
+  focusedCell: undefined
+Restored columnOrder matches? true
+Restored sort matches? true
+Restored filter matches? true
+Restored rowSelection matches? true
+Restored pinning matches? true
+Restored sizing matches? true
+New root classes carry ag-rtl after recreation? true
+
+=== TEST 4a: Open cell editor, live-option attempt, then destroy WITHOUT flushing the editor ===
+Editor open before switch attempt? true | editor instance found? true
+Underlying row data before any live attempt: Beta
+Still editing after a live setGridOption attempt (editor undisturbed)? true
+Row 'part' after destroy+recreate WITHOUT explicit flush (expect original 'Beta' — any uncommitted edit is silently discarded, never applied to the row model): Beta
+
+=== TEST 4b: Same scenario, but the switch code explicitly commits the editor before destroying ===
+Row 'part' immediately after explicit stopEditing(false) commit: Beta
+Row 'part' after recreation, when caller explicitly committed+re-read before switching: Beta
+
+=== TEST 5: Debounce-window interaction — state change inside the 500ms persistence debounce, then recreation ===
+persistedGridState at moment of recreation (should be null — debounce not fired yet): null
+liveGridState at moment of recreation (available immediately, no data loss if used): true
+Column width survives recreation when the switch reads the LIVE (in-memory) snapshot instead of waiting for the debounced write: undefined
+(for contrast) debounced durable write eventually resolved with width: undefined
+
+Done.
