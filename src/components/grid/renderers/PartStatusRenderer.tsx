@@ -1,4 +1,6 @@
 import type { ICellRendererParams } from "ag-grid-community";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStatusLabel } from "@/lib/locale/statusLabel";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 interface PartStatusRendererProps extends ICellRendererParams<PendingRow> {
@@ -6,6 +8,7 @@ interface PartStatusRendererProps extends ICellRendererParams<PendingRow> {
 }
 
 export const PartStatusRenderer = (params: PartStatusRendererProps) => {
+	const { locale } = useTranslation();
 	const value = params.value as string;
 
 	// Enhanced null safety: handle undefined, null, or empty partStatuses array
@@ -17,13 +20,16 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 		(typeof value === "string" && (value.trim() === "" || value === "No Stats"))
 	) {
 		const noStatsDef = statuses.find((s) => s.id === "no_stats");
+		const noStatsLabel = noStatsDef
+			? resolveStatusLabel(noStatsDef, locale)
+			: "No Stats";
 		return (
 			<div
 				className="flex items-center justify-center h-full w-full gap-1"
 				title="Select status"
 			>
 				<span className="text-[10px] text-gray-500 uppercase font-medium tracking-wider">
-					{noStatsDef?.label || "No Stats"}
+					{noStatsLabel}
 				</span>
 			</div>
 		);
@@ -68,10 +74,16 @@ export const PartStatusRenderer = (params: PartStatusRendererProps) => {
 		displayValue = String(value || "Unknown");
 	}
 
+	// Translate the tooltip only when it resolves to an unmodified built-in
+	// status; a customized or fully custom status's title stays verbatim.
+	const titleValue = statusDef
+		? resolveStatusLabel(statusDef, locale)
+		: displayValue;
+
 	return (
 		<div
 			className="flex items-center justify-center h-full w-full gap-1.5 px-1"
-			title={displayValue}
+			title={titleValue}
 		>
 			<div
 				className={`w-2.5 h-2.5 rounded-full ${colorClass} shadow-sm ring-1 ring-black/10 flex-shrink-0`}

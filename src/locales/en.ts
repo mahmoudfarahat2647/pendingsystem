@@ -29,4 +29,19 @@ export const en: TranslationCatalog = {
 			arabic: "العربية",
 		},
 	},
+	statuses: {
+		partStatus: {
+			noStats: "Pending",
+			hold: "Hold",
+			reserve: "Reserve",
+			branch: "Branch",
+			arrive: "Arrived",
+		},
+		bookingStatus: {
+			confirmed: "Confirmed",
+			pending: "Pending",
+			cancelled: "Cancelled",
+			completed: "Completed",
+		},
+	},
 };

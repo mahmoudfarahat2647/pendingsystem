@@ -27,6 +27,8 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStatusLabel } from "@/lib/locale/statusLabel";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef, PendingRow } from "@/types";
 
@@ -67,6 +69,7 @@ export const BookingToolbar = ({
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
 }: BookingToolbarProps) => {
+	const { locale } = useTranslation();
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("booking");
 
@@ -159,7 +162,9 @@ export const BookingToolbar = ({
 												className={cn("w-2 h-2 rounded-full", colorClass)}
 												style={dotStyle}
 											/>
-											<span className="text-xs">{status.label}</span>
+											<span className="text-xs">
+												{resolveStatusLabel(status, locale)}
+											</span>
 										</DropdownMenuItem>
 									);
 								})}

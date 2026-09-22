@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/tooltip";
 import { hasMixedVinSelection } from "@/domain/order/orderWorkflow";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStatusLabel } from "@/lib/locale/statusLabel";
 import { cn } from "@/lib/utils";
 import type { PartStatus, PendingRow } from "@/types";
 
@@ -84,6 +86,7 @@ export const OrdersToolbar = ({
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
 }: OrdersToolbarProps) => {
+	const { locale } = useTranslation();
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("orders");
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
@@ -380,7 +383,7 @@ export const OrdersToolbar = ({
 												className="text-xs font-semibold"
 												style={isHex ? { color: status.color } : undefined}
 											>
-												{status.label}
+												{resolveStatusLabel(status, locale)}
 											</span>
 										</DropdownMenuItem>
 									);

@@ -1,11 +1,16 @@
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BookingToolbar } from "@/components/booking/BookingToolbar";
+import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { PendingRow } from "@/types";
 
 const renderWithProvider = (ui: React.ReactElement) => {
-	return render(<TooltipProvider>{ui}</TooltipProvider>);
+	return render(
+		<LocaleProvider>
+			<TooltipProvider>{ui}</TooltipProvider>
+		</LocaleProvider>,
+	);
 };
 
 const mockSelectedRows: PendingRow[] = [

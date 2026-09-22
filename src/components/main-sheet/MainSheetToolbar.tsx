@@ -32,6 +32,8 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStatusLabel } from "@/lib/locale/statusLabel";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef, PendingRow } from "@/types";
 
@@ -80,6 +82,7 @@ export const MainSheetToolbar = ({
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
 }: MainSheetToolbarProps) => {
+	const { locale } = useTranslation();
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("main-sheet");
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
@@ -305,7 +308,7 @@ export const MainSheetToolbar = ({
 												className="text-xs font-semibold"
 												style={isHex ? { color: status.color } : undefined}
 											>
-												{status.label}
+												{resolveStatusLabel(status, locale)}
 											</span>
 										</DropdownMenuItem>
 									);
@@ -346,7 +349,9 @@ export const MainSheetToolbar = ({
 										style={buttonStyle}
 									/>
 								</TooltipTrigger>
-								<TooltipContent>{status.label}</TooltipContent>
+								<TooltipContent>
+									{resolveStatusLabel(status, locale)}
+								</TooltipContent>
 							</Tooltip>
 						);
 					})}

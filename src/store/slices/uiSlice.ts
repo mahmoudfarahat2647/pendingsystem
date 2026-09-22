@@ -1,5 +1,9 @@
 import type { StateCreator } from "zustand";
 import { DEFAULT_LOCALE, normalizeLocale } from "@/domain/locale/locale";
+import {
+	BUILT_IN_BOOKING_STATUS_DEFAULTS,
+	BUILT_IN_PART_STATUS_DEFAULTS,
+} from "@/domain/status/statusDefaults";
 import { generateId } from "@/lib/utils";
 import type { CombinedStore, UIActions, UIState } from "../types";
 
@@ -14,20 +18,12 @@ const BUILT_IN_PART_STATUS_IDS = new Set([
 	"arrive",
 ]);
 
-export const defaultPartStatuses = [
-	{ id: "no_stats", label: "Pending", color: "" },
-	{ id: "hold", label: "Hold", color: "#3b82f6" },
-	{ id: "reserve", label: "Reserve", color: "#8b5cf6" },
-	{ id: "branch", label: "Branch", color: "#92400e" },
-	{ id: "arrive", label: "Arrived", color: "#10b981" },
-];
+// Same canonical values as before (#269 extracted them into
+// `src/domain/status/statusDefaults.ts` as the single source of truth shared
+// with the status label presentation rule) — no behavior change.
+export const defaultPartStatuses = [...BUILT_IN_PART_STATUS_DEFAULTS];
 
-const defaultBookingStatuses = [
-	{ id: "confirmed", label: "Confirmed", color: "#10b981" },
-	{ id: "pending", label: "Pending", color: "#facc15" },
-	{ id: "cancelled", label: "Cancelled", color: "#ef4444" },
-	{ id: "completed", label: "Completed", color: "#3b82f6" },
-];
+const defaultBookingStatuses = [...BUILT_IN_BOOKING_STATUS_DEFAULTS];
 
 const initialState: UIState = {
 	searchTerm: "",

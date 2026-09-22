@@ -24,6 +24,8 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStatusLabel } from "@/lib/locale/statusLabel";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef, PendingRow } from "@/types";
 
@@ -56,6 +58,7 @@ export function ArchiveToolbar({
 }: ArchiveToolbarProps) {
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("archive");
+	const { locale } = useTranslation();
 
 	return (
 		<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
@@ -131,7 +134,9 @@ export function ArchiveToolbar({
 												className={cn("w-2 h-2 rounded-full", colorClass)}
 												style={dotStyle}
 											/>
-											<span className="text-xs">{status.label}</span>
+											<span className="text-xs">
+											{resolveStatusLabel(status, locale)}
+										</span>
 										</DropdownMenuItem>
 									);
 								})}

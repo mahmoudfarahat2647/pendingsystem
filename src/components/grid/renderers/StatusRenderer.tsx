@@ -1,4 +1,6 @@
 import type { ICellRendererParams } from "ag-grid-community";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStatusLabel } from "@/lib/locale/statusLabel";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 interface StatusRendererProps extends ICellRendererParams<PendingRow> {
@@ -6,6 +8,7 @@ interface StatusRendererProps extends ICellRendererParams<PendingRow> {
 }
 
 export const StatusRenderer = (params: StatusRendererProps) => {
+	const { locale } = useTranslation();
 	const rawValue = (params.value ?? "") as string;
 	const value = rawValue || "Pending";
 	const statuses = params.partStatuses || [];
@@ -18,6 +21,7 @@ export const StatusRenderer = (params: StatusRendererProps) => {
 		const isCssColor =
 			statusDef.color?.startsWith("#") || statusDef.color?.startsWith("rgb");
 		const textStyle = isCssColor ? { color: statusDef.color } : undefined;
+		const displayLabel = resolveStatusLabel(statusDef, locale);
 
 		return (
 			<span
@@ -25,9 +29,9 @@ export const StatusRenderer = (params: StatusRendererProps) => {
 					isCssColor ? "" : "text-gray-400"
 				}`}
 				style={textStyle}
-				title={value}
+				title={displayLabel}
 			>
-				{value}
+				{displayLabel}
 			</span>
 		);
 	}

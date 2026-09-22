@@ -28,6 +28,8 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStatusLabel } from "@/lib/locale/statusLabel";
 import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
@@ -77,6 +79,7 @@ export const SearchToolbar = ({
 	activeSourceFilter,
 	onSourceFilterChange,
 }: SearchToolbarProps) => {
+	const { locale } = useTranslation();
 	const isReserveDisabled = selectedCount === 0;
 	const isStageActionDisabled = selectedCount === 0 || !isSameSource;
 
@@ -260,7 +263,7 @@ export const SearchToolbar = ({
 												className="text-xs font-semibold"
 												style={isHex ? { color: status.color } : undefined}
 											>
-												{status.label}
+												{resolveStatusLabel(status, locale)}
 											</span>
 										</DropdownMenuItem>
 									);

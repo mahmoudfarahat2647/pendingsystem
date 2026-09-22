@@ -7,11 +7,16 @@ import {
 	ArchiveToolbar,
 	type ArchiveToolbarProps,
 } from "@/components/archive/ArchiveToolbar";
+import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 const renderWithProvider = (ui: React.ReactElement) => {
-	return render(<TooltipProvider>{ui}</TooltipProvider>);
+	return render(
+		<LocaleProvider>
+			<TooltipProvider>{ui}</TooltipProvider>
+		</LocaleProvider>,
+	);
 };
 
 const getButtonByIcon = (container: HTMLElement, iconClass: string) => {

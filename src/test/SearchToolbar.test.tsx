@@ -2,6 +2,7 @@ import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type React from "react";
 import { describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import {
 	SearchToolbar,
 	type SearchToolbarProps,
@@ -10,7 +11,11 @@ import { SEARCH_SOURCES } from "@/components/shared/search/searchSources";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const renderWithProvider = (ui: React.ReactElement) => {
-	return render(<TooltipProvider>{ui}</TooltipProvider>);
+	return render(
+		<LocaleProvider>
+			<TooltipProvider>{ui}</TooltipProvider>
+		</LocaleProvider>,
+	);
 };
 
 const defaultProps: SearchToolbarProps = {

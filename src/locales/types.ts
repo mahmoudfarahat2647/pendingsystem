@@ -40,6 +40,28 @@ export interface TranslationCatalog {
 			arabic: string;
 		};
 	};
+	/**
+	 * Translated labels for built-in statuses, used only by the status label
+	 * presentation rule (`src/lib/locale/statusLabel.ts`, issue #269) — never
+	 * applied to a status an operator has renamed or created. See
+	 * `src/domain/status/statusDefaults.ts` for the canonical default labels
+	 * these keys correspond to.
+	 */
+	statuses: {
+		partStatus: {
+			noStats: string;
+			hold: string;
+			reserve: string;
+			branch: string;
+			arrive: string;
+		};
+		bookingStatus: {
+			confirmed: string;
+			pending: string;
+			cancelled: string;
+			completed: string;
+		};
+	};
 }
 
 type Join<K extends string, P extends string> = P extends "" ? K : `${K}.${P}`;

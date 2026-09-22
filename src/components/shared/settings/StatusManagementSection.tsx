@@ -9,6 +9,8 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStatusLabel } from "@/lib/locale/statusLabel";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
 import { ColorPicker } from "../ColorPicker";
@@ -45,6 +47,7 @@ export const StatusManagementSection = ({
 	isLocked,
 	lockColors = false,
 }: StatusManagementSectionProps) => {
+	const { locale } = useTranslation();
 	const [newLabel, setNewLabel] = useState("");
 	const [selectedColor, setSelectedColor] = useState("#10b981");
 	const [editingId, setEditingId] = useState<string | null>(null);
@@ -201,7 +204,7 @@ export const StatusManagementSection = ({
 										}}
 									/>
 									<span className="font-medium text-gray-200">
-										{status.label}
+										{resolveStatusLabel(status, locale)}
 									</span>
 									{usageCount > 0 && (
 										<span className="text-[10px] bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">

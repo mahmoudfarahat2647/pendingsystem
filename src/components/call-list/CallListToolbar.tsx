@@ -28,6 +28,8 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import { useTranslation } from "@/hooks/useTranslation";
+import { resolveStatusLabel } from "@/lib/locale/statusLabel";
 import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef, PendingRow } from "@/types";
@@ -71,6 +73,7 @@ export function CallListToolbar({
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
 }: CallListToolbarProps) {
+	const { locale } = useTranslation();
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("call-list");
 
@@ -163,7 +166,9 @@ export function CallListToolbar({
 												className={cn("w-2 h-2 rounded-full", colorClass)}
 												style={dotStyle}
 											/>
-											<span className="text-xs">{status.label}</span>
+											<span className="text-xs">
+												{resolveStatusLabel(status, locale)}
+											</span>
 										</DropdownMenuItem>
 									);
 								})}
