@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { Header } from "@/components/shared/Header";
 import { shouldRunNotificationCheck } from "@/components/shared/headerNotificationPolling";
 import type { OrderStage } from "@/domain/order/orderStage";
@@ -11,7 +12,9 @@ import { queryClient } from "./testQueryClient";
 function renderHeader() {
 	return render(
 		<QueryClientProvider client={queryClient}>
-			<Header />
+			<LocaleProvider>
+				<Header />
+			</LocaleProvider>
 		</QueryClientProvider>,
 	);
 }
@@ -27,6 +30,8 @@ const storeMocks = vi.hoisted(() => ({
 		checkNotifications: vi.fn(),
 		searchTerm: "",
 		setSearchTerm: vi.fn(),
+		locale: "en" as "en" | "ar",
+		setLocale: vi.fn(),
 	},
 }));
 

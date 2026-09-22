@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import { Toaster } from "sonner";
+import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
 
 const APP_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -34,6 +35,9 @@ export const metadata: Metadata = {
  *
  * This layout only provides:
  * - Dark theme enforcement
+ * - Locale provider (document lang/dir + translation context; see
+ *   `src/components/providers/LocaleProvider.tsx`), covering protected app
+ *   routes, public auth/reset routes, and mobile intake alike
  * - React Query provider
  * - Toast notifications
  */
@@ -43,12 +47,14 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" className="dark" suppressHydrationWarning>
+		<html lang="en" dir="ltr" className="dark" suppressHydrationWarning>
 			<body className="font-sans" suppressHydrationWarning>
-				<QueryProvider>
-					{children}
-					<Toaster position="bottom-right" richColors />
-				</QueryProvider>
+				<LocaleProvider>
+					<QueryProvider>
+						{children}
+						<Toaster position="bottom-right" richColors />
+					</QueryProvider>
+				</LocaleProvider>
 			</body>
 		</html>
 	);

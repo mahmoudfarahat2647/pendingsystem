@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { Sidebar } from "@/components/shared/Sidebar";
 
 const navigationMocks = vi.hoisted(() => ({
@@ -14,6 +15,8 @@ const storeMocks = vi.hoisted(() => ({
 	state: {
 		currentEditVin: null as string | null,
 		clearCurrentEditVin: vi.fn(),
+		locale: "en" as "en" | "ar",
+		setLocale: vi.fn(),
 	},
 }));
 
@@ -66,7 +69,9 @@ function renderWithProviders(ui: React.ReactElement) {
 		defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
 	});
 	const wrapper = ({ children }: { children: ReactNode }) => (
-		<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+		<QueryClientProvider client={queryClient}>
+			<LocaleProvider>{children}</LocaleProvider>
+		</QueryClientProvider>
 	);
 	return { ...render(ui, { wrapper }), queryClient };
 }
@@ -77,6 +82,8 @@ describe("Sidebar", () => {
 		navigationMocks.push.mockReset();
 		storeMocks.state.currentEditVin = null;
 		storeMocks.state.clearCurrentEditVin.mockReset();
+		storeMocks.state.locale = "en";
+		storeMocks.state.setLocale.mockReset();
 	});
 
 	it("navigates to the dashboard when the logo is clicked", async () => {
