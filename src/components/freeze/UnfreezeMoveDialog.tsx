@@ -87,7 +87,7 @@ export function UnfreezeMoveDialog({
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden">
-				<DialogHeader className="px-6 pt-6 pb-4 text-left">
+				<DialogHeader className="px-6 pt-6 pb-4 text-start">
 					<DialogTitle>
 						Move {rowCount === 1 ? "1 row" : `${rowCount} rows`}
 					</DialogTitle>
@@ -104,7 +104,7 @@ export function UnfreezeMoveDialog({
 						</div>
 						<span className="font-semibold text-white">Freeze</span>
 					</div>
-					<ArrowRight className="h-5 w-5 text-gray-500 shrink-0" />
+					<ArrowRight className="h-5 w-5 text-gray-500 shrink-0 rtl:-scale-x-100" />
 					<Select
 						value={destination}
 						onValueChange={(value) => setDestination(value as OrderStage)}

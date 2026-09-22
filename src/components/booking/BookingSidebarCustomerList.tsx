@@ -66,7 +66,7 @@ export const BookingSidebarCustomerList = ({
 									)}
 								</span>
 								{isArchived && (
-									<span className="ml-2 shrink-0 rounded border border-dashed border-gray-600 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-gray-500">
+									<span className="ms-2 shrink-0 rounded border border-dashed border-gray-600 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-gray-500">
 										Archived
 									</span>
 								)}
@@ -78,7 +78,7 @@ export const BookingSidebarCustomerList = ({
 								{!searchQuery && (
 									<ChevronRight
 										className={cn(
-											"h-3 w-3 opacity-0 group-hover:opacity-100",
+											"h-3 w-3 opacity-0 group-hover:opacity-100 rtl:-scale-x-100",
 											selectedBookingId === booking.id && "opacity-100",
 										)}
 									/>

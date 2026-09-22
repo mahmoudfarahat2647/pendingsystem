@@ -1,5 +1,7 @@
 "use client";
 
+import { DirectionProvider as BaseDirectionProvider } from "@base-ui/react/direction-provider";
+import { DirectionProvider as RadixDirectionProvider } from "@radix-ui/react-direction";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import {
 	DEFAULT_LOCALE,
@@ -69,7 +71,22 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 		[resolvedLocale, setLocale, t],
 	);
 
+	const direction = getDirection(resolvedLocale);
+
+	// Direction is supplied to the installed component primitives through
+	// their own direction APIs — Radix's `DirectionProvider` (read by every
+	// Radix primitive via `useDirection()`, overriding each primitive's
+	// individual `dir` prop default) and Base UI's `DirectionProvider` (read
+	// by `@base-ui/react/combobox` et al.) — not inferred from
+	// `document.documentElement.dir` alone. See CLAUDE.md "Localization"
+	// and issue #265.
 	return (
-		<LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
+		<LocaleContext.Provider value={value}>
+			<RadixDirectionProvider dir={direction}>
+				<BaseDirectionProvider direction={direction}>
+					{children}
+				</BaseDirectionProvider>
+			</RadixDirectionProvider>
+		</LocaleContext.Provider>
 	);
 }

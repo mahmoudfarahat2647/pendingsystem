@@ -1,4 +1,5 @@
 import { AlertCircle } from "lucide-react";
+import { LtrIsolate } from "@/components/shared/bidi/LtrIsolate";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -40,8 +41,11 @@ export function DuplicateOrderWarningModal({
 						</DialogTitle>
 						<DialogDescription className="text-slate-400">
 							An order with the same VIN{" "}
-							<span className="text-white font-mono">{vin}</span> and Part
-							Number <span className="text-white font-mono">{partNumber}</span>{" "}
+							<LtrIsolate className="text-white font-mono">{vin}</LtrIsolate>{" "}
+							and Part Number{" "}
+							<LtrIsolate className="text-white font-mono">
+								{partNumber}
+							</LtrIsolate>{" "}
 							already exists.
 						</DialogDescription>
 					</div>

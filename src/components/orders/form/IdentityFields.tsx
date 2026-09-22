@@ -151,6 +151,9 @@ export const IdentityFields = ({
 									</Label>
 									<Input
 										placeholder="Full Name"
+										// Customer names may mix Arabic and Latin script; let the
+										// browser detect this field's own direction.
+										dir="auto"
 										value={formData.customerName}
 										onChange={(e) =>
 											onFieldChange({ customerName: e.target.value })
@@ -226,6 +229,8 @@ export const IdentityFields = ({
 									</Label>
 									<Input
 										placeholder="VF1..."
+										// VINs must always read LTR, in both locales.
+										dir="ltr"
 										value={formData.vin}
 										onChange={(e) =>
 											onFieldChange({ vin: e.target.value.toUpperCase() })
@@ -279,6 +284,8 @@ export const IdentityFields = ({
 									</Label>
 									<Input
 										placeholder="0xxxxxxxxx"
+										// Phone numbers must always read LTR, in both locales.
+										dir="ltr"
 										value={formData.mobile}
 										onChange={(e) => onFieldChange({ mobile: e.target.value })}
 										className={cn(

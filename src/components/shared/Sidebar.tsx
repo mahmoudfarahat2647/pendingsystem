@@ -277,9 +277,9 @@ export const Sidebar = React.memo(function Sidebar() {
 				className="flex items-center justify-center h-12 mx-4 mb-4 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-colors border border-transparent hover:border-white/10"
 			>
 				{isCollapsed ? (
-					<ChevronRight className="h-5 w-5" />
+					<ChevronRight className="h-5 w-5 rtl:-scale-x-100" />
 				) : (
-					<ChevronLeft className="h-5 w-5" />
+					<ChevronLeft className="h-5 w-5 rtl:-scale-x-100" />
 				)}
 			</button>
 

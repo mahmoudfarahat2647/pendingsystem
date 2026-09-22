@@ -240,6 +240,8 @@ export const PartsSection = ({
 													<div className="w-1/3">
 														<Input
 															placeholder="REF#"
+															// Part numbers must always read LTR, in both locales.
+															dir="ltr"
 															value={part.partNumber}
 															onChange={(e) => {
 																const val = e.target.value.toUpperCase();
@@ -267,6 +269,10 @@ export const PartsSection = ({
 																descriptionRefs.current[index] = el;
 															}}
 															placeholder="Description"
+															// Operator-entered free text may mix Arabic and Latin
+															// script; let the browser detect each field's own
+															// direction rather than inheriting the page's.
+															dir="auto"
 															value={part.description}
 															onChange={(e) =>
 																onPartChange(

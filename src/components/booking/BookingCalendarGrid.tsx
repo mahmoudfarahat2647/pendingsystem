@@ -68,7 +68,7 @@ export const BookingCalendarGrid = ({
 					onClick={() => onMonthChange(subMonths(monthStart, 1))}
 					className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
 				>
-					<ChevronLeft className="h-6 w-6" />
+					<ChevronLeft className="h-6 w-6 rtl:-scale-x-100" />
 				</button>
 				<h2 className="text-2xl font-light text-white tracking-widest uppercase">
 					{format(currentMonth, "MMMM yyyy")}
@@ -79,7 +79,7 @@ export const BookingCalendarGrid = ({
 					onClick={() => onMonthChange(addMonths(monthStart, 1))}
 					className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
 				>
-					<ChevronRight className="h-6 w-6" />
+					<ChevronRight className="h-6 w-6 rtl:-scale-x-100" />
 				</button>
 			</div>
 

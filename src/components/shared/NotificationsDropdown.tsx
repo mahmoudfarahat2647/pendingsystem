@@ -5,6 +5,7 @@ import { Bell, Hash, MapPin, TableProperties, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { LtrIsolate } from "@/components/shared/bidi/LtrIsolate";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { computeReleaseFollowUpDueDate } from "@/domain/order/releaseGate";
 import { useUpsertReleaseFollowUpMutation } from "@/hooks/queries/useReleaseFollowUpsQuery";
@@ -306,15 +307,15 @@ export const NotificationsDropdown = () => {
 															</div>
 															<div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
 																<Hash className="h-2.5 w-2.5 text-gray-500" />
-																<span className="text-[9px] text-gray-400 font-mono">
+																<LtrIsolate className="text-[9px] text-gray-400 font-mono">
 																	{n.trackingId}
-																</span>
+																</LtrIsolate>
 															</div>
 															<div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
 																<MapPin className="h-2.5 w-2.5 text-gray-500" />
-																<span className="text-[9px] text-gray-400 font-mono uppercase">
+																<LtrIsolate className="text-[9px] text-gray-400 font-mono uppercase">
 																	{n.vin}
-																</span>
+																</LtrIsolate>
 															</div>
 														</div>
 													</div>

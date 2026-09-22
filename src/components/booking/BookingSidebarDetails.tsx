@@ -4,6 +4,7 @@ import {
 	MessageSquare,
 	Package,
 } from "lucide-react";
+import { LtrIsolate } from "@/components/shared/bidi/LtrIsolate";
 import {
 	Popover,
 	PopoverContent,
@@ -102,8 +103,8 @@ export const BookingSidebarDetails = ({
 								VIN & Model
 							</span>
 							<span className="font-mono text-gray-300">
-								{currentRep?.vin}
-								<span className="text-renault-yellow ml-2 text-xs font-sans uppercase tracking-wider">
+								<LtrIsolate>{currentRep?.vin}</LtrIsolate>
+								<span className="text-renault-yellow ms-2 text-xs font-sans uppercase tracking-wider">
 									[{currentRep?.model || "No Model"}]
 								</span>
 							</span>

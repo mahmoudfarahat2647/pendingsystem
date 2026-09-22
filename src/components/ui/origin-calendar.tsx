@@ -63,19 +63,28 @@ function Calendar({
 
 	const defaultComponents = {
 		// biome-ignore lint/suspicious/noExplicitAny: DayPicker component prop type
-		Chevron: (props: any) => {
+		Chevron: ({ className: chevronClassName, ...props }: any) => {
+			// Previous/next month is a directional control: it mirrors in RTL.
+			const mirroredClassName = cn(chevronClassName, "rtl:-scale-x-100");
 			if (props.orientation === "left") {
 				return (
 					<ChevronLeft
 						size={16}
 						strokeWidth={2}
 						{...props}
+						className={mirroredClassName}
 						aria-hidden="true"
 					/>
 				);
 			}
 			return (
-				<ChevronRight size={16} strokeWidth={2} {...props} aria-hidden="true" />
+				<ChevronRight
+					size={16}
+					strokeWidth={2}
+					{...props}
+					className={mirroredClassName}
+					aria-hidden="true"
+				/>
 			);
 		},
 	};

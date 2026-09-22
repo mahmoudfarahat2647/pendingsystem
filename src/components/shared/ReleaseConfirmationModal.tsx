@@ -2,6 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { LtrIsolate } from "@/components/shared/bidi/LtrIsolate";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -95,7 +96,9 @@ export function ReleaseConfirmationModal({
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
 								VIN
 							</p>
-							<p className="mt-1 text-[17px] text-gray-100">{vin}</p>
+							<LtrIsolate className="mt-1 block text-[17px] text-gray-100">
+								{vin}
+							</LtrIsolate>
 						</div>
 						<div>
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
@@ -126,6 +129,9 @@ export function ReleaseConfirmationModal({
 							id="release-confirmation-word"
 							ref={inputRef}
 							type="text"
+							// The confirmation word is a fixed English token; it must
+							// always read and type LTR, in both locales.
+							dir="ltr"
 							autoComplete="off"
 							value={value}
 							disabled={pending}
