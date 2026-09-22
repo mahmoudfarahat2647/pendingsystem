@@ -6,6 +6,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatNumber } from "@/lib/locale/formatters";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import { CntrRdgAlertIcon } from "./CntrRdgAlertIcon";
@@ -22,10 +23,11 @@ export const CntrRdgCellRenderer = (
 				)
 			: undefined,
 	);
+	const locale = useAppStore((state) => state.locale);
 
 	if (!data) return null;
 
-	const displayValue = data.cntrRdg ? data.cntrRdg.toLocaleString() : "0";
+	const displayValue = data.cntrRdg ? formatNumber(data.cntrRdg, locale) : "0";
 
 	if (!warningNotification) {
 		return <span>{displayValue}</span>;

@@ -24,6 +24,8 @@ import type {
 	LostSalesReport,
 	PartDemand,
 } from "@/domain/reports/lostSalesAnalysis";
+import { formatNumber } from "@/lib/locale/formatters";
+import { useAppStore } from "@/store/useStore";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -185,6 +187,7 @@ interface KpiCardProps {
 }
 
 function KpiCard({ label, value, icon }: KpiCardProps) {
+	const locale = useAppStore((state) => state.locale);
 	return (
 		<Card className="bg-[#0c0c0e]/90 border-white/10 hover:bg-white/5 hover:border-renault-yellow/20 transition-all duration-300 group cursor-default">
 			<CardContent className="p-3">
@@ -197,7 +200,7 @@ function KpiCard({ label, value, icon }: KpiCardProps) {
 							{label}
 						</p>
 						<p className="text-2xl font-black text-white group-hover:text-renault-yellow transition-colors">
-							{value.toLocaleString()}
+							{formatNumber(value, locale)}
 						</p>
 					</div>
 				</div>
@@ -237,6 +240,7 @@ function SectionCard({ title, icon, children }: SectionCardProps) {
 // ---------------------------------------------------------------------------
 
 function PartsTable({ rows }: { rows: PartDemand[] }) {
+	const locale = useAppStore((state) => state.locale);
 	return (
 		<section
 			aria-label="Parts demand table"
@@ -281,10 +285,10 @@ function PartsTable({ rows }: { rows: PartDemand[] }) {
 								{part.description || "—"}
 							</td>
 							<td className="py-2.5 px-4 text-right text-white font-semibold">
-								{part.orderCount.toLocaleString()}
+								{formatNumber(part.orderCount, locale)}
 							</td>
 							<td className="py-2.5 px-4 text-right text-gray-400">
-								{part.totalQuantity.toLocaleString()}
+								{formatNumber(part.totalQuantity, locale)}
 							</td>
 							<td className="py-2.5 px-4 text-gray-400 max-w-[120px] truncate">
 								{part.models.filter(Boolean).join(" / ") || "—"}

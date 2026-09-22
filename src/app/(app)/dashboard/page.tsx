@@ -15,8 +15,10 @@ import { ClientErrorBoundary } from "@/components/shared/ClientErrorBoundary";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardStatsQuery } from "@/hooks/queries/useDashboardStatsQuery";
 import { useStorageStats } from "@/hooks/useStorageStats";
+import { formatMonthName } from "@/lib/locale/formatters";
 import { formatBytesToMB, usagePercent } from "@/lib/storage-limits";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useStore";
 
 const CapacityChart = dynamic(
 	() => import("@/components/dashboard/CapacityChart"),
@@ -38,6 +40,7 @@ const DistributionChart = dynamic(
 );
 
 export default function DashboardPage() {
+	const locale = useAppStore((state) => state.locale);
 	const { data: statsData, isLoading: isStageLoading } =
 		useDashboardStatsQuery();
 
@@ -82,7 +85,7 @@ export default function DashboardPage() {
 	const firstDay = new Date(year, month, 1).getDay();
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 	const today = now.getDate();
-	const monthName = now.toLocaleString("en-US", { month: "long" });
+	const monthName = formatMonthName(now, locale);
 
 	const calendarData = { year, month, firstDay, daysInMonth, today, monthName };
 

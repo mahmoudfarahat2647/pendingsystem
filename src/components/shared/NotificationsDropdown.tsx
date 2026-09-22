@@ -9,6 +9,7 @@ import type { OrderStage } from "@/domain/order/orderStage";
 import { computeReleaseFollowUpDueDate } from "@/domain/order/releaseGate";
 import { useUpsertReleaseFollowUpMutation } from "@/hooks/queries/useReleaseFollowUpsQuery";
 import { ORDER_STAGES } from "@/lib/constants";
+import { formatTime } from "@/lib/locale/formatters";
 import { ORDER_STAGE_TAB_INFO } from "@/lib/orderStage";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -80,6 +81,7 @@ export const NotificationsDropdown = () => {
 	const [showNotifications, setShowNotifications] = useState(false);
 
 	const notifications = useAppStore((state) => state.notifications);
+	const locale = useAppStore((state) => state.locale);
 	const markNotificationAsRead = useAppStore(
 		(state) => state.markNotificationAsRead,
 	);
@@ -287,10 +289,7 @@ export const NotificationsDropdown = () => {
 																{n.title}
 															</span>
 															<span className="text-[9px] text-gray-600 font-mono">
-																{new Date(n.timestamp).toLocaleTimeString([], {
-																	hour: "2-digit",
-																	minute: "2-digit",
-																})}
+																{formatTime(n.timestamp, locale)}
 															</span>
 														</div>
 														<p className="text-xs text-gray-400 leading-relaxed font-medium">
