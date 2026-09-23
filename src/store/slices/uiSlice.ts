@@ -30,6 +30,7 @@ const defaultBookingStatuses = [
 
 const initialState: UIState = {
 	searchTerm: "",
+	language: "en",
 	highlightedRowId: null,
 	pendingVinSelection: null,
 	notes: [],
@@ -52,6 +53,8 @@ export const createUISlice: StateCreator<
 	...initialState,
 
 	setSearchTerm: (term) => set({ searchTerm: term }),
+
+	setLanguage: (language) => set({ language }),
 
 	setHighlightedRowId: (request) => {
 		set({ highlightedRowId: request });

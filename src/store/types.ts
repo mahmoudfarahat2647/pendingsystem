@@ -1,5 +1,6 @@
 import type { GridState } from "ag-grid-community";
 import type { OrderStage } from "@/domain/order/orderStage";
+import type { Language } from "@/i18n/dictionaries/en";
 import type {
 	AppNotification,
 	PartStatusDef,
@@ -35,6 +36,8 @@ export interface NotificationActions {
 
 export interface UIState {
 	searchTerm: string;
+	/** UI language. Defaults to `"en"`; old persisted snapshots without the field fall back to English. */
+	language: Language;
 	/** Stage-scoped row jump request (notification click). Only the matching stage grid may consume it. */
 	highlightedRowId: { stage: OrderStage; id: string } | null;
 	pendingVinSelection: { vin: string; bookingDate?: string } | string | null;
@@ -51,6 +54,7 @@ export interface UIState {
 
 export interface UIActions {
 	setSearchTerm: (term: string) => void;
+	setLanguage: (language: Language) => void;
 	setHighlightedRowId: (
 		request: { stage: OrderStage; id: string } | null,
 	) => void;
