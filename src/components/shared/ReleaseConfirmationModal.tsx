@@ -101,7 +101,7 @@ export function ReleaseConfirmationModal({
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
 								Mileage
 							</p>
-							<p className="mt-1 text-[17px] text-gray-100">
+							<p className="release-value-pulse mt-1 text-[17px] text-gray-100">
 								{formattedMileage} km
 							</p>
 						</div>
@@ -109,7 +109,9 @@ export function ReleaseConfirmationModal({
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
 								Repair system
 							</p>
-							<p className="mt-1 text-[17px] text-gray-100">Warranty</p>
+							<p className="release-value-pulse-alt mt-1 text-[17px] text-gray-100">
+								Warranty
+							</p>
 						</div>
 					</div>
 
@@ -127,6 +129,7 @@ export function ReleaseConfirmationModal({
 							ref={inputRef}
 							type="text"
 							autoComplete="off"
+							placeholder={RELEASE_CONFIRMATION_WORD}
 							value={value}
 							disabled={pending}
 							onChange={(e) => setValue(e.target.value)}
