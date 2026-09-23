@@ -235,9 +235,12 @@
 	background: rgba(255, 255, 255, 0.2);
 }
 
-/* Release-gate modal: alternating (ping-pong) soft red glow on the two
-   values that trigger the gate. Both share one keyframe; the second element
-   is offset by half the cycle so exactly one glows at a time. */
+/* Release-gate modal: alternating (ping-pong) soft glow on the two values
+   that trigger the gate. Both share one keyframe; the second element is
+   offset by half the cycle so exactly one glows at a time. Neutral
+   off-white/gold glow — the approved #242 design reserves red for nothing
+   and gold for the warning icon, focused input border, and primary button,
+   so this pulse stays within that palette rather than introducing red. */
 @keyframes release-value-pulse {
 	0%,
 	100% {
@@ -245,8 +248,8 @@
 		text-shadow: none;
 	}
 	50% {
-		color: rgb(248 113 113);
-		text-shadow: 0 0 10px rgba(248, 113, 113, 0.35);
+		color: rgb(255 255 255);
+		text-shadow: 0 0 10px rgba(255, 204, 0, 0.35);
 	}
 }
 
@@ -262,7 +265,7 @@
 	.release-value-pulse,
 	.release-value-pulse-alt {
 		animation: none;
-		color: rgb(248 113 113);
+		color: rgb(255 255 255);
 	}
 }
 
