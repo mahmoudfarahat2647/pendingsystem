@@ -69,39 +69,39 @@ export function ReleaseConfirmationModal({
 				if (!next) onCancel();
 			}}
 		>
-			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-[680px] p-0 gap-0 overflow-hidden rounded-[10px]">
+			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden rounded-[10px]">
 				<DialogDescription className="sr-only">
 					Warranty chassis under 5,000 km — confirm approval before moving to
 					Call List.
 				</DialogDescription>
-				<div className="p-9">
-					<div className="flex items-start gap-4">
-						<div className="mt-1 flex h-9 w-9 shrink-0 rotate-45 items-center justify-center rounded-[6px] border-2 border-renault-yellow">
-							<AlertTriangle className="h-4 w-4 -rotate-45 text-renault-yellow" />
+				<div className="p-6">
+					<div className="flex items-start gap-3">
+						<div className="mt-1 flex h-7 w-7 shrink-0 rotate-45 items-center justify-center rounded-[6px] border-2 border-renault-yellow">
+							<AlertTriangle className="h-3.5 w-3.5 -rotate-45 text-renault-yellow" />
 						</div>
 						<div className="flex-1">
-							<DialogTitle className="text-[28px] font-semibold leading-tight text-white">
+							<DialogTitle className="text-xl font-semibold leading-tight text-white">
 								Release required
 							</DialogTitle>
-							<p className="mt-2 text-[15px] text-gray-400">
+							<p className="mt-1 text-sm text-gray-400">
 								Warranty chassis under 5,000 km — confirm approval before moving
 								to Call List.
 							</p>
 						</div>
 					</div>
 
-					<div className="mt-7 grid grid-cols-3 gap-6">
+					<div className="mt-5 grid grid-cols-3 gap-4">
 						<div>
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
 								VIN
 							</p>
-							<p className="mt-1 text-[17px] text-gray-100">{vin}</p>
+							<p className="mt-1 break-all text-[15px] text-gray-100">{vin}</p>
 						</div>
 						<div>
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
 								Mileage
 							</p>
-							<p className="release-value-pulse mt-1 text-[17px] text-gray-100">
+							<p className="release-value-pulse mt-1 text-[15px] text-gray-100">
 								{formattedMileage} km
 							</p>
 						</div>
@@ -109,15 +109,15 @@ export function ReleaseConfirmationModal({
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
 								Repair system
 							</p>
-							<p className="release-value-pulse-alt mt-1 text-[17px] text-gray-100">
+							<p className="release-value-pulse-alt mt-1 text-[15px] text-gray-100">
 								Warranty
 							</p>
 						</div>
 					</div>
 
-					<div className="mt-6 border-t border-white/10" />
+					<div className="mt-5 border-t border-white/10" />
 
-					<div className="mt-6">
+					<div className="mt-5">
 						<label
 							htmlFor="release-confirmation-word"
 							className="text-[13px] font-medium text-gray-300"
@@ -140,7 +140,7 @@ export function ReleaseConfirmationModal({
 							}}
 							className={cn(
 								FOCUS_CHAMPAGNE_VISIBLE,
-								"mt-2 h-11 w-full rounded-md border border-white/10 bg-[#2c2c2e] px-3 text-white placeholder:text-gray-600",
+								"mt-2 h-10 w-full rounded-md border border-white/10 bg-[#2c2c2e] px-3 text-white placeholder:text-gray-600",
 							)}
 						/>
 						<p className="mt-2 text-[12px] text-gray-500">
@@ -148,7 +148,7 @@ export function ReleaseConfirmationModal({
 						</p>
 					</div>
 
-					<div className="mt-7 flex justify-end gap-3">
+					<div className="mt-6 flex justify-end gap-3">
 						<Button
 							type="button"
 							variant="outline"
