@@ -201,10 +201,10 @@ SearchResultsView
 ### Gates (repo order — CLAUDE.md:19)
 
 ```
-npm run lint          # Biome check (read-only)
-npm run type-check    # tsc --noEmit
-npm run test          # Vitest
-npm run build         # takes several minutes
+pnpm run lint          # Biome check (read-only)
+pnpm run type-check    # tsc --noEmit
+pnpm run test          # Vitest
+pnpm run build         # takes several minutes
 ```
 
 ### New tests — `describe("source filter")`

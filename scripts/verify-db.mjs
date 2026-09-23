@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Verify database connectivity and required env config.
- * Run: npm run db:verify
+ * Run: pnpm run db:verify
  *
  * Troubleshooting contract (see AGENTS.md "Supabase & Database"):
  *  1. Parse .env.local (simple KEY=VALUE, ignore comments/blank lines, strip quotes).
@@ -218,7 +218,7 @@ async function main() {
 		console.log(
 			"⚠ 'pg' package not available, skipping live check. " +
 				"Run 'pnpm install' (pg is a repo dependency via src/lib/postgres.ts) " +
-				"then re-run npm run db:verify.",
+				"then re-run pnpm run db:verify.",
 		);
 		// Exit 2 = dependencies missing; live verification was NOT performed.
 		process.exit(2);

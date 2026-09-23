@@ -4,16 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+**Package manager: pnpm only.** Always use `pnpm` (`pnpm install`, `pnpm run <script>`, `pnpm exec`, `pnpm dlx`). Never use `npm`, `npx`, or `yarn`, and never create a `package-lock.json`.
+
 ```bash
-npm run dev          # Dev server (Node max memory 4GB)
-npm run build        # Production build
-npm run lint         # Biome check
-npm run lint:fix     # Auto-fix lint issues
-npm run lint:fix:staged # Auto-fix staged files
-npm run lint:fix:staged:unsafe # Retry staged fixes with unsafe fixes
-npm run type-check   # TypeScript validation (no emit)
-npm run test         # Vitest unit tests
-npm run test:watch   # Vitest watch mode
+pnpm run dev          # Dev server (Node max memory 4GB)
+pnpm run build        # Production build
+pnpm run lint         # Biome check
+pnpm run lint:fix     # Auto-fix lint issues
+pnpm run lint:fix:staged # Auto-fix staged files
+pnpm run lint:fix:staged:unsafe # Retry staged fixes with unsafe fixes
+pnpm run type-check   # TypeScript validation (no emit)
+pnpm run test         # Vitest unit tests
+pnpm run test:watch   # Vitest watch mode
 ```
 
 **Quality gates before merging:** `lint` -> `type-check` -> `test` -> `build`.
@@ -96,7 +98,7 @@ A chassis-level safety gate in front of every route into **Call List** (issue `#
 - **Session helper**: `src/lib/auth-session.ts` — `getServerSession()` for RSC/Route Handlers
 - **Route handler**: `src/app/api/auth/[...all]/route.ts` — Better Auth catch-all
 - **Protection**: Middleware (optimistic cookie check) + `(app)/layout.tsx` (authoritative DB check)
-- **Admin setup**: Run `npm run auth:seed-admin` after setting `AUTH_ADMIN_*` env vars in `.env.local`
+- **Admin setup**: Run `pnpm run auth:seed-admin` after setting `AUTH_ADMIN_*` env vars in `.env.local`
 - **Session expiry**: 8 hours, 5-minute rolling refresh (`session.expiresIn: 60 * 60 * 8`, `session.updateAge: 60 * 5`)
 
 ### Key Cross-Cutting Components
@@ -142,7 +144,7 @@ This project's Supabase pooler region is `eu-central-1` (host: `aws-1-eu-central
 **Before trying any other fix** for a database/auth error, run:
 
 ```bash
-npm run db:verify
+pnpm run db:verify
 ```
 
 This script parses `.env.local`, validates the `DATABASE_URL` format, attempts a live `SELECT 1`, checks all required vars, and prints row counts for every table. 90% of past failures were a malformed `DATABASE_URL`. Check it character by character before exploring other causes.
@@ -154,7 +156,7 @@ This script parses `.env.local`, validates the `DATABASE_URL` format, attempts a
 | `28P01 password authentication failed` | Wrong password in `DATABASE_URL` or URL is malformed | Copy exact string from Dashboard → Connect → Session mode — do not manually edit |
 | `ENOTFOUND` / `getaddrinfo` | Wrong pooler host | Host must be `aws-<n>-<region>.pooler.supabase.com` |
 | `SASL` / `invalid password` | Password has special chars not URL-encoded | Use Dashboard-provided string verbatim |
-| `relation "auth_users" does not exist` | Better Auth tables not created yet | Trigger with one request to `/api/auth/get-session`, or run `npm run auth:seed-admin` |
+| `relation "auth_users" does not exist` | Better Auth tables not created yet | Trigger with one request to `/api/auth/get-session`, or run `pnpm run auth:seed-admin` |
 | Auth passes but login fails | Better Auth `CamelCasePlugin` mismatch or wrong `modelName` | Check `src/lib/auth.ts` — model names must match prefixed table names (`auth_users`, etc.) |
 | `duplicate key` on `DATABASE_URL` prefix | Duplicate `NEXT_PUBLIC_` prefix accidentally added to `DATABASE_URL` | `DATABASE_URL` must NOT have `NEXT_PUBLIC_` prefix |
 
@@ -278,7 +280,7 @@ After major changes, update this file (`CLAUDE.md`). Keep it up-to-date with the
 
 - When a review or audit skill is invoked (`/bug-review`, `/production-code-audit`, `/requesting-code-review`, etc.), deliver **only** the findings report unless the user explicitly asks to apply fixes.
 - For bug-review and adversarial review workflows: verify each finding is a real issue in the current codebase before proposing any fix. Do not propose fixes for unreachable code, dead paths, or already-compensated issues.
-- After any code edit, run `npm run type-check` and `npm run lint` on the changed files before declaring the task done. Both must pass cleanly.
+- After any code edit, run `pnpm run type-check` and `pnpm run lint` on the changed files before declaring the task done. Both must pass cleanly.
 
 ## Planning
 
@@ -288,9 +290,9 @@ After major changes, update this file (`CLAUDE.md`). Keep it up-to-date with the
 
 ## Build & Long-Running Tasks
 
-- `npm run build` can take several minutes. Before starting, announce what you are running and the expected wait time.
-- Prefer `npm run type-check` (`tsc --noEmit`) for fast type validation unless production output is the explicit goal.
-- For lint validation prefer `npm run lint` (read-only Biome check) over `npm run lint:fix` unless the task is specifically to auto-fix.
+- `pnpm run build` can take several minutes. Before starting, announce what you are running and the expected wait time.
+- Prefer `pnpm run type-check` (`tsc --noEmit`) for fast type validation unless production output is the explicit goal.
+- For lint validation prefer `pnpm run lint` (read-only Biome check) over `pnpm run lint:fix` unless the task is specifically to auto-fix.
 
 ## Documentation Structure
 

@@ -4,8 +4,8 @@
  * One-time import script: "sys data - Sheet1.csv" → Supabase orders (stage: "main")
  *
  * Usage:
- *   npm run import:sheet          # dry-run (no writes, just preview)
- *   npm run import:sheet -- --yes # actually insert into Supabase
+ *   pnpm run import:sheet          # dry-run (no writes, just preview)
+ *   pnpm run import:sheet --yes # actually insert into Supabase
  *
  * Requires .env.local with:
  *   NEXT_PUBLIC_SUPABASE_URL
@@ -282,7 +282,7 @@ if (isDryRun) {
 	console.log(
 		"\n🔍  DRY RUN — no data was written. Run with --yes to insert:\n",
 	);
-	console.log("   npm run import:sheet -- --yes\n");
+	console.log("   pnpm run import:sheet --yes\n");
 	process.exit(0);
 }
 

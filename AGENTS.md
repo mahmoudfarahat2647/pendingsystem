@@ -4,36 +4,38 @@ This file guides Codex (Codex.ai/code) when working in this repository.
 
 ## Commands
 
+**Package manager: pnpm only.** Always use `pnpm` (`pnpm install`, `pnpm run <script>`, `pnpm exec`, `pnpm dlx`). Never use `npm`, `npx`, or `yarn`, and never create a `package-lock.json`.
+
 ```bash
-npm run dev                     # Next.js dev server, Node max memory 4GB
-npm run build                   # Production build
-npm run start                   # Start the production server
-npm run lint                    # Biome check
-npm run lint:fix                # Biome check with writes
-npm run lint:fix:staged         # Biome safe fixes on staged files
-npm run lint:fix:staged:unsafe  # Biome unsafe fixes on staged files
-npm run type-check              # TypeScript validation, no emit
-npm run test                    # Vitest unit/component tests
-npm run test:watch              # Vitest watch mode
-npm run test:ui                 # Vitest UI
-npm run docs                    # Print main docs entrypoints
-npm run docs:serve              # Serve repo/docs content on port 8080
-npm run docs:validate           # Validate README/docs structure
-npm run docs:extract            # Extract JSDoc-derived docs data
-npm run docs:sync               # Sync src/ changes into docs vault through prompts
-npm run db:verify               # Verify .env.local, DATABASE_URL, and table access
-npm run auth:seed-admin         # Seed the initial Better Auth admin user
-npm run import:sheet            # Dry-run legacy CSV import to Supabase main stage
-npm run import:sheet -- --yes   # Execute legacy CSV import
-npm run commit                  # PowerShell helper that stages, commits, then optionally pushes
-npm run testsprite              # Prints TestSprite MCP guidance
+pnpm run dev                     # Next.js dev server, Node max memory 4GB
+pnpm run build                   # Production build
+pnpm run start                   # Start the production server
+pnpm run lint                    # Biome check
+pnpm run lint:fix                # Biome check with writes
+pnpm run lint:fix:staged         # Biome safe fixes on staged files
+pnpm run lint:fix:staged:unsafe  # Biome unsafe fixes on staged files
+pnpm run type-check              # TypeScript validation, no emit
+pnpm run test                    # Vitest unit/component tests
+pnpm run test:watch              # Vitest watch mode
+pnpm run test:ui                 # Vitest UI
+pnpm run docs                    # Print main docs entrypoints
+pnpm run docs:serve              # Serve repo/docs content on port 8080
+pnpm run docs:validate           # Validate README/docs structure
+pnpm run docs:extract            # Extract JSDoc-derived docs data
+pnpm run docs:sync               # Sync src/ changes into docs vault through prompts
+pnpm run db:verify               # Verify .env.local, DATABASE_URL, and table access
+pnpm run auth:seed-admin         # Seed the initial Better Auth admin user
+pnpm run import:sheet            # Dry-run legacy CSV import to Supabase main stage
+pnpm run import:sheet --yes   # Execute legacy CSV import
+pnpm run commit                  # PowerShell helper that stages, commits, then optionally pushes
+pnpm run testsprite              # Prints TestSprite MCP guidance
 ```
 
-`npm run prepare` installs Husky hooks. Normal commits run the Husky pre-commit hook, which applies Biome safe fixes to staged files and retries with unsafe fixes if needed.
+`pnpm install` (via the `prepare` script) installs Husky hooks. Normal commits run the Husky pre-commit hook, which applies Biome safe fixes to staged files and retries with unsafe fixes if needed.
 
-**Quality gates before merging:** `npm run lint` -> `npm run type-check` -> `npm run test` -> `npm run build`. Add `npm run docs:validate` whenever README/docs guidance changes. For docs-only edits, run at least `npm run docs:validate`; run the full gates when touching source behavior.
+**Quality gates before merging:** `pnpm run lint` -> `pnpm run type-check` -> `pnpm run test` -> `pnpm run build`. Add `pnpm run docs:validate` whenever README/docs guidance changes. For docs-only edits, run at least `pnpm run docs:validate`; run the full gates when touching source behavior.
 
-`npm run build` can take several minutes. Announce it before starting and prefer `npm run type-check` for fast TypeScript validation unless production output is the goal.
+`pnpm run build` can take several minutes. Announce it before starting and prefer `pnpm run type-check` for fast TypeScript validation unless production output is the goal.
 
 ## Architecture
 
@@ -137,7 +139,7 @@ Protected app routes live under `src/app/(app)/`. Auth pages live under `src/app
 - **Route handler:** `src/app/api/auth/[...all]/route.ts` is the Better Auth catch-all.
 - **Protection:** middleware performs an optimistic cookie check; `(app)/layout.tsx` performs the authoritative DB session check.
 - **Public paths:** `/login`, `/forgot-password`, `/reset-password`, `/api/auth/*`, `/api/health/*`, `/api/password-reset/*`, `/mobile-order/*`, `/api/mobile-order/*`.
-- **Admin setup:** run `npm run auth:seed-admin` after setting `AUTH_ADMIN_*` values in `.env.local`.
+- **Admin setup:** run `pnpm run auth:seed-admin` after setting `AUTH_ADMIN_*` values in `.env.local`.
 - **Password reset:** `/api/password-reset/request` looks up username via pg and sends reset mail through Better Auth + Resend.
 - **Session timing:** `expiresIn` is 8 hours and `updateAge` is 5 minutes in `src/lib/auth.ts`.
 
@@ -203,7 +205,7 @@ When behavior changes, update the relevant docs:
 
 **Spec lifecycle:** `draft` -> `approved` -> `implemented`. When implementing from a spec, read the spec first, implement the change, update its `status:` frontmatter to `implemented`, and update relevant reference docs.
 
-`npm run docs:sync` is commit-range based. It checks for `src/` changes and uses `scripts/prompts/docs-triage.md` plus `scripts/prompts/docs-ingest.md` to decide which docs need updates. It is allowed to skip when the local docs vault is absent.
+`pnpm run docs:sync` is commit-range based. It checks for `src/` changes and uses `scripts/prompts/docs-triage.md` plus `scripts/prompts/docs-ingest.md` to decide which docs need updates. It is allowed to skip when the local docs vault is absent.
 
 ## Supabase & Database
 
@@ -254,7 +256,7 @@ The known Supabase pooler region for this project is `eu-central-1` (host patter
 Before trying any other fix for a database/auth error, run:
 
 ```bash
-npm run db:verify
+pnpm run db:verify
 ```
 
 The verifier parses `.env.local`, validates the `DATABASE_URL` shape, checks required vars, attempts a live DB connection, and prints row counts for auth and core app tables. Most historical database/auth failures were malformed `DATABASE_URL` values, wrong pooler hosts, or unencoded passwords.
@@ -266,7 +268,7 @@ The verifier parses `.env.local`, validates the `DATABASE_URL` shape, checks req
 | `28P01 password authentication failed` | Wrong password or malformed `DATABASE_URL` | Copy the exact Supabase Dashboard connection string |
 | `ENOTFOUND` / `getaddrinfo` | Wrong pooler host | Use `aws-<n>-<region>.pooler.supabase.com` |
 | `SASL` / `invalid password` | Password has special chars not URL-encoded | Use the Dashboard-provided string verbatim |
-| `relation "auth_users" does not exist` | Better Auth tables not created | Apply migrations or trigger Better Auth table creation, then run `npm run auth:seed-admin` |
+| `relation "auth_users" does not exist` | Better Auth tables not created | Apply migrations or trigger Better Auth table creation, then run `pnpm run auth:seed-admin` |
 | Auth DB connection passes but login fails | Better Auth config/table mapping mismatch | Check `src/lib/auth.ts` model names and `CamelCasePlugin` |
 | `NEXT_PUBLIC_DATABASE_URL` appears | Secret DB URL exposed with public prefix | Remove it; only `DATABASE_URL` is valid |
 
@@ -333,7 +335,7 @@ When performing any refactor, optimization, or code cleanup:
 
 - When a review or audit skill is invoked (`/bug-review`, `/production-code-audit`, `/requesting-code-review`, etc.), deliver only the findings report unless the user explicitly asks to apply fixes.
 - For bug-review and adversarial review workflows, verify each finding is a real issue in the current codebase before proposing any fix.
-- After source code edits, run `npm run type-check` and `npm run lint` before declaring the task done. For docs-only edits, run `npm run docs:validate`; add full gates if source files changed.
+- After source code edits, run `pnpm run type-check` and `pnpm run lint` before declaring the task done. For docs-only edits, run `pnpm run docs:validate`; add full gates if source files changed.
 - Keep planning proportional. For simple UI additions or single-file changes, implement directly.
 - When presenting approaches, offer 2-3 concise options with trade-offs and wait for the user to choose before deep-diving.
 - If asked to save a general plan, write it to a `.md` file in the project root and stop before implementation. If implementing from an Obsidian spec, plans belong in `docs/superpowers/plans/`.
@@ -347,6 +349,6 @@ The following slash commands are deprecated. Do not suggest or invoke them:
 
 ## Build and Long-Running Tasks
 
-- Announce `npm run build` before starting; it can take several minutes.
-- Prefer `npm run type-check` for quick validation unless production output is explicitly needed.
-- Prefer read-only `npm run lint` over `npm run lint:fix` unless the task is specifically to auto-fix.
+- Announce `pnpm run build` before starting; it can take several minutes.
+- Prefer `pnpm run type-check` for quick validation unless production output is explicitly needed.
+- Prefer read-only `pnpm run lint` over `pnpm run lint:fix` unless the task is specifically to auto-fix.

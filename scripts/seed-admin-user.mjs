@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Seed script to create the initial admin user.
- * Run: npm run auth:seed-admin
+ * Run: pnpm run auth:seed-admin
  * Requires .env.local with DATABASE_URL, BETTER_AUTH_URL, BETTER_AUTH_SECRET,
  * AUTH_ADMIN_USERNAME, AUTH_ADMIN_EMAIL, AUTH_ADMIN_PASSWORD, AUTH_ADMIN_NAME
  */
