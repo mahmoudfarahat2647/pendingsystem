@@ -75,15 +75,15 @@ export const BookingInquiryModal = ({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				hideClose={true}
-				className="bg-[#1c1c1e] text-gray-300 border-white/5 p-0 gap-0 overflow-hidden flex h-[90vh] rounded-[2rem] shadow-2xl font-sans w-fit max-w-[95vw]"
+				className="bg-[#1c1c1e] text-gray-300 border-white/5 p-0 gap-0 overflow-hidden flex h-[min(620px,85vh)] rounded-2xl sm:rounded-2xl shadow-2xl font-sans w-fit max-w-[95vw]"
 			>
 				<DialogHeader className="sr-only">
 					<DialogTitle>Booking Inquiry</DialogTitle>
 				</DialogHeader>
 
-				<div className="flex-1 flex min-w-0">
+				<div className="flex-1 flex min-w-0 min-h-0 overflow-x-auto">
 					{/* Column 1: Calendar */}
-					<div className="w-[450px] p-10 flex flex-col bg-[#1c1c1e] border-r border-white/5 overflow-y-auto custom-scrollbar">
+					<div className="w-[400px] shrink-0 p-8 flex flex-col bg-[#1c1c1e] border-r border-white/5 overflow-y-auto custom-scrollbar">
 						{isLoadingBookings ? (
 							<div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-500">
 								<Loader2 className="h-6 w-6 animate-spin" />
@@ -129,7 +129,7 @@ export const BookingInquiryModal = ({
 					</div>
 
 					{/* Column 2: Customers booked on the selected day */}
-					<div className="w-[320px] bg-[#1c1c1e] border-r border-white/5 flex flex-col">
+					<div className="w-[280px] min-w-[220px] min-h-0 bg-[#1c1c1e] border-r border-white/5 flex flex-col">
 						{isLoadingBookings || isUnavailable ? (
 							<div className="flex-1 p-6 text-xs text-gray-700 italic">
 								{isLoadingBookings ? "Loading…" : "Unavailable"}
@@ -146,7 +146,7 @@ export const BookingInquiryModal = ({
 					</div>
 
 					{/* Column 3: Details of the selected customer */}
-					<div className="flex-1 bg-[#1c1c1e] flex flex-col w-[360px] max-w-[360px]">
+					<div className="w-[320px] shrink-0 min-h-0 bg-[#1c1c1e] flex flex-col">
 						<BookingSidebarHeader
 							selectedRows={[]}
 							preBookingStatus=""
