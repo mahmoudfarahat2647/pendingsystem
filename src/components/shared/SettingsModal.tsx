@@ -17,6 +17,7 @@ import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import BackupReportsTab from "../reports/BackupReportsTab";
+import { LanguageToggle } from "./LanguageToggle";
 import { PartStatusTab } from "./settings/PartStatusTab";
 import { PermissionTab } from "./settings/PermissionTab";
 import { ThemeTab } from "./settings/ThemeTab";
@@ -224,6 +225,8 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									"Control whether grid cells can be edited directly on non-Orders stages."}
 							</p>
 						</div>
+						{/* Language switch — intentionally outside the lock gate so anyone can switch. */}
+						<LanguageToggle />
 					</header>
 
 					<div className="flex-1 overflow-y-auto p-8 custom-scrollbar">

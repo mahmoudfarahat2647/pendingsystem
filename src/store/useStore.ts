@@ -38,6 +38,7 @@ export const useAppStore = create<CombinedStore>()(
 						},
 			),
 			partialize: (state) => ({
+				language: state.language,
 				partStatuses: state.partStatuses,
 				bookingStatuses: state.bookingStatuses,
 				isLocked: state.isLocked,

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { IBM_Plex_Sans_Arabic } from "next/font/google";
 
 import "./globals.css";
 import { Toaster } from "sonner";
@@ -27,7 +28,23 @@ export const metadata: Metadata = {
 };
 
 /**
+ * Arabic font for translated text only. Applied via the `font-arabic`
+ * utility inside scoped translation containers — never globally — so the
+ * page layout stays LTR and pixel-identical in both languages.
+ */
+const arabicFont = IBM_Plex_Sans_Arabic({
+	subsets: ["arabic"],
+	weight: ["400", "500", "700"],
+	variable: "--font-arabic",
+	display: "swap",
+});
+
+/**
  * Root layout providing global providers and dark theme.
+ *
+ * NOTE: `<html lang="en">` stays unchanged with no global `dir`.
+ * Arabic text blocks get `lang="ar" dir="rtl"` on their own scoped
+ * containers instead (see `LocalizedScope`).
  *
  * Layout structure is handled by route groups:
  * - (app) - Full layout with Sidebar/Header for application pages
@@ -44,7 +61,10 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" className="dark" suppressHydrationWarning>
-			<body className="font-sans" suppressHydrationWarning>
+			<body
+				className={`font-sans ${arabicFont.variable}`}
+				suppressHydrationWarning
+			>
 				<QueryProvider>
 					{children}
 					<Toaster position="bottom-right" richColors />
