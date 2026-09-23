@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -27,6 +28,7 @@ import {
 	DialogFooter,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { useT } from "@/hooks/useT";
 import { authClient } from "@/lib/auth-client";
 import { getOrdersQueryKey } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
@@ -97,6 +99,7 @@ export const Sidebar = React.memo(function Sidebar() {
 	);
 	const pathname = usePathname();
 	const router = useRouter();
+	const { t, lang } = useT();
 	const currentEditVin = useAppStore((state) => state.currentEditVin);
 	const clearCurrentEditVin = useAppStore((state) => state.clearCurrentEditVin);
 	const { data: session } = authClient.useSession();
@@ -167,7 +170,7 @@ export const Sidebar = React.memo(function Sidebar() {
 							href={dashboardHref}
 							className="flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-renault-yellow/80"
 							onClick={(e) => handleNavigation(dashboardHref, e)}
-							aria-label="Go to Dashboard"
+							aria-label={t("sidebar.goToDashboard")}
 						>
 							<div className="w-10 h-10 bg-renault-yellow rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(255,204,0,0.3)]">
 								<Logo />
@@ -188,7 +191,7 @@ export const Sidebar = React.memo(function Sidebar() {
 							href={dashboardHref}
 							className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-renault-yellow/80"
 							onClick={(e) => handleNavigation(dashboardHref, e)}
-							aria-label="Go to Dashboard"
+							aria-label={t("sidebar.goToDashboard")}
 						>
 							<div className="w-10 h-10 bg-renault-yellow rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(255,204,0,0.3)]">
 								<Logo />
@@ -201,7 +204,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			{/* Navigation */}
 			<nav
 				className="flex-1 py-8 overflow-y-auto"
-				aria-label="Main navigation"
+				aria-label={t("sidebar.mainNavigation")}
 				suppressHydrationWarning
 			>
 				<ul className="space-y-2 px-4" suppressHydrationWarning>
@@ -313,13 +316,19 @@ export const Sidebar = React.memo(function Sidebar() {
 									className="text-sm font-semibold text-white truncate"
 									suppressHydrationWarning
 								>
-									{userName || "User"}
+									{userName || (
+										<LocalizedScope lang={lang}>
+											{t("sidebar.userFallback")}
+										</LocalizedScope>
+									)}
 								</p>
 								<p
 									className="text-xs text-gray-500 truncate"
 									suppressHydrationWarning
 								>
-									System Creator
+									<LocalizedScope lang={lang}>
+										{t("sidebar.systemCreator")}
+									</LocalizedScope>
 								</p>
 							</div>
 						)}
@@ -330,7 +339,7 @@ export const Sidebar = React.memo(function Sidebar() {
 								<button
 									type="button"
 									className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
-									aria-label="Sign out menu"
+									aria-label={t("sidebar.signOutMenu")}
 									suppressHydrationWarning
 								>
 									<MoreVertical className="h-4 w-4" />
@@ -350,12 +359,20 @@ export const Sidebar = React.memo(function Sidebar() {
 				<DialogContent className="bg-[#0c0c0e] border-white/10 text-slate-200">
 					<DialogTitle className="flex items-center gap-2 text-lg font-bold">
 						<AlertTriangle className="h-5 w-5 text-amber-500" />
-						Unsaved Changes
+						<LocalizedScope lang={lang}>
+							{t("sidebar.unsavedTitle")}
+						</LocalizedScope>
 					</DialogTitle>
 					<DialogDescription className="text-slate-400 text-sm">
-						You have an active edit for VIN{" "}
-						<span className="text-white font-mono">{currentEditVin}</span>.
-						Navigating to another tab will discard your changes.
+						{/* One scope for the whole sentence, VIN isolated as LTR, so
+						    Arabic reads right-to-left across the VIN in order. */}
+						<LocalizedScope lang={lang}>
+							{t("sidebar.unsavedDescriptionBeforeVin")}{" "}
+							<span dir="ltr" className="text-white font-mono">
+								{currentEditVin}
+							</span>
+							{t("sidebar.unsavedDescriptionAfterVin")}
+						</LocalizedScope>
 					</DialogDescription>
 					<DialogFooter className="mt-4">
 						<Button
@@ -364,14 +381,16 @@ export const Sidebar = React.memo(function Sidebar() {
 							className="text-slate-400 hover:text-white"
 						>
 							<X className="h-4 w-4 mr-2" />
-							Cancel
+							<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 						</Button>
 						<Button
 							onClick={confirmNavigation}
 							className="bg-amber-500 hover:bg-amber-400 text-black"
 						>
 							<AlertTriangle className="h-4 w-4 mr-2" />
-							Discard & Continue
+							<LocalizedScope lang={lang}>
+								{t("sidebar.discardAndContinue")}
+							</LocalizedScope>
 						</Button>
 					</DialogFooter>
 				</DialogContent>

@@ -20,7 +20,19 @@ export const en = {
 		move: "Move",
 		understood: "Understood",
 	},
-	sidebar: {},
+	sidebar: {
+		mainNavigation: "Main navigation",
+		goToDashboard: "Go to Dashboard",
+		signOutMenu: "Sign out menu",
+		userFallback: "User",
+		systemCreator: "System Creator",
+		signOut: "Sign out",
+		unsavedTitle: "Unsaved Changes",
+		unsavedDescriptionBeforeVin: "You have an active edit for VIN",
+		unsavedDescriptionAfterVin:
+			". Navigating to another tab will discard your changes.",
+		discardAndContinue: "Discard & Continue",
+	},
 	notifications: {},
 	settings: {
 		language: {
