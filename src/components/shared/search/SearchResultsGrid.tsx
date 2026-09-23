@@ -10,7 +10,7 @@ import type {
 	SelectionChangedEvent,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { gridTheme } from "@/lib/ag-grid-setup";
 import type { PendingRow } from "@/types";
 
@@ -45,6 +45,20 @@ export const SearchResultsGrid = ({
 	showFilters = false,
 }: SearchResultsGridProps) => {
 	const gridRef = useRef<AgGridReact<PendingRow>>(null);
+
+	// Must stay referentially stable: a new object on every parent render makes
+	// AG Grid re-apply column defaults, which re-fires onModelUpdated and loops
+	// back into a parent re-render — this froze the column filter popup (#297).
+	const defaultColDef = useMemo<ColDef<PendingRow>>(
+		() => ({
+			sortable: true,
+			filter: true,
+			resizable: true,
+			suppressHeaderMenuButton: true,
+			floatingFilter: showFilters,
+		}),
+		[showFilters],
+	);
 
 	const onGridReady = useCallback(
 		(params: GridReadyEvent<PendingRow>) => {
@@ -83,13 +97,7 @@ export const SearchResultsGrid = ({
 					theme={gridTheme}
 					rowData={rowData}
 					columnDefs={columnDefs}
-					defaultColDef={{
-						sortable: true,
-						filter: true,
-						resizable: true,
-						suppressHeaderMenuButton: true,
-						floatingFilter: showFilters,
-					}}
+					defaultColDef={defaultColDef}
 					rowHeight={32}
 					headerHeight={36}
 					animateRows={true}
