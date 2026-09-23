@@ -40,8 +40,8 @@ The user might ask in various ways:
 
 1. **Understand the user's intent** from natural language
 2. **Determine the appropriate repomix command**:
-   - Remote repository: `npx repomix@latest --remote <repo>`
-   - Local directory: `npx repomix@latest [directory]`
+   - Remote repository: `pnpm dlx repomix@latest --remote <repo>`
+   - Local directory: `pnpm dlx repomix@latest [directory]`
    - Choose output format (xml is default and recommended)
    - Decide if compression is needed (for repos >100k lines)
 3. **Execute the repomix command** via shell
@@ -54,14 +54,14 @@ The user might ask in various ways:
 
 **For Remote Repositories:**
 ```bash
-npx repomix@latest --remote <repo> --output /tmp/<repo-name>-analysis.xml
+pnpm dlx repomix@latest --remote <repo> --output /tmp/<repo-name>-analysis.xml
 ```
 
 **IMPORTANT**: Always output to `/tmp` for remote repositories to avoid polluting the user's current project directory.
 
 **For Local Directories:**
 ```bash
-npx repomix@latest [directory] [options]
+pnpm dlx repomix@latest [directory] [options]
 ```
 
 **Common Options:**
@@ -75,19 +75,19 @@ npx repomix@latest [directory] [options]
 **Command Examples:**
 ```bash
 # Basic remote pack (always use /tmp)
-npx repomix@latest --remote yamadashy/repomix --output /tmp/repomix-analysis.xml
+pnpm dlx repomix@latest --remote yamadashy/repomix --output /tmp/repomix-analysis.xml
 
 # Basic local pack
-npx repomix@latest
+pnpm dlx repomix@latest
 
 # Pack specific directory
-npx repomix@latest ./src
+pnpm dlx repomix@latest ./src
 
 # Large repo with compression (use /tmp)
-npx repomix@latest --remote facebook/react --compress --output /tmp/react-analysis.xml
+pnpm dlx repomix@latest --remote facebook/react --compress --output /tmp/react-analysis.xml
 
 # Include only specific file types
-npx repomix@latest --include "**/*.{ts,tsx,js,jsx}"
+pnpm dlx repomix@latest --include "**/*.{ts,tsx,js,jsx}"
 ```
 
 ### Step 2: Check Command Output
@@ -186,7 +186,7 @@ grep -iE "error|exception|try.*catch" file.xml
 User: "Analyze the yamadashy/repomix repository"
 
 Your workflow:
-1. Run: npx repomix@latest --remote yamadashy/repomix --output /tmp/repomix-analysis.xml
+1. Run: pnpm dlx repomix@latest --remote yamadashy/repomix --output /tmp/repomix-analysis.xml
 2. Note the metrics from command output (files, tokens)
 3. Grep: grep -i "export" /tmp/repomix-analysis.xml (find main exports)
 4. Read file tree section to understand structure
@@ -201,7 +201,7 @@ Your workflow:
 User: "Find authentication code in this repository"
 
 Your workflow:
-1. Run: npx repomix@latest (or --remote if specified)
+1. Run: pnpm dlx repomix@latest (or --remote if specified)
 2. Grep: grep -iE -A 5 -B 5 "auth|authentication|login|password" repomix-output.xml
 3. Analyze matches and categorize by file
 4. Read the file to get more context if needed
@@ -216,7 +216,7 @@ Your workflow:
 User: "Explain the structure of this project"
 
 Your workflow:
-1. Run: npx repomix@latest ./
+1. Run: pnpm dlx repomix@latest ./
 2. Read file tree from output (use limit if file is large)
 3. Grep for main entry points: grep -iE "index|main|app" repomix-output.xml
 4. Grep for exports: grep "export" repomix-output.xml | head -20
@@ -228,7 +228,7 @@ Your workflow:
 User: "Analyze facebook/react - it's a large repository"
 
 Your workflow:
-1. Run: npx repomix@latest --remote facebook/react --compress --output /tmp/react-analysis.xml
+1. Run: pnpm dlx repomix@latest --remote facebook/react --compress --output /tmp/react-analysis.xml
 2. Note compression reduced token count (~70% reduction)
 3. Check metrics and file tree
 4. Grep for main components
@@ -240,7 +240,7 @@ Your workflow:
 User: "I want to see only TypeScript files"
 
 Your workflow:
-1. Run: npx repomix@latest --include "**/*.{ts,tsx}"
+1. Run: pnpm dlx repomix@latest --include "**/*.{ts,tsx}"
 2. Analyze TypeScript-specific patterns
 3. Report findings focused on TS code
 ```
@@ -273,7 +273,7 @@ If you encounter issues:
 ## Help and Documentation
 
 If you need more information:
-- Run `npx repomix@latest --help` to see all available options
+- Run `pnpm dlx repomix@latest --help` to see all available options
 - Check the official documentation at https://github.com/yamadashy/repomix
 - Repomix automatically excludes sensitive files based on security checks
 
