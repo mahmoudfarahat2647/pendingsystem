@@ -85,6 +85,18 @@ A chassis-level safety gate in front of every route into **Call List** (issue `#
 - **Notifications**: new `release_followup` `AppNotification` type, one per normalized VIN, `managedKey = release_followup:{vin}:{dueISO}`. Reaches `notificationSlice.checkNotifications` via `ordersQueryAdapter.getReleaseFollowUps()` (store never touches React Query directly). The dropdown's `X` — and "Clear All" — snooze a `release_followup` notification another two months instead of permanently dismissing it; every other notification type keeps its existing dismiss behavior. Click-through reuses `resolveNotificationStage`.
 - Migration: `supabase/migrations/20260920_add_release_follow_ups.sql` (applied directly to the live project).
 
+### Arabic (AR) language — i18n
+
+Epic `#300`: an `EN | AR` option that translates **only four areas** — Sidebar, Notifications, the Settings modal, and the action pop-up modals. Page layout stays **LTR**; stage names, user data, and logic values (e.g. `ضمان`, status values, the `release` confirmation word) are never translated. Digits stay Western.
+
+- **Status:** Wave 1 foundation (`#301`, PR `#307`, merged 2026-09-23). Waves 2–5 (`#302`–`#305`) translate the four areas on top of it; the full feature doc (`docs/features/i18n.md`) is finalized in the last wave.
+- **Dictionaries**: `src/i18n/dictionaries/en.ts` is the source of truth (`as const`, namespaces `common`/`sidebar`/`notifications`/`settings`/`modals`); `ar.ts` is typed as `Dictionary`, so a missing Arabic key fails `type-check` (backed by `src/test/i18n/dictionaries.parity.test.ts`).
+- **Pure lookup**: `translate(lang, key, params?)` in `src/lib/i18n/translate.ts` — `{param}` interpolation, falls back to EN, echoes the key when missing everywhere. No React/store.
+- **Hook**: `useT()` (`src/hooks/useT.ts`) returns `{ t, lang, dir, scopeProps }` via a selector on `useAppStore(s => s.language)`.
+- **State**: `language: "en" | "ar"` + `setLanguage` in `uiSlice`, persisted through `partialize` (`pending-sys-storage-v1.1`), per browser, default `en`. No DB change and no migration — legacy snapshots rehydrate as English.
+- **Direction & font**: never set a global `dir` or change `<html lang="en">`. Wrap **leaf text blocks only** (never flex/grid containers) in `LocalizedScope` (`src/components/shared/`), which adds `lang="ar" dir="rtl"` + `.font-arabic` (IBM Plex Sans Arabic via `next/font/google`, `--font-arabic`, wired in `src/app/layout.tsx`).
+- **Toggle**: `LanguageToggle` sits in the `SettingsModal` header's right slot, deliberately **outside the lock gate**. The header carries `pr-14` so it clears `DialogContent`'s absolute close button.
+
 ### App Shell
 `src/app/layout.tsx` -> `src/app/(app)/layout.tsx` -> `AppShell` (Sidebar + Header + error boundary). All application routes live under `src/app/(app)/`.
 
