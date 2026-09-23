@@ -204,7 +204,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 				{/* Content Area */}
 				<div className="flex-1 flex flex-col bg-[#1c1c1e]">
-					<header className="p-6 flex items-center justify-between border-b border-white/5 h-[73px]">
+					<header className="p-6 pr-14 flex items-center justify-between border-b border-white/5 h-[73px]">
 						<div>
 							<h3 className="font-bold text-lg">
 								{activeTab === "part-statuses" && "Status Management"}
@@ -225,7 +225,8 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									"Control whether grid cells can be edited directly on non-Orders stages."}
 							</p>
 						</div>
-						{/* Language switch — intentionally outside the lock gate so anyone can switch. */}
+						{/* Language switch — intentionally outside the lock gate so anyone can switch.
+						    Header pr-14 keeps it clear of DialogContent's absolute close button. */}
 						<LanguageToggle />
 					</header>
 
