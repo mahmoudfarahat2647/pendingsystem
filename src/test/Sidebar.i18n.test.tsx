@@ -140,7 +140,14 @@ describe("Sidebar i18n (Wave 2)", () => {
 		await user.click(bookingLink);
 
 		expect(screen.getByText("تغييرات غير محفوظة")).toBeInTheDocument();
-		expect(screen.getByText("VIN123AR")).toBeInTheDocument();
+		// The whole description is one RTL scope with the VIN isolated as LTR,
+		// so the Arabic halves are not reordered around the VIN.
+		const vin = screen.getByText("VIN123AR");
+		expect(vin).toHaveAttribute("dir", "ltr");
+		const scope = vin.closest('[dir="rtl"]');
+		expect(scope).not.toBeNull();
+		expect(scope).toHaveTextContent("لديك تعديل نشط للشاسيه");
+		expect(scope).toHaveTextContent("الانتقال إلى تبويب آخر سيتجاهل تغييراتك.");
 		expect(screen.getByRole("button", { name: /إلغاء/ })).toBeInTheDocument();
 		expect(
 			screen.getByRole("button", { name: /تجاهل والمتابعة/ }),

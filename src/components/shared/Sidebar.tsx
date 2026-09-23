@@ -364,11 +364,13 @@ export const Sidebar = React.memo(function Sidebar() {
 						</LocalizedScope>
 					</DialogTitle>
 					<DialogDescription className="text-slate-400 text-sm">
+						{/* One scope for the whole sentence, VIN isolated as LTR, so
+						    Arabic reads right-to-left across the VIN in order. */}
 						<LocalizedScope lang={lang}>
-							{t("sidebar.unsavedDescriptionBeforeVin")}
-						</LocalizedScope>{" "}
-						<span className="text-white font-mono">{currentEditVin}</span>
-						<LocalizedScope lang={lang}>
+							{t("sidebar.unsavedDescriptionBeforeVin")}{" "}
+							<span dir="ltr" className="text-white font-mono">
+								{currentEditVin}
+							</span>
 							{t("sidebar.unsavedDescriptionAfterVin")}
 						</LocalizedScope>
 					</DialogDescription>
