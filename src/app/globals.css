@@ -235,6 +235,37 @@
 	background: rgba(255, 255, 255, 0.2);
 }
 
+/* Release-gate modal: alternating (ping-pong) soft red glow on the two
+   values that trigger the gate. Both share one keyframe; the second element
+   is offset by half the cycle so exactly one glows at a time. */
+@keyframes release-value-pulse {
+	0%,
+	100% {
+		color: rgb(243 244 246);
+		text-shadow: none;
+	}
+	50% {
+		color: rgb(248 113 113);
+		text-shadow: 0 0 10px rgba(248, 113, 113, 0.35);
+	}
+}
+
+.release-value-pulse {
+	animation: release-value-pulse 2.5s ease-in-out infinite;
+}
+
+.release-value-pulse-alt {
+	animation: release-value-pulse 2.5s ease-in-out -1.25s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.release-value-pulse,
+	.release-value-pulse-alt {
+		animation: none;
+		color: rgb(248 113 113);
+	}
+}
+
 /* CNTR RDG warranty warning pulse animations */
 @keyframes cntr-pulse-red {
 	0%,
