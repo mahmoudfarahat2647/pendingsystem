@@ -184,4 +184,66 @@ describe("Sidebar i18n (Wave 2)", () => {
 		const item = await screen.findByRole("menuitem", { name: /Sign out/ });
 		expect(within(item).getByText("Sign out")).toBeInTheDocument();
 	});
+
+	it("keeps collapsed tooltips English and the collapse affordance in AR", async () => {
+		const user = userEvent.setup();
+		useAppStore.getState().setLanguage("ar");
+		const { container } = renderWithProviders(<Sidebar />);
+
+		// The collapse toggle is the only direct button child of the aside;
+		// the sign-out trigger lives inside the user block.
+		const collapseButton = container.querySelector("aside > button");
+		expect(collapseButton).not.toBeNull();
+		await user.click(collapseButton as HTMLElement);
+
+		// Collapsed width, logo aria-label still Arabic, user block hidden.
+		expect(container.querySelector("aside")?.className).toContain("w-20");
+		expect(
+			screen.getAllByRole("link", { name: "الانتقال إلى لوحة التحكم" }).length,
+		).toBeGreaterThan(0);
+		expect(screen.queryByText("مستخدم")).not.toBeInTheDocument();
+		expect(
+			screen.queryByLabelText("قائمة تسجيل الخروج"),
+		).not.toBeInTheDocument();
+
+		// Collapsed title tooltips stay English stage names by decision.
+		for (const label of ["Dashboard", "Orders", "Main Sheet"]) {
+			const link = screen.getByRole("link", { name: label });
+			expect(link.getAttribute("title")).toBe(label);
+		}
+	});
+
+	it("keeps icons, collapse button and sidebar position identical in EN and AR", () => {
+		const countIcons = () => document.querySelectorAll("aside svg").length;
+		const countCollapseButtons = () =>
+			document.querySelectorAll("aside > button").length;
+
+		const enRender = renderWithProviders(<Sidebar />);
+		const enIcons = countIcons();
+		expect(enIcons).toBeGreaterThan(0);
+		expect(countCollapseButtons()).toBe(1);
+		expect(enRender.container.querySelector("aside")?.className).toContain(
+			"border-r",
+		);
+		enRender.unmount();
+
+		useAppStore.getState().setLanguage("ar");
+		const arRender = renderWithProviders(<Sidebar />);
+		expect(countIcons()).toBe(enIcons);
+		expect(countCollapseButtons()).toBe(1);
+		expect(arRender.container.querySelector("aside")?.className).toContain(
+			"border-r",
+		);
+		arRender.unmount();
+	});
+
+	it("keeps truncation on the AR user block so nothing overflows", () => {
+		useAppStore.getState().setLanguage("ar");
+		renderWithProviders(<Sidebar />);
+
+		for (const text of ["مستخدم", "منشئ النظام"]) {
+			const paragraph = screen.getByText(text).closest("p");
+			expect(paragraph?.className).toContain("truncate");
+		}
+	});
 });

@@ -2,6 +2,7 @@
 
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -10,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useT } from "@/hooks/useT";
 import { authClient } from "@/lib/auth-client";
-import { LocalizedScope } from "./LocalizedScope";
 
 interface SidebarUserMenuProps {
 	trigger: React.ReactNode;

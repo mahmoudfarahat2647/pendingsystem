@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -33,7 +34,6 @@ import { getOrdersQueryKey } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
-import { LocalizedScope } from "./LocalizedScope";
 import { Logo } from "./Logo";
 import { SettingsModal } from "./SettingsModal";
 import { SidebarUserMenu } from "./SidebarUserMenu";
