@@ -8,7 +8,9 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useT } from "@/hooks/useT";
 import { authClient } from "@/lib/auth-client";
+import { LocalizedScope } from "./LocalizedScope";
 
 interface SidebarUserMenuProps {
 	trigger: React.ReactNode;
@@ -16,6 +18,7 @@ interface SidebarUserMenuProps {
 
 export function SidebarUserMenu({ trigger }: SidebarUserMenuProps) {
 	const router = useRouter();
+	const { t, lang } = useT();
 
 	const handleSignOut = async () => {
 		await authClient.signOut();
@@ -34,7 +37,7 @@ export function SidebarUserMenu({ trigger }: SidebarUserMenuProps) {
 					className="cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10"
 				>
 					<LogOut className="h-4 w-4 mr-2" />
-					Sign out
+					<LocalizedScope lang={lang}>{t("sidebar.signOut")}</LocalizedScope>
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>

@@ -19,7 +19,18 @@ export const ar: Dictionary = {
 		move: "نقل",
 		understood: "تم",
 	},
-	sidebar: {},
+	sidebar: {
+		mainNavigation: "التنقل الرئيسي",
+		goToDashboard: "الانتقال إلى لوحة التحكم",
+		signOutMenu: "قائمة تسجيل الخروج",
+		userFallback: "مستخدم",
+		systemCreator: "منشئ النظام",
+		signOut: "تسجيل الخروج",
+		unsavedTitle: "تغييرات غير محفوظة",
+		unsavedDescriptionBeforeVin: "لديك تعديل نشط للشاسيه",
+		unsavedDescriptionAfterVin: ". الانتقال إلى تبويب آخر سيتجاهل تغييراتك.",
+		discardAndContinue: "تجاهل والمتابعة",
+	},
 	notifications: {},
 	settings: {
 		language: {
