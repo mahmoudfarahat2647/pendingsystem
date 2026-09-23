@@ -1,6 +1,6 @@
 # Normalise line endings.
 #
-# The repo previously held a mix of CRLF and LF, which made `npm run lint`
+# The repo previously held a mix of CRLF and LF, which made `pnpm run lint`
 # unusable as a quality gate: a clean checkout reported 311 formatting errors,
 # so a genuinely new error was indistinguishable from the existing noise.
 # Biome formats to LF, so LF is what gets stored and checked out.

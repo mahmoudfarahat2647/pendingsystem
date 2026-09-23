@@ -12,12 +12,12 @@ if [ -z "$STAGED_FILES" ]; then
 fi
 
 printf '🔍 Biome: Running safe fixes on staged files...\n'
-npx @biomejs/biome check --write --staged --no-errors-on-unmatched --files-ignore-unknown=true
+pnpm exec biome check --write --staged --no-errors-on-unmatched --files-ignore-unknown=true
 status=$?
 
 if [ $status -ne 0 ]; then
     printf '⚠️  Biome: Some issues remain. Retrying with unsafe fixes...\n'
-    npx @biomejs/biome check --write --unsafe --staged --no-errors-on-unmatched --files-ignore-unknown=true
+    pnpm exec biome check --write --unsafe --staged --no-errors-on-unmatched --files-ignore-unknown=true
     status=$?
 fi
 

@@ -3,7 +3,7 @@
  *
  * Later waves extend these namespaces with their own keys; Arabic
  * (`ar.ts`) is typed as {@link Dictionary} so a missing key fails
- * `npm run type-check`.
+ * `pnpm run type-check`.
  *
  * Namespaces: `common`, `sidebar`, `notifications`, `settings`, `modals`.
  * Wave 1 starts with `common.*` and `settings.language.*`.
