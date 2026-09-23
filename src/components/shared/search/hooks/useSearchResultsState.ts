@@ -1,70 +1,26 @@
 "use client";
 
-import type {
-	CellValueChangedEvent,
-	GridApi,
-	SelectionChangedEvent,
-} from "ag-grid-community";
+import type { GridApi, SelectionChangedEvent } from "ag-grid-community";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
 	getGlobalSearchWorkspaceColumns,
 	type SearchHeaderCheckboxState,
 } from "@/components/shared/GridConfig";
-import {
-	SEARCH_SOURCES,
-	type SearchSource,
-} from "@/components/shared/search/searchSources";
-import {
-	buildGlobalSearchString,
-	getMissingPartRows,
-} from "@/components/shared/search/searchUtils";
-import { ALLOWED_COMPANIES } from "@/domain/order/constants";
+import { useSearchResultsActions } from "@/components/shared/search/hooks/useSearchResultsActions";
+import { useSearchResultsFilterChain } from "@/components/shared/search/hooks/useSearchResultsFilterChain";
+import { buildGlobalSearchString } from "@/components/shared/search/searchUtils";
 import type { OrderStage } from "@/domain/order/orderStage";
-import {
-	appendTaggedUserNote,
-	filterReservedRows,
-	getEffectiveNoteHistory,
-	getVinAutoMoveIds,
-} from "@/domain/order/orderWorkflow";
 import { useBulkDeleteOrdersMutation } from "@/hooks/queries/useBulkDeleteOrdersMutation";
 import { useBulkUpdateOrderStageMutation } from "@/hooks/queries/useBulkUpdateOrderStageMutation";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
 import { useSaveOrderMutation } from "@/hooks/queries/useSaveOrderMutation";
 import { useReleaseGate } from "@/hooks/useReleaseGate";
 import { useRowModals } from "@/hooks/useRowModals";
-import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
 import { normalizeOrderStage } from "@/lib/orderStage";
-import { buildReorderUpdates } from "@/lib/orderStageTransitions";
-import { printReservationLabels } from "@/lib/printing/reservationLabels";
-import {
-	filterRowsByValues,
-	getCompanyValue,
-	getModelValue,
-	getRowValueFilterOptions,
-} from "@/lib/rowValueFilter";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
-
-const SOURCE_TO_STAGE: Record<string, string> = {
-	"Main Sheet": "main",
-	Orders: "orders",
-	Booking: "booking",
-	Call: "call",
-	Archive: "archive",
-	Freeze: "freeze",
-};
-
-const SOURCE_TO_ROUTE: Record<string, string> = {
-	"Main Sheet": "/main-sheet",
-	Orders: "/orders",
-	Booking: "/booking",
-	Call: "/call-list",
-	Archive: "/archive",
-	Freeze: "/freeze",
-};
 
 export const useSearchResultsState = () => {
 	const searchTerm = useAppStore((state) => state.searchTerm);
@@ -193,180 +149,19 @@ export const useSearchResultsState = () => {
 		freezeData,
 	]);
 
-	// Distinct sourceType values present in searchResults (pre-filter)
-	const sourceOptions = useMemo<SearchSource[]>(() => {
-		const available = new Set<string>();
-		for (const row of searchResults) {
-			if (row.sourceType) {
-				available.add(row.sourceType);
-			}
-		}
-		return SEARCH_SOURCES.map((s) => s.source).filter((source) =>
-			available.has(source),
-		);
-	}, [searchResults]);
-
-	const [activeSourceFilter, setActiveSourceFilter] =
-		useState<SearchSource | null>(null);
-
-	// Intersect during render (not in an effect): a post-render prune would let
-	// one frame through with new searchResults and a stale filter, flashing an
-	// empty grid when the search term changes while a source filter is active.
-	const sourceOptionSet = useMemo(
-		() => new Set<SearchSource>(sourceOptions),
-		[sourceOptions],
-	);
-	const effectiveSourceFilter = useMemo(
-		() =>
-			activeSourceFilter && sourceOptionSet.has(activeSourceFilter)
-				? activeSourceFilter
-				: null,
-		[activeSourceFilter, sourceOptionSet],
-	);
-
-	const sourceFilteredResults = useMemo(() => {
-		if (!effectiveSourceFilter) return searchResults;
-		return searchResults.filter(
-			(row) => row.sourceType === effectiveSourceFilter,
-		);
-	}, [searchResults, effectiveSourceFilter]);
-
-	// Tidy the active source filter once its source disappears from search results.
-	// The render-time intersection above keeps `sourceFilteredResults` correct in the meantime.
-	useEffect(() => {
-		setActiveSourceFilter((current) => {
-			if (current && !sourceOptionSet.has(current)) {
-				return null;
-			}
-			return current;
-		});
-	}, [sourceOptionSet]);
-
-	const handleSourceFilterChange = useCallback(
-		(source: SearchSource | null) => {
-			setActiveSourceFilter((current) => {
-				if (source === null || current === source) {
-					return null;
-				}
-				return source;
-			});
-		},
-		[],
-	);
-
-	// Company filter (Global Search toolbar). Buttons are always rendered from the
-	// fixed ALLOWED_COMPANIES list; availability is derived from the source-filtered
-	// results so a company with no matching row renders disabled, mirroring how
-	// `sourceOptions` gates the stage dots. Multi-select: selecting every entry in
-	// ALLOWED_COMPANIES is treated as no filter (see `isEveryCompanySelected` below),
-	// so rows with a blank/unrecognized company aren't hidden just because both
-	// buttons happen to be on.
-	const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
-
-	const availableCompanies = useMemo<string[]>(() => {
-		const available = new Set<string>();
-		for (const row of sourceFilteredResults) {
-			const company = getCompanyValue(row);
-			if (typeof company === "string" && company) {
-				available.add(company);
-			}
-		}
-		return ALLOWED_COMPANIES.filter((company) => available.has(company));
-	}, [sourceFilteredResults]);
-
-	// Intersect during render (not in an effect): a post-render prune would let one
-	// frame through with the new searchResults and the old selection, flashing an
-	// empty grid when the search term changes while a company button is still active.
-	const availableCompanySet = useMemo(
-		() => new Set(availableCompanies),
-		[availableCompanies],
-	);
-	const effectiveSelectedCompanies = useMemo(
-		() => selectedCompanies.filter((value) => availableCompanySet.has(value)),
-		[selectedCompanies, availableCompanySet],
-	);
-
-	// Compared against the fixed ALLOWED_COMPANIES list (not `availableCompanies`):
-	// when only one company has any matching rows, selecting that single button
-	// must still filter down to it, not fall through to "no filter".
-	const isEveryCompanySelected =
-		effectiveSelectedCompanies.length === ALLOWED_COMPANIES.length;
-
-	const companyFilteredResults = useMemo(() => {
-		if (isEveryCompanySelected) return sourceFilteredResults;
-		return filterRowsByValues(
-			sourceFilteredResults,
-			effectiveSelectedCompanies,
-			getCompanyValue,
-		);
-	}, [
-		sourceFilteredResults,
-		effectiveSelectedCompanies,
-		isEveryCompanySelected,
-	]);
-
-	// Tidy the active company selection once a selected company disappears from
-	// the results. The render-time intersection above keeps `companyFilteredResults`
-	// correct in the meantime.
-	useEffect(() => {
-		setSelectedCompanies((current) => {
-			const next = current.filter((value) => availableCompanySet.has(value));
-			return next.length === current.length ? current : next;
-		});
-	}, [availableCompanySet]);
-
-	const handleCompanyFilterChange = useCallback((company: string) => {
-		setSelectedCompanies((current) =>
-			current.includes(company)
-				? current.filter((value) => value !== company)
-				: [...current, company],
-		);
-	}, []);
-
-	const handleCompanyFilterClear = useCallback(() => {
-		setSelectedCompanies([]);
-	}, []);
-
-	// Car model filter (Global Search toolbar). Options are derived from the
-	// company-filtered results so model chips always match >=1 visible row.
-	const [selectedModels, setSelectedModels] = useState<string[]>([]);
-
-	const modelOptions = useMemo(
-		() => getRowValueFilterOptions(companyFilteredResults, getModelValue),
-		[companyFilteredResults],
-	);
-
-	// Intersect during render (not in an effect): a post-render prune would let one
-	// frame through with the new searchResults and the old selection, flashing an
-	// empty grid when the search term changes while a model chip is still selected.
-	const modelOptionValues = useMemo(
-		() => new Set(modelOptions.map((option) => option.value)),
-		[modelOptions],
-	);
-	const effectiveSelectedModels = useMemo(
-		() => selectedModels.filter((value) => modelOptionValues.has(value)),
-		[selectedModels, modelOptionValues],
-	);
-
-	const filteredResults = useMemo(
-		() =>
-			filterRowsByValues(
-				companyFilteredResults,
-				effectiveSelectedModels,
-				getModelValue,
-			),
-		[companyFilteredResults, effectiveSelectedModels],
-	);
-
-	// Tidy the rendered chips once a selected model disappears from the results
-	// (e.g. the search term changed). The render-time intersection above is what
-	// keeps `filteredResults` correct in the meantime.
-	useEffect(() => {
-		setSelectedModels((current) => {
-			const next = current.filter((value) => modelOptionValues.has(value));
-			return next.length === current.length ? current : next;
-		});
-	}, [modelOptionValues]);
+	const {
+		sourceOptions,
+		activeSourceFilter,
+		handleSourceFilterChange,
+		availableCompanies,
+		selectedCompanies,
+		handleCompanyFilterChange,
+		handleCompanyFilterClear,
+		modelOptions,
+		selectedModels,
+		setSelectedModels,
+		filteredResults,
+	} = useSearchResultsFilterChain(searchResults);
 
 	// Handlers
 	const syncMasterCheckboxState = useCallback((api: GridApi<PendingRow>) => {
@@ -520,432 +315,43 @@ export const useSearchResultsState = () => {
 		handleSelectAllFiltered,
 	]);
 
-	// Toolbar Actions
-	const handleReserve = useCallback(() => {
-		const reservedRows = filterReservedRows(selectedRows, partStatuses);
-		if (reservedRows.length === 0) return;
-		printReservationLabels(reservedRows);
-	}, [selectedRows, partStatuses]);
-
-	const handleBookingConfirm = useCallback(
-		async (date: string, note: string, status?: string) => {
-			if (selectedRows.length === 0 || !isSameSource) return;
-
-			if (activeStage === "orders") {
-				const missing = getMissingPartRows(selectedRows);
-				if (missing.length > 0) {
-					toast.error(
-						`${missing.length} order(s) missing part number or description. Complete all part fields before booking.`,
-					);
-					return;
-				}
-			}
-
-			try {
-				const results = await Promise.allSettled(
-					selectedRows.map((row) => {
-						const freshRow = searchResults.find((r) => r.id === row.id) ?? row;
-						return saveOrderMutation.mutateAsync({
-							id: row.id,
-							updates: {
-								bookingDate: date,
-								bookingNote: note,
-								noteHistory: appendTaggedUserNote(
-									getEffectiveNoteHistory(freshRow),
-									note,
-									"booking",
-								),
-								...(status ? { bookingStatus: status } : {}),
-							},
-							stage: "booking",
-							sourceStage: row.stage as OrderStage,
-						});
-					}),
-				);
-
-				const succeededIds = new Set(
-					selectedRows
-						.filter((_, i) => results[i]?.status === "fulfilled")
-						.map((r) => r.id),
-				);
-				const failedCount = selectedRows.length - succeededIds.size;
-
-				if (succeededIds.size > 0) {
-					setShowBookingModal(false);
-					if (failedCount === 0) {
-						setSelectedRows([]);
-						toast.success(`Booked ${selectedRows.length} rows for ${date}`);
-					} else {
-						setSelectedRows((prev) =>
-							prev.filter((r) => !succeededIds.has(r.id)),
-						);
-						toast.warning(
-							`${succeededIds.size} row(s) booked, ${failedCount} failed (possibly edited elsewhere). Remaining rows stay selected.`,
-						);
-					}
-				} else {
-					toast.error("Booking failed");
-				}
-			} catch (_error) {
-				toast.error("Booking failed");
-			}
-		},
-		[selectedRows, isSameSource, activeStage, searchResults, saveOrderMutation],
-	);
-
-	const handleArchiveConfirm = useCallback(
-		async (reason: string) => {
-			if (selectedRows.length === 0 || !isSameSource) return;
-			try {
-				const results = await Promise.allSettled(
-					selectedRows.map((row) => {
-						const freshRow = searchResults.find((r) => r.id === row.id) ?? row;
-						const updatedHistory = appendTaggedUserNote(
-							getEffectiveNoteHistory(freshRow),
-							reason,
-							"archive",
-						);
-						return saveOrderMutation.mutateAsync({
-							id: row.id,
-							updates: {
-								archiveReason: reason,
-								noteHistory: updatedHistory,
-							},
-							stage: "archive",
-							sourceStage: row.stage as OrderStage,
-						});
-					}),
-				);
-
-				const succeededIds = new Set(
-					selectedRows
-						.filter((_, i) => results[i]?.status === "fulfilled")
-						.map((r) => r.id),
-				);
-				const failedCount = selectedRows.length - succeededIds.size;
-
-				if (succeededIds.size > 0) {
-					setShowArchiveModal(false);
-					if (failedCount === 0) {
-						setSelectedRows([]);
-						toast.success(`Archived ${selectedRows.length} rows`);
-					} else {
-						setSelectedRows((prev) =>
-							prev.filter((r) => !succeededIds.has(r.id)),
-						);
-						toast.warning(
-							`${succeededIds.size} row(s) archived, ${failedCount} failed (possibly edited elsewhere). Remaining rows stay selected.`,
-						);
-					}
-				} else {
-					toast.error("Archiving failed");
-				}
-			} catch (_error) {
-				toast.error("Archiving failed");
-			}
-		},
-		[selectedRows, isSameSource, searchResults, saveOrderMutation],
-	);
-
-	const handleSendToCallList = useCallback(async () => {
-		if (selectedRows.length === 0 || !isSameSource) return;
-
-		if (activeStage === "orders") {
-			const missing = getMissingPartRows(selectedRows);
-			if (missing.length > 0) {
-				toast.error(
-					`${missing.length} order(s) missing part number or description. Complete all part fields before sending to Call List.`,
-				);
-				return;
-			}
-		}
-
-		const mutation =
-			bulkStageMutations[activeStage as keyof typeof bulkStageMutations];
-		if (!mutation) return;
-
-		const gateResult = await requestCallRelease({
-			rows: selectedRows,
-			automatic: false,
-		});
-		if (gateResult.approvedRows.length === 0) {
-			if (gateResult.cancelledVins.length > 0) {
-				toast.error("Release not confirmed — no rows were moved.");
-			}
-			return;
-		}
-
-		try {
-			await mutation.mutateAsync({
-				ids: gateResult.approvedRows.map((r) => r.id),
-				stage: "call",
-			});
-			await clearFollowUpsForVins(gateResult.approvedVins);
-			toast.success(
-				`Moved ${gateResult.approvedRows.length} rows to Call List${
-					gateResult.cancelledVins.length > 0
-						? ` (${gateResult.cancelledVins.length} chassis withheld pending release approval)`
-						: ""
-				}`,
-			);
-		} catch (_error) {
-			toast.error("Move failed");
-		}
-	}, [
+	const {
+		handleReserve,
+		handleBookingConfirm,
+		handleArchiveConfirm,
+		handleSendToCallList,
+		handleReorderConfirm,
+		handleDeleteConfirm,
+		handleBulkStatusUpdate,
+		handleExtract,
+		onBadgeNavigate,
+		onCellValueChanged,
+	} = useSearchResultsActions({
 		selectedRows,
+		setSelectedRows,
 		isSameSource,
 		activeStage,
+		searchResults,
+		filteredResults,
+		mainData,
+		ordersData,
+		freezeData,
+		partStatuses,
+		saveOrderMutation,
 		bulkStageMutations,
+		deleteOrdersMutation,
 		requestCallRelease,
 		clearFollowUpsForVins,
-	]);
-
-	const handleReorderConfirm = useCallback(async () => {
-		if (selectedRows.length === 0 || !isSameSource || !reorderReason.trim())
-			return;
-		try {
-			const results = await Promise.allSettled(
-				selectedRows.map((row) => {
-					const freshRow = searchResults.find((r) => r.id === row.id) ?? row;
-					return saveOrderMutation.mutateAsync({
-						id: row.id,
-						updates: buildReorderUpdates(freshRow, reorderReason),
-						stage: "orders",
-						sourceStage: row.stage as OrderStage,
-					});
-				}),
-			);
-
-			const succeeded = results.filter(
-				(r) => r.status === "fulfilled" && r.value !== null,
-			);
-			const skipped = results.filter(
-				(r) => r.status === "fulfilled" && r.value === null,
-			);
-			const failed = results.filter((r) => r.status === "rejected");
-
-			if (succeeded.length > 0) {
-				setShowReorderModal(false);
-				setReorderReason("");
-				if (skipped.length === 0 && failed.length === 0) {
-					setSelectedRows([]);
-					toast.success(
-						`${succeeded.length} row(s) sent back to Orders (Reorder)`,
-					);
-				} else {
-					// Keep unresolved rows selected so the user can retry
-					const succeededIds = new Set(
-						selectedRows
-							.filter(
-								(_, i) =>
-									results[i]?.status === "fulfilled" &&
-									(results[i] as PromiseFulfilledResult<unknown>).value !==
-										null,
-							)
-							.map((r) => r.id),
-					);
-					setSelectedRows((prev) =>
-						prev.filter((r) => !succeededIds.has(r.id)),
-					);
-					toast.warning(
-						`${succeeded.length} reordered, ${skipped.length + failed.length} could not be moved (already moved or failed). Remaining rows stay selected.`,
-					);
-				}
-			} else if (skipped.length > 0 && failed.length === 0) {
-				toast.warning(
-					"No rows were moved — they may have already been reordered by another session.",
-				);
-			} else {
-				toast.error("Reorder failed");
-			}
-		} catch (_error) {
-			toast.error("Reorder failed");
-		}
-	}, [
-		selectedRows,
-		isSameSource,
+		handleUpdateOrder,
+		setPendingSearchSelection,
+		setSearchTerm,
+		router,
+		setShowBookingModal,
+		setShowArchiveModal,
+		setShowReorderModal,
 		reorderReason,
-		searchResults,
-		saveOrderMutation,
-	]);
-
-	const handleDeleteConfirm = useCallback(async () => {
-		if (selectedRows.length === 0 || !isSameSource) return;
-		try {
-			await deleteOrdersMutation.mutateAsync(selectedRows.map((r) => r.id));
-			toast.success(`Deleted ${selectedRows.length} rows`);
-			setSelectedRows([]);
-		} catch (_error) {
-			toast.error("Delete failed");
-		}
-	}, [selectedRows, isSameSource, deleteOrdersMutation]);
-
-	const handleBulkStatusUpdate = useCallback(
-		async (status: string) => {
-			if (selectedRows.length === 0 || !isSameSource) return;
-			try {
-				const results = await Promise.allSettled(
-					selectedRows.map((row) =>
-						saveOrderMutation.mutateAsync({
-							id: row.id,
-							updates: { status },
-							stage: row.stage as OrderStage,
-							sourceStage: row.stage as OrderStage,
-						}),
-					),
-				);
-
-				const succeededIds = new Set(
-					selectedRows
-						.filter((_, i) => results[i]?.status === "fulfilled")
-						.map((r) => r.id),
-				);
-				const failedCount = selectedRows.length - succeededIds.size;
-
-				if (succeededIds.size > 0) {
-					if (failedCount === 0) {
-						toast.success(`Updated status for ${selectedRows.length} rows`);
-					} else {
-						setSelectedRows((prev) =>
-							prev.filter((r) => !succeededIds.has(r.id)),
-						);
-						toast.warning(
-							`Updated ${succeededIds.size} row(s), ${failedCount} failed (possibly edited elsewhere). Remaining rows stay selected.`,
-						);
-					}
-				} else {
-					toast.error("Status update failed");
-				}
-			} catch (_error) {
-				toast.error("Status update failed");
-			}
-		},
-		[selectedRows, isSameSource, saveOrderMutation],
-	);
-
-	const handleExtract = useCallback(() => {
-		exportToLogisticsXLSX(filteredResults).catch(() => {
-			toast.error("Export failed");
-		});
-	}, [filteredResults]);
-
-	const onBadgeNavigate = useCallback(
-		(source: string) => {
-			const targetIds =
-				selectedRows.length > 0
-					? selectedRows.filter((r) => r.sourceType === source).map((r) => r.id)
-					: filteredResults
-							.filter((r) => r.sourceType === source)
-							.map((r) => r.id);
-
-			const stage = SOURCE_TO_STAGE[source];
-			const route = SOURCE_TO_ROUTE[source];
-			if (!stage || !route || targetIds.length === 0) return;
-
-			setPendingSearchSelection({ stage, ids: targetIds });
-			setSearchTerm("");
-			router.push(route);
-		},
-		[
-			selectedRows,
-			filteredResults,
-			setPendingSearchSelection,
-			setSearchTerm,
-			router,
-		],
-	);
-
-	const onCellValueChanged = useCallback(
-		async (event: CellValueChangedEvent<PendingRow>) => {
-			if (
-				event.colDef.field === "status" &&
-				event.data?.id &&
-				event.newValue !== event.oldValue
-			) {
-				try {
-					await handleUpdateOrder(
-						event.data.id,
-						{ status: event.newValue },
-						event.data.stage,
-					);
-				} catch {
-					return;
-				}
-
-				const stage = event.data.stage;
-				// Must use live query data here. Do not derive this from filtered search results
-				// or memoize a stage map outside the edit handler.
-				const stageRows =
-					stage === "main" ? mainData : stage === "orders" ? ordersData : [];
-				const vinIds = getVinAutoMoveIds({
-					stage,
-					stageRows,
-					editedRowId: event.data.id,
-					editedVin: event.data.vin,
-					nextStatus: event.newValue,
-					frozenRows: freezeData,
-				});
-
-				if (vinIds.length === 0) {
-					toast.success("Status updated");
-					return;
-				}
-
-				const mutation =
-					stage && stage in bulkStageMutations
-						? bulkStageMutations[stage as keyof typeof bulkStageMutations]
-						: undefined;
-
-				if (!mutation) {
-					toast.success("Status updated");
-					return;
-				}
-
-				const vinRows = stageRows.filter((r) => vinIds.includes(r.id));
-				const gateResult = await requestCallRelease({
-					rows: vinRows,
-					automatic: true,
-				});
-				if (gateResult.approvedRows.length === 0) {
-					toast.success("Status updated");
-					return;
-				}
-
-				try {
-					await mutation.mutateAsync({
-						ids: gateResult.approvedRows.map((r) => r.id),
-						stage: "call",
-						silentErrorToast: true,
-						guardFrozenVins: true,
-					});
-					await clearFollowUpsForVins(gateResult.approvedVins);
-					toast.success(
-						`All parts for VIN ${event.data.vin} arrived! Moved to Call List.`,
-						{ duration: 5000 },
-					);
-				} catch (error) {
-					logger.error("[SearchResultsView] vin_auto_move_failed", {
-						error,
-						vin: event.data.vin,
-						stage,
-						ids: vinIds,
-					});
-					toast.error(
-						"Part saved, but VIN group move failed - refresh and try again.",
-					);
-				}
-			}
-		},
-		[
-			bulkStageMutations,
-			freezeData,
-			handleUpdateOrder,
-			mainData,
-			ordersData,
-			requestCallRelease,
-			clearFollowUpsForVins,
-		],
-	);
+		setReorderReason,
+	});
 
 	const counts = useMemo(() => {
 		if (selectedRows.length === 0) {
