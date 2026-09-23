@@ -242,14 +242,15 @@
 @keyframes release-value-pulse {
 	0%,
 	100% {
-		color: rgb(156 163 175);
+		color: rgb(107 114 128);
 		text-shadow: none;
 	}
 	50% {
 		color: rgb(255 255 255);
 		text-shadow:
-			0 0 8px rgba(255, 204, 0, 0.55),
-			0 0 16px rgba(255, 204, 0, 0.25);
+			0 0 6px rgba(255, 204, 0, 0.9),
+			0 0 14px rgba(255, 204, 0, 0.6),
+			0 0 24px rgba(255, 204, 0, 0.35);
 	}
 }
 
