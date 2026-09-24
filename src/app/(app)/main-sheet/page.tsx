@@ -32,6 +32,7 @@ import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
+import { useT } from "@/hooks/useT";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
@@ -39,6 +40,7 @@ import { useMainSheetModals } from "./useMainSheetModals";
 import { useMainSheetPageActions } from "./useMainSheetPageActions";
 
 export default function MainSheetPage() {
+	const { t } = useT();
 	const { data: rowData = [] } = useOrdersQuery("main");
 	const { data: freezeData = [] } = useOrdersQuery("freeze");
 
@@ -334,16 +336,18 @@ export default function MainSheetPage() {
 				onReasonChange={setReorderReason}
 				onCancel={closeReorder}
 				onConfirm={() => handleConfirmReorder(reorderReason, resetReorder)}
-				placeholder="e.g., Customer called back, error on main sheet"
+				placeholder={t("modals.reorder.placeholderMainSheet")}
 			/>
 
 			<ConfirmDialog
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
 				onConfirm={handleConfirmDelete}
-				title="Delete Records"
-				description={`Are you sure you want to delete ${selectedRows.length} selected record(s)?`}
-				confirmText="Delete"
+				title={t("modals.stageConfirm.recordsDeleteTitle")}
+				description={t("modals.stageConfirm.recordsDeleteDescription", {
+					count: selectedRows.length,
+				})}
+				confirmText={t("modals.stageConfirm.delete")}
 			/>
 		</>
 	);

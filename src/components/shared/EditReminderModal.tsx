@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Bell, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import DateTimePicker from "@/components/ui/date-time-picker";
 import {
@@ -21,6 +22,7 @@ import {
 	useQuickTemplatesQuery,
 	useRemoveQuickTemplateMutation,
 } from "@/hooks/queries/useQuickTemplatesQuery";
+import { useT } from "@/hooks/useT";
 import { ReminderInputSchema } from "@/schemas/order.schema";
 
 interface EditReminderModalProps {
@@ -42,6 +44,7 @@ export const EditReminderModal = ({
 	initialData,
 	onSave,
 }: EditReminderModalProps) => {
+	const { t, lang } = useT();
 	const { data: reminderTemplates = [] } = useQuickTemplatesQuery("reminder");
 	const addMutation = useAddQuickTemplateMutation("reminder");
 	const removeMutation = useRemoveQuickTemplateMutation("reminder");
@@ -120,7 +123,10 @@ export const EditReminderModal = ({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden"
+			>
 				<DialogHeader className="px-6 py-4 flex flex-row items-center justify-between border-b border-white/5 space-y-0 relative">
 					<div className="flex-1 flex justify-start">
 						<Button
@@ -128,17 +134,21 @@ export const EditReminderModal = ({
 							size="icon"
 							onClick={() => setShowDeleteConfirm(true)}
 							className="h-8 w-8 text-gray-500 hover:text-red-400 hover:bg-red-400/10"
-							title="Clear Reminder"
+							title={t("modals.reminder.clearReminder")}
 						>
 							<Trash2 className="h-4 w-4" />
 						</Button>
 					</div>
 					<DialogTitle className="text-lg font-medium flex items-center gap-2">
 						<Bell className="h-5 w-5 text-renault-yellow" />
-						Set Reminder
+						<LocalizedScope lang={lang}>
+							{t("modals.reminder.title")}
+						</LocalizedScope>
 					</DialogTitle>
 					<DialogDescription className="sr-only">
-						Set or update a reminder date and subject.
+						<LocalizedScope lang={lang}>
+							{t("modals.reminder.srDescription")}
+						</LocalizedScope>
 					</DialogDescription>
 					<div className="flex-1" />
 				</DialogHeader>
@@ -155,10 +165,14 @@ export const EditReminderModal = ({
 								</div>
 								<div>
 									<h3 className="text-sm font-semibold text-white">
-										Clear Reminder?
+										<LocalizedScope lang={lang}>
+											{t("modals.reminder.clearConfirmTitle")}
+										</LocalizedScope>
 									</h3>
 									<p className="text-xs text-gray-400 mt-1">
-										This will permanently remove the reminder from this row.
+										<LocalizedScope lang={lang}>
+											{t("modals.reminder.clearConfirmDescription")}
+										</LocalizedScope>
 									</p>
 								</div>
 								<div className="flex gap-3">
@@ -168,7 +182,9 @@ export const EditReminderModal = ({
 										className="flex-1 h-9 text-xs bg-[#3c3c3e] hover:bg-[#4c4c4e] text-gray-300"
 										onClick={() => setShowDeleteConfirm(false)}
 									>
-										No
+										<LocalizedScope lang={lang}>
+											{t("modals.reminder.no")}
+										</LocalizedScope>
 									</Button>
 									<Button
 										size="sm"
@@ -179,7 +195,9 @@ export const EditReminderModal = ({
 											setShowDeleteConfirm(false);
 										}}
 									>
-										Yes, Clear
+										<LocalizedScope lang={lang}>
+											{t("modals.reminder.yesClear")}
+										</LocalizedScope>
 									</Button>
 								</div>
 							</div>
@@ -191,19 +209,27 @@ export const EditReminderModal = ({
 						<div className="space-y-4">
 							<div className="space-y-2">
 								<Label className="text-xs text-gray-400 uppercase tracking-wider">
-									Date & Time
+									<LocalizedScope lang={lang}>
+										{t("modals.reminder.dateTime")}
+									</LocalizedScope>
 								</Label>
-								<DateTimePicker date={dateTime} setDate={setDateTime} />
+								<DateTimePicker
+									date={dateTime}
+									setDate={setDateTime}
+									lang={lang}
+								/>
 							</div>
 
 							<div className="space-y-2">
 								<Label className="text-xs text-gray-400 uppercase tracking-wider">
-									Subject
+									<LocalizedScope lang={lang}>
+										{t("modals.reminder.subject")}
+									</LocalizedScope>
 								</Label>
 								<Input
 									value={subject}
 									onChange={(e) => setSubject(e.target.value)}
-									placeholder="What needs to be done?"
+									placeholder={t("modals.reminder.subjectPlaceholder")}
 									className="bg-[#2c2c2e] border-white/10 text-gray-200 focus-visible:ring-1 focus-visible:ring-renault-yellow focus-visible:ring-offset-0"
 								/>
 							</div>
@@ -213,7 +239,9 @@ export const EditReminderModal = ({
 						<div className="space-y-3">
 							<div className="flex items-center justify-between">
 								<h4 className="text-sm font-semibold text-gray-200 uppercase tracking-wider">
-									QUICK TEMPLATES
+									<LocalizedScope lang={lang}>
+										{t("modals.shared.quickTemplates")}
+									</LocalizedScope>
 								</h4>
 								<button
 									type="button"
@@ -221,7 +249,9 @@ export const EditReminderModal = ({
 									className="flex items-center text-renault-yellow hover:text-renault-yellow/80 text-xs transition-colors"
 								>
 									<Plus className="h-3 w-3 mr-1" />
-									{isAddingTemplate ? "Cancel" : "Add New"}
+									<LocalizedScope lang={lang}>
+										{isAddingTemplate ? t("common.cancel") : t("common.addNew")}
+									</LocalizedScope>
 								</button>
 							</div>
 
@@ -230,7 +260,7 @@ export const EditReminderModal = ({
 									<Input
 										value={newTemplate}
 										onChange={(e) => setNewTemplate(e.target.value)}
-										placeholder="New template..."
+										placeholder={t("modals.shared.newTemplatePlaceholder")}
 										className="h-8 text-xs bg-[#2c2c2e] border-white/10"
 										onKeyDown={(e) => e.key === "Enter" && handleAddTemplate()}
 									/>
@@ -239,7 +269,9 @@ export const EditReminderModal = ({
 										onClick={handleAddTemplate}
 										className="h-8 bg-renault-yellow text-black hover:bg-renault-yellow/90"
 									>
-										Add
+										<LocalizedScope lang={lang}>
+											{t("common.add")}
+										</LocalizedScope>
 									</Button>
 								</div>
 							)}
@@ -280,13 +312,15 @@ export const EditReminderModal = ({
 						onClick={() => onOpenChange(false)}
 						className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 w-full"
 					>
-						Cancel
+						<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 					</Button>
 					<Button
 						onClick={handleSave}
 						className="bg-renault-yellow hover:bg-renault-yellow/90 text-black font-medium w-full"
 					>
-						Save Reminder
+						<LocalizedScope lang={lang}>
+							{t("modals.reminder.save")}
+						</LocalizedScope>
 					</Button>
 				</DialogFooter>
 			</DialogContent>

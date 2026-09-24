@@ -2,6 +2,7 @@
 
 import { ArrowRight, ShieldCheck, Snowflake } from "lucide-react";
 import { useEffect, useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -20,6 +21,11 @@ import {
 } from "@/components/ui/origin-select";
 import { ORDER_STAGE_VALUES, type OrderStage } from "@/domain/order/orderStage";
 import { getStageDisplayName } from "@/domain/order/orderWorkflow";
+import {
+	type TranslationKey,
+	type TranslationParams,
+	useT,
+} from "@/hooks/useT";
 import { FOCUS_CHAMPAGNE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 
@@ -54,16 +60,23 @@ export interface UnfreezeMoveDialogProps {
 	onConfirm: (destinationStage: OrderStage) => void;
 }
 
-function getOriginMessage(origin: UnfreezeOrigin): string {
+function getOriginMessage(origin: UnfreezeOrigin): {
+	key: TranslationKey;
+	params?: TranslationParams;
+} {
 	switch (origin.kind) {
 		case "single":
-			return `Came from ${getStageDisplayName(origin.stage)}`;
+			// Stage names stay English in every language.
+			return {
+				key: "modals.unfreeze.originSingle",
+				params: { stage: getStageDisplayName(origin.stage) },
+			};
 		case "mixed":
-			return "Mixed origin stages";
+			return { key: "modals.unfreeze.originMixed" };
 		case "partial":
-			return "Some origins not recorded";
+			return { key: "modals.unfreeze.originPartial" };
 		case "none":
-			return "Origin stage not recorded";
+			return { key: "modals.unfreeze.originNone" };
 	}
 }
 
@@ -76,6 +89,8 @@ export function UnfreezeMoveDialog({
 	onCancel,
 	onConfirm,
 }: UnfreezeMoveDialogProps) {
+	const { t, lang } = useT();
+	const originMessage = getOriginMessage(origin);
 	const [destination, setDestination] = useState<OrderStage>(initialStage);
 
 	useEffect(() => {
@@ -86,14 +101,24 @@ export function UnfreezeMoveDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden"
+			>
 				<DialogHeader className="px-6 pt-6 pb-4 text-left">
 					<DialogTitle>
-						Move {rowCount === 1 ? "1 row" : `${rowCount} rows`}
+						<LocalizedScope lang={lang}>
+							{rowCount === 1
+								? t("modals.unfreeze.moveOne")
+								: t("modals.unfreeze.moveMany", { count: rowCount })}
+						</LocalizedScope>
 					</DialogTitle>
 					<DialogDescription className="text-gray-400">
-						Choose the next stage for{" "}
-						{rowCount === 1 ? "this frozen row" : "these frozen rows"}.
+						<LocalizedScope lang={lang}>
+							{rowCount === 1
+								? t("modals.unfreeze.descriptionOne")
+								: t("modals.unfreeze.descriptionMany")}
+						</LocalizedScope>
 					</DialogDescription>
 				</DialogHeader>
 
@@ -110,7 +135,7 @@ export function UnfreezeMoveDialog({
 						onValueChange={(value) => setDestination(value as OrderStage)}
 					>
 						<SelectTrigger
-							aria-label="Destination stage"
+							aria-label={t("modals.unfreeze.destinationAria")}
 							className={cn(
 								FOCUS_CHAMPAGNE,
 								"flex-1 h-11 bg-[#2c2c2e] border-white/10 text-white",
@@ -132,10 +157,14 @@ export function UnfreezeMoveDialog({
 					<ShieldCheck className="h-5 w-5 text-gray-400 mt-0.5 shrink-0" />
 					<div>
 						<p className="text-sm font-medium text-white">
-							{getOriginMessage(origin)}
+							<LocalizedScope lang={lang}>
+								{t(originMessage.key, originMessage.params)}
+							</LocalizedScope>
 						</p>
 						<p className="text-xs text-gray-500">
-							Freeze details will be removed. All other data is kept.
+							<LocalizedScope lang={lang}>
+								{t("modals.unfreeze.detailsRemoved")}
+							</LocalizedScope>
 						</p>
 					</div>
 				</div>
@@ -146,14 +175,14 @@ export function UnfreezeMoveDialog({
 						onClick={onCancel}
 						className="border-white/20 text-white hover:bg-white/10"
 					>
-						Cancel
+						<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 					</Button>
 					<Button
 						variant="renault"
 						onClick={() => onConfirm(destination)}
 						className="min-w-[120px]"
 					>
-						Move
+						<LocalizedScope lang={lang}>{t("common.move")}</LocalizedScope>
 					</Button>
 				</DialogFooter>
 			</DialogContent>

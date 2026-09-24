@@ -16,6 +16,7 @@ import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
+import { useT } from "@/hooks/useT";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import {
 	filterRowsByValues,
@@ -28,6 +29,7 @@ import { useCallListModals } from "./useCallListModals";
 import { useCallListPageActions } from "./useCallListPageActions";
 
 export default function CallListPage() {
+	const { t } = useT();
 	const { data: callRowData = [] } = useOrdersQuery("call");
 
 	// Draft session for undo/redo
@@ -246,8 +248,8 @@ export default function CallListPage() {
 				onReasonChange={setReorderReason}
 				onCancel={closeReorder}
 				onConfirm={() => handleConfirmReorder(reorderReason, resetReorder)}
-				placeholder="e.g., Wrong part, Customer cancelled"
-				helperText="This will send the selected items back to the Orders view."
+				placeholder={t("modals.reorder.placeholderWrongPart")}
+				helperText={t("modals.reorder.helperBackToOrders")}
 			/>
 
 			<BookingCalendarModal
@@ -272,9 +274,11 @@ export default function CallListPage() {
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
 				onConfirm={handleConfirmDelete}
-				title="Delete Records"
-				description={`Are you sure you want to delete ${selectedRows.length} selected record(s)?`}
-				confirmText="Delete"
+				title={t("modals.stageConfirm.recordsDeleteTitle")}
+				description={t("modals.stageConfirm.recordsDeleteDescription", {
+					count: selectedRows.length,
+				})}
+				confirmText={t("modals.stageConfirm.delete")}
 			/>
 		</div>
 	);

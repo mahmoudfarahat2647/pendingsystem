@@ -44,10 +44,12 @@ const RowModals = dynamic(
 
 import { useOrdersRealtimeSync } from "@/hooks/useOrdersRealtimeSync";
 import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
+import { useT } from "@/hooks/useT";
 import { useAppStore } from "@/store/useStore";
 import { useOrdersPageHandlers } from "./useOrdersPageHandlers";
 
 export default function OrdersPage() {
+	const { t } = useT();
 	const {
 		ordersRowData,
 		freezeData,
@@ -328,19 +330,21 @@ export default function OrdersPage() {
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
 				onConfirm={handleDeleteSelected}
-				title="Delete Orders"
-				description={`Are you sure you want to delete ${selectedRows.length} selected order(s)? This action cannot be undone.`}
-				confirmText="Delete"
+				title={t("modals.stageConfirm.ordersDeleteTitle")}
+				description={t("modals.stageConfirm.ordersDeleteDescription", {
+					count: selectedRows.length,
+				})}
+				confirmText={t("modals.stageConfirm.delete")}
 			/>
 
 			<ConfirmDialog
 				open={showCommitConfirm}
 				onOpenChange={setShowCommitConfirm}
 				onConfirm={handleConfirmCommit}
-				title="Commit to Main Sheet"
-				description="Have you verified the request date for all selected orders before committing?"
-				confirmText="Commit"
-				cancelText="No, Go Back"
+				title={t("modals.stageConfirm.commitTitle")}
+				description={t("modals.stageConfirm.commitDescription")}
+				confirmText={t("modals.stageConfirm.commit")}
+				cancelText={t("modals.stageConfirm.noGoBack")}
 				variant="success"
 				requireTypeToConfirm="yes"
 			/>

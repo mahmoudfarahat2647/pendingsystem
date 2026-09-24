@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import * as React from "react";
+import { ar as arDayPickerLocale } from "react-day-picker/locale";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/origin-calendar";
 import {
@@ -17,15 +18,44 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import type { Language } from "@/i18n/dictionaries/en";
 import { FOCUS_CHAMPAGNE } from "@/lib/focusStyles";
+import { translate } from "@/lib/i18n/translate";
 import { cn } from "@/lib/utils";
 
 interface DateTimePickerProps {
 	date: Date | undefined;
 	setDate: (date: Date | undefined) => void;
+	/**
+	 * Display language only. Arabic swaps the date format, calendar month /
+	 * weekday / navigation labels and AM/PM text; stored values, Western
+	 * digits and the LTR layout are unchanged.
+	 */
+	lang?: Language;
 }
 
-export default function DateTimePicker({ date, setDate }: DateTimePickerProps) {
+/** Arabic text only — sets lang/dir/font on the text, never the layout. */
+const TextScope = ({
+	lang,
+	children,
+}: {
+	lang: Language;
+	children: React.ReactNode;
+}) =>
+	lang === "ar" ? (
+		<span lang="ar" dir="rtl" className="font-arabic">
+			{children}
+		</span>
+	) : (
+		children
+	);
+
+export default function DateTimePicker({
+	date,
+	setDate,
+	lang = "en",
+}: DateTimePickerProps) {
+	const dayPickerLocale = lang === "ar" ? arDayPickerLocale : undefined;
 	const [time, setTime] = React.useState({ h: "12", m: "00", ampm: "AM" });
 
 	// Sync internal time state with controlled date prop when it changes
@@ -98,7 +128,17 @@ export default function DateTimePicker({ date, setDate }: DateTimePickerProps) {
 						)}
 					>
 						<CalendarIcon className="mr-2 h-4 w-4" />
-						{date ? format(date, "PPP") : <span>Pick a date</span>}
+						{date ? (
+							<TextScope lang={lang}>
+								{format(date, "PPP", { locale: dayPickerLocale })}
+							</TextScope>
+						) : (
+							<span>
+								<TextScope lang={lang}>
+									{translate(lang, "modals.reminder.pickDate")}
+								</TextScope>
+							</span>
+						)}
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className="p-0 w-fit border-white/10 bg-[#1c1c1e] text-white">
@@ -107,6 +147,10 @@ export default function DateTimePicker({ date, setDate }: DateTimePickerProps) {
 						selected={date}
 						onSelect={handleDaySelect}
 						initialFocus
+						locale={dayPickerLocale}
+						numerals="latn"
+						// Keep the English Sunday-first grid in every language.
+						weekStartsOn={0}
 					/>
 				</PopoverContent>
 			</Popover>
@@ -180,13 +224,17 @@ export default function DateTimePicker({ date, setDate }: DateTimePickerProps) {
 							value="AM"
 							className="focus:bg-[#2c2c2e] focus:text-white"
 						>
-							AM
+							<TextScope lang={lang}>
+								{translate(lang, "modals.reminder.am")}
+							</TextScope>
 						</SelectItem>
 						<SelectItem
 							value="PM"
 							className="focus:bg-[#2c2c2e] focus:text-white"
 						>
-							PM
+							<TextScope lang={lang}>
+								{translate(lang, "modals.reminder.pm")}
+							</TextScope>
 						</SelectItem>
 					</SelectContent>
 				</Select>

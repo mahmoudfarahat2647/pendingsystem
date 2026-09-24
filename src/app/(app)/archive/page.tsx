@@ -20,12 +20,14 @@ import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
+import { useT } from "@/hooks/useT";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import { useArchiveModals } from "./useArchiveModals";
 import { useArchivePageActions } from "./useArchivePageActions";
 
 export default function ArchivePage() {
+	const { t } = useT();
 	const { data: archiveRowData = [] } = useOrdersQuery("archive");
 
 	// Draft session for undo/redo
@@ -223,8 +225,8 @@ export default function ArchivePage() {
 				onReasonChange={setReorderReason}
 				onCancel={closeReorder}
 				onConfirm={() => handleConfirmReorder(reorderReason, resetReorder)}
-				placeholder="e.g., Customer called back, error in archive"
-				helperText="This will send the selected items back to the Orders view."
+				placeholder={t("modals.reorder.placeholderArchive")}
+				helperText={t("modals.reorder.helperBackToOrders")}
 			/>
 
 			<BookingCalendarModal
@@ -238,9 +240,11 @@ export default function ArchivePage() {
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
 				onConfirm={handleConfirmDelete}
-				title="Delete Archived Records"
-				description={`Are you sure you want to permanently delete ${selectedRows.length} selected record(s)?`}
-				confirmText="Permanently Delete"
+				title={t("modals.stageConfirm.archiveDeleteTitle")}
+				description={t("modals.stageConfirm.archiveDeleteDescription", {
+					count: selectedRows.length,
+				})}
+				confirmText={t("modals.stageConfirm.permanentlyDelete")}
 			/>
 		</div>
 	);

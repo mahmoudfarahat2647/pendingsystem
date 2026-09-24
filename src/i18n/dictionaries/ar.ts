@@ -5,7 +5,8 @@ import type { Dictionary } from "./en";
  * of `en.ts`), so a missing or extra key fails `pnpm run type-check`.
  *
  * Conventions from the epic: Western digits 0–9, existing date/time
- * formats, stage names stay English, user data is never translated.
+ * formats, stage names in modal copy/pickers stay English, Sidebar navigation
+ * labels are localized, and user data is never translated.
  */
 export const ar: Dictionary = {
 	common: {
@@ -18,9 +19,18 @@ export const ar: Dictionary = {
 		remove: "إزالة",
 		move: "نقل",
 		understood: "تم",
+		close: "إغلاق",
 	},
 	sidebar: {
 		mainNavigation: "التنقل الرئيسي",
+		navDashboard: "لوحة التحكم",
+		navOrders: "الطلبات",
+		navMainSheet: "الجدول الرئيسي",
+		navCall: "قائمة الاتصال",
+		navBooking: "الحجوزات",
+		navArchive: "الأرشيف",
+		navFreeze: "التجميد",
+		navReports: "التقارير",
 		goToDashboard: "الانتقال إلى لوحة التحكم",
 		signOutMenu: "قائمة تسجيل الخروج",
 		userFallback: "مستخدم",
@@ -142,5 +152,155 @@ export const ar: Dictionary = {
 			switchToArabic: "التبديل إلى العربية",
 		},
 	},
-	modals: {},
+	modals: {
+		shared: {
+			quickTemplates: "قوالب سريعة",
+			newTemplatePlaceholder: "قالب جديد...",
+		},
+		confirm: {
+			typeToConfirmBefore: "اكتب",
+			typeToConfirmAfter: "للتأكيد",
+			typeToConfirmTitle: "اكتب {word} للتأكيد",
+		},
+		stageConfirm: {
+			delete: "حذف",
+			permanentlyDelete: "حذف نهائي",
+			searchDeleteTitle: "تأكيد الحذف",
+			searchDeleteDescription:
+				"هل أنت متأكد من حذف {count} من السجلات المحددة؟ لا يمكن التراجع عن هذا الإجراء.",
+			ordersDeleteTitle: "حذف الطلبات",
+			ordersDeleteDescription:
+				"هل أنت متأكد من حذف {count} من الطلبات المحددة؟ لا يمكن التراجع عن هذا الإجراء.",
+			commitTitle: "اعتماد إلى Main Sheet",
+			commitDescription:
+				"هل تحققت من تاريخ الطلب لجميع الطلبات المحددة قبل الاعتماد؟",
+			commit: "اعتماد",
+			noGoBack: "لا، رجوع",
+			bookingDeleteTitle: "حذف الحجوزات",
+			bookingDeleteDescription:
+				"هل أنت متأكد من حذف {count} من الحجوزات المحددة؟",
+			recordsDeleteTitle: "حذف السجلات",
+			recordsDeleteDescription:
+				"هل أنت متأكد من حذف {count} من السجلات المحددة؟",
+			archiveDeleteTitle: "حذف السجلات المؤرشفة",
+			archiveDeleteDescription:
+				"هل أنت متأكد من الحذف النهائي لـ {count} من السجلات المحددة؟",
+		},
+		freeze: {
+			title: "تجميد السجل",
+			reasonLabel: "سبب التجميد",
+			reasonPlaceholder: "يرجى إدخال سبب تجميد هذا السجل...",
+			hint: "* سيؤدي التجميد إلى نقل هذا السجل إلى مرحلة Freeze مع تسجيل مرحلته السابقة.",
+			confirm: "تأكيد التجميد",
+		},
+		archive: {
+			title: "أرشفة السجل",
+			reasonLabel: "سبب الأرشفة",
+			reasonPlaceholder: "يرجى إدخال سبب أرشفة هذا السجل...",
+			hint: "* ستؤدي الأرشفة إلى نقل هذا السجل إلى سجل الأرشيف.",
+			confirm: "تأكيد الأرشفة",
+		},
+		reorder: {
+			title: "إعادة الطلب - السبب مطلوب",
+			reasonLabel: "سبب إعادة الطلب",
+			confirm: "تأكيد إعادة الطلب",
+			placeholderMainSheet: "مثال: عاود العميل الاتصال، خطأ في Main Sheet",
+			placeholderArchive: "مثال: عاود العميل الاتصال، خطأ في Archive",
+			placeholderWrongPart: "مثال: قطعة خاطئة، ألغى العميل",
+			helperBackToOrders: "سيؤدي هذا إلى إعادة العناصر المحددة إلى عرض Orders.",
+			srDescription: "أدخل سبب إعادة هذا الطلب لإعادة الطلب.",
+		},
+		release: {
+			title: "الإفراج مطلوب",
+			subtitle:
+				"شاسيه ضمان أقل من 5,000 كم — أكّد الموافقة قبل النقل إلى Call List.",
+			vin: "رقم الشاسيه",
+			mileage: "المسافة المقطوعة",
+			mileageValue: "{mileage} كم",
+			repairSystem: "نظام الإصلاح",
+			warranty: "ضمان",
+			enterWord: "أدخل كلمة التأكيد",
+			appliesOnce: "تنطبق هذه الموافقة على عملية النقل هذه فقط.",
+			confirm: "إفراج إلى Call List",
+		},
+		unfreeze: {
+			moveOne: "نقل صف واحد",
+			moveMany: "نقل {count} صفوف",
+			descriptionOne: "اختر المرحلة التالية لهذا الصف المجمّد.",
+			descriptionMany: "اختر المرحلة التالية لهذه الصفوف المجمّدة.",
+			destinationAria: "المرحلة الوجهة",
+			originSingle: "قادم من {stage}",
+			originMixed: "مراحل أصل مختلفة",
+			originPartial: "بعض مراحل الأصل غير مسجلة",
+			originNone: "مرحلة الأصل غير مسجلة",
+			detailsRemoved:
+				"ستتم إزالة تفاصيل التجميد. يتم الاحتفاظ بجميع البيانات الأخرى.",
+		},
+		duplicate: {
+			title: "تم اكتشاف طلب مكرر",
+			descriptionBeforeVin: "طلب بنفس رقم الشاسيه",
+			descriptionBeforePart: "ورقم القطعة",
+			descriptionAfter: "موجود بالفعل.",
+			locatedIn: "هذا الطلب موجود حاليًا في:",
+		},
+		note: {
+			title: "الملاحظات",
+			srDescription: "إضافة أو تعديل أو إزالة ملاحظات هذا الصف.",
+			existingNotes: "الملاحظات الحالية",
+			editHistory: "تعديل السجل",
+			editHistoryTitle: "تعديل الملاحظات الحالية؟",
+			editHistoryDescription:
+				"يجب أن يكون السجل عادةً للإضافة فقط. هل أنت متأكد أنك تريد تعديل الملاحظات السابقة مباشرةً؟",
+			no: "لا",
+			yesUnlock: "نعم، فتح القفل",
+			emptyPlaceholder: "لا توجد ملاحظات بعد...",
+			addNewNote: "إضافة ملاحظة جديدة",
+			newNotePlaceholder: "اكتب ملاحظة لـ #{tag}...",
+			autoTags: "وسم تلقائي بـ #{tag}",
+			addNewTemplate: "إضافة جديد",
+			cancelTemplate: "إلغاء",
+			templatesUnavailable:
+				"القوالب السريعة غير متاحة لأنه تعذّر تحديد مرحلة هذا السجل.",
+			templatePlaceholder: "نص القالب...",
+			addTemplate: "إضافة",
+			cancel: "إلغاء",
+			save: "حفظ الملاحظات",
+		},
+		reminder: {
+			clearReminder: "مسح التذكير",
+			title: "تعيين تذكير",
+			srDescription: "تعيين أو تحديث تاريخ التذكير وموضوعه.",
+			clearConfirmTitle: "مسح التذكير؟",
+			clearConfirmDescription:
+				"سيؤدي هذا إلى إزالة التذكير نهائيًا من هذا الصف.",
+			no: "لا",
+			yesClear: "نعم، مسح",
+			dateTime: "التاريخ والوقت",
+			subject: "الموضوع",
+			subjectPlaceholder: "ما الذي يجب إنجازه؟",
+			save: "حفظ التذكير",
+			pickDate: "اختر تاريخًا",
+			am: "ص",
+			pm: "م",
+		},
+		attachment: {
+			title: "المرفقات",
+			close: "إغلاق",
+			srDescription: "أرفق حتى 5 ملفات (JPG, PNG, PDF) لهذا الطلب.",
+			externalLink: "رابط خارجي",
+			linkPlaceholder: "الصق مسارًا محليًا أو رابطًا…",
+			removeLink: "إزالة الرابط",
+			copyLink: "نسخ الرابط",
+			uploading: 'جارٍ رفع "{name}"…',
+			limitReached: "تم بلوغ الحد الأقصى",
+			dropOrBrowse: "أفلت الملفات أو انقر للاستعراض",
+			fileHint: "JPG, PNG, PDF · بحد أقصى 5 ميجابايت لكل ملف",
+			errorUnsupported: "يُسمح فقط بملفات JPG وPNG وPDF.",
+			errorTooLarge: "يجب ألا يتجاوز حجم الملف 5 ميجابايت.",
+			openFile: "فتح الملف",
+			openName: "فتح {name}",
+			remove: "إزالة",
+			removeName: "إزالة {name}",
+		},
+	},
 };

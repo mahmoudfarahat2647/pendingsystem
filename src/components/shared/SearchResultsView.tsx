@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useT } from "@/hooks/useT";
 import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 import { RowModals } from "./RowModals";
@@ -23,6 +24,7 @@ import { SearchResultsHeader } from "./search/SearchResultsHeader";
 import { SearchToolbar } from "./search/SearchToolbar";
 
 export const SearchResultsView = () => {
+	const { t } = useT();
 	const {
 		searchTerm,
 		setSearchTerm,
@@ -185,8 +187,10 @@ export const SearchResultsView = () => {
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
 				onConfirm={handleDeleteConfirm}
-				title="Confirm Delete"
-				description={`Are you sure you want to delete ${selectedRows.length} selected records? This action cannot be undone.`}
+				title={t("modals.stageConfirm.searchDeleteTitle")}
+				description={t("modals.stageConfirm.searchDeleteDescription", {
+					count: selectedRows.length,
+				})}
 			/>
 
 			{/* Reorder Reason Modal */}

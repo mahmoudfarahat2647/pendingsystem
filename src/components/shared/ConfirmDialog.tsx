@@ -2,6 +2,7 @@
 
 import { AlertTriangle, FileCheck } from "lucide-react";
 import { useEffect, useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -9,6 +10,7 @@ import {
 	DialogDescription,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { useT } from "@/hooks/useT";
 
 interface ConfirmDialogProps {
 	open: boolean;
@@ -76,11 +78,12 @@ export const ConfirmDialog = ({
 	onConfirm,
 	title,
 	description,
-	confirmText = "Confirm",
-	cancelText = "Cancel",
+	confirmText,
+	cancelText,
 	variant = "destructive",
 	requireTypeToConfirm,
 }: ConfirmDialogProps) => {
+	const { t, lang } = useT();
 	const cfg = variantConfig[variant];
 	const { Icon } = cfg;
 
@@ -161,13 +164,13 @@ export const ConfirmDialog = ({
 
 								<div className="text-center space-y-2.5">
 									<DialogTitle className="text-[17px] font-bold tracking-tight text-white leading-snug">
-										{title}
+										<LocalizedScope lang={lang}>{title}</LocalizedScope>
 									</DialogTitle>
 									<DialogDescription
 										className="text-[13px] leading-relaxed max-w-[270px] mx-auto"
 										style={{ color: "rgba(255,255,255,0.38)" }}
 									>
-										{description}
+										<LocalizedScope lang={lang}>{description}</LocalizedScope>
 									</DialogDescription>
 								</div>
 
@@ -178,14 +181,18 @@ export const ConfirmDialog = ({
 											className="text-[12px] mb-2 font-medium"
 											style={{ color: "rgba(255,255,255,0.5)" }}
 										>
-											Type{" "}
-											<strong className="text-white">
-												"{requireTypeToConfirm}"
-											</strong>{" "}
-											to confirm
+											<LocalizedScope lang={lang}>
+												{t("modals.confirm.typeToConfirmBefore")}{" "}
+												<strong className="text-white">
+													"{requireTypeToConfirm}"
+												</strong>{" "}
+												{t("modals.confirm.typeToConfirmAfter")}
+											</LocalizedScope>
 										</p>
 										<input
-											title={`Type ${requireTypeToConfirm} to confirm`}
+											title={t("modals.confirm.typeToConfirmTitle", {
+												word: requireTypeToConfirm,
+											})}
 											type="text"
 											autoFocus
 											aria-labelledby="confirm-type-instruction"
@@ -220,7 +227,9 @@ export const ConfirmDialog = ({
 											border: "1px solid rgba(255,255,255,0.12)",
 										}}
 									>
-										{cancelText}
+										<LocalizedScope lang={lang}>
+											{cancelText ?? t("common.cancel")}
+										</LocalizedScope>
 									</Button>
 									<Button
 										onClick={() => {
@@ -235,7 +244,9 @@ export const ConfirmDialog = ({
 											boxShadow: isConfirmDisabled ? "none" : cfg.btnGlow,
 										}}
 									>
-										{confirmText}
+										<LocalizedScope lang={lang}>
+											{confirmText ?? t("common.confirm")}
+										</LocalizedScope>
 									</Button>
 								</div>
 							</div>

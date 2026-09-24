@@ -1,5 +1,6 @@
 "use client";
 
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useT } from "@/hooks/useT";
 import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 
@@ -37,22 +39,32 @@ export function ReorderReasonDialog({
 	helperText,
 	srDescription,
 }: ReorderReasonDialogProps) {
+	const { t, lang } = useT();
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="bg-[#1c1c1e] border border-white/10 text-white"
+			>
 				<DialogHeader>
 					<DialogTitle className="text-orange-500">
-						Reorder - Reason Required
+						<LocalizedScope lang={lang}>
+							{t("modals.reorder.title")}
+						</LocalizedScope>
 					</DialogTitle>
 					{srDescription ? (
 						<DialogDescription className="sr-only">
-							{srDescription}
+							<LocalizedScope lang={lang}>{srDescription}</LocalizedScope>
 						</DialogDescription>
 					) : null}
 				</DialogHeader>
 				<div className="space-y-4">
 					<div>
-						<Label>Reason for Reorder</Label>
+						<Label>
+							<LocalizedScope lang={lang}>
+								{t("modals.reorder.reasonLabel")}
+							</LocalizedScope>
+						</Label>
 						<Input
 							value={reason}
 							onChange={(e) => onReasonChange(e.target.value)}
@@ -64,7 +76,9 @@ export function ReorderReasonDialog({
 						/>
 					</div>
 					{helperText ? (
-						<p className="text-sm text-muted-foreground">{helperText}</p>
+						<p className="text-sm text-muted-foreground">
+							<LocalizedScope lang={lang}>{helperText}</LocalizedScope>
+						</p>
 					) : null}
 				</div>
 				<DialogFooter>
@@ -73,14 +87,16 @@ export function ReorderReasonDialog({
 						onClick={onCancel}
 						className="border-white/20 text-white hover:bg-white/10"
 					>
-						Cancel
+						<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 					</Button>
 					<Button
 						variant="renault"
 						onClick={onConfirm}
 						disabled={!reason.trim()}
 					>
-						Confirm Reorder
+						<LocalizedScope lang={lang}>
+							{t("modals.reorder.confirm")}
+						</LocalizedScope>
 					</Button>
 				</DialogFooter>
 			</DialogContent>

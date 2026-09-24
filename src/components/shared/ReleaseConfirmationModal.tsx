@@ -2,6 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -10,6 +11,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { RELEASE_CONFIRMATION_WORD } from "@/domain/order/releaseGate";
+import { useT } from "@/hooks/useT";
 import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +39,7 @@ export function ReleaseConfirmationModal({
 	onConfirm,
 	pending = false,
 }: ReleaseConfirmationModalProps) {
+	const { t, lang } = useT();
 	const [value, setValue] = useState("");
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -69,10 +72,14 @@ export function ReleaseConfirmationModal({
 				if (!next) onCancel();
 			}}
 		>
-			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden rounded-[10px]">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden rounded-[10px]"
+			>
 				<DialogDescription className="sr-only">
-					Warranty chassis under 5,000 km — confirm approval before moving to
-					Call List.
+					<LocalizedScope lang={lang}>
+						{t("modals.release.subtitle")}
+					</LocalizedScope>
 				</DialogDescription>
 				<div className="p-6">
 					<div className="flex items-start gap-3">
@@ -81,11 +88,14 @@ export function ReleaseConfirmationModal({
 						</div>
 						<div className="flex-1">
 							<DialogTitle className="text-xl font-semibold leading-tight text-white">
-								Release required
+								<LocalizedScope lang={lang}>
+									{t("modals.release.title")}
+								</LocalizedScope>
 							</DialogTitle>
 							<p className="mt-1 text-sm text-gray-400">
-								Warranty chassis under 5,000 km — confirm approval before moving
-								to Call List.
+								<LocalizedScope lang={lang}>
+									{t("modals.release.subtitle")}
+								</LocalizedScope>
 							</p>
 						</div>
 					</div>
@@ -93,24 +103,36 @@ export function ReleaseConfirmationModal({
 					<div className="mt-5 grid grid-cols-3 gap-4">
 						<div>
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-								VIN
+								<LocalizedScope lang={lang}>
+									{t("modals.release.vin")}
+								</LocalizedScope>
 							</p>
 							<p className="mt-1 break-all text-[15px] text-gray-100">{vin}</p>
 						</div>
 						<div>
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-								Mileage
+								<LocalizedScope lang={lang}>
+									{t("modals.release.mileage")}
+								</LocalizedScope>
 							</p>
 							<p className="release-value-pulse mt-1 text-[15px] text-gray-100">
-								{formattedMileage} km
+								<LocalizedScope lang={lang}>
+									{t("modals.release.mileageValue", {
+										mileage: formattedMileage,
+									})}
+								</LocalizedScope>
 							</p>
 						</div>
 						<div>
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-								Repair system
+								<LocalizedScope lang={lang}>
+									{t("modals.release.repairSystem")}
+								</LocalizedScope>
 							</p>
 							<p className="release-value-pulse-alt mt-1 text-[15px] text-gray-100">
-								Warranty
+								<LocalizedScope lang={lang}>
+									{t("modals.release.warranty")}
+								</LocalizedScope>
 							</p>
 						</div>
 					</div>
@@ -122,7 +144,9 @@ export function ReleaseConfirmationModal({
 							htmlFor="release-confirmation-word"
 							className="text-[13px] font-medium text-gray-300"
 						>
-							Enter confirmation word
+							<LocalizedScope lang={lang}>
+								{t("modals.release.enterWord")}
+							</LocalizedScope>
 						</label>
 						<input
 							id="release-confirmation-word"
@@ -144,7 +168,9 @@ export function ReleaseConfirmationModal({
 							)}
 						/>
 						<p className="mt-2 text-[12px] text-gray-500">
-							This approval applies to this move only.
+							<LocalizedScope lang={lang}>
+								{t("modals.release.appliesOnce")}
+							</LocalizedScope>
 						</p>
 					</div>
 
@@ -156,7 +182,7 @@ export function ReleaseConfirmationModal({
 							disabled={pending}
 							className="border-white/20 text-white hover:bg-white/10"
 						>
-							Cancel
+							<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 						</Button>
 						<Button
 							type="button"
@@ -164,7 +190,9 @@ export function ReleaseConfirmationModal({
 							onClick={handleConfirm}
 							disabled={isConfirmDisabled}
 						>
-							Release to Call List
+							<LocalizedScope lang={lang}>
+								{t("modals.release.confirm")}
+							</LocalizedScope>
 						</Button>
 					</div>
 				</div>
