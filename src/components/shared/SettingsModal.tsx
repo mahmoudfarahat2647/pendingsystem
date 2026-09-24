@@ -13,11 +13,14 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/hooks/useT";
+import type { TranslationKey } from "@/i18n/dictionaries/en";
 import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import BackupReportsTab from "../reports/BackupReportsTab";
 import { LanguageToggle } from "./LanguageToggle";
+import { LocalizedScope } from "./LocalizedScope";
 import { PartStatusTab } from "./settings/PartStatusTab";
 import { PermissionTab } from "./settings/PermissionTab";
 import { ThemeTab } from "./settings/ThemeTab";
@@ -32,6 +35,28 @@ type TabType =
 	| "theme-color"
 	| "backup-reports"
 	| "permission";
+
+const TAB_HEADINGS: Record<
+	TabType,
+	{ title: TranslationKey; description: TranslationKey }
+> = {
+	"part-statuses": {
+		title: "settings.sections.statusTitle",
+		description: "settings.sections.statusDescription",
+	},
+	"theme-color": {
+		title: "settings.sections.appearanceTitle",
+		description: "settings.sections.appearanceDescription",
+	},
+	"backup-reports": {
+		title: "settings.sections.backupTitle",
+		description: "settings.sections.backupDescription",
+	},
+	permission: {
+		title: "settings.sections.permissionTitle",
+		description: "settings.sections.permissionDescription",
+	},
+};
 
 // Client-side only settings password (defaults to env var or falls back for development)
 const _getSettingsPassword = (): string | undefined => {
@@ -50,13 +75,22 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 	const isLocked = useAppStore((state) => state.isLocked);
 	const setIsLocked = useAppStore((state) => state.setIsLocked);
+	const { t, lang } = useT();
 
 	const navItems = [
-		{ id: "part-statuses", label: "Statuses", icon: Tag },
-		{ id: "theme-color", label: "Theme Color", icon: Palette },
+		{ id: "part-statuses", label: t("settings.tabs.statuses"), icon: Tag },
+		{ id: "theme-color", label: t("settings.tabs.themeColor"), icon: Palette },
 
-		{ id: "backup-reports", label: "Backup & Reports", icon: Shield },
-		{ id: "permission", label: "Permission", icon: PencilLine },
+		{
+			id: "backup-reports",
+			label: t("settings.tabs.backupReports"),
+			icon: Shield,
+		},
+		{
+			id: "permission",
+			label: t("settings.tabs.permission"),
+			icon: PencilLine,
+		},
 	];
 
 	const handleUnlock = (attempt: string) => {
@@ -85,7 +119,9 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 					<div className="p-6 flex items-center gap-2 border-b border-white/5">
 						<SettingsIcon className="h-5 w-5 text-gray-400" />
 						<DialogTitle className="font-bold text-lg tracking-tight">
-							Settings
+							<LocalizedScope lang={lang}>
+								{t("settings.modal.title")}
+							</LocalizedScope>
 						</DialogTitle>
 					</div>
 					<nav className="flex-1 p-3 space-y-1">
@@ -109,7 +145,9 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 											: "text-gray-500 group-hover:text-white",
 									)}
 								/>
-								<span className="text-sm">{item.label}</span>
+								<span className="text-sm">
+									<LocalizedScope lang={lang}>{item.label}</LocalizedScope>
+								</span>
 							</button>
 						))}
 					</nav>
@@ -139,7 +177,11 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 										<Unlock className="h-4 w-4" />
 									)}
 									<span className="text-xs font-bold uppercase tracking-wider">
-										{isLocked ? "Locked" : "Unlocked"}
+										<LocalizedScope lang={lang}>
+											{isLocked
+												? t("settings.modal.locked")
+												: t("settings.modal.unlocked")}
+										</LocalizedScope>
 									</span>
 								</div>
 								{!isLocked && (
@@ -151,7 +193,11 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 								<Input
 									ref={passwordInputRef}
 									type="password"
-									placeholder={authError ? "Incorrect password" : "Password"}
+									placeholder={
+										authError
+											? t("settings.modal.incorrectPassword")
+											: t("settings.modal.password")
+									}
 									value={passwordAttempt}
 									onChange={(e) => setPasswordAttempt(e.target.value)}
 									onKeyDown={(e) => {
@@ -181,21 +227,27 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 											setAuthError(false);
 										}}
 									>
-										Cancel
+										<LocalizedScope lang={lang}>
+											{t("common.cancel")}
+										</LocalizedScope>
 									</Button>
 									<Button
 										size="sm"
 										className="flex-1 h-7 text-[10px] uppercase font-bold bg-emerald-500 hover:bg-emerald-400 text-black"
 										onClick={() => handleUnlock(passwordAttempt)}
 									>
-										Unlock
+										<LocalizedScope lang={lang}>
+											{t("settings.modal.unlock")}
+										</LocalizedScope>
 									</Button>
 								</div>
 							</div>
 						)}
 						<div className="flex items-center justify-between pt-2">
 							<div className="text-[10px] font-mono text-gray-700 tracking-widest uppercase">
-								Version
+								<LocalizedScope lang={lang}>
+									{t("settings.modal.version")}
+								</LocalizedScope>
 							</div>
 							<div className="text-[10px] font-bold text-gray-600">v2.5.0</div>
 						</div>
@@ -207,22 +259,14 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 					<header className="p-6 pr-14 flex items-center justify-between border-b border-white/5 h-[73px]">
 						<div>
 							<h3 className="font-bold text-lg">
-								{activeTab === "part-statuses" && "Status Management"}
-								{activeTab === "theme-color" && "System Appearance"}
-
-								{activeTab === "backup-reports" && "Backup & Reports Settings"}
-								{activeTab === "permission" && "Grid Edit Permission"}
+								<LocalizedScope lang={lang}>
+									{t(TAB_HEADINGS[activeTab].title)}
+								</LocalizedScope>
 							</h3>
 							<p className="text-xs text-gray-400">
-								{activeTab === "part-statuses" &&
-									"Customize status labels and colors used in the grid."}
-								{activeTab === "theme-color" &&
-									"Manage theme colors and UI preferences."}
-
-								{activeTab === "backup-reports" &&
-									"Configure automated reports and manage data backups."}
-								{activeTab === "permission" &&
-									"Control whether grid cells can be edited directly on non-Orders stages."}
+								<LocalizedScope lang={lang}>
+									{t(TAB_HEADINGS[activeTab].description)}
+								</LocalizedScope>
 							</p>
 						</div>
 						{/* Language switch — intentionally outside the lock gate so anyone can switch.

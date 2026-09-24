@@ -1,7 +1,9 @@
 "use client";
 
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useT } from "@/hooks/useT";
 import { useAppStore } from "@/store/useStore";
 
 interface PermissionTabProps {
@@ -11,31 +13,36 @@ interface PermissionTabProps {
 export const PermissionTab = ({ isLocked }: PermissionTabProps) => {
 	const gridEditPermission = useAppStore((s) => s.gridEditPermission);
 	const setGridEditPermission = useAppStore((s) => s.setGridEditPermission);
+	const { t, lang } = useT();
 
 	return (
 		<div className="space-y-6">
 			<div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
 				<div className="space-y-1">
 					<Label className="text-sm font-semibold text-white">
-						Allow Grid Editing
+						<LocalizedScope lang={lang}>
+							{t("settings.permission.allowGridEditing")}
+						</LocalizedScope>
 					</Label>
 					<p className="text-xs text-gray-400">
-						When enabled, cells on Main Sheet, Call List, Booking, and Archive
-						can be edited directly. Changes require clicking Save to persist.
-						Orders stage is unaffected.
+						<LocalizedScope lang={lang}>
+							{t("settings.permission.description")}
+						</LocalizedScope>
 					</p>
 				</div>
 				<Switch
 					checked={gridEditPermission}
 					onCheckedChange={setGridEditPermission}
 					disabled={isLocked}
-					aria-label="Allow grid editing"
+					aria-label={t("settings.permission.allowGridEditingAria")}
 				/>
 			</div>
 
 			{isLocked && (
 				<p className="text-xs text-gray-600 text-center">
-					Unlock settings to change this permission.
+					<LocalizedScope lang={lang}>
+						{t("settings.permission.unlockHint")}
+					</LocalizedScope>
 				</p>
 			)}
 		</div>

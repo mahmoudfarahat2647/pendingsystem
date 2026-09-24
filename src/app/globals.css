@@ -306,4 +306,6 @@
 .font-arabic {
 	font-family:
 		var(--font-arabic), "Inter", ui-sans-serif, system-ui, sans-serif;
+	/* Letter-spacing (tracking-*) breaks Arabic cursive joining. */
+	letter-spacing: normal;
 }

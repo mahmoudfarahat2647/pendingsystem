@@ -53,6 +53,83 @@ export const ar: Dictionary = {
 			"قد يكون الشاسيه {vin} (ضمان) قد تجاوز 5,000 كم — أعد تأكيد الإفراج قبل النقل إلى Call List.",
 	},
 	settings: {
+		modal: {
+			title: "الإعدادات",
+			locked: "مقفل",
+			unlocked: "مفتوح",
+			password: "كلمة المرور",
+			incorrectPassword: "كلمة مرور غير صحيحة",
+			unlock: "فتح القفل",
+			version: "الإصدار",
+		},
+		tabs: {
+			statuses: "الحالات",
+			themeColor: "لون المظهر",
+			backupReports: "النسخ الاحتياطي والتقارير",
+			permission: "الصلاحيات",
+		},
+		sections: {
+			statusTitle: "إدارة الحالات",
+			statusDescription: "خصّص أسماء الحالات وألوانها المستخدمة في الجدول.",
+			appearanceTitle: "مظهر النظام",
+			appearanceDescription: "إدارة ألوان المظهر وتفضيلات الواجهة.",
+			backupTitle: "إعدادات النسخ الاحتياطي والتقارير",
+			backupDescription:
+				"اضبط التقارير التلقائية وأدِر النسخ الاحتياطية للبيانات.",
+			permissionTitle: "صلاحية تعديل الجدول",
+			permissionDescription:
+				"تحكّم في إمكانية تعديل خلايا الجدول مباشرةً في المراحل غير Orders.",
+		},
+		statuses: {
+			addNewStatus: "إضافة حالة جديدة",
+			managedStatuses: "الحالات المُدارة",
+			editorsLocked: "التعديل مقفل",
+			labelPlaceholder: "أدخل اسم الحالة، مثال: In Transit",
+			addStatus: "إضافة حالة",
+			statusColor: "لون الحالة",
+			save: "حفظ",
+			usedCount: "{count} استخدام",
+			cannotDeleteOne: "لا يمكن الحذف: مستخدمة حاليًا في {count} عنصر",
+			cannotDeleteMany: "لا يمكن الحذف: مستخدمة حاليًا في {count} عناصر",
+		},
+		theme: {
+			title: "إعدادات المظهر",
+			comingSoon: "السمات المخصصة وإعدادات الألوان الجاهزة قادمة قريبًا.",
+		},
+		permission: {
+			allowGridEditing: "السماح بتعديل الجدول",
+			allowGridEditingAria: "السماح بتعديل الجدول",
+			description:
+				"عند التفعيل، يمكن تعديل الخلايا مباشرةً في Main Sheet وCall List وBooking وArchive. يجب الضغط على حفظ لتثبيت التغييرات. مرحلة Orders غير متأثرة.",
+			unlockHint: "افتح قفل الإعدادات لتغيير هذه الصلاحية.",
+		},
+		reports: {
+			schedulingTitle: "الجدولة",
+			schedulingDescription: "اضبط عدد مرات استلام النسخ الاحتياطية التلقائية.",
+			automaticBackups: "النسخ الاحتياطي التلقائي",
+			automaticBackupsHint:
+				"تفعيل التقارير المجدولة المرسلة إلى بريدك الإلكتروني.",
+			frequency: "التكرار",
+			setFrequencyTo: "تعيين التكرار إلى {frequency}",
+			confirmFrequency: "تأكيد التكرار",
+			openFrequencyPicker: "فتح اختيار التكرار",
+			selectDay: "اختيار {day}",
+			recipientsTitle: "المستلمون",
+			recipientsDescription:
+				"حدّد من يستلم التقارير التلقائية المخصصة للنسخ الاحتياطي.",
+			emailPlaceholder: "البريد الإلكتروني",
+			addEmailRecipient: "إضافة مستلم",
+			addEmail: "إضافة بريد إلكتروني",
+			removeRecipient: "إزالة {email}",
+			noRecipients: "لم تتم إضافة مستلمين بعد.",
+			manualActionTitle: "إجراء يدوي",
+			manualActionDescription:
+				"إنشاء تقرير نسخ احتياطي وإرساله فورًا إلى جميع المستلمين.",
+			lastSent: "آخر إرسال: {date}",
+			noReportsSent: "لم يتم إرسال أي تقارير بعد.",
+			sending: "جارٍ الإرسال...",
+			sendBackupNow: "إرسال النسخة الاحتياطية الآن",
+		},
 		language: {
 			label: "اللغة",
 			english: "الإنجليزية",
