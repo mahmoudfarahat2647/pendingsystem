@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -81,12 +81,12 @@ describe("Sidebar i18n (Wave 2)", () => {
 		expect(screen.getByLabelText("Sign out menu")).toBeInTheDocument();
 		expect(screen.getByText("User")).toBeInTheDocument();
 		expect(screen.getByText("System Creator")).toBeInTheDocument();
-		// Nav labels stay English in both languages.
+		// Navigation labels stay English in EN mode.
 		expect(screen.getByText("Dashboard")).toBeInTheDocument();
 		expect(screen.getByText("Orders")).toBeInTheDocument();
 	});
 
-	it("renders Arabic sidebar strings when language is ar, nav labels stay English", () => {
+	it("renders Arabic sidebar strings and navigation labels when language is ar", () => {
 		useAppStore.getState().setLanguage("ar");
 		renderWithProviders(<Sidebar />);
 
@@ -100,15 +100,30 @@ describe("Sidebar i18n (Wave 2)", () => {
 		expect(screen.getByText("مستخدم")).toBeInTheDocument();
 		expect(screen.getByText("منشئ النظام")).toBeInTheDocument();
 
-		// Stage names stay English by decision.
-		expect(screen.getByText("Dashboard")).toBeInTheDocument();
-		expect(screen.getByText("Orders")).toBeInTheDocument();
-		expect(screen.getByText("Main Sheet")).toBeInTheDocument();
-		expect(screen.getByText("Call")).toBeInTheDocument();
-		expect(screen.getByText("Booking")).toBeInTheDocument();
-		expect(screen.getByText("Archive")).toBeInTheDocument();
-		expect(screen.getByText("Freeze")).toBeInTheDocument();
-		expect(screen.getByText("Reports")).toBeInTheDocument();
+		for (const label of [
+			"لوحة التحكم",
+			"الطلبات",
+			"الجدول الرئيسي",
+			"قائمة الاتصال",
+			"الحجوزات",
+			"الأرشيف",
+			"التجميد",
+			"التقارير",
+		]) {
+			expect(screen.getByRole("link", { name: label })).toBeInTheDocument();
+		}
+		expect(screen.queryByRole("link", { name: "Orders" })).toBeNull();
+	});
+
+	it("switches navigation labels immediately without changing routes or layout", () => {
+		const { container } = renderWithProviders(<Sidebar />);
+		const ordersLink = screen.getByRole("link", { name: "Orders" });
+		expect(ordersLink).toHaveAttribute("href", "/orders");
+
+		act(() => useAppStore.getState().setLanguage("ar"));
+		expect(screen.getByRole("link", { name: "الطلبات" })).toBe(ordersLink);
+		expect(ordersLink).toHaveAttribute("href", "/orders");
+		expect(container.querySelector("aside")?.className).toContain("border-r");
 	});
 
 	it("scopes translated leaf text with lang/dir without mirroring layout", () => {
@@ -125,6 +140,9 @@ describe("Sidebar i18n (Wave 2)", () => {
 		const userFallback = screen.getByText("مستخدم");
 		expect(userFallback.closest('[lang="ar"]')).not.toBeNull();
 		expect(userFallback.closest('[dir="rtl"]')).not.toBeNull();
+		const navLabel = screen.getByText("الطلبات");
+		expect(navLabel.closest('[lang="ar"]')).not.toBeNull();
+		expect(navLabel.closest('[dir="rtl"]')).not.toBeNull();
 	});
 
 	it("shows the Arabic Unsaved Changes dialog with translated actions", async () => {
@@ -136,7 +154,7 @@ describe("Sidebar i18n (Wave 2)", () => {
 
 		renderWithProviders(<Sidebar />);
 
-		const bookingLink = screen.getByRole("link", { name: "Booking" });
+		const bookingLink = screen.getByRole("link", { name: "الحجوزات" });
 		await user.click(bookingLink);
 
 		expect(screen.getByText("تغييرات غير محفوظة")).toBeInTheDocument();
@@ -192,7 +210,7 @@ describe("Sidebar i18n (Wave 2)", () => {
 		expect(within(item).getByText("Sign out")).toBeInTheDocument();
 	});
 
-	it("keeps collapsed tooltips English and the collapse affordance in AR", async () => {
+	it("translates collapsed tooltips and keeps the collapse affordance in AR", async () => {
 		const user = userEvent.setup();
 		useAppStore.getState().setLanguage("ar");
 		const { container } = renderWithProviders(<Sidebar />);
@@ -213,8 +231,7 @@ describe("Sidebar i18n (Wave 2)", () => {
 			screen.queryByLabelText("قائمة تسجيل الخروج"),
 		).not.toBeInTheDocument();
 
-		// Collapsed title tooltips stay English stage names by decision.
-		for (const label of ["Dashboard", "Orders", "Main Sheet"]) {
+		for (const label of ["لوحة التحكم", "الطلبات", "الجدول الرئيسي"]) {
 			const link = screen.getByRole("link", { name: label });
 			expect(link.getAttribute("title")).toBe(label);
 		}

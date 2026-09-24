@@ -5,7 +5,8 @@ import type { Dictionary } from "./en";
  * of `en.ts`), so a missing or extra key fails `pnpm run type-check`.
  *
  * Conventions from the epic: Western digits 0–9, existing date/time
- * formats, stage names stay English, user data is never translated.
+ * formats, stage names in modal copy/pickers stay English, Sidebar navigation
+ * labels are localized, and user data is never translated.
  */
 export const ar: Dictionary = {
 	common: {
@@ -22,6 +23,14 @@ export const ar: Dictionary = {
 	},
 	sidebar: {
 		mainNavigation: "التنقل الرئيسي",
+		navDashboard: "لوحة التحكم",
+		navOrders: "الطلبات",
+		navMainSheet: "الجدول الرئيسي",
+		navCall: "قائمة الاتصال",
+		navBooking: "الحجوزات",
+		navArchive: "الأرشيف",
+		navFreeze: "التجميد",
+		navReports: "التقارير",
 		goToDashboard: "الانتقال إلى لوحة التحكم",
 		signOutMenu: "قائمة تسجيل الخروج",
 		userFallback: "مستخدم",

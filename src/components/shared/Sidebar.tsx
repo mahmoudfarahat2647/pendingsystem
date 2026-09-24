@@ -28,7 +28,7 @@ import {
 	DialogFooter,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { useT } from "@/hooks/useT";
+import { type TranslationKey, useT } from "@/hooks/useT";
 import { authClient } from "@/lib/auth-client";
 import { getOrdersQueryKey } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
@@ -40,7 +40,7 @@ import { SidebarUserMenu } from "./SidebarUserMenu";
 
 interface NavItem {
 	href: string;
-	label: string;
+	labelKey: TranslationKey;
 	icon: React.ReactNode;
 	badge?: number;
 }
@@ -50,42 +50,42 @@ const dashboardHref = "/dashboard";
 const navItems: NavItem[] = [
 	{
 		href: dashboardHref,
-		label: "Dashboard",
+		labelKey: "sidebar.navDashboard",
 		icon: <LayoutDashboard className="h-5 w-5" />,
 	},
 	{
 		href: "/orders",
-		label: "Orders",
+		labelKey: "sidebar.navOrders",
 		icon: <ShoppingCart className="h-5 w-5" />,
 	},
 	{
 		href: "/main-sheet",
-		label: "Main Sheet",
+		labelKey: "sidebar.navMainSheet",
 		icon: <FileSpreadsheet className="h-5 w-5" />,
 	},
 	{
 		href: "/call-list",
-		label: "Call",
+		labelKey: "sidebar.navCall",
 		icon: <Phone className="h-5 w-5" />,
 	},
 	{
 		href: "/booking",
-		label: "Booking",
+		labelKey: "sidebar.navBooking",
 		icon: <Calendar className="h-5 w-5" />,
 	},
 	{
 		href: "/archive",
-		label: "Archive",
+		labelKey: "sidebar.navArchive",
 		icon: <Archive className="h-5 w-5" />,
 	},
 	{
 		href: "/freeze",
-		label: "Freeze",
+		labelKey: "sidebar.navFreeze",
 		icon: <Snowflake className="h-5 w-5" />,
 	},
 	{
 		href: "/reports",
-		label: "Reports",
+		labelKey: "sidebar.navReports",
 		icon: <BarChart3 className="h-5 w-5" />,
 	},
 ];
@@ -209,6 +209,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			>
 				<ul className="space-y-2 px-4" suppressHydrationWarning>
 					{navItems.map((item) => {
+						const label = t(item.labelKey);
 						const isActive =
 							pathname === item.href ||
 							(item.href === dashboardHref && pathname === "/");
@@ -225,7 +226,7 @@ export const Sidebar = React.memo(function Sidebar() {
 											: "text-gray-400 hover:text-white hover:bg-white/5",
 										isCollapsed && "justify-center px-2",
 									)}
-									title={isCollapsed ? item.label : undefined}
+									title={isCollapsed ? label : undefined}
 									onClick={(e) => handleNavigation(item.href, e)}
 								>
 									{/* Icon */}
@@ -244,7 +245,7 @@ export const Sidebar = React.memo(function Sidebar() {
 											className="relative z-10 text-sm tracking-wide"
 											suppressHydrationWarning
 										>
-											{item.label}
+											<LocalizedScope lang={lang}>{label}</LocalizedScope>
 										</span>
 									)}
 
