@@ -82,6 +82,9 @@ export type Dictionary = DeepStrings<typeof en>;
 /** Dot-joined leaf paths of the dictionary, e.g. `"common.cancel"`. */
 export type TranslationKey = LeafPaths<typeof en>;
 
+/** Values substituted into `{placeholder}` tokens of a translation. */
+export type TranslationParams = Record<string, string | number>;
+
 type LeafPaths<T, Prefix extends string = ""> = {
 	[K in keyof T & string]: T[K] extends string
 		? `${Prefix}${K}`

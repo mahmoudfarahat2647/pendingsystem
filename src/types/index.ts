@@ -1,4 +1,4 @@
-import type { TranslationKey, TranslationParams } from "@/lib/i18n/translate";
+import type { TranslationKey, TranslationParams } from "@/i18n/dictionaries/en";
 import type { PartEntry, PendingRow } from "@/schemas/order.schema";
 
 export type { PartEntry, PendingRow };
