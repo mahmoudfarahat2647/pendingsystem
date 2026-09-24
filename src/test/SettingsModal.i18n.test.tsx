@@ -210,10 +210,16 @@ describe("SettingsModal i18n (Wave 4)", () => {
 		const { unmount } = renderModal();
 
 		await openTab(user, "الصلاحيات");
-		expect(screen.getByText("صلاحية تعديل الجدول")).toBeInTheDocument();
+		expect(screen.getByText("إعدادات الصلاحيات")).toBeInTheDocument();
 		expect(screen.getByText("السماح بتعديل الجدول")).toBeInTheDocument();
 		expect(
 			screen.getByRole("switch", { name: "السماح بتعديل الجدول" }),
+		).toBeDisabled();
+		expect(
+			screen.getByText("السماح بالنقل إلى Main Sheet"),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("switch", { name: "السماح بالنقل إلى Main Sheet" }),
 		).toBeDisabled();
 		expect(
 			screen.getByText("افتح قفل الإعدادات لتغيير هذه الصلاحية."),

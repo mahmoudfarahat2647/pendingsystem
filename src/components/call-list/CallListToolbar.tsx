@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { CallCustomerCounter } from "@/components/shared/CallCustomerCounter";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { MoveToMainButton } from "@/components/shared/MoveToMainButton";
 import { RowValueFilter } from "@/components/shared/RowValueFilter";
 import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,8 @@ export interface CallListToolbarProps {
 	onReorder: () => void;
 	onArchive: () => void;
 	onFreeze: () => void;
+	onMoveToMain?: () => void;
+	canMoveToMain?: boolean;
 	onDelete: () => void;
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
@@ -67,6 +70,8 @@ export function CallListToolbar({
 	onReorder,
 	onArchive,
 	onFreeze,
+	onMoveToMain,
+	canMoveToMain = false,
 	onDelete,
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
@@ -234,6 +239,13 @@ export function CallListToolbar({
 					</TooltipTrigger>
 					<TooltipContent>Freeze</TooltipContent>
 				</Tooltip>
+
+				{canMoveToMain && onMoveToMain && (
+					<MoveToMainButton
+						onClick={onMoveToMain}
+						disabled={selectedRows.length === 0}
+					/>
+				)}
 
 				<RowValueFilter
 					options={repairSystemOptions}

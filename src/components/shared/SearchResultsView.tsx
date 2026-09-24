@@ -4,6 +4,7 @@ import { Search as SearchIcon } from "lucide-react";
 import { ArchiveReasonModal } from "@/components/shared/ArchiveReasonModal";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { MoveToMainConfirmDialog } from "@/components/shared/MoveToMainConfirmDialog";
 import { useSearchResultsState } from "@/components/shared/search/hooks/useSearchResultsState";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,6 +63,11 @@ export const SearchResultsView = () => {
 		setShowReorderModal,
 		reorderReason,
 		setReorderReason,
+		moveToMainPermission,
+		isMoveToMainEligible,
+		showMoveToMainModal,
+		setShowMoveToMainModal,
+		handleMoveToMainConfirm,
 		handleDeleteConfirm,
 		handleBulkStatusUpdate,
 		handleExtract,
@@ -102,6 +108,9 @@ export const SearchResultsView = () => {
 				onArchive={() => setShowArchiveModal(true)}
 				onSendToCallList={handleSendToCallList}
 				onReorder={() => setShowReorderModal(true)}
+				onMoveToMain={() => setShowMoveToMainModal(true)}
+				canMoveToMain={moveToMainPermission}
+				isMoveToMainEligible={isMoveToMainEligible}
 				onDelete={() => setShowDeleteConfirm(true)}
 				onExtract={handleExtract}
 				onFilterToggle={() => setShowFilters((v) => !v)}
@@ -191,6 +200,13 @@ export const SearchResultsView = () => {
 				description={t("modals.stageConfirm.searchDeleteDescription", {
 					count: selectedRows.length,
 				})}
+			/>
+
+			<MoveToMainConfirmDialog
+				open={showMoveToMainModal}
+				onOpenChange={setShowMoveToMainModal}
+				count={selectedRows.length}
+				onConfirm={handleMoveToMainConfirm}
 			/>
 
 			{/* Reorder Reason Modal */}

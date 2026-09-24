@@ -490,4 +490,60 @@ describe("useArchivePageActions", () => {
 			);
 		});
 	});
+
+	describe("handleConfirmMoveToMain", () => {
+		it("applies one archive→main patchRow per selected row, clears the selection, and toasts", () => {
+			const rows = [
+				createRow({ stage: "archive" }),
+				createRow({ stage: "archive" }),
+			];
+			const { result } = renderHook(() =>
+				useArchivePageActions({
+					applyCommand,
+					effectiveRows: rows,
+					selectedRows: rows,
+					setSelectedRows,
+				}),
+			);
+
+			act(() => {
+				result.current.handleConfirmMoveToMain();
+			});
+
+			expect(applyCommand).toHaveBeenCalledTimes(2);
+			for (const [i, row] of rows.entries()) {
+				expect(applyCommand).toHaveBeenNthCalledWith(
+					i + 1,
+					expect.objectContaining({
+						type: "patchRow",
+						id: row.id,
+						sourceStage: "archive",
+						destinationStage: "main",
+					}),
+				);
+			}
+			expect(setSelectedRows).toHaveBeenCalledWith([]);
+			expect(toast.success).toHaveBeenCalledWith(
+				"2 line(s) moved to Main Sheet",
+			);
+		});
+
+		it("does nothing with an empty selection", () => {
+			const { result } = renderHook(() =>
+				useArchivePageActions({
+					applyCommand,
+					effectiveRows: [],
+					selectedRows: [],
+					setSelectedRows,
+				}),
+			);
+
+			act(() => {
+				result.current.handleConfirmMoveToMain();
+			});
+
+			expect(applyCommand).not.toHaveBeenCalled();
+			expect(setSelectedRows).not.toHaveBeenCalled();
+		});
+	});
 });

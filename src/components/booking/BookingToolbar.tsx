@@ -12,6 +12,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { MoveToMainButton } from "@/components/shared/MoveToMainButton";
 import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,8 @@ interface BookingToolbarProps {
 	onFreeze: () => void;
 	onRebook: () => void;
 	onReorder: () => void;
+	onMoveToMain?: () => void;
+	canMoveToMain?: boolean;
 	onDelete: () => void;
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
@@ -63,6 +66,8 @@ export const BookingToolbar = ({
 	onFreeze,
 	onRebook,
 	onReorder,
+	onMoveToMain,
+	canMoveToMain = false,
 	onDelete,
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
@@ -242,6 +247,13 @@ export const BookingToolbar = ({
 						{hasMixedVins ? "Mixed customers selected" : "Reorder"}
 					</TooltipContent>
 				</Tooltip>
+
+				{canMoveToMain && onMoveToMain && (
+					<MoveToMainButton
+						onClick={onMoveToMain}
+						disabled={selectedRows.length === 0}
+					/>
+				)}
 			</div>
 
 			<div className="flex items-center gap-1.5">

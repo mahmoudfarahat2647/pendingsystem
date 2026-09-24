@@ -13,6 +13,7 @@ import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
+import { MoveToMainConfirmDialog } from "@/components/shared/MoveToMainConfirmDialog";
 import { ReorderReasonDialog } from "@/components/shared/ReorderReasonDialog";
 import { RowModals } from "@/components/shared/RowModals";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
@@ -50,6 +51,7 @@ export default function ArchivePage() {
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const gridEditPermission = useAppStore((s) => s.gridEditPermission);
+	const moveToMainPermission = useAppStore((s) => s.moveToMainPermission);
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -78,6 +80,9 @@ export default function ArchivePage() {
 		showDeleteConfirm,
 		setShowDeleteConfirm,
 		openDeleteConfirm,
+		showMoveToMainConfirm,
+		setShowMoveToMainConfirm,
+		openMoveToMainConfirm,
 	} = useArchiveModals();
 
 	const {
@@ -85,6 +90,7 @@ export default function ArchivePage() {
 		handleSendToArchive,
 		handleConfirmBooking,
 		handleConfirmReorder,
+		handleConfirmMoveToMain,
 		handleUpdatePartStatus,
 		handleConfirmDelete,
 	} = useArchivePageActions({
@@ -156,6 +162,8 @@ export default function ArchivePage() {
 				onUpdateStatus={handleUpdatePartStatus}
 				onReorder={openReorder}
 				onBooking={openBooking}
+				onMoveToMain={openMoveToMainConfirm}
+				canMoveToMain={moveToMainPermission}
 				onDelete={openDeleteConfirm}
 				onSelectAllByVin={onSelectAllByVin}
 				isSelectAllByVinDisabled={isSelectAllByVinDisabled}
@@ -245,6 +253,13 @@ export default function ArchivePage() {
 					count: selectedRows.length,
 				})}
 				confirmText={t("modals.stageConfirm.permanentlyDelete")}
+			/>
+
+			<MoveToMainConfirmDialog
+				open={showMoveToMainConfirm}
+				onOpenChange={setShowMoveToMainConfirm}
+				count={selectedRows.length}
+				onConfirm={handleConfirmMoveToMain}
 			/>
 		</div>
 	);

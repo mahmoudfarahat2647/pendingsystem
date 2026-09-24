@@ -12,6 +12,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { CompanyLogo } from "@/components/shared/CompanyLogo";
+import { MoveToMainButton } from "@/components/shared/MoveToMainButton";
 import { RowValueFilter } from "@/components/shared/RowValueFilter";
 import {
 	SEARCH_SOURCES,
@@ -30,6 +31,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ALLOWED_COMPANIES } from "@/domain/order/constants";
+import { useT } from "@/hooks/useT";
 import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
@@ -42,6 +44,9 @@ export interface SearchToolbarProps {
 	onArchive: () => void;
 	onSendToCallList: () => void;
 	onReorder: () => void;
+	onMoveToMain: () => void;
+	canMoveToMain: boolean;
+	isMoveToMainEligible: boolean;
 	onDelete: () => void;
 	onExtract: () => void;
 	onFilterToggle: () => void;
@@ -69,6 +74,9 @@ export const SearchToolbar = ({
 	onArchive,
 	onSendToCallList,
 	onReorder,
+	onMoveToMain,
+	canMoveToMain,
+	isMoveToMainEligible,
 	onDelete,
 	onExtract,
 	onFilterToggle,
@@ -87,6 +95,7 @@ export const SearchToolbar = ({
 	onCompanyFilterChange,
 	onCompanyFilterClear,
 }: SearchToolbarProps) => {
+	const { t } = useT();
 	const isReserveDisabled = selectedCount === 0;
 	const isStageActionDisabled = selectedCount === 0 || !isSameSource;
 
@@ -193,6 +202,27 @@ export const SearchToolbar = ({
 						{!isSameSource && selectedCount > 0 ? disabledReason : "Reorder"}
 					</TooltipContent>
 				</Tooltip>
+
+				{canMoveToMain && (
+					<MoveToMainButton
+						onClick={onMoveToMain}
+						disabled={selectedCount === 0 || !isMoveToMainEligible}
+						iconClassName="h-4 w-4"
+						className={cn(
+							"transition-colors",
+							isMoveToMainEligible
+								? "hover:bg-emerald-500/10"
+								: "text-gray-600 cursor-not-allowed opacity-50",
+						)}
+						tooltip={
+							!isSameSource && selectedCount > 0
+								? disabledReason
+								: selectedCount > 0 && !isMoveToMainEligible
+									? t("modals.moveToMain.notEligible")
+									: undefined
+						}
+					/>
+				)}
 
 				<Tooltip>
 					<TooltipTrigger asChild>

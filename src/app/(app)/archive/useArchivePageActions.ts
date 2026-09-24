@@ -5,8 +5,10 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { getSelectedIds } from "@/domain/order/orderWorkflow";
 import type { useDraftSession } from "@/hooks/useDraftSession";
+import { useT } from "@/hooks/useT";
 import {
 	buildBookingCommands,
+	buildMoveToMainCommands,
 	buildReorderCommands,
 	buildSendToArchiveCommands,
 } from "@/lib/orderStageTransitions";
@@ -19,6 +21,7 @@ export function useArchivePageActions(params: {
 	setSelectedRows: React.Dispatch<React.SetStateAction<PendingRow[]>>;
 }) {
 	const { applyCommand, effectiveRows, selectedRows, setSelectedRows } = params;
+	const { t } = useT();
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
@@ -83,6 +86,16 @@ export function useArchivePageActions(params: {
 		toast.success(`${count} row(s) sent back to Orders (Reorder)`);
 	};
 
+	const handleConfirmMoveToMain = () => {
+		if (selectedRows.length === 0) return;
+		const count = selectedRows.length;
+		for (const cmd of buildMoveToMainCommands(selectedRows, "archive")) {
+			applyCommand(cmd);
+		}
+		setSelectedRows([]);
+		toast.success(t("modals.moveToMain.success", { count }));
+	};
+
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
 		selectedRows.forEach((row) => {
@@ -105,6 +118,7 @@ export function useArchivePageActions(params: {
 		handleSendToArchive,
 		handleConfirmBooking,
 		handleConfirmReorder,
+		handleConfirmMoveToMain,
 		handleUpdatePartStatus,
 		handleConfirmDelete,
 	};

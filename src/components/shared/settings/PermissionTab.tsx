@@ -13,6 +13,8 @@ interface PermissionTabProps {
 export const PermissionTab = ({ isLocked }: PermissionTabProps) => {
 	const gridEditPermission = useAppStore((s) => s.gridEditPermission);
 	const setGridEditPermission = useAppStore((s) => s.setGridEditPermission);
+	const moveToMainPermission = useAppStore((s) => s.moveToMainPermission);
+	const setMoveToMainPermission = useAppStore((s) => s.setMoveToMainPermission);
 	const { t, lang } = useT();
 
 	return (
@@ -35,6 +37,27 @@ export const PermissionTab = ({ isLocked }: PermissionTabProps) => {
 					onCheckedChange={setGridEditPermission}
 					disabled={isLocked}
 					aria-label={t("settings.permission.allowGridEditingAria")}
+				/>
+			</div>
+
+			<div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+				<div className="space-y-1">
+					<Label className="text-sm font-semibold text-white">
+						<LocalizedScope lang={lang}>
+							{t("settings.permission.allowMoveToMain")}
+						</LocalizedScope>
+					</Label>
+					<p className="text-xs text-gray-400">
+						<LocalizedScope lang={lang}>
+							{t("settings.permission.allowMoveToMainDescription")}
+						</LocalizedScope>
+					</p>
+				</div>
+				<Switch
+					checked={moveToMainPermission}
+					onCheckedChange={setMoveToMainPermission}
+					disabled={isLocked}
+					aria-label={t("settings.permission.allowMoveToMainAria")}
 				/>
 			</div>
 

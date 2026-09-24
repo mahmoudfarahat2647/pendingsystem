@@ -276,3 +276,42 @@ describe("PendingRowSchema - createdAt field", () => {
 		}
 	});
 });
+
+describe("PendingRowSchema - nullable archive fields", () => {
+	it("accepts null for archiveReason and archivedAt (Move to Main Sheet clears them)", () => {
+		const result = PendingRowSchema.safeParse({
+			id: "row-3",
+			parts: [],
+			archiveReason: null,
+			archivedAt: null,
+		});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.archiveReason).toBeNull();
+			expect(result.data.archivedAt).toBeNull();
+		}
+	});
+
+	it("still accepts a string value for archiveReason and archivedAt", () => {
+		const result = PendingRowSchema.safeParse({
+			id: "row-4",
+			parts: [],
+			archiveReason: "Customer no-show",
+			archivedAt: "2024-01-25",
+		});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.archiveReason).toBe("Customer no-show");
+			expect(result.data.archivedAt).toBe("2024-01-25");
+		}
+	});
+
+	it("still accepts rows with neither field present", () => {
+		const result = PendingRowSchema.safeParse({ id: "row-5", parts: [] });
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.archiveReason).toBeUndefined();
+			expect(result.data.archivedAt).toBeUndefined();
+		}
+	});
+});

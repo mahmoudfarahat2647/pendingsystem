@@ -8,6 +8,7 @@ import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getCallColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
+import { MoveToMainConfirmDialog } from "@/components/shared/MoveToMainConfirmDialog";
 import { ReorderReasonDialog } from "@/components/shared/ReorderReasonDialog";
 import { RowModals } from "@/components/shared/RowModals";
 import { filterReservedRows } from "@/domain/order/orderWorkflow";
@@ -52,6 +53,7 @@ export default function CallListPage() {
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const gridEditPermission = useAppStore((s) => s.gridEditPermission);
+	const moveToMainPermission = useAppStore((s) => s.moveToMainPermission);
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -74,6 +76,9 @@ export default function CallListPage() {
 		showDeleteConfirm,
 		setShowDeleteConfirm,
 		openDeleteConfirm,
+		showMoveToMainConfirm,
+		setShowMoveToMainConfirm,
+		openMoveToMainConfirm,
 	} = useCallListModals();
 	const [showFilters, setShowFilters] = useState(false);
 	const [scrollDir, setScrollDir] = useState<"vertical" | "horizontal">(
@@ -122,6 +127,7 @@ export default function CallListPage() {
 		handleSendToFreeze,
 		handleConfirmBooking,
 		handleConfirmReorder,
+		handleConfirmMoveToMain,
 		handleUpdatePartStatus,
 		handleDelete,
 		handleConfirmDelete,
@@ -190,6 +196,8 @@ export default function CallListPage() {
 						selectedRows.map((r) => r.id),
 					)
 				}
+				onMoveToMain={openMoveToMainConfirm}
+				canMoveToMain={moveToMainPermission}
 				onDelete={() => handleDelete(() => openDeleteConfirm())}
 				onSelectAllByVin={onSelectAllByVin}
 				isSelectAllByVinDisabled={isSelectAllByVinDisabled}
@@ -279,6 +287,13 @@ export default function CallListPage() {
 					count: selectedRows.length,
 				})}
 				confirmText={t("modals.stageConfirm.delete")}
+			/>
+
+			<MoveToMainConfirmDialog
+				open={showMoveToMainConfirm}
+				onOpenChange={setShowMoveToMainConfirm}
+				count={selectedRows.length}
+				onConfirm={handleConfirmMoveToMain}
 			/>
 		</div>
 	);

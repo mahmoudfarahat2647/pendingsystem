@@ -38,6 +38,7 @@ const initialState: UIState = {
 	bookingStatuses: defaultBookingStatuses,
 	isLocked: true,
 	gridEditPermission: false,
+	moveToMainPermission: false,
 	beastModeTriggers: {},
 	currentEditVin: null,
 	currentEditId: null,
@@ -128,6 +129,8 @@ export const createUISlice: StateCreator<
 
 	setIsLocked: (isLocked) => set({ isLocked }),
 	setGridEditPermission: (gridEditPermission) => set({ gridEditPermission }),
+	setMoveToMainPermission: (moveToMainPermission) =>
+		set({ moveToMainPermission }),
 
 	// CRITICAL: BEAST MODE SYNC - DO NOT MODIFY WITHOUT REVIEW
 	// This tracks when an order failed validation during commit,

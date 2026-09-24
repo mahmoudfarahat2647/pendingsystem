@@ -9,6 +9,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { MoveToMainButton } from "@/components/shared/MoveToMainButton";
 import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,8 @@ export interface ArchiveToolbarProps {
 	onUpdateStatus: (statusLabel: string) => void;
 	onReorder: () => void;
 	onBooking: () => void;
+	onMoveToMain?: () => void;
+	canMoveToMain?: boolean;
 	onDelete: () => void;
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
@@ -50,6 +53,8 @@ export function ArchiveToolbar({
 	onUpdateStatus,
 	onReorder,
 	onBooking,
+	onMoveToMain,
+	canMoveToMain = false,
 	onDelete,
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
@@ -172,6 +177,13 @@ export function ArchiveToolbar({
 					</TooltipTrigger>
 					<TooltipContent>Reschedule Booking</TooltipContent>
 				</Tooltip>
+
+				{canMoveToMain && onMoveToMain && (
+					<MoveToMainButton
+						onClick={onMoveToMain}
+						disabled={selectedRows.length === 0}
+					/>
+				)}
 			</div>
 
 			<div className="flex items-center gap-1.5">

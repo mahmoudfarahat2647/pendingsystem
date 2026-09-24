@@ -16,9 +16,14 @@ import type { useBulkDeleteOrdersMutation } from "@/hooks/queries/useBulkDeleteO
 import type { useBulkUpdateOrderStageMutation } from "@/hooks/queries/useBulkUpdateOrderStageMutation";
 import type { useSaveOrderMutation } from "@/hooks/queries/useSaveOrderMutation";
 import type { ReleaseGateApi } from "@/hooks/useReleaseGate";
+import { useT } from "@/hooks/useT";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
-import { buildReorderUpdates } from "@/lib/orderStageTransitions";
+import {
+	buildMoveToMainUpdates,
+	buildReorderUpdates,
+	getMoveToMainSourceStage,
+} from "@/lib/orderStageTransitions";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import type { UIActions } from "@/store/types";
 import type { PartStatus, PendingRow } from "@/types";
@@ -55,6 +60,8 @@ export interface UseSearchResultsActionsArgs {
 	setShowReorderModal: React.Dispatch<React.SetStateAction<boolean>>;
 	reorderReason: string;
 	setReorderReason: React.Dispatch<React.SetStateAction<string>>;
+	moveToMainPermission: boolean;
+	setShowMoveToMainModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SOURCE_TO_STAGE: Record<string, string> = {
@@ -104,7 +111,10 @@ export const useSearchResultsActions = ({
 	setShowReorderModal,
 	reorderReason,
 	setReorderReason,
+	moveToMainPermission,
+	setShowMoveToMainModal,
 }: UseSearchResultsActionsArgs) => {
+	const { t } = useT();
 	const handleReserve = useCallback(() => {
 		const reservedRows = filterReservedRows(selectedRows, partStatuses);
 		if (reservedRows.length === 0) return;
@@ -353,6 +363,93 @@ export const useSearchResultsActions = ({
 		saveOrderMutation,
 	]);
 
+	const handleMoveToMainConfirm = useCallback(async () => {
+		// Re-check the source stage at confirmation time: only a selection
+		// entirely within one of call/booking/archive may move.
+		const sourceStage = getMoveToMainSourceStage(
+			selectedRows.map((row) => row.stage),
+		);
+		if (!sourceStage) return;
+
+		// Re-check the Settings switch — it may have been turned off while the
+		// confirmation dialog was open.
+		if (!moveToMainPermission) {
+			toast.error(t("modals.moveToMain.permissionOff"));
+			return;
+		}
+
+		const total = selectedRows.length;
+		try {
+			const results = await Promise.all(
+				selectedRows.map(
+					async (row): Promise<"moved" | "skipped" | "failed"> => {
+						const freshRow = searchResults.find((r) => r.id === row.id);
+						// Stale selection: the row left the source stage (or vanished)
+						// since it was selected. Never write it.
+						if (!freshRow || freshRow.stage !== sourceStage) {
+							return "skipped";
+						}
+						try {
+							const saved = await saveOrderMutation.mutateAsync({
+								id: row.id,
+								updates: buildMoveToMainUpdates(freshRow, sourceStage),
+								stage: "main",
+								sourceStage,
+							});
+							// `null` = compare-and-set no-op: the row moved elsewhere.
+							return saved === null ? "skipped" : "moved";
+						} catch {
+							return "failed";
+						}
+					},
+				),
+			);
+
+			const movedIds = new Set(
+				selectedRows.filter((_, i) => results[i] === "moved").map((r) => r.id),
+			);
+			const skipped = results.filter((r) => r === "skipped").length;
+			const failed = results.filter((r) => r === "failed").length;
+
+			if (movedIds.size === 0) {
+				if (failed === 0) {
+					toast.warning(t("modals.moveToMain.noneMoved"));
+				} else {
+					toast.error(t("modals.moveToMain.failed"));
+				}
+				return;
+			}
+
+			setShowMoveToMainModal(false);
+			if (movedIds.size === total) {
+				setSelectedRows([]);
+				toast.success(t("modals.moveToMain.success", { count: total }));
+				return;
+			}
+
+			// Keep unresolved rows selected so the user can review/retry.
+			setSelectedRows((prev) => prev.filter((r) => !movedIds.has(r.id)));
+			toast.warning(
+				t("modals.moveToMain.partial", {
+					moved: movedIds.size,
+					total,
+					skipped,
+					failed,
+				}),
+			);
+		} catch (_error) {
+			toast.error(t("modals.moveToMain.failed"));
+		}
+	}, [
+		selectedRows,
+		moveToMainPermission,
+		searchResults,
+		saveOrderMutation,
+		setSelectedRows,
+		setShowMoveToMainModal,
+		t,
+	]);
+
 	const handleDeleteConfirm = useCallback(async () => {
 		if (selectedRows.length === 0 || !isSameSource) return;
 		try {
@@ -537,6 +634,7 @@ export const useSearchResultsActions = ({
 		handleArchiveConfirm,
 		handleSendToCallList,
 		handleReorderConfirm,
+		handleMoveToMainConfirm,
 		handleDeleteConfirm,
 		handleBulkStatusUpdate,
 		handleExtract,

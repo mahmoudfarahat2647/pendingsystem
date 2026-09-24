@@ -5,8 +5,10 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { getSelectedIds } from "@/domain/order/orderWorkflow";
 import type { useDraftSession } from "@/hooks/useDraftSession";
+import { useT } from "@/hooks/useT";
 import {
 	buildBookingCommands,
+	buildMoveToMainCommands,
 	buildReorderCommands,
 	buildSendToArchiveCommands,
 	buildSendToFreezeCommands,
@@ -20,6 +22,7 @@ export function useCallListPageActions(params: {
 	setSelectedRows: React.Dispatch<React.SetStateAction<PendingRow[]>>;
 }) {
 	const { applyCommand, effectiveRows, selectedRows, setSelectedRows } = params;
+	const { t } = useT();
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
@@ -102,6 +105,16 @@ export function useCallListPageActions(params: {
 		);
 	};
 
+	const handleConfirmMoveToMain = () => {
+		if (selectedRows.length === 0) return;
+		const count = selectedRows.length;
+		for (const cmd of buildMoveToMainCommands(selectedRows, "call")) {
+			applyCommand(cmd);
+		}
+		setSelectedRows([]);
+		toast.success(t("modals.moveToMain.success", { count }));
+	};
+
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
 		selectedRows.forEach((row) => {
@@ -133,6 +146,7 @@ export function useCallListPageActions(params: {
 		handleSendToFreeze,
 		handleConfirmBooking,
 		handleConfirmReorder,
+		handleConfirmMoveToMain,
 		handleUpdatePartStatus,
 		handleDelete,
 		handleConfirmDelete,

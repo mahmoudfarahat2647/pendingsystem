@@ -19,6 +19,7 @@ import { useReleaseGate } from "@/hooks/useReleaseGate";
 import { useRowModals } from "@/hooks/useRowModals";
 import { logger } from "@/lib/logger";
 import { normalizeOrderStage } from "@/lib/orderStage";
+import { getMoveToMainSourceStage } from "@/lib/orderStageTransitions";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
@@ -30,6 +31,9 @@ export const useSearchResultsState = () => {
 	);
 	const router = useRouter();
 	const partStatuses = useAppStore((state) => state.partStatuses);
+	const moveToMainPermission = useAppStore(
+		(state) => state.moveToMainPermission,
+	);
 
 	// Grid & Selection State
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -47,6 +51,8 @@ export const useSearchResultsState = () => {
 	const isSameSource = selectedStages.length <= 1;
 	const disabledReason = isSameSource ? "" : "Mixed sources selected";
 	const activeStage = selectedStages[0];
+	const isMoveToMainEligible =
+		getMoveToMainSourceStage(selectedStages) !== null;
 
 	// Modal State
 	const [showBookingModal, setShowBookingModal] = useState(false);
@@ -54,6 +60,7 @@ export const useSearchResultsState = () => {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showReorderModal, setShowReorderModal] = useState(false);
 	const [reorderReason, setReorderReason] = useState("");
+	const [showMoveToMainModal, setShowMoveToMainModal] = useState(false);
 
 	// Fetch data from all sources
 	const { data: mainData = [] } = useOrdersQuery("main");
@@ -321,6 +328,7 @@ export const useSearchResultsState = () => {
 		handleArchiveConfirm,
 		handleSendToCallList,
 		handleReorderConfirm,
+		handleMoveToMainConfirm,
 		handleDeleteConfirm,
 		handleBulkStatusUpdate,
 		handleExtract,
@@ -351,6 +359,8 @@ export const useSearchResultsState = () => {
 		setShowReorderModal,
 		reorderReason,
 		setReorderReason,
+		moveToMainPermission,
+		setShowMoveToMainModal,
 	});
 
 	const counts = useMemo(() => {
@@ -421,6 +431,11 @@ export const useSearchResultsState = () => {
 		reorderReason,
 		setReorderReason,
 		handleReorderConfirm,
+		moveToMainPermission,
+		isMoveToMainEligible,
+		showMoveToMainModal,
+		setShowMoveToMainModal,
+		handleMoveToMainConfirm,
 		handleDeleteConfirm,
 		handleBulkStatusUpdate,
 		handleExtract,

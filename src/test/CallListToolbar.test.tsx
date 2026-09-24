@@ -51,6 +51,8 @@ const defaultProps: CallListToolbarProps = {
 	onReorder: vi.fn(),
 	onArchive: vi.fn(),
 	onFreeze: vi.fn(),
+	onMoveToMain: vi.fn(),
+	canMoveToMain: false,
 	onDelete: vi.fn(),
 	onSelectAllByVin: vi.fn(),
 	isSelectAllByVinDisabled: false,
@@ -165,6 +167,39 @@ describe("CallListToolbar", () => {
 		const btn = getButtonByIcon(container, "lucide-trash2");
 		fireEvent.click(btn);
 		expect(onDelete).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not render the Move to Main Sheet button when canMoveToMain is false", () => {
+		const { container } = renderWithProvider(
+			<CallListToolbar {...defaultProps} canMoveToMain={false} />,
+		);
+		expect(container.querySelector(".lucide-file-check")).toBeNull();
+	});
+
+	it("renders and calls onMoveToMain when canMoveToMain is true", () => {
+		const onMoveToMain = vi.fn();
+		const { container } = renderWithProvider(
+			<CallListToolbar
+				{...defaultProps}
+				canMoveToMain={true}
+				onMoveToMain={onMoveToMain}
+			/>,
+		);
+		const btn = getButtonByIcon(container, "lucide-file-check");
+		expect(btn).toBeEnabled();
+		fireEvent.click(btn);
+		expect(onMoveToMain).toHaveBeenCalledTimes(1);
+	});
+
+	it("disables Move to Main Sheet when no rows are selected", () => {
+		const { container } = renderWithProvider(
+			<CallListToolbar
+				{...defaultProps}
+				canMoveToMain={true}
+				selectedRows={[]}
+			/>,
+		);
+		expect(getButtonByIcon(container, "lucide-file-check")).toBeDisabled();
 	});
 
 	it("renders items for each partStatus and calls onUpdateStatus when clicked", async () => {

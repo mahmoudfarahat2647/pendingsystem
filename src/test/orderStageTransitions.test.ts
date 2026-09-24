@@ -8,6 +8,8 @@ import { FreezeReasonRequiredError } from "@/lib/errors";
 import { buildFreezePayload } from "@/lib/freezePayloadBuilder";
 import {
 	buildBookingCommands,
+	buildMoveToMainCommands,
+	buildMoveToMainUpdates,
 	buildRebookingCommands,
 	buildReorderCommands,
 	buildSendToArchiveCommands,
@@ -522,5 +524,80 @@ describe("buildUnfreezeCommands", () => {
 
 	it("returns empty array for empty input", () => {
 		expect(buildUnfreezeCommands([], "main")).toEqual([]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+
+describe("buildMoveToMainUpdates / buildMoveToMainCommands", () => {
+	it("from call: only appends a history note, no other field changes", () => {
+		const row = createMockRow({ stage: "call" });
+		const updates = buildMoveToMainUpdates(row, "call");
+
+		expect(updates.noteHistory).toContain("Moved to Main Sheet from Call");
+		expect(updates.status).toBeUndefined();
+		expect(updates.archiveReason).toBeUndefined();
+		expect(updates.archivedAt).toBeUndefined();
+	});
+
+	it("from booking: only appends a history note, no other field changes", () => {
+		const row = createMockRow({ stage: "booking" });
+		const updates = buildMoveToMainUpdates(row, "booking");
+
+		expect(updates.noteHistory).toContain("Moved to Main Sheet from Booking");
+		expect(updates.status).toBeUndefined();
+		expect(updates.bookingDate).toBeUndefined();
+		expect(updates.archiveReason).toBeUndefined();
+	});
+
+	it("from archive: resets status and nulls the archive fields, preserving the old reason in history", () => {
+		const row = createMockRow({
+			stage: "archive",
+			status: "Archived",
+			archiveReason: "Customer no-show",
+			archivedAt: "2024-01-01T00:00:00.000Z",
+		});
+		const updates = buildMoveToMainUpdates(row, "archive");
+
+		expect(updates.status).toBe("Pending");
+		expect(updates.archiveReason).toBeNull();
+		expect(updates.archivedAt).toBeNull();
+		expect(updates.noteHistory).toContain("Moved to Main Sheet from Archive");
+		expect(updates.noteHistory).toContain("Customer no-show");
+	});
+
+	it("from archive: does not add a 'Previous archive reason' note when there was none", () => {
+		const row = createMockRow({ stage: "archive", archiveReason: undefined });
+		const updates = buildMoveToMainUpdates(row, "archive");
+		expect(updates.noteHistory).not.toContain("Previous archive reason");
+	});
+
+	it("preserves booking and attachment fields for every source stage", () => {
+		const row = createMockRow({
+			stage: "booking",
+			bookingDate: "2024-05-01",
+			bookingNote: "keep me",
+			attachmentLink: "https://example.com/file.pdf",
+			hasAttachment: true,
+		});
+		const updates = buildMoveToMainUpdates(row, "booking");
+		expect("bookingDate" in updates).toBe(false);
+		expect("bookingNote" in updates).toBe(false);
+		expect("attachmentLink" in updates).toBe(false);
+		expect("hasAttachment" in updates).toBe(false);
+	});
+
+	it("buildMoveToMainCommands targets main and uses empty previousValues", () => {
+		const [cmd] = buildMoveToMainCommands(
+			[createMockRow({ stage: "call" })],
+			"call",
+		);
+		expect(cmd.sourceStage).toBe("call");
+		expect(cmd.destinationStage).toBe("main");
+		expect(cmd.previousValues).toEqual({});
+	});
+
+	it("returns empty array for empty input", () => {
+		expect(buildMoveToMainCommands([], "call")).toEqual([]);
 	});
 });

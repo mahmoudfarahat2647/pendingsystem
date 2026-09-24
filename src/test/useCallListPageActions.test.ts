@@ -533,4 +533,57 @@ describe("useCallListPageActions", () => {
 			);
 		});
 	});
+
+	describe("handleConfirmMoveToMain", () => {
+		it("applies one call→main patchRow per selected row, clears the selection, and toasts", () => {
+			const rows = [createRow({ stage: "call" }), createRow({ stage: "call" })];
+			const { result } = renderHook(() =>
+				useCallListPageActions({
+					applyCommand,
+					effectiveRows: rows,
+					selectedRows: rows,
+					setSelectedRows,
+				}),
+			);
+
+			act(() => {
+				result.current.handleConfirmMoveToMain();
+			});
+
+			expect(applyCommand).toHaveBeenCalledTimes(2);
+			for (const [i, row] of rows.entries()) {
+				expect(applyCommand).toHaveBeenNthCalledWith(
+					i + 1,
+					expect.objectContaining({
+						type: "patchRow",
+						id: row.id,
+						sourceStage: "call",
+						destinationStage: "main",
+					}),
+				);
+			}
+			expect(setSelectedRows).toHaveBeenCalledWith([]);
+			expect(toast.success).toHaveBeenCalledWith(
+				"2 line(s) moved to Main Sheet",
+			);
+		});
+
+		it("does nothing with an empty selection", () => {
+			const { result } = renderHook(() =>
+				useCallListPageActions({
+					applyCommand,
+					effectiveRows: [],
+					selectedRows: [],
+					setSelectedRows,
+				}),
+			);
+
+			act(() => {
+				result.current.handleConfirmMoveToMain();
+			});
+
+			expect(applyCommand).not.toHaveBeenCalled();
+			expect(setSelectedRows).not.toHaveBeenCalled();
+		});
+	});
 });
