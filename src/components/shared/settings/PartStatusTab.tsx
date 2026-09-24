@@ -1,6 +1,7 @@
 "use client";
 
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
+import { useT } from "@/hooks/useT";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef } from "@/types";
 import { StatusManagementSection } from "./StatusManagementSection";
@@ -14,6 +15,7 @@ export const PartStatusTab = ({ isLocked }: PartStatusTabProps) => {
 	const addPartStatusDef = useAppStore((state) => state.addPartStatusDef);
 	const updatePartStatusDef = useAppStore((state) => state.updatePartStatusDef);
 	const removePartStatusDef = useAppStore((state) => state.removePartStatusDef);
+	const { t } = useT();
 
 	// Data for usage checks
 	const { data: rowData = [] } = useOrdersQuery("main");
@@ -35,8 +37,8 @@ export const PartStatusTab = ({ isLocked }: PartStatusTabProps) => {
 
 	return (
 		<StatusManagementSection
-			title="Add New Status"
-			managedTitle="Managed Statuses"
+			title={t("settings.statuses.addNewStatus")}
+			managedTitle={t("settings.statuses.managedStatuses")}
 			statuses={partStatuses}
 			onAdd={(label, color) => {
 				const newStatus: PartStatusDef = {

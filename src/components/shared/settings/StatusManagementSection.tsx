@@ -2,6 +2,7 @@
 
 import { Check, Lock, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,6 +10,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
 import { ColorPicker } from "../ColorPicker";
@@ -45,6 +47,7 @@ export const StatusManagementSection = ({
 	isLocked,
 	lockColors = false,
 }: StatusManagementSectionProps) => {
+	const { t, lang } = useT();
 	const [newLabel, setNewLabel] = useState("");
 	const [selectedColor, setSelectedColor] = useState("#10b981");
 	const [editingId, setEditingId] = useState<string | null>(null);
@@ -84,19 +87,21 @@ export const StatusManagementSection = ({
 						<div className="px-3 py-1.5 bg-black/80 border border-white/10 rounded-full flex items-center gap-2 shadow-2xl backdrop-blur-sm">
 							<Lock className="h-3 w-3 text-red-400" />
 							<span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">
-								Editors Locked
+								<LocalizedScope lang={lang}>
+									{t("settings.statuses.editorsLocked")}
+								</LocalizedScope>
 							</span>
 						</div>
 					</div>
 				)}
 				<h4 className="text-sm font-semibold text-white uppercase tracking-wider">
-					{title}
+					<LocalizedScope lang={lang}>{title}</LocalizedScope>
 				</h4>
 				<div className="flex gap-4">
 					<Input
 						value={newLabel}
 						onChange={(e) => setNewLabel(e.target.value)}
-						placeholder="Enter status label (e.g., In Transit)"
+						placeholder={t("settings.statuses.labelPlaceholder")}
 						className="h-12 bg-black/40 border-white/10 rounded-xl focus:ring-renault-yellow/50"
 						disabled={isLocked}
 					/>
@@ -109,12 +114,16 @@ export const StatusManagementSection = ({
 						className="h-12 px-6 bg-renault-yellow hover:bg-renault-yellow/90 text-black font-bold rounded-xl transition-all active:scale-95"
 					>
 						<Plus className="h-5 w-5 mr-2" />
-						Add Status
+						<LocalizedScope lang={lang}>
+							{t("settings.statuses.addStatus")}
+						</LocalizedScope>
 					</Button>
 				</div>
 				<div className="space-y-3">
 					<p className="text-xs font-medium text-gray-500 uppercase">
-						Status Color
+						<LocalizedScope lang={lang}>
+							{t("settings.statuses.statusColor")}
+						</LocalizedScope>
 					</p>
 					<ColorPicker
 						color={selectedColor}
@@ -127,7 +136,7 @@ export const StatusManagementSection = ({
 			{/* List of Statuses */}
 			<div className="space-y-4">
 				<h4 className="text-sm font-semibold text-white uppercase tracking-wider px-2">
-					{managedTitle}
+					<LocalizedScope lang={lang}>{managedTitle}</LocalizedScope>
 				</h4>
 				<div className="grid gap-3">
 					{statuses.map((status) => {
@@ -163,7 +172,9 @@ export const StatusManagementSection = ({
 												className="hover:bg-white/10 text-gray-400"
 											>
 												<X className="h-4 w-4 mr-1" />
-												Cancel
+												<LocalizedScope lang={lang}>
+													{t("common.cancel")}
+												</LocalizedScope>
 											</Button>
 											<Button
 												size="sm"
@@ -172,7 +183,9 @@ export const StatusManagementSection = ({
 												className="bg-emerald-500 hover:bg-emerald-400 text-black font-medium"
 											>
 												<Check className="h-4 w-4 mr-1" />
-												Save
+												<LocalizedScope lang={lang}>
+													{t("settings.statuses.save")}
+												</LocalizedScope>
 											</Button>
 										</div>
 									</div>
@@ -205,7 +218,11 @@ export const StatusManagementSection = ({
 									</span>
 									{usageCount > 0 && (
 										<span className="text-[10px] bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">
-											{usageCount} used
+											<LocalizedScope lang={lang}>
+												{t("settings.statuses.usedCount", {
+													count: usageCount,
+												})}
+											</LocalizedScope>
 										</span>
 									)}
 								</div>
@@ -244,8 +261,14 @@ export const StatusManagementSection = ({
 											{!isDeletable && (
 												<TooltipContent>
 													<p>
-														Cannot delete: Currently used by {usageCount} item
-														{usageCount !== 1 ? "s" : ""}
+														<LocalizedScope lang={lang}>
+															{t(
+																usageCount !== 1
+																	? "settings.statuses.cannotDeleteMany"
+																	: "settings.statuses.cannotDeleteOne",
+																{ count: usageCount },
+															)}
+														</LocalizedScope>
 													</p>
 												</TooltipContent>
 											)}

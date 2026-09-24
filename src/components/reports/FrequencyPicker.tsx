@@ -4,6 +4,8 @@ import { Tick02Icon, UnfoldMoreIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
+import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/utils";
 
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -28,6 +30,7 @@ export default function FrequencyPicker({
 	onChange,
 	disabled,
 }: FrequencyPickerProps) {
+	const { t, lang } = useT();
 	// value format: "Frequency" or "Frequency-DayIndex"
 	const [option, setOption] = useState<options>("Daily");
 	const [day, setDay] = useState(1);
@@ -89,7 +92,9 @@ export default function FrequencyPicker({
 						transition={springTransition}
 						className="px-3 text-muted-foreground h-full flex items-center justify-center py-2"
 					>
-						Frequency
+						<LocalizedScope lang={lang}>
+							{t("settings.reports.frequency")}
+						</LocalizedScope>
 					</motion.div>
 					{isOptionOpen ? (
 						<div className="absolute w-full h-full flex justify-between gap-2 p-0">
@@ -107,7 +112,9 @@ export default function FrequencyPicker({
 											<motion.button
 												key={op}
 												type="button"
-												aria-label={`Set frequency to ${op}`}
+												aria-label={t("settings.reports.setFrequencyTo", {
+													frequency: op,
+												})}
 												layout
 												initial={{
 													filter: "blur(8px)",
@@ -143,7 +150,7 @@ export default function FrequencyPicker({
 								<motion.button
 									key="check-button"
 									type="button"
-									aria-label="Confirm frequency"
+									aria-label={t("settings.reports.confirmFrequency")}
 									layoutId="button"
 									onClick={handleConfirm}
 									initial={{
@@ -169,7 +176,7 @@ export default function FrequencyPicker({
 					) : (
 						<motion.button
 							type="button"
-							aria-label="Open frequency picker"
+							aria-label={t("settings.reports.openFrequencyPicker")}
 							onClick={() => setIsOptionOpen(true)}
 							className="rounded-full w-fit px-0 p-0 relative flex gap-0 items-center cursor-pointer"
 						>
@@ -228,7 +235,7 @@ export default function FrequencyPicker({
 									<motion.button
 										key={d}
 										type="button"
-										aria-label={`Select ${d}`}
+										aria-label={t("settings.reports.selectDay", { day: d })}
 										layout
 										initial={{
 											filter: "blur(8px)",

@@ -3,6 +3,7 @@
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +19,7 @@ import {
 	useRemoveEmailRecipientMutation,
 	useReportSettingsQuery,
 } from "@/hooks/queries/reports/useReportSettingsQuery";
+import { useT } from "@/hooks/useT";
 
 interface RecipientsCardProps {
 	isLocked: boolean;
@@ -28,6 +30,7 @@ export function RecipientsCard({ isLocked }: RecipientsCardProps) {
 	const addEmailRecipientMutation = useAddEmailRecipientMutation();
 	const removeEmailRecipientMutation = useRemoveEmailRecipientMutation();
 	const [emailInput, setEmailInput] = useState("");
+	const { t, lang } = useT();
 
 	const isLoading = !reportSettings;
 
@@ -51,16 +54,22 @@ export function RecipientsCard({ isLocked }: RecipientsCardProps) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Recipients</CardTitle>
+				<CardTitle>
+					<LocalizedScope lang={lang}>
+						{t("settings.reports.recipientsTitle")}
+					</LocalizedScope>
+				</CardTitle>
 				<CardDescription>
-					Manage who receives the automated reports suitable for backup.
+					<LocalizedScope lang={lang}>
+						{t("settings.reports.recipientsDescription")}
+					</LocalizedScope>
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div className="flex w-full max-w-sm items-center space-x-2">
 					<Input
 						type="email"
-						placeholder="Email address"
+						placeholder={t("settings.reports.emailPlaceholder")}
 						value={emailInput}
 						onChange={(e) => setEmailInput(e.target.value)}
 						onKeyDown={handleKeyDown}
@@ -70,11 +79,11 @@ export function RecipientsCard({ isLocked }: RecipientsCardProps) {
 						type="button"
 						onClick={handleAddEmail}
 						size="icon"
-						aria-label="Add email recipient"
+						aria-label={t("settings.reports.addEmailRecipient")}
 						disabled={isLoading || isLocked}
 					>
 						<Plus className="h-4 w-4" />
-						<span className="sr-only">Add Email</span>
+						<span className="sr-only">{t("settings.reports.addEmail")}</span>
 					</Button>
 				</div>
 
@@ -87,17 +96,21 @@ export function RecipientsCard({ isLocked }: RecipientsCardProps) {
 									type="button"
 									className="ml-2 ring-offset-background transition-colors hover:text-destructive focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full disabled:opacity-50"
 									onClick={() => removeEmailRecipientMutation.mutate(email)}
-									aria-label={`Remove ${email}`}
+									aria-label={t("settings.reports.removeRecipient", { email })}
 									disabled={isLocked}
 								>
 									<X className="h-3 w-3" />
-									<span className="sr-only">Remove {email}</span>
+									<span className="sr-only">
+										{t("settings.reports.removeRecipient", { email })}
+									</span>
 								</button>
 							</Badge>
 						))
 					) : (
 						<p className="text-sm text-muted-foreground italic">
-							No recipients added yet.
+							<LocalizedScope lang={lang}>
+								{t("settings.reports.noRecipients")}
+							</LocalizedScope>
 						</p>
 					)}
 				</div>

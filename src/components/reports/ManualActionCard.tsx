@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -15,6 +16,7 @@ import {
 	useReportSettingsQuery,
 	useTriggerManualBackupMutation,
 } from "@/hooks/queries/reports/useReportSettingsQuery";
+import { useT } from "@/hooks/useT";
 
 interface ManualActionCardProps {
 	isLocked: boolean;
@@ -23,6 +25,7 @@ interface ManualActionCardProps {
 export function ManualActionCard({ isLocked }: ManualActionCardProps) {
 	const { data: reportSettings } = useReportSettingsQuery();
 	const triggerManualBackupMutation = useTriggerManualBackupMutation();
+	const { t, lang } = useT();
 
 	const handleTriggerBackup = async () => {
 		try {
@@ -40,9 +43,15 @@ export function ManualActionCard({ isLocked }: ManualActionCardProps) {
 	return (
 		<Card className="border-destructive/20 bg-destructive/5">
 			<CardHeader>
-				<CardTitle className="text-destructive">Manual Action</CardTitle>
+				<CardTitle className="text-destructive">
+					<LocalizedScope lang={lang}>
+						{t("settings.reports.manualActionTitle")}
+					</LocalizedScope>
+				</CardTitle>
 				<CardDescription>
-					Immediately generate and send a backup report to all recipients.
+					<LocalizedScope lang={lang}>
+						{t("settings.reports.manualActionDescription")}
+					</LocalizedScope>
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -50,11 +59,18 @@ export function ManualActionCard({ isLocked }: ManualActionCardProps) {
 					<div className="text-sm text-muted-foreground">
 						{reportSettings?.last_sent_at ? (
 							<p>
-								Last sent:{" "}
-								{format(new Date(reportSettings.last_sent_at), "PPp")}
+								<LocalizedScope lang={lang}>
+									{t("settings.reports.lastSent", {
+										date: format(new Date(reportSettings.last_sent_at), "PPp"),
+									})}
+								</LocalizedScope>
 							</p>
 						) : (
-							<p>No reports sent yet.</p>
+							<p>
+								<LocalizedScope lang={lang}>
+									{t("settings.reports.noReportsSent")}
+								</LocalizedScope>
+							</p>
 						)}
 					</div>
 					<Button
@@ -68,12 +84,16 @@ export function ManualActionCard({ isLocked }: ManualActionCardProps) {
 						{triggerManualBackupMutation.isPending ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								Sending...
+								<LocalizedScope lang={lang}>
+									{t("settings.reports.sending")}
+								</LocalizedScope>
 							</>
 						) : (
 							<>
 								<Send className="mr-2 h-4 w-4" />
-								Send Backup Now
+								<LocalizedScope lang={lang}>
+									{t("settings.reports.sendBackupNow")}
+								</LocalizedScope>
 							</>
 						)}
 					</Button>

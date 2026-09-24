@@ -1,5 +1,6 @@
 "use client";
 
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import {
 	Card,
 	CardContent,
@@ -13,6 +14,7 @@ import {
 	useReportSettingsQuery,
 	useUpdateReportSettingsMutation,
 } from "@/hooks/queries/reports/useReportSettingsQuery";
+import { useT } from "@/hooks/useT";
 import FrequencyPicker from "./FrequencyPicker";
 
 interface SchedulingCardProps {
@@ -23,22 +25,36 @@ export function SchedulingCard({ isLocked }: SchedulingCardProps) {
 	const { data: reportSettings } = useReportSettingsQuery();
 	const updateReportSettingsMutation = useUpdateReportSettingsMutation();
 
+	const { t, lang } = useT();
+
 	const isLoading = !reportSettings;
 
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Scheduling</CardTitle>
+				<CardTitle>
+					<LocalizedScope lang={lang}>
+						{t("settings.reports.schedulingTitle")}
+					</LocalizedScope>
+				</CardTitle>
 				<CardDescription>
-					Configure how often you want to receive automated backups.
+					<LocalizedScope lang={lang}>
+						{t("settings.reports.schedulingDescription")}
+					</LocalizedScope>
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-6">
 				<div className="flex items-center justify-between space-x-2">
 					<Label htmlFor="auto-backup" className="flex flex-col space-y-1">
-						<span>Automatic Backups</span>
+						<span>
+							<LocalizedScope lang={lang}>
+								{t("settings.reports.automaticBackups")}
+							</LocalizedScope>
+						</span>
 						<span className="font-normal text-xs text-muted-foreground">
-							Enable scheduled reports sent to your email.
+							<LocalizedScope lang={lang}>
+								{t("settings.reports.automaticBackupsHint")}
+							</LocalizedScope>
 						</span>
 					</Label>
 					<Switch
@@ -52,7 +68,11 @@ export function SchedulingCard({ isLocked }: SchedulingCardProps) {
 				</div>
 
 				<div className="space-y-4" data-testid="frequency-picker-container">
-					<Label className="text-sm font-medium">Frequency</Label>
+					<Label className="text-sm font-medium">
+						<LocalizedScope lang={lang}>
+							{t("settings.reports.frequency")}
+						</LocalizedScope>
+					</Label>
 					<FrequencyPicker
 						value={reportSettings?.frequency || "Weekly"}
 						onChange={(value) =>
