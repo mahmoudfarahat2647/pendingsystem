@@ -87,6 +87,15 @@ A chassis-level safety gate in front of every route into **Call List** (issue `#
 - **Notifications**: new `release_followup` `AppNotification` type, one per normalized VIN, `managedKey = release_followup:{vin}:{dueISO}`. Reaches `notificationSlice.checkNotifications` via `ordersQueryAdapter.getReleaseFollowUps()` (store never touches React Query directly). The dropdown's `X` — and "Clear All" — snooze a `release_followup` notification another two months instead of permanently dismissing it; every other notification type keeps its existing dismiss behavior. Click-through reuses `resolveNotificationStage`.
 - Migration: `supabase/migrations/20260920_add_release_follow_ups.sql` (applied directly to the live project).
 
+### Move to Main Sheet (issue `#314`)
+
+A "Move to Main Sheet" toolbar action on Call List, Booking, Archive, and Global Search — the only other path into `main` besides Orders → Commit and Freeze → Move to…, guarded by a Settings permission so nobody moves a customer to Main Sheet by accident.
+
+- **Permission is a per-browser safety toggle, not user authorization.** `moveToMainPermission` (Zustand `uiSlice`, persisted, default `false`) hides the button on every surface until turned on in Settings → Permissions ("Allow Move to Main Sheet", under "Allow Grid Editing"). Every confirm handler re-checks the store value at the moment of confirmation, since the toggle can change while a dialog is open.
+- **Builder**: `buildMoveToMainUpdates(row, sourceStage)` / `buildMoveToMainCommands(rows, sourceStage)` in `src/lib/orderStageTransitions.ts`. Every move appends a `Moved to Main Sheet from <Stage>` history note (`#main` tag). From `archive` only, it also resets `status` to `"Pending"` and nulls `archiveReason`/`archivedAt` (now nullable in `PendingRowSchema`) while preserving the old reason in the note history; booking and attachment fields are untouched for every source.
+- **Draft pages** (Call List, Booking, Archive): a plain Yes/No `ConfirmDialog` (no field validation, no type-to-confirm) wired through each page's `use*PageActions.ts` → `applyCommand`, same as every other draft-session transition.
+- **Global Search**: only enabled when every selected row is currently in `call`, `booking`, or `archive` and all in the same stage (`MOVE_TO_MAIN_SOURCE_STAGES` in `useSearchResultsActions.ts`) — Orders/Main/Freeze and mixed selections are excluded. Unlike the bulk-stage-only `useBulkUpdateOrderStageMutation`, it saves each row individually through the guarded `useSaveOrderMutation` (`sourceStage` as `expectedCurrentStage`, the existing compare-and-set check) so the note/status/archive-field updates persist together with the stage move, and reports actual moved/skipped/failed counts rather than assuming full success.
+
 ### Arabic (AR) Language (i18n)
 
 Epic `#300`, delivered in five waves (`#301` foundation, `#302` Sidebar, `#303` Notifications, `#304` Settings, `#305` action modals). Arabic is a **text-only** translation: the page layout stays LTR and pixel-identical in both languages.

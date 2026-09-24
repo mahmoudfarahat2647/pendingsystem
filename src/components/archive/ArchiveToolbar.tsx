@@ -4,6 +4,7 @@ import {
 	Calendar,
 	CheckCircle,
 	Download,
+	FileCheck,
 	Filter,
 	RotateCcw,
 	Trash2,
@@ -36,6 +37,8 @@ export interface ArchiveToolbarProps {
 	onUpdateStatus: (statusLabel: string) => void;
 	onReorder: () => void;
 	onBooking: () => void;
+	onMoveToMain?: () => void;
+	canMoveToMain?: boolean;
 	onDelete: () => void;
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
@@ -50,6 +53,8 @@ export function ArchiveToolbar({
 	onUpdateStatus,
 	onReorder,
 	onBooking,
+	onMoveToMain,
+	canMoveToMain = false,
 	onDelete,
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
@@ -172,6 +177,23 @@ export function ArchiveToolbar({
 					</TooltipTrigger>
 					<TooltipContent>Reschedule Booking</TooltipContent>
 				</Tooltip>
+
+				{canMoveToMain && onMoveToMain && (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								size="icon"
+								variant="ghost"
+								className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 h-8 w-8"
+								onClick={onMoveToMain}
+								disabled={selectedRows.length === 0}
+							>
+								<FileCheck className="h-3.5 w-3.5" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Move to Main Sheet</TooltipContent>
+					</Tooltip>
+				)}
 			</div>
 
 			<div className="flex items-center gap-1.5">

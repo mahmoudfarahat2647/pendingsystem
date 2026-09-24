@@ -62,6 +62,11 @@ export const SearchResultsView = () => {
 		setShowReorderModal,
 		reorderReason,
 		setReorderReason,
+		moveToMainPermission,
+		isMoveToMainEligible,
+		showMoveToMainModal,
+		setShowMoveToMainModal,
+		handleMoveToMainConfirm,
 		handleDeleteConfirm,
 		handleBulkStatusUpdate,
 		handleExtract,
@@ -102,6 +107,9 @@ export const SearchResultsView = () => {
 				onArchive={() => setShowArchiveModal(true)}
 				onSendToCallList={handleSendToCallList}
 				onReorder={() => setShowReorderModal(true)}
+				onMoveToMain={() => setShowMoveToMainModal(true)}
+				canMoveToMain={moveToMainPermission}
+				isMoveToMainEligible={isMoveToMainEligible}
 				onDelete={() => setShowDeleteConfirm(true)}
 				onExtract={handleExtract}
 				onFilterToggle={() => setShowFilters((v) => !v)}
@@ -191,6 +199,19 @@ export const SearchResultsView = () => {
 				description={t("modals.stageConfirm.searchDeleteDescription", {
 					count: selectedRows.length,
 				})}
+			/>
+
+			<ConfirmDialog
+				open={showMoveToMainModal}
+				onOpenChange={setShowMoveToMainModal}
+				onConfirm={handleMoveToMainConfirm}
+				variant="success"
+				title={t("modals.stageConfirm.moveToMainTitle")}
+				description={t("modals.stageConfirm.moveToMainDescription", {
+					count: selectedRows.length,
+				})}
+				confirmText={t("modals.stageConfirm.moveToMainYes")}
+				cancelText={t("modals.stageConfirm.moveToMainNo")}
 			/>
 
 			{/* Reorder Reason Modal */}

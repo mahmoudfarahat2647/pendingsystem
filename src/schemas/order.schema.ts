@@ -141,8 +141,11 @@ const PendingRowBaseObject = z.object({
 	attachmentFilePath: z.string().optional(),
 	attachmentFilePaths: z.array(z.string()).optional(),
 	reminder: ReminderSchema.optional(),
-	archiveReason: z.string().optional(),
-	archivedAt: z.string().optional(),
+	// Nullable (not just optional) so the Move to Main Sheet transition can
+	// clear them by persisting `null` — metadata is merged on write, omitting
+	// a key preserves it, and `undefined` does not reliably delete a JSON key.
+	archiveReason: z.string().nullable().optional(),
+	archivedAt: z.string().nullable().optional(),
 	// Freeze metadata. These fields are nullable (not just optional) so that
 	// the neutral unfreeze transition can clear them by persisting `null`:
 	// metadata is merged on write, omitting a key preserves it and `undefined`

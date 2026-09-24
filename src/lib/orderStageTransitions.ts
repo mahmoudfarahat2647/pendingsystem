@@ -241,6 +241,68 @@ export function buildUnfreezeCommands(
 	});
 }
 /**
+ * Returns the update payload for moving a single row to Main Sheet from
+ * Call List, Booking, or Archive (the "Move to Main Sheet" toolbar action,
+ * guarded by the `moveToMainPermission` Settings toggle).
+ *
+ * Appends a `Moved to Main Sheet from <Stage>` history note. When the source
+ * is `archive`, also clears the archive markers — `status` resets to
+ * "Pending" (the schema default) and `archiveReason`/`archivedAt` are
+ * persisted as `null` (metadata is merged on write, so omitting a key would
+ * preserve it) — while the old archive reason is preserved in the note
+ * history. Booking and attachment fields are left untouched for every
+ * source stage.
+ */
+export function buildMoveToMainUpdates(
+	row: PendingRow,
+	sourceStage: OrderStage,
+): Partial<PendingRow> {
+	const stageLabel = sourceStage.charAt(0).toUpperCase() + sourceStage.slice(1);
+	let newNoteHistory = appendTaggedUserNote(
+		getEffectiveNoteHistory(row),
+		`Moved to Main Sheet from ${stageLabel}`,
+		"main",
+	);
+
+	if (sourceStage !== "archive") {
+		return { noteHistory: newNoteHistory };
+	}
+
+	newNoteHistory = appendPreviousValueNote(
+		newNoteHistory,
+		"Previous archive reason",
+		row.archiveReason ?? undefined,
+		"main",
+	);
+
+	return {
+		noteHistory: newNoteHistory,
+		status: "Pending",
+		archiveReason: null,
+		archivedAt: null,
+	};
+}
+
+/**
+ * Returns patchRow commands to move rows to Main Sheet from Call List,
+ * Booking, or Archive. See {@link buildMoveToMainUpdates} for the per-row
+ * update semantics.
+ */
+export function buildMoveToMainCommands(
+	rows: PendingRow[],
+	sourceStage: OrderStage,
+): PatchRowCommand[] {
+	return rows.map((row) => ({
+		type: "patchRow",
+		id: row.id,
+		sourceStage,
+		destinationStage: "main" as const,
+		updates: buildMoveToMainUpdates(row, sourceStage),
+		previousValues: {},
+	}));
+}
+
+/**
  * Returns patchRow commands to reschedule existing bookings.
  * Rows stay in the "booking" stage; only the date, note, and history change.
  */

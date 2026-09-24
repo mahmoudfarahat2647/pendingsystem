@@ -18,7 +18,10 @@ import type { useSaveOrderMutation } from "@/hooks/queries/useSaveOrderMutation"
 import type { ReleaseGateApi } from "@/hooks/useReleaseGate";
 import { exportToLogisticsXLSX } from "@/lib/exportUtils";
 import { logger } from "@/lib/logger";
-import { buildReorderUpdates } from "@/lib/orderStageTransitions";
+import {
+	buildMoveToMainUpdates,
+	buildReorderUpdates,
+} from "@/lib/orderStageTransitions";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import type { UIActions } from "@/store/types";
 import type { PartStatus, PendingRow } from "@/types";
@@ -55,7 +58,19 @@ export interface UseSearchResultsActionsArgs {
 	setShowReorderModal: React.Dispatch<React.SetStateAction<boolean>>;
 	reorderReason: string;
 	setReorderReason: React.Dispatch<React.SetStateAction<string>>;
+	isMoveToMainEligible: boolean;
+	moveToMainPermission: boolean;
+	setShowMoveToMainModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
+
+// The only source stages the "Move to Main Sheet" action may move rows from.
+// Orders, Main Sheet, and Freeze are excluded — Orders/Main have their own
+// dedicated paths (Commit / already there) and Freeze has "Move to…".
+export const MOVE_TO_MAIN_SOURCE_STAGES: readonly OrderStage[] = [
+	"call",
+	"booking",
+	"archive",
+];
 
 const SOURCE_TO_STAGE: Record<string, string> = {
 	"Main Sheet": "main",
@@ -104,6 +119,9 @@ export const useSearchResultsActions = ({
 	setShowReorderModal,
 	reorderReason,
 	setReorderReason,
+	isMoveToMainEligible,
+	moveToMainPermission,
+	setShowMoveToMainModal,
 }: UseSearchResultsActionsArgs) => {
 	const handleReserve = useCallback(() => {
 		const reservedRows = filterReservedRows(selectedRows, partStatuses);
@@ -353,6 +371,92 @@ export const useSearchResultsActions = ({
 		saveOrderMutation,
 	]);
 
+	const handleMoveToMainConfirm = useCallback(async () => {
+		if (
+			selectedRows.length === 0 ||
+			!isSameSource ||
+			!isMoveToMainEligible ||
+			!activeStage
+		) {
+			return;
+		}
+
+		// Re-check the Settings toggle at the moment of confirmation — it may
+		// have been turned off while this dialog was open.
+		if (!moveToMainPermission) {
+			toast.error("Move to Main Sheet permission was turned off.");
+			return;
+		}
+
+		const sourceStage = activeStage;
+		try {
+			const results = await Promise.allSettled(
+				selectedRows.map((row) => {
+					const freshRow = searchResults.find((r) => r.id === row.id) ?? row;
+					return saveOrderMutation.mutateAsync({
+						id: row.id,
+						updates: buildMoveToMainUpdates(freshRow, sourceStage),
+						stage: "main",
+						sourceStage,
+					});
+				}),
+			);
+
+			const succeeded = results.filter(
+				(r) => r.status === "fulfilled" && r.value !== null,
+			);
+			const skipped = results.filter(
+				(r) => r.status === "fulfilled" && r.value === null,
+			);
+			const failed = results.filter((r) => r.status === "rejected");
+
+			if (succeeded.length > 0) {
+				setShowMoveToMainModal(false);
+				if (skipped.length === 0 && failed.length === 0) {
+					setSelectedRows([]);
+					toast.success(`Moved ${succeeded.length} row(s) to Main Sheet`);
+				} else {
+					const succeededIds = new Set(
+						selectedRows
+							.filter(
+								(_, i) =>
+									results[i]?.status === "fulfilled" &&
+									(results[i] as PromiseFulfilledResult<unknown>).value !==
+										null,
+							)
+							.map((r) => r.id),
+					);
+					setSelectedRows((prev) =>
+						prev.filter((r) => !succeededIds.has(r.id)),
+					);
+					toast.warning(
+						`Moved ${succeeded.length} of ${selectedRows.length} row(s) to Main Sheet, ${
+							skipped.length
+						} skipped (changed elsewhere), ${failed.length} failed. Remaining rows stay selected.`,
+					);
+				}
+			} else if (skipped.length > 0 && failed.length === 0) {
+				toast.warning(
+					"No rows were moved — they may have already been moved by another session.",
+				);
+			} else {
+				toast.error("Move to Main Sheet failed");
+			}
+		} catch (_error) {
+			toast.error("Move to Main Sheet failed");
+		}
+	}, [
+		selectedRows,
+		isSameSource,
+		isMoveToMainEligible,
+		activeStage,
+		moveToMainPermission,
+		searchResults,
+		saveOrderMutation,
+		setSelectedRows,
+		setShowMoveToMainModal,
+	]);
+
 	const handleDeleteConfirm = useCallback(async () => {
 		if (selectedRows.length === 0 || !isSameSource) return;
 		try {
@@ -537,6 +641,7 @@ export const useSearchResultsActions = ({
 		handleArchiveConfirm,
 		handleSendToCallList,
 		handleReorderConfirm,
+		handleMoveToMainConfirm,
 		handleDeleteConfirm,
 		handleBulkStatusUpdate,
 		handleExtract,

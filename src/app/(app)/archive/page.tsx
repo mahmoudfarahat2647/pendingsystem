@@ -7,6 +7,7 @@ import type {
 } from "ag-grid-community";
 import { format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { ArchiveToolbar } from "@/components/archive/ArchiveToolbar";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
@@ -50,6 +51,7 @@ export default function ArchivePage() {
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const gridEditPermission = useAppStore((s) => s.gridEditPermission);
+	const moveToMainPermission = useAppStore((s) => s.moveToMainPermission);
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -78,6 +80,9 @@ export default function ArchivePage() {
 		showDeleteConfirm,
 		setShowDeleteConfirm,
 		openDeleteConfirm,
+		showMoveToMainConfirm,
+		setShowMoveToMainConfirm,
+		openMoveToMainConfirm,
 	} = useArchiveModals();
 
 	const {
@@ -85,6 +90,7 @@ export default function ArchivePage() {
 		handleSendToArchive,
 		handleConfirmBooking,
 		handleConfirmReorder,
+		handleConfirmMoveToMain,
 		handleUpdatePartStatus,
 		handleConfirmDelete,
 	} = useArchivePageActions({
@@ -156,6 +162,8 @@ export default function ArchivePage() {
 				onUpdateStatus={handleUpdatePartStatus}
 				onReorder={openReorder}
 				onBooking={openBooking}
+				onMoveToMain={openMoveToMainConfirm}
+				canMoveToMain={moveToMainPermission}
 				onDelete={openDeleteConfirm}
 				onSelectAllByVin={onSelectAllByVin}
 				isSelectAllByVinDisabled={isSelectAllByVinDisabled}
@@ -245,6 +253,25 @@ export default function ArchivePage() {
 					count: selectedRows.length,
 				})}
 				confirmText={t("modals.stageConfirm.permanentlyDelete")}
+			/>
+
+			<ConfirmDialog
+				open={showMoveToMainConfirm}
+				onOpenChange={setShowMoveToMainConfirm}
+				onConfirm={() => {
+					if (!moveToMainPermission) {
+						toast.error("Move to Main Sheet permission was turned off.");
+						return;
+					}
+					handleConfirmMoveToMain();
+				}}
+				variant="success"
+				title={t("modals.stageConfirm.moveToMainTitle")}
+				description={t("modals.stageConfirm.moveToMainDescription", {
+					count: selectedRows.length,
+				})}
+				confirmText={t("modals.stageConfirm.moveToMainYes")}
+				cancelText={t("modals.stageConfirm.moveToMainNo")}
 			/>
 		</div>
 	);

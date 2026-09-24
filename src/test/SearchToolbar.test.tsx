@@ -22,6 +22,9 @@ const defaultProps: SearchToolbarProps = {
 	onArchive: vi.fn(),
 	onSendToCallList: vi.fn(),
 	onReorder: vi.fn(),
+	onMoveToMain: vi.fn(),
+	canMoveToMain: false,
+	isMoveToMainEligible: false,
 	onDelete: vi.fn(),
 	onExtract: vi.fn(),
 	onFilterToggle: vi.fn(),
@@ -289,6 +292,70 @@ describe("SearchToolbar", () => {
 			expect(
 				screen.getByRole("button", { name: "Clear company filter" }),
 			).toBeInTheDocument();
+		});
+	});
+
+	describe("Move to Main Sheet action", () => {
+		it("is not rendered when the permission is off", () => {
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					canMoveToMain={false}
+					isMoveToMainEligible={true}
+					selectedCount={2}
+				/>,
+			);
+			expect(
+				screen.queryByRole("button", { name: /move to main sheet/i }),
+			).not.toBeInTheDocument();
+		});
+
+		it("is rendered but disabled when the permission is on but the selection is not eligible", () => {
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					canMoveToMain={true}
+					isMoveToMainEligible={false}
+					selectedCount={2}
+				/>,
+			);
+			const button = screen.getByRole("button", {
+				name: /move to main sheet/i,
+			});
+			expect(button).toBeDisabled();
+		});
+
+		it("is rendered and enabled when the permission is on, the selection is eligible, and rows are selected", () => {
+			const onMoveToMain = vi.fn();
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					canMoveToMain={true}
+					isMoveToMainEligible={true}
+					selectedCount={2}
+					onMoveToMain={onMoveToMain}
+				/>,
+			);
+			const button = screen.getByRole("button", {
+				name: /move to main sheet/i,
+			});
+			expect(button).not.toBeDisabled();
+			fireEvent.click(button);
+			expect(onMoveToMain).toHaveBeenCalledTimes(1);
+		});
+
+		it("is disabled when eligible but nothing is selected", () => {
+			renderWithProvider(
+				<SearchToolbar
+					{...defaultProps}
+					canMoveToMain={true}
+					isMoveToMainEligible={true}
+					selectedCount={0}
+				/>,
+			);
+			expect(
+				screen.getByRole("button", { name: /move to main sheet/i }),
+			).toBeDisabled();
 		});
 	});
 });

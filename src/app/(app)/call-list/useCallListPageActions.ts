@@ -7,6 +7,7 @@ import { getSelectedIds } from "@/domain/order/orderWorkflow";
 import type { useDraftSession } from "@/hooks/useDraftSession";
 import {
 	buildBookingCommands,
+	buildMoveToMainCommands,
 	buildReorderCommands,
 	buildSendToArchiveCommands,
 	buildSendToFreezeCommands,
@@ -102,6 +103,16 @@ export function useCallListPageActions(params: {
 		);
 	};
 
+	const handleConfirmMoveToMain = () => {
+		if (selectedRows.length === 0) return;
+		const count = selectedRows.length;
+		for (const cmd of buildMoveToMainCommands(selectedRows, "call")) {
+			applyCommand(cmd);
+		}
+		setSelectedRows([]);
+		toast.success(`${count} row(s) moved to Main Sheet`);
+	};
+
 	const handleUpdatePartStatus = (status: string) => {
 		if (selectedRows.length === 0) return;
 		selectedRows.forEach((row) => {
@@ -133,6 +144,7 @@ export function useCallListPageActions(params: {
 		handleSendToFreeze,
 		handleConfirmBooking,
 		handleConfirmReorder,
+		handleConfirmMoveToMain,
 		handleUpdatePartStatus,
 		handleDelete,
 		handleConfirmDelete,

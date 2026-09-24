@@ -2,6 +2,7 @@
 
 import type { GridApi } from "ag-grid-community";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { CallListToolbar } from "@/components/call-list/CallListToolbar";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
@@ -52,6 +53,7 @@ export default function CallListPage() {
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const gridEditPermission = useAppStore((s) => s.gridEditPermission);
+	const moveToMainPermission = useAppStore((s) => s.moveToMainPermission);
 
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -74,6 +76,9 @@ export default function CallListPage() {
 		showDeleteConfirm,
 		setShowDeleteConfirm,
 		openDeleteConfirm,
+		showMoveToMainConfirm,
+		setShowMoveToMainConfirm,
+		openMoveToMainConfirm,
 	} = useCallListModals();
 	const [showFilters, setShowFilters] = useState(false);
 	const [scrollDir, setScrollDir] = useState<"vertical" | "horizontal">(
@@ -122,6 +127,7 @@ export default function CallListPage() {
 		handleSendToFreeze,
 		handleConfirmBooking,
 		handleConfirmReorder,
+		handleConfirmMoveToMain,
 		handleUpdatePartStatus,
 		handleDelete,
 		handleConfirmDelete,
@@ -190,6 +196,8 @@ export default function CallListPage() {
 						selectedRows.map((r) => r.id),
 					)
 				}
+				onMoveToMain={openMoveToMainConfirm}
+				canMoveToMain={moveToMainPermission}
 				onDelete={() => handleDelete(() => openDeleteConfirm())}
 				onSelectAllByVin={onSelectAllByVin}
 				isSelectAllByVinDisabled={isSelectAllByVinDisabled}
@@ -279,6 +287,25 @@ export default function CallListPage() {
 					count: selectedRows.length,
 				})}
 				confirmText={t("modals.stageConfirm.delete")}
+			/>
+
+			<ConfirmDialog
+				open={showMoveToMainConfirm}
+				onOpenChange={setShowMoveToMainConfirm}
+				onConfirm={() => {
+					if (!moveToMainPermission) {
+						toast.error("Move to Main Sheet permission was turned off.");
+						return;
+					}
+					handleConfirmMoveToMain();
+				}}
+				variant="success"
+				title={t("modals.stageConfirm.moveToMainTitle")}
+				description={t("modals.stageConfirm.moveToMainDescription", {
+					count: selectedRows.length,
+				})}
+				confirmText={t("modals.stageConfirm.moveToMainYes")}
+				cancelText={t("modals.stageConfirm.moveToMainNo")}
 			/>
 		</div>
 	);

@@ -5,6 +5,7 @@ import {
 	Calendar,
 	CheckCircle,
 	Download,
+	FileCheck,
 	Filter,
 	Phone,
 	RotateCcw,
@@ -42,6 +43,9 @@ export interface SearchToolbarProps {
 	onArchive: () => void;
 	onSendToCallList: () => void;
 	onReorder: () => void;
+	onMoveToMain: () => void;
+	canMoveToMain: boolean;
+	isMoveToMainEligible: boolean;
 	onDelete: () => void;
 	onExtract: () => void;
 	onFilterToggle: () => void;
@@ -69,6 +73,9 @@ export const SearchToolbar = ({
 	onArchive,
 	onSendToCallList,
 	onReorder,
+	onMoveToMain,
+	canMoveToMain,
+	isMoveToMainEligible,
 	onDelete,
 	onExtract,
 	onFilterToggle,
@@ -193,6 +200,36 @@ export const SearchToolbar = ({
 						{!isSameSource && selectedCount > 0 ? disabledReason : "Reorder"}
 					</TooltipContent>
 				</Tooltip>
+
+				{canMoveToMain && (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								aria-label="Move to Main Sheet"
+								className={cn(
+									"h-8 w-8 transition-colors",
+									isMoveToMainEligible
+										? "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
+										: "text-gray-600 cursor-not-allowed opacity-50",
+								)}
+								disabled={selectedCount === 0 || !isMoveToMainEligible}
+								onClick={onMoveToMain}
+							>
+								<FileCheck className="h-4 w-4" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							{!isSameSource && selectedCount > 0
+								? disabledReason
+								: selectedCount > 0 && !isMoveToMainEligible
+									? "Only available from Call List, Booking, or Archive"
+									: "Move to Main Sheet"}
+						</TooltipContent>
+					</Tooltip>
+				)}
 
 				<Tooltip>
 					<TooltipTrigger asChild>

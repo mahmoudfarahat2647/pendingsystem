@@ -5,6 +5,7 @@ import {
 	Calendar,
 	CheckCircle,
 	Download,
+	FileCheck,
 	Filter,
 	RotateCcw,
 	Snowflake,
@@ -47,6 +48,8 @@ export interface CallListToolbarProps {
 	onReorder: () => void;
 	onArchive: () => void;
 	onFreeze: () => void;
+	onMoveToMain?: () => void;
+	canMoveToMain?: boolean;
 	onDelete: () => void;
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
@@ -67,6 +70,8 @@ export function CallListToolbar({
 	onReorder,
 	onArchive,
 	onFreeze,
+	onMoveToMain,
+	canMoveToMain = false,
 	onDelete,
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
@@ -234,6 +239,23 @@ export function CallListToolbar({
 					</TooltipTrigger>
 					<TooltipContent>Freeze</TooltipContent>
 				</Tooltip>
+
+				{canMoveToMain && onMoveToMain && (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								size="icon"
+								variant="ghost"
+								className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 h-8 w-8"
+								disabled={selectedRows.length === 0}
+								onClick={onMoveToMain}
+							>
+								<FileCheck className="h-3.5 w-3.5" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Move to Main Sheet</TooltipContent>
+					</Tooltip>
+				)}
 
 				<RowValueFilter
 					options={repairSystemOptions}

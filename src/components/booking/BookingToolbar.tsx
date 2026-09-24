@@ -5,6 +5,7 @@ import {
 	Calendar,
 	CheckCircle,
 	Download,
+	FileCheck,
 	Filter,
 	RotateCcw,
 	Snowflake,
@@ -44,6 +45,8 @@ interface BookingToolbarProps {
 	onFreeze: () => void;
 	onRebook: () => void;
 	onReorder: () => void;
+	onMoveToMain?: () => void;
+	canMoveToMain?: boolean;
 	onDelete: () => void;
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
@@ -63,6 +66,8 @@ export const BookingToolbar = ({
 	onFreeze,
 	onRebook,
 	onReorder,
+	onMoveToMain,
+	canMoveToMain = false,
 	onDelete,
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
@@ -242,6 +247,25 @@ export const BookingToolbar = ({
 						{hasMixedVins ? "Mixed customers selected" : "Reorder"}
 					</TooltipContent>
 				</Tooltip>
+
+				{canMoveToMain && onMoveToMain && (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								size="icon"
+								variant="ghost"
+								className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 h-8 w-8"
+								onClick={onMoveToMain}
+								disabled={selectedRows.length === 0 || hasMixedVins}
+							>
+								<FileCheck className="h-3.5 w-3.5" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							{hasMixedVins ? "Mixed customers selected" : "Move to Main Sheet"}
+						</TooltipContent>
+					</Tooltip>
+				)}
 			</div>
 
 			<div className="flex items-center gap-1.5">

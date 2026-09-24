@@ -87,9 +87,9 @@ export const ar: Dictionary = {
 			backupTitle: "إعدادات النسخ الاحتياطي والتقارير",
 			backupDescription:
 				"اضبط التقارير التلقائية وأدِر النسخ الاحتياطية للبيانات.",
-			permissionTitle: "صلاحية تعديل الجدول",
+			permissionTitle: "إعدادات الصلاحيات",
 			permissionDescription:
-				"تحكّم في إمكانية تعديل خلايا الجدول مباشرةً في المراحل غير Orders.",
+				"تحكّم في صلاحيات تعديل الجدول ونقل السجلات بين المراحل في التطبيق.",
 		},
 		statuses: {
 			addNewStatus: "إضافة حالة جديدة",
@@ -113,6 +113,10 @@ export const ar: Dictionary = {
 			allowGridEditingAria: "السماح بتعديل الجدول",
 			description:
 				"عند التفعيل، يمكن تعديل الخلايا مباشرةً في Main Sheet وCall List وBooking وArchive. يجب الضغط على حفظ لتثبيت التغييرات. مرحلة Orders غير متأثرة.",
+			allowMoveToMain: "السماح بالنقل إلى Main Sheet",
+			allowMoveToMainAria: "السماح بالنقل إلى Main Sheet",
+			allowMoveToMainDescription:
+				"عند التفعيل، يظهر إجراء النقل إلى Main Sheet في Call List وBooking وArchive وGlobal Search للتحديدات المؤهلة.",
 			unlockHint: "افتح قفل الإعدادات لتغيير هذه الصلاحية.",
 		},
 		reports: {
@@ -185,6 +189,10 @@ export const ar: Dictionary = {
 			archiveDeleteTitle: "حذف السجلات المؤرشفة",
 			archiveDeleteDescription:
 				"هل أنت متأكد من الحذف النهائي لـ {count} من السجلات المحددة؟",
+			moveToMainTitle: "النقل إلى Main Sheet",
+			moveToMainDescription: "هل أنت متأكد من نقل {count} سطر إلى Main Sheet؟",
+			moveToMainYes: "نعم",
+			moveToMainNo: "لا",
 		},
 		freeze: {
 			title: "تجميد السجل",

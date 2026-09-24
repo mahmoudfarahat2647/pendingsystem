@@ -86,9 +86,9 @@ export const en = {
 			appearanceDescription: "Manage theme colors and UI preferences.",
 			backupTitle: "Backup & Reports Settings",
 			backupDescription: "Configure automated reports and manage data backups.",
-			permissionTitle: "Grid Edit Permission",
+			permissionTitle: "Permissions",
 			permissionDescription:
-				"Control whether grid cells can be edited directly on non-Orders stages.",
+				"Control grid editing and stage-move permissions across the app.",
 		},
 		statuses: {
 			addNewStatus: "Add New Status",
@@ -112,6 +112,10 @@ export const en = {
 			allowGridEditingAria: "Allow grid editing",
 			description:
 				"When enabled, cells on Main Sheet, Call List, Booking, and Archive can be edited directly. Changes require clicking Save to persist. Orders stage is unaffected.",
+			allowMoveToMain: "Allow Move to Main Sheet",
+			allowMoveToMainAria: "Allow move to Main Sheet",
+			allowMoveToMainDescription:
+				"When enabled, a Move to Main Sheet action appears on Call List, Booking, Archive, and Global Search for eligible selections.",
 			unlockHint: "Unlock settings to change this permission.",
 		},
 		reports: {
@@ -184,6 +188,11 @@ export const en = {
 			archiveDeleteTitle: "Delete Archived Records",
 			archiveDeleteDescription:
 				"Are you sure you want to permanently delete {count} selected record(s)?",
+			moveToMainTitle: "Move to Main Sheet",
+			moveToMainDescription:
+				"Are you sure you want to move {count} line(s) to Main Sheet?",
+			moveToMainYes: "Yes",
+			moveToMainNo: "No",
 		},
 		freeze: {
 			title: "Freeze Record",
