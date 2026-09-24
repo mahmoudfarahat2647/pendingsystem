@@ -1,9 +1,15 @@
 import { ar } from "@/i18n/dictionaries/ar";
-import { en, type Language } from "@/i18n/dictionaries/en";
+import {
+	en,
+	type Language,
+	type TranslationParams,
+} from "@/i18n/dictionaries/en";
 
-export type { Language, TranslationKey } from "@/i18n/dictionaries/en";
-
-export type TranslationParams = Record<string, string | number>;
+export type {
+	Language,
+	TranslationKey,
+	TranslationParams,
+} from "@/i18n/dictionaries/en";
 
 const dictionaries = { en, ar } as const;
 

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
+import { translate } from "@/lib/i18n/translate";
 import {
 	getOrdersQueryKey,
 	NOTIFICATION_CANDIDATES_QUERY_KEY,
@@ -96,6 +97,30 @@ describe("notificationSlice: release_followup", () => {
 		expect(notifications[0].vin).toBe("VF1RFA00000000001");
 		expect(notifications[0].managedKey).toBe(
 			"release_followup:VF1RFA00000000001:2026-02-01T00:00:00Z",
+		);
+	});
+
+	it("emits localization keys that render to the English strings", () => {
+		vi.setSystemTime(new Date("2026-03-01T00:00:00Z"));
+		const store = createTestStore([
+			{
+				vin: "VF1RFA00000000001",
+				nextDueAt: "2026-02-01T00:00:00Z",
+				referenceRowId: "row-1",
+				createdAt: "2026-01-01T00:00:00Z",
+				updatedAt: "2026-01-01T00:00:00Z",
+			},
+		]);
+
+		store.getState().checkNotifications();
+
+		const [n] = store.getState().notifications;
+		expect(n.titleKey).toBe("notifications.releaseFollowUpTitle");
+		expect(n.descriptionKey).toBe("notifications.releaseFollowUpDescription");
+		expect(n.params).toEqual({ vin: "VF1RFA00000000001" });
+		expect(translate("en", n.titleKey as string, n.params)).toBe(n.title);
+		expect(translate("en", n.descriptionKey as string, n.params)).toBe(
+			n.description,
 		);
 	});
 

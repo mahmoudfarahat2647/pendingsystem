@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { create } from "zustand";
+import { translate } from "@/lib/i18n/translate";
 import {
 	NOTIFICATION_CANDIDATES_QUERY_KEY,
 	RELEASE_FOLLOW_UPS_QUERY_KEY,
@@ -7,7 +8,7 @@ import {
 import type { OrderStage } from "../domain/order/orderStage";
 import { createNotificationSlice } from "../store/slices/notificationSlice";
 import type { CombinedStore } from "../store/types";
-import type { PendingRow } from "../types";
+import type { AppNotification, PendingRow } from "../types";
 import { queryClient } from "./testQueryClient";
 
 // Mock orderService
@@ -677,6 +678,95 @@ describe("notificationSlice", () => {
 			// Second sync — must NOT respawn
 			store.getState().checkNotifications();
 			expect(store.getState().notifications).toHaveLength(0);
+		});
+	});
+	describe("Localization keys (i18n wave 3)", () => {
+		// The dropdown renders `titleKey`/`descriptionKey` + `params` and only
+		// falls back to `title`/`description` when a key is missing. Rendering
+		// the emitted keys through the English dictionary must reproduce the
+		// slice's own English strings, so a renamed key or placeholder fails
+		// here instead of silently leaking `{customer}` into the Arabic UI.
+		const expectKeysRenderEnglish = (n: AppNotification) => {
+			expect(n.titleKey).toBeDefined();
+			expect(n.descriptionKey).toBeDefined();
+			expect(translate("en", n.titleKey as string, n.params)).toBe(n.title);
+			expect(translate("en", n.descriptionKey as string, n.params)).toBe(
+				n.description,
+			);
+		};
+
+		it("emits reminder keys and params", () => {
+			vi.setSystemTime(new Date("2026-03-01T12:00:00Z"));
+			const row = createMockRow("1");
+			row.reminder = { date: "2026-03-01", time: "10:00", subject: "Call" };
+
+			const store = createTestStore([row]);
+			store.getState().checkNotifications();
+
+			const [n] = store.getState().notifications;
+			expect(n.titleKey).toBe("notifications.reminderTitle");
+			expect(n.descriptionKey).toBe("notifications.reminderDescription");
+			expect(n.params).toEqual({
+				date: "2026-03-01",
+				time: "10:00",
+				customer: "Test User",
+				subject: "Call",
+			});
+			expectKeysRenderEnglish(n);
+		});
+
+		it("emits warranty keys and params", () => {
+			vi.setSystemTime(new Date("2026-03-01T12:00:00Z"));
+			const store = createTestStore([createMockRow("1", "2026-03-11")]);
+			store.getState().checkNotifications();
+
+			const [n] = store.getState().notifications;
+			expect(n.titleKey).toBe("notifications.warrantyTitle");
+			expect(n.descriptionKey).toBe("notifications.warrantyDescription");
+			expect(n.params).toEqual({ days: 10, date: "2026-03-11" });
+			expectKeysRenderEnglish(n);
+		});
+
+		it("emits booking follow-up keys and params", () => {
+			vi.setSystemTime(new Date(2026, 2, 2, 10, 0, 0));
+			const row = createMockRow("1", undefined, "booking");
+			row.bookingDate = "2026-03-01";
+
+			const store = createTestStore([row]);
+			store.getState().checkNotifications();
+
+			const [n] = store.getState().notifications;
+			expect(n.titleKey).toBe("notifications.bookingFollowUpTitle");
+			expect(n.descriptionKey).toBe("notifications.bookingFollowUpDescription");
+			expect(n.params).toEqual({ customer: "Test User", vin: "VIN1" });
+			expectKeysRenderEnglish(n);
+		});
+
+		it.each([
+			["high", 90_000, 11, "notifications.cntrWarningHighTitle"],
+			["early", 75_000, 15, "notifications.cntrWarningEarlyTitle"],
+		] as const)("emits %s CNTR RDG warning keys and params", (level, km, daysAgo, titleKey) => {
+			const now = new Date("2026-05-20T12:00:00Z");
+			vi.setSystemTime(now);
+			const createdAt = new Date(
+				now.getTime() - daysAgo * 24 * 60 * 60 * 1000,
+			).toISOString();
+
+			const store = createMainSheetStore([
+				createCntrWarrantyRow("row-1", km, createdAt),
+			]);
+			store.getState().checkNotifications();
+
+			const [n] = store.getState().notifications;
+			expect(n.cntrRdgLevel).toBe(level);
+			expect(n.titleKey).toBe(titleKey);
+			expect(n.descriptionKey).toBe("notifications.cntrWarningDescription");
+			expect(n.params).toEqual({
+				customer: "Test User",
+				km: km.toLocaleString(),
+				vin: "VINrow-1",
+			});
+			expectKeysRenderEnglish(n);
 		});
 	});
 });

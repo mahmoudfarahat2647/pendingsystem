@@ -31,7 +31,27 @@ export const ar: Dictionary = {
 		unsavedDescriptionAfterVin: ". الانتقال إلى تبويب آخر سيتجاهل تغييراتك.",
 		discardAndContinue: "تجاهل والمتابعة",
 	},
-	notifications: {},
+	notifications: {
+		title: "الإشعارات",
+		clearAll: "مسح الكل",
+		empty: "لا توجد إشعارات بعد",
+		close: "إغلاق الإشعارات",
+		snoozeTwoMonths: "تأجيل لمدة شهرين",
+		remove: "إزالة الإشعار",
+		reminderTitle: "تذكير مستحق",
+		reminderDescription:
+			"موعد الاستحقاق: {date} {time} - {customer}: {subject}",
+		warrantyTitle: "الضمان على وشك الانتهاء",
+		warrantyDescription: "ينتهي الضمان خلال {days} يوم ({date})",
+		bookingFollowUpTitle: "متابعة الحجز",
+		bookingFollowUpDescription: "{customer} — VIN {vin}",
+		cntrWarningHighTitle: "خطورة عالية: تحذير قراءة العداد",
+		cntrWarningEarlyTitle: "تنبيه مبكر: قراءة العداد",
+		cntrWarningDescription: "{customer} — {km} KM (VIN: {vin})",
+		releaseFollowUpTitle: "متابعة الإفراج مستحقة",
+		releaseFollowUpDescription:
+			"قد يكون الشاسيه {vin} (ضمان) قد تجاوز 5,000 كم — أعد تأكيد الإفراج قبل النقل إلى Call List.",
+	},
 	settings: {
 		language: {
 			label: "اللغة",
