@@ -62,6 +62,7 @@ export const en = {
 			incorrectPassword: "Incorrect password",
 			unlock: "Unlock",
 			version: "Version",
+			close: "Close",
 		},
 		tabs: {
 			statuses: "Statuses",
@@ -87,6 +88,7 @@ export const en = {
 			labelPlaceholder: "Enter status label (e.g., In Transit)",
 			addStatus: "Add Status",
 			statusColor: "Status Color",
+			selectColor: "Select Color",
 			save: "Save",
 			usedCount: "{count} used",
 			cannotDeleteOne: "Cannot delete: Currently used by {count} item",

@@ -61,6 +61,7 @@ export const ar: Dictionary = {
 			incorrectPassword: "كلمة مرور غير صحيحة",
 			unlock: "فتح القفل",
 			version: "الإصدار",
+			close: "إغلاق",
 		},
 		tabs: {
 			statuses: "الحالات",
@@ -87,6 +88,7 @@ export const ar: Dictionary = {
 			labelPlaceholder: "أدخل اسم الحالة، مثال: In Transit",
 			addStatus: "إضافة حالة",
 			statusColor: "لون الحالة",
+			selectColor: "اختر اللون",
 			save: "حفظ",
 			usedCount: "{count} استخدام",
 			cannotDeleteOne: "لا يمكن الحذف: مستخدمة حاليًا في {count} عنصر",

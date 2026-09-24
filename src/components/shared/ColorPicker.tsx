@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -7,6 +8,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/utils";
 
 interface ColorPickerProps {
@@ -21,6 +23,7 @@ export const ColorPicker = ({
 	disabled,
 }: ColorPickerProps) => {
 	const [isOpen, setIsOpen] = useState(false);
+	const { t, lang } = useT();
 
 	// Predefined colors for quick selection
 	const presetColors = [
@@ -61,7 +64,11 @@ export const ColorPicker = ({
 			<PopoverContent className="w-64 p-3 bg-[#18181b] border-white/10 space-y-3">
 				<div className="space-y-3">
 					<div className="flex items-center justify-between">
-						<h4 className="text-xs font-medium text-gray-400">Select Color</h4>
+						<h4 className="text-xs font-medium text-gray-400">
+							<LocalizedScope lang={lang}>
+								{t("settings.statuses.selectColor")}
+							</LocalizedScope>
+						</h4>
 						<Input
 							value={color}
 							onChange={(e) => onChange(e.target.value)}

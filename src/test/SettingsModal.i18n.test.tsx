@@ -153,6 +153,31 @@ describe("SettingsModal i18n (Wave 4)", () => {
 		expect(screen.queryByText("التعديل مقفل")).not.toBeInTheDocument();
 	});
 
+	it("localizes the dialog close button label in EN and AR", () => {
+		const { unmount } = renderModal();
+		expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
+		unmount();
+
+		useAppStore.getState().setLanguage("ar");
+		renderModal();
+		expect(screen.getByRole("button", { name: "إغلاق" })).toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: "Close" }),
+		).not.toBeInTheDocument();
+	});
+
+	it("translates the color picker heading and keeps the hex value", async () => {
+		const user = userEvent.setup();
+		useAppStore.getState().setLanguage("ar");
+		useAppStore.getState().setIsLocked(false);
+		renderModal();
+
+		await user.click(screen.getByRole("button", { name: "10b981" }));
+		expect(screen.getByText("اختر اللون")).toBeInTheDocument();
+		expect(screen.queryByText("Select Color")).not.toBeInTheDocument();
+		expect(screen.getAllByDisplayValue("#10b981").length).toBeGreaterThan(0);
+	});
+
 	it("translates status usage counts and keeps user status names in English", () => {
 		useAppStore.getState().setLanguage("ar");
 		const label = useAppStore.getState().partStatuses[0]?.label ?? "";

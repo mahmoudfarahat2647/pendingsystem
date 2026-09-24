@@ -113,7 +113,10 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-[#0a0a0b] text-white border-white/10 max-w-5xl p-0 gap-0 overflow-hidden flex h-[80vh] rounded-3xl shadow-2xl">
+			<DialogContent
+				closeLabel={t("settings.modal.close")}
+				className="bg-[#0a0a0b] text-white border-white/10 max-w-5xl p-0 gap-0 overflow-hidden flex h-[80vh] rounded-3xl shadow-2xl"
+			>
 				{/* Sidebar Navigation */}
 				<div className="w-64 border-r border-white/5 bg-black/20 flex flex-col">
 					<div className="p-6 flex items-center gap-2 border-b border-white/5">
