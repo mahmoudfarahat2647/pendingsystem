@@ -72,7 +72,10 @@ export function ReleaseConfirmationModal({
 				if (!next) onCancel();
 			}}
 		>
-			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden rounded-[10px]">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden rounded-[10px]"
+			>
 				<DialogDescription className="sr-only">
 					<LocalizedScope lang={lang}>
 						{t("modals.release.subtitle")}

@@ -101,7 +101,10 @@ export const EditNoteModal = ({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden"
+			>
 				<DialogHeader className="px-6 py-4 flex flex-row items-center justify-between border-b border-white/5 space-y-0 relative">
 					<div className="flex-1 flex justify-start"></div>
 					<DialogTitle className="text-lg font-medium">

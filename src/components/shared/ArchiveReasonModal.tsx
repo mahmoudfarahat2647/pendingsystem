@@ -69,7 +69,10 @@ export const ArchiveReasonModal = ({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden"
+			>
 				<DialogHeader className="px-6 py-4 flex flex-row items-center justify-between border-b border-white/5 space-y-0 relative bg-red-500/5">
 					<div className="flex-1 flex justify-start">
 						<div className="bg-red-500/10 p-2 rounded-full">

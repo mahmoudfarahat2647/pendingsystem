@@ -262,4 +262,115 @@ describe("action modals i18n (Wave 5)", () => {
 			).toBeInTheDocument();
 		});
 	});
+
+	describe("dialog close control", () => {
+		it.each([
+			[
+				"ReleaseConfirmationModal",
+				() => (
+					<ReleaseConfirmationModal
+						open
+						vin="VIN1"
+						formattedMileage="100"
+						onCancel={vi.fn()}
+						onConfirm={vi.fn()}
+					/>
+				),
+			],
+			[
+				"FreezeReasonModal",
+				() => (
+					<FreezeReasonModal open onOpenChange={vi.fn()} onSave={vi.fn()} />
+				),
+			],
+			[
+				"ArchiveReasonModal",
+				() => (
+					<ArchiveReasonModal open onOpenChange={vi.fn()} onSave={vi.fn()} />
+				),
+			],
+			[
+				"EditReminderModal",
+				() => (
+					<EditReminderModal
+						open
+						onOpenChange={vi.fn()}
+						initialData={null}
+						onSave={vi.fn()}
+					/>
+				),
+			],
+			[
+				"UnfreezeMoveDialog",
+				() => (
+					<UnfreezeMoveDialog
+						open
+						onOpenChange={vi.fn()}
+						initialStage="main"
+						rowCount={1}
+						origin={{ kind: "none" }}
+						onCancel={vi.fn()}
+						onConfirm={vi.fn()}
+					/>
+				),
+			],
+		])("%s announces an Arabic close label", (_name, renderModal) => {
+			render(renderModal());
+			expect(screen.getByRole("button", { name: "إغلاق" })).toBeInTheDocument();
+			expect(
+				screen.queryByRole("button", { name: "Close" }),
+			).not.toBeInTheDocument();
+		});
+	});
+
+	describe("reminder date picker", () => {
+		it("shows an Arabic date, calendar and AM/PM with Western digits", async () => {
+			const user = userEvent.setup();
+			render(
+				<EditReminderModal
+					open
+					onOpenChange={vi.fn()}
+					initialData={{ date: "2026-09-24", time: "14:30", subject: "Call" }}
+					onSave={vi.fn()}
+				/>,
+			);
+
+			const trigger = screen.getByRole("button", { name: "24 سبتمبر 2026" });
+			expect(screen.getByText("م")).toBeInTheDocument();
+
+			await user.click(trigger);
+			const grid = await screen.findByRole("grid");
+			expect(grid).toHaveAttribute("aria-label", "سبتمبر 2026");
+			expect(
+				screen.getByRole("button", { name: "اذهب إلى الشهر التالي" }),
+			).toBeInTheDocument();
+			expect(
+				screen.getByRole("button", { name: "اذهب إلى الشهر السابق" }),
+			).toBeInTheDocument();
+			// Layout stays LTR — the calendar never gets a dir attribute.
+			expect(grid.closest("[dir='rtl'].rdp-root")).toBeNull();
+		});
+
+		it("keeps the English date picker in EN mode", async () => {
+			useAppStore.getState().setLanguage("en");
+			const user = userEvent.setup();
+			render(
+				<EditReminderModal
+					open
+					onOpenChange={vi.fn()}
+					initialData={{ date: "2026-09-24", time: "14:30", subject: "Call" }}
+					onSave={vi.fn()}
+				/>,
+			);
+
+			await user.click(
+				screen.getByRole("button", { name: "September 24th, 2026" }),
+			);
+			expect(await screen.findByRole("grid")).toHaveAttribute(
+				"aria-label",
+				"September 2026",
+			);
+			expect(screen.getByText("PM")).toBeInTheDocument();
+		});
+	});
 });

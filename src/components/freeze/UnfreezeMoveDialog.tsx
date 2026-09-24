@@ -101,7 +101,10 @@ export function UnfreezeMoveDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden"
+			>
 				<DialogHeader className="px-6 pt-6 pb-4 text-left">
 					<DialogTitle>
 						<LocalizedScope lang={lang}>

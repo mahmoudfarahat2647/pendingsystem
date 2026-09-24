@@ -19,6 +19,7 @@ export const en = {
 		remove: "Remove",
 		move: "Move",
 		understood: "Understood",
+		close: "Close",
 	},
 	sidebar: {
 		mainNavigation: "Main navigation",
@@ -270,6 +271,9 @@ export const en = {
 			subject: "Subject",
 			subjectPlaceholder: "What needs to be done?",
 			save: "Save Reminder",
+			pickDate: "Pick a date",
+			am: "AM",
+			pm: "PM",
 		},
 		attachment: {
 			title: "Attachments",

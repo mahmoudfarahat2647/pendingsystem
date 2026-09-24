@@ -42,7 +42,10 @@ export function ReorderReasonDialog({
 	const { t, lang } = useT();
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="bg-[#1c1c1e] border border-white/10 text-white"
+			>
 				<DialogHeader>
 					<DialogTitle className="text-orange-500">
 						<LocalizedScope lang={lang}>

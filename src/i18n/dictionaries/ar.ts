@@ -18,6 +18,7 @@ export const ar: Dictionary = {
 		remove: "إزالة",
 		move: "نقل",
 		understood: "تم",
+		close: "إغلاق",
 	},
 	sidebar: {
 		mainNavigation: "التنقل الرئيسي",
@@ -269,6 +270,9 @@ export const ar: Dictionary = {
 			subject: "الموضوع",
 			subjectPlaceholder: "ما الذي يجب إنجازه؟",
 			save: "حفظ التذكير",
+			pickDate: "اختر تاريخًا",
+			am: "ص",
+			pm: "م",
 		},
 		attachment: {
 			title: "المرفقات",

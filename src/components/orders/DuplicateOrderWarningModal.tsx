@@ -31,7 +31,10 @@ export function DuplicateOrderWarningModal({
 
 	return (
 		<Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-			<DialogContent className="max-w-md bg-[#0c0c0e] border-white/10 text-slate-200">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="max-w-md bg-[#0c0c0e] border-white/10 text-slate-200"
+			>
 				<div className="flex flex-col items-center text-center space-y-4 pt-6">
 					<div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
 						<AlertCircle className="h-6 w-6 text-red-500" />

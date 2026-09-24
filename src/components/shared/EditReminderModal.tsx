@@ -123,7 +123,10 @@ export const EditReminderModal = ({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden">
+			<DialogContent
+				closeLabel={t("common.close")}
+				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden"
+			>
 				<DialogHeader className="px-6 py-4 flex flex-row items-center justify-between border-b border-white/5 space-y-0 relative">
 					<div className="flex-1 flex justify-start">
 						<Button
@@ -210,7 +213,11 @@ export const EditReminderModal = ({
 										{t("modals.reminder.dateTime")}
 									</LocalizedScope>
 								</Label>
-								<DateTimePicker date={dateTime} setDate={setDateTime} />
+								<DateTimePicker
+									date={dateTime}
+									setDate={setDateTime}
+									lang={lang}
+								/>
 							</div>
 
 							<div className="space-y-2">
