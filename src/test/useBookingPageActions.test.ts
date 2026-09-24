@@ -525,4 +525,60 @@ describe("useBookingPageActions", () => {
 			);
 		});
 	});
+
+	describe("handleConfirmMoveToMain", () => {
+		it("applies one booking→main patchRow per selected row, clears the selection, and toasts", () => {
+			const rows = [
+				createRow({ stage: "booking" }),
+				createRow({ stage: "booking" }),
+			];
+			const { result } = renderHook(() =>
+				useBookingPageActions({
+					applyCommand,
+					effectiveRows: rows,
+					selectedRows: rows,
+					setSelectedRows,
+				}),
+			);
+
+			act(() => {
+				result.current.handleConfirmMoveToMain();
+			});
+
+			expect(applyCommand).toHaveBeenCalledTimes(2);
+			for (const [i, row] of rows.entries()) {
+				expect(applyCommand).toHaveBeenNthCalledWith(
+					i + 1,
+					expect.objectContaining({
+						type: "patchRow",
+						id: row.id,
+						sourceStage: "booking",
+						destinationStage: "main",
+					}),
+				);
+			}
+			expect(setSelectedRows).toHaveBeenCalledWith([]);
+			expect(toast.success).toHaveBeenCalledWith(
+				"2 line(s) moved to Main Sheet",
+			);
+		});
+
+		it("does nothing with an empty selection", () => {
+			const { result } = renderHook(() =>
+				useBookingPageActions({
+					applyCommand,
+					effectiveRows: [],
+					selectedRows: [],
+					setSelectedRows,
+				}),
+			);
+
+			act(() => {
+				result.current.handleConfirmMoveToMain();
+			});
+
+			expect(applyCommand).not.toHaveBeenCalled();
+			expect(setSelectedRows).not.toHaveBeenCalled();
+		});
+	});
 });

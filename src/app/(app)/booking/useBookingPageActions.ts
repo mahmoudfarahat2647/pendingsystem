@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { getSelectedIds } from "@/domain/order/orderWorkflow";
 import type { useDraftSession } from "@/hooks/useDraftSession";
+import { useT } from "@/hooks/useT";
 import {
 	buildMoveToMainCommands,
 	buildRebookingCommands,
@@ -21,6 +22,7 @@ export function useBookingPageActions(params: {
 	setSelectedRows: React.Dispatch<React.SetStateAction<PendingRow[]>>;
 }) {
 	const { applyCommand, effectiveRows, selectedRows, setSelectedRows } = params;
+	const { t } = useT();
 
 	const handleUpdateOrder = useCallback(
 		(id: string, updates: Partial<PendingRow>) => {
@@ -112,7 +114,7 @@ export function useBookingPageActions(params: {
 			applyCommand(cmd);
 		}
 		setSelectedRows([]);
-		toast.success(`${count} row(s) moved to Main Sheet`);
+		toast.success(t("modals.moveToMain.success", { count }));
 	};
 
 	const handleUpdatePartStatus = (status: string) => {

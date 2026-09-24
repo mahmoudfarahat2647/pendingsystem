@@ -241,6 +241,30 @@ export function buildUnfreezeCommands(
 	});
 }
 /**
+ * The only source stages the "Move to Main Sheet" action may move rows from.
+ * Orders has Commit, Main Sheet is the destination, and Freeze has "Move to…".
+ */
+export const MOVE_TO_MAIN_SOURCE_STAGES: readonly OrderStage[] = [
+	"call",
+	"booking",
+	"archive",
+];
+
+/**
+ * Returns the single eligible source stage shared by every selected row, or
+ * `null` when the selection is empty, mixes stages, or comes from a stage
+ * outside {@link MOVE_TO_MAIN_SOURCE_STAGES}.
+ */
+export function getMoveToMainSourceStage(
+	stages: readonly (OrderStage | undefined)[],
+): OrderStage | null {
+	if (stages.length === 0) return null;
+	const [first] = stages;
+	if (!first || !MOVE_TO_MAIN_SOURCE_STAGES.includes(first)) return null;
+	return stages.every((stage) => stage === first) ? first : null;
+}
+
+/**
  * Returns the update payload for moving a single row to Main Sheet from
  * Call List, Booking, or Archive (the "Move to Main Sheet" toolbar action,
  * guarded by the `moveToMainPermission` Settings toggle).

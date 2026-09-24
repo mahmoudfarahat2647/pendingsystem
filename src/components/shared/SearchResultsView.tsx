@@ -4,6 +4,7 @@ import { Search as SearchIcon } from "lucide-react";
 import { ArchiveReasonModal } from "@/components/shared/ArchiveReasonModal";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { MoveToMainConfirmDialog } from "@/components/shared/MoveToMainConfirmDialog";
 import { useSearchResultsState } from "@/components/shared/search/hooks/useSearchResultsState";
 import { Button } from "@/components/ui/button";
 import {
@@ -201,17 +202,11 @@ export const SearchResultsView = () => {
 				})}
 			/>
 
-			<ConfirmDialog
+			<MoveToMainConfirmDialog
 				open={showMoveToMainModal}
 				onOpenChange={setShowMoveToMainModal}
+				count={selectedRows.length}
 				onConfirm={handleMoveToMainConfirm}
-				variant="success"
-				title={t("modals.stageConfirm.moveToMainTitle")}
-				description={t("modals.stageConfirm.moveToMainDescription", {
-					count: selectedRows.length,
-				})}
-				confirmText={t("modals.stageConfirm.moveToMainYes")}
-				cancelText={t("modals.stageConfirm.moveToMainNo")}
 			/>
 
 			{/* Reorder Reason Modal */}

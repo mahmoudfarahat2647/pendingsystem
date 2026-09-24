@@ -5,7 +5,6 @@ import {
 	Calendar,
 	CheckCircle,
 	Download,
-	FileCheck,
 	Filter,
 	Phone,
 	RotateCcw,
@@ -13,6 +12,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { CompanyLogo } from "@/components/shared/CompanyLogo";
+import { MoveToMainButton } from "@/components/shared/MoveToMainButton";
 import { RowValueFilter } from "@/components/shared/RowValueFilter";
 import {
 	SEARCH_SOURCES,
@@ -31,6 +31,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ALLOWED_COMPANIES } from "@/domain/order/constants";
+import { useT } from "@/hooks/useT";
 import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef } from "@/types";
@@ -94,6 +95,7 @@ export const SearchToolbar = ({
 	onCompanyFilterChange,
 	onCompanyFilterClear,
 }: SearchToolbarProps) => {
+	const { t } = useT();
 	const isReserveDisabled = selectedCount === 0;
 	const isStageActionDisabled = selectedCount === 0 || !isSameSource;
 
@@ -202,33 +204,23 @@ export const SearchToolbar = ({
 				</Tooltip>
 
 				{canMoveToMain && (
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon"
-								aria-label="Move to Main Sheet"
-								className={cn(
-									"h-8 w-8 transition-colors",
-									isMoveToMainEligible
-										? "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
-										: "text-gray-600 cursor-not-allowed opacity-50",
-								)}
-								disabled={selectedCount === 0 || !isMoveToMainEligible}
-								onClick={onMoveToMain}
-							>
-								<FileCheck className="h-4 w-4" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>
-							{!isSameSource && selectedCount > 0
+					<MoveToMainButton
+						onClick={onMoveToMain}
+						disabled={selectedCount === 0 || !isMoveToMainEligible}
+						iconClassName="h-4 w-4"
+						className={
+							isMoveToMainEligible
+								? undefined
+								: "text-gray-600 cursor-not-allowed opacity-50"
+						}
+						tooltip={
+							!isSameSource && selectedCount > 0
 								? disabledReason
 								: selectedCount > 0 && !isMoveToMainEligible
-									? "Only available from Call List, Booking, or Archive"
-									: "Move to Main Sheet"}
-						</TooltipContent>
-					</Tooltip>
+									? t("modals.moveToMain.notEligible")
+									: undefined
+						}
+					/>
 				)}
 
 				<Tooltip>

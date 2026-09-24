@@ -194,6 +194,17 @@ export const ar: Dictionary = {
 			moveToMainYes: "نعم",
 			moveToMainNo: "لا",
 		},
+		moveToMain: {
+			action: "النقل إلى Main Sheet",
+			notEligible: "متاح فقط للسطور من Call List أو Booking أو Archive",
+			permissionOff:
+				"النقل إلى Main Sheet متوقف في الإعدادات. لم يتم نقل أي سطر.",
+			success: "تم نقل {count} سطر إلى Main Sheet",
+			partial:
+				"تم نقل {moved} من {total} سطر إلى Main Sheet: تم تخطي {skipped} (تم تغييرها في مكان آخر)، وفشل {failed}. تبقى السطور المتبقية محددة.",
+			noneMoved: "لم يتم نقل أي سطر — ربما تم نقلها بالفعل من جلسة أخرى.",
+			failed: "فشل النقل إلى Main Sheet",
+		},
 		freeze: {
 			title: "تجميد السجل",
 			reasonLabel: "سبب التجميد",

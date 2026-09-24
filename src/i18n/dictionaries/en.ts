@@ -194,6 +194,19 @@ export const en = {
 			moveToMainYes: "Yes",
 			moveToMainNo: "No",
 		},
+		moveToMain: {
+			action: "Move to Main Sheet",
+			notEligible:
+				"Only available for lines from Call List, Booking, or Archive",
+			permissionOff:
+				"Move to Main Sheet is turned off in Settings. No lines were moved.",
+			success: "{count} line(s) moved to Main Sheet",
+			partial:
+				"Moved {moved} of {total} line(s) to Main Sheet: {skipped} skipped (changed elsewhere), {failed} failed. Remaining lines stay selected.",
+			noneMoved:
+				"No lines were moved — they may have already been moved by another session.",
+			failed: "Move to Main Sheet failed",
+		},
 		freeze: {
 			title: "Freeze Record",
 			reasonLabel: "Reason for Freezing",

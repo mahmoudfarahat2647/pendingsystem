@@ -7,10 +7,7 @@ import {
 	getGlobalSearchWorkspaceColumns,
 	type SearchHeaderCheckboxState,
 } from "@/components/shared/GridConfig";
-import {
-	MOVE_TO_MAIN_SOURCE_STAGES,
-	useSearchResultsActions,
-} from "@/components/shared/search/hooks/useSearchResultsActions";
+import { useSearchResultsActions } from "@/components/shared/search/hooks/useSearchResultsActions";
 import { useSearchResultsFilterChain } from "@/components/shared/search/hooks/useSearchResultsFilterChain";
 import { buildGlobalSearchString } from "@/components/shared/search/searchUtils";
 import type { OrderStage } from "@/domain/order/orderStage";
@@ -22,6 +19,7 @@ import { useReleaseGate } from "@/hooks/useReleaseGate";
 import { useRowModals } from "@/hooks/useRowModals";
 import { logger } from "@/lib/logger";
 import { normalizeOrderStage } from "@/lib/orderStage";
+import { getMoveToMainSourceStage } from "@/lib/orderStageTransitions";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
@@ -54,9 +52,7 @@ export const useSearchResultsState = () => {
 	const disabledReason = isSameSource ? "" : "Mixed sources selected";
 	const activeStage = selectedStages[0];
 	const isMoveToMainEligible =
-		isSameSource &&
-		!!activeStage &&
-		MOVE_TO_MAIN_SOURCE_STAGES.includes(activeStage);
+		getMoveToMainSourceStage(selectedStages) !== null;
 
 	// Modal State
 	const [showBookingModal, setShowBookingModal] = useState(false);
@@ -363,7 +359,6 @@ export const useSearchResultsState = () => {
 		setShowReorderModal,
 		reorderReason,
 		setReorderReason,
-		isMoveToMainEligible,
 		moveToMainPermission,
 		setShowMoveToMainModal,
 	});

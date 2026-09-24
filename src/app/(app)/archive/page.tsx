@@ -7,13 +7,13 @@ import type {
 } from "ag-grid-community";
 import { format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { ArchiveToolbar } from "@/components/archive/ArchiveToolbar";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
+import { MoveToMainConfirmDialog } from "@/components/shared/MoveToMainConfirmDialog";
 import { ReorderReasonDialog } from "@/components/shared/ReorderReasonDialog";
 import { RowModals } from "@/components/shared/RowModals";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
@@ -255,23 +255,11 @@ export default function ArchivePage() {
 				confirmText={t("modals.stageConfirm.permanentlyDelete")}
 			/>
 
-			<ConfirmDialog
+			<MoveToMainConfirmDialog
 				open={showMoveToMainConfirm}
 				onOpenChange={setShowMoveToMainConfirm}
-				onConfirm={() => {
-					if (!moveToMainPermission) {
-						toast.error("Move to Main Sheet permission was turned off.");
-						return;
-					}
-					handleConfirmMoveToMain();
-				}}
-				variant="success"
-				title={t("modals.stageConfirm.moveToMainTitle")}
-				description={t("modals.stageConfirm.moveToMainDescription", {
-					count: selectedRows.length,
-				})}
-				confirmText={t("modals.stageConfirm.moveToMainYes")}
-				cancelText={t("modals.stageConfirm.moveToMainNo")}
+				count={selectedRows.length}
+				onConfirm={handleConfirmMoveToMain}
 			/>
 		</div>
 	);

@@ -4,12 +4,12 @@ import {
 	Calendar,
 	CheckCircle,
 	Download,
-	FileCheck,
 	Filter,
 	RotateCcw,
 	Trash2,
 } from "lucide-react";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { MoveToMainButton } from "@/components/shared/MoveToMainButton";
 import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
 import { Button } from "@/components/ui/button";
@@ -179,20 +179,10 @@ export function ArchiveToolbar({
 				</Tooltip>
 
 				{canMoveToMain && onMoveToMain && (
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								size="icon"
-								variant="ghost"
-								className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 h-8 w-8"
-								onClick={onMoveToMain}
-								disabled={selectedRows.length === 0}
-							>
-								<FileCheck className="h-3.5 w-3.5" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>Move to Main Sheet</TooltipContent>
-					</Tooltip>
+					<MoveToMainButton
+						onClick={onMoveToMain}
+						disabled={selectedRows.length === 0}
+					/>
 				)}
 			</div>
 

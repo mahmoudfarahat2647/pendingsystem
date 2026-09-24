@@ -2,13 +2,13 @@
 
 import type { GridApi } from "ag-grid-community";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { BookingToolbar } from "@/components/booking/BookingToolbar";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getBookingColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
+import { MoveToMainConfirmDialog } from "@/components/shared/MoveToMainConfirmDialog";
 import { ReorderReasonDialog } from "@/components/shared/ReorderReasonDialog";
 import { RowModals } from "@/components/shared/RowModals";
 import {
@@ -295,23 +295,11 @@ export default function BookingPage() {
 				confirmText={t("modals.stageConfirm.delete")}
 			/>
 
-			<ConfirmDialog
+			<MoveToMainConfirmDialog
 				open={showMoveToMainConfirm}
 				onOpenChange={setShowMoveToMainConfirm}
-				onConfirm={() => {
-					if (!moveToMainPermission) {
-						toast.error("Move to Main Sheet permission was turned off.");
-						return;
-					}
-					handleConfirmMoveToMain();
-				}}
-				variant="success"
-				title={t("modals.stageConfirm.moveToMainTitle")}
-				description={t("modals.stageConfirm.moveToMainDescription", {
-					count: selectedRows.length,
-				})}
-				confirmText={t("modals.stageConfirm.moveToMainYes")}
-				cancelText={t("modals.stageConfirm.moveToMainNo")}
+				count={selectedRows.length}
+				onConfirm={handleConfirmMoveToMain}
 			/>
 		</div>
 	);

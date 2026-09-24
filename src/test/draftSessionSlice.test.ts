@@ -11,6 +11,7 @@ vi.mock("sonner", () => ({
 
 import type { OrderStage } from "@/domain/order/orderStage";
 import { ORDER_STAGES } from "@/lib/constants";
+import { buildMoveToMainCommands } from "@/lib/orderStageTransitions";
 import { getOrdersQueryKey } from "@/lib/queryClient";
 import type { DraftRecoverySnapshot } from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
@@ -279,6 +280,106 @@ describe("draftSessionSlice", () => {
 				status: "Recovered",
 			}),
 		]);
+	});
+
+	describe("Move to Main Sheet (#314)", () => {
+		const ARCHIVED_ID = "00000000-0000-4000-8000-000000000314";
+		const CALL_ID = "00000000-0000-4000-8000-000000000315";
+
+		const archivedRow = () =>
+			createRow(ARCHIVED_ID, "archive", {
+				status: "Archived",
+				archiveReason: "Customer no-show",
+				archivedAt: "2026-01-01T00:00:00.000Z",
+				bookingDate: "2026-02-01",
+				noteHistory: "existing note",
+			});
+
+		it("moves an archived row into main with the archive markers cleared, and undo/redo round-trips it", () => {
+			seedStageData({ archive: [archivedRow()] });
+
+			for (const cmd of buildMoveToMainCommands([archivedRow()], "archive")) {
+				expect(useAppStore.getState().applyCommand(cmd)).toBe(true);
+			}
+
+			const state = () => useAppStore.getState();
+			expect(state().getWorkingRows("archive")).toEqual([]);
+			expect(state().getWorkingRows("main")).toEqual([
+				expect.objectContaining({
+					id: ARCHIVED_ID,
+					stage: "main",
+					status: "Pending",
+					archiveReason: null,
+					archivedAt: null,
+					bookingDate: "2026-02-01",
+					attachmentLink: "https://example.com/spec-sheet",
+				}),
+			]);
+			expect(state().getWorkingRows("main")?.[0]?.noteHistory).toContain(
+				"existing note",
+			);
+
+			state().undoDraft();
+			expect(state().getWorkingRows("main")).toEqual([]);
+			expect(state().getWorkingRows("archive")).toEqual([
+				expect.objectContaining({ id: ARCHIVED_ID, status: "Archived" }),
+			]);
+
+			state().redoDraft();
+			expect(state().getWorkingRows("archive")).toEqual([]);
+			expect(state().getWorkingRows("main")).toEqual([
+				expect.objectContaining({ id: ARCHIVED_ID, status: "Pending" }),
+			]);
+		});
+
+		it("keeps business fields unchanged when moving from call", () => {
+			const row = createRow(CALL_ID, "call", { status: "Arrived" });
+			seedStageData({ call: [row] });
+
+			for (const cmd of buildMoveToMainCommands([row], "call")) {
+				useAppStore.getState().applyCommand(cmd);
+			}
+
+			expect(useAppStore.getState().getWorkingRows("main")).toEqual([
+				expect.objectContaining({
+					id: CALL_ID,
+					stage: "main",
+					status: "Arrived",
+					attachmentLink: row.attachmentLink,
+					partNumber: row.partNumber,
+				}),
+			]);
+		});
+
+		it("saveDraft persists the move through the guarded saveOrder with sourceStage and null archive markers", async () => {
+			seedStageData({ archive: [archivedRow()] });
+			for (const cmd of buildMoveToMainCommands([archivedRow()], "archive")) {
+				useAppStore.getState().applyCommand(cmd);
+			}
+
+			const saveOrder = vi.fn().mockResolvedValue({ id: ARCHIVED_ID });
+			const bulkUpdateStage = vi.fn().mockResolvedValue([]);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(saveOrder).toHaveBeenCalledTimes(1);
+			expect(saveOrder).toHaveBeenCalledWith(
+				expect.objectContaining({
+					id: ARCHIVED_ID,
+					stage: "main",
+					sourceStage: "archive",
+					updates: expect.objectContaining({
+						status: "Pending",
+						archiveReason: null,
+						archivedAt: null,
+					}),
+				}),
+			);
+			expect(bulkUpdateStage).not.toHaveBeenCalled();
+			expect(useAppStore.getState().draftSession.dirty).toBe(false);
+		});
 	});
 
 	describe("applyCommand — freeze reason guard (#196)", () => {
