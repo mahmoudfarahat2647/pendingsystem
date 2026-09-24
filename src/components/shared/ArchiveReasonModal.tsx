@@ -2,6 +2,7 @@
 
 import { Archive, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -17,6 +18,7 @@ import {
 	useQuickTemplatesQuery,
 	useRemoveQuickTemplateMutation,
 } from "@/hooks/queries/useQuickTemplatesQuery";
+import { useT } from "@/hooks/useT";
 
 interface ArchiveReasonModalProps {
 	open: boolean;
@@ -29,6 +31,7 @@ export const ArchiveReasonModal = ({
 	onOpenChange,
 	onSave,
 }: ArchiveReasonModalProps) => {
+	const { t, lang } = useT();
 	const { data: reasonTemplates = [] } = useQuickTemplatesQuery("reason");
 	const addMutation = useAddQuickTemplateMutation("reason");
 	const removeMutation = useRemoveQuickTemplateMutation("reason");
@@ -74,7 +77,9 @@ export const ArchiveReasonModal = ({
 						</div>
 					</div>
 					<DialogTitle className="text-lg font-medium text-red-400">
-						Archive Record
+						<LocalizedScope lang={lang}>
+							{t("modals.archive.title")}
+						</LocalizedScope>
 					</DialogTitle>
 					<div className="flex-1" />
 				</DialogHeader>
@@ -85,14 +90,16 @@ export const ArchiveReasonModal = ({
 							htmlFor="archive-reason"
 							className="text-xs font-semibold text-gray-400 uppercase tracking-wider"
 						>
-							Reason for Archiving
+							<LocalizedScope lang={lang}>
+								{t("modals.archive.reasonLabel")}
+							</LocalizedScope>
 						</label>
 						<div className="relative">
 							<Textarea
 								id="archive-reason"
 								value={reason}
 								onChange={(e) => setReason(e.target.value)}
-								placeholder="Please enter a reason for archiving this record..."
+								placeholder={t("modals.archive.reasonPlaceholder")}
 								className="min-h-[120px] bg-[#2c2c2e] border-white/10 text-gray-200 resize-none focus-visible:ring-1 focus-visible:ring-red-500/50 focus-visible:ring-offset-0 placeholder:text-gray-600"
 								maxLength={maxChars}
 							/>
@@ -101,7 +108,9 @@ export const ArchiveReasonModal = ({
 							</div>
 						</div>
 						<p className="text-[11px] text-gray-500 italic">
-							* Archiving will move this record to the archive history.
+							<LocalizedScope lang={lang}>
+								{t("modals.archive.hint")}
+							</LocalizedScope>
 						</p>
 					</div>
 
@@ -109,7 +118,9 @@ export const ArchiveReasonModal = ({
 					<div className="space-y-3">
 						<div className="flex items-center justify-between">
 							<h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-								QUICK TEMPLATES
+								<LocalizedScope lang={lang}>
+									{t("modals.shared.quickTemplates")}
+								</LocalizedScope>
 							</h4>
 							<Button
 								variant="ghost"
@@ -118,7 +129,9 @@ export const ArchiveReasonModal = ({
 								className="h-6 px-2 text-red-400 hover:text-red-400/80 hover:bg-red-400/10 text-[10px]"
 							>
 								<Plus className="h-3 w-3 mr-1" />
-								{isAdding ? "Cancel" : "Add New"}
+								<LocalizedScope lang={lang}>
+									{isAdding ? t("common.cancel") : t("common.addNew")}
+								</LocalizedScope>
 							</Button>
 						</div>
 
@@ -127,7 +140,7 @@ export const ArchiveReasonModal = ({
 								<Input
 									value={newTemplate}
 									onChange={(e) => setNewTemplate(e.target.value)}
-									placeholder="New template..."
+									placeholder={t("modals.shared.newTemplatePlaceholder")}
 									className="h-8 text-xs bg-[#2c2c2e] border-white/10 focus-visible:ring-red-500/50"
 									onKeyDown={(e) => e.key === "Enter" && handleAddTemplate()}
 								/>
@@ -136,7 +149,7 @@ export const ArchiveReasonModal = ({
 									onClick={handleAddTemplate}
 									className="h-8 bg-red-500 text-white hover:bg-red-600 px-3 text-xs"
 								>
-									Add
+									<LocalizedScope lang={lang}>{t("common.add")}</LocalizedScope>
 								</Button>
 							</div>
 						)}
@@ -177,14 +190,16 @@ export const ArchiveReasonModal = ({
 						onClick={() => onOpenChange(false)}
 						className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 w-full"
 					>
-						Cancel
+						<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 					</Button>
 					<Button
 						onClick={handleSave}
 						disabled={!reason.trim()}
 						className="bg-red-500 hover:bg-red-600 text-white font-medium w-full disabled:opacity-50 transition-all shadow-lg shadow-red-500/20"
 					>
-						Confirm Archive
+						<LocalizedScope lang={lang}>
+							{t("modals.archive.confirm")}
+						</LocalizedScope>
 					</Button>
 				</DialogFooter>
 			</DialogContent>

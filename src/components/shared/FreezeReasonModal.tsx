@@ -2,6 +2,7 @@
 
 import { Plus, Snowflake, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -17,6 +18,7 @@ import {
 	useQuickTemplatesQuery,
 	useRemoveQuickTemplateMutation,
 } from "@/hooks/queries/useQuickTemplatesQuery";
+import { useT } from "@/hooks/useT";
 
 interface FreezeReasonModalProps {
 	open: boolean;
@@ -29,6 +31,7 @@ export const FreezeReasonModal = ({
 	onOpenChange,
 	onSave,
 }: FreezeReasonModalProps) => {
+	const { t, lang } = useT();
 	const { data: reasonTemplates = [] } = useQuickTemplatesQuery("reason");
 	const addMutation = useAddQuickTemplateMutation("reason");
 	const removeMutation = useRemoveQuickTemplateMutation("reason");
@@ -74,7 +77,9 @@ export const FreezeReasonModal = ({
 						</div>
 					</div>
 					<DialogTitle className="text-lg font-medium text-sky-300">
-						Freeze Record
+						<LocalizedScope lang={lang}>
+							{t("modals.freeze.title")}
+						</LocalizedScope>
 					</DialogTitle>
 					<div className="flex-1" />
 				</DialogHeader>
@@ -85,14 +90,16 @@ export const FreezeReasonModal = ({
 							htmlFor="freeze-reason"
 							className="text-xs font-semibold text-gray-400 uppercase tracking-wider"
 						>
-							Reason for Freezing
+							<LocalizedScope lang={lang}>
+								{t("modals.freeze.reasonLabel")}
+							</LocalizedScope>
 						</label>
 						<div className="relative">
 							<Textarea
 								id="freeze-reason"
 								value={reason}
 								onChange={(e) => setReason(e.target.value)}
-								placeholder="Please enter a reason for freezing this record..."
+								placeholder={t("modals.freeze.reasonPlaceholder")}
 								className="min-h-[120px] bg-[#2c2c2e] border-white/10 text-gray-200 resize-none focus-visible:ring-1 focus-visible:ring-sky-500/50 focus-visible:ring-offset-0 placeholder:text-gray-600"
 								maxLength={maxChars}
 							/>
@@ -101,8 +108,9 @@ export const FreezeReasonModal = ({
 							</div>
 						</div>
 						<p className="text-[11px] text-gray-500 italic">
-							* Freezing will move this record to the freeze stage with its
-							previous stage recorded.
+							<LocalizedScope lang={lang}>
+								{t("modals.freeze.hint")}
+							</LocalizedScope>
 						</p>
 					</div>
 
@@ -110,7 +118,9 @@ export const FreezeReasonModal = ({
 					<div className="space-y-3">
 						<div className="flex items-center justify-between">
 							<h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-								QUICK TEMPLATES
+								<LocalizedScope lang={lang}>
+									{t("modals.shared.quickTemplates")}
+								</LocalizedScope>
 							</h4>
 							<Button
 								variant="ghost"
@@ -119,7 +129,9 @@ export const FreezeReasonModal = ({
 								className="h-6 px-2 text-sky-300 hover:text-sky-300/80 hover:bg-sky-400/10 text-[10px]"
 							>
 								<Plus className="h-3 w-3 mr-1" />
-								{isAdding ? "Cancel" : "Add New"}
+								<LocalizedScope lang={lang}>
+									{isAdding ? t("common.cancel") : t("common.addNew")}
+								</LocalizedScope>
 							</Button>
 						</div>
 
@@ -128,7 +140,7 @@ export const FreezeReasonModal = ({
 								<Input
 									value={newTemplate}
 									onChange={(e) => setNewTemplate(e.target.value)}
-									placeholder="New template..."
+									placeholder={t("modals.shared.newTemplatePlaceholder")}
 									className="h-8 text-xs bg-[#2c2c2e] border-white/10 focus-visible:ring-sky-500/50"
 									onKeyDown={(e) => e.key === "Enter" && handleAddTemplate()}
 								/>
@@ -137,7 +149,7 @@ export const FreezeReasonModal = ({
 									onClick={handleAddTemplate}
 									className="h-8 bg-sky-500 text-white hover:bg-sky-600 px-3 text-xs"
 								>
-									Add
+									<LocalizedScope lang={lang}>{t("common.add")}</LocalizedScope>
 								</Button>
 							</div>
 						)}
@@ -178,14 +190,16 @@ export const FreezeReasonModal = ({
 						onClick={() => onOpenChange(false)}
 						className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 w-full"
 					>
-						Cancel
+						<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 					</Button>
 					<Button
 						onClick={handleSave}
 						disabled={!reason.trim()}
 						className="bg-sky-500 hover:bg-sky-600 text-white font-medium w-full disabled:opacity-50 transition-all shadow-lg shadow-sky-500/20"
 					>
-						Confirm Freeze
+						<LocalizedScope lang={lang}>
+							{t("modals.freeze.confirm")}
+						</LocalizedScope>
 					</Button>
 				</DialogFooter>
 			</DialogContent>

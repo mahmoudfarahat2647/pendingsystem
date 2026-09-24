@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { type TranslationKey, useT } from "@/hooks/useT";
 import {
 	isAtAttachmentLimit,
 	isSupportedAttachmentFile,
@@ -59,6 +61,7 @@ export const EditAttachmentModal = ({
 	initialLink,
 	allowUpload = true,
 }: EditAttachmentModalProps) => {
+	const { t, lang } = useT();
 	// Working pill list — what will be passed to onSave
 	const [paths, setPaths] = useState<string[]>([]);
 	// Committed files the user removed — deleted from storage after successful save
@@ -70,7 +73,8 @@ export const EditAttachmentModal = ({
 	);
 	const [isDragging, setIsDragging] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	// Stored as a dictionary key so the inline message follows the language.
+	const [error, setError] = useState<TranslationKey | null>(null);
 	const [link, setLink] = useState("");
 	const [hasCopied, setHasCopied] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -110,11 +114,11 @@ export const EditAttachmentModal = ({
 				break;
 			}
 			if (!isSupportedAttachmentFile(file)) {
-				setError("Only JPG, PNG, and PDF files are supported.");
+				setError("modals.attachment.errorUnsupported");
 				continue;
 			}
 			if (!isValidFileSize(file)) {
-				setError("File size must be 5 MB or less.");
+				setError("modals.attachment.errorTooLarge");
 				continue;
 			}
 			setUploadingFileName(file.name);
@@ -219,7 +223,9 @@ export const EditAttachmentModal = ({
 								<Paperclip className="h-4 w-4 text-indigo-400" />
 							</div>
 							<DialogTitle className="text-base font-medium text-white">
-								Attachments
+								<LocalizedScope lang={lang}>
+									{t("modals.attachment.title")}
+								</LocalizedScope>
 							</DialogTitle>
 							<Badge
 								variant="secondary"
@@ -237,11 +243,13 @@ export const EditAttachmentModal = ({
 							className="h-8 w-8 rounded-full text-slate-500 hover:bg-white/10 hover:text-white"
 						>
 							<X className="h-4 w-4" />
-							<span className="sr-only">Close</span>
+							<span className="sr-only">{t("modals.attachment.close")}</span>
 						</Button>
 					</div>
 					<DialogDescription className="sr-only">
-						Attach up to 5 files (JPG, PNG, PDF) for this order.
+						<LocalizedScope lang={lang}>
+							{t("modals.attachment.srDescription")}
+						</LocalizedScope>
 					</DialogDescription>
 				</DialogHeader>
 
@@ -252,7 +260,9 @@ export const EditAttachmentModal = ({
 							htmlFor="external-link"
 							className="text-xs font-medium text-slate-400"
 						>
-							External Link
+							<LocalizedScope lang={lang}>
+								{t("modals.attachment.externalLink")}
+							</LocalizedScope>
 						</label>
 						<div className="relative flex items-center">
 							<input
@@ -268,7 +278,7 @@ export const EditAttachmentModal = ({
 										sanitizeAttachmentLink(e.clipboardData.getData("text")),
 									);
 								}}
-								placeholder="Paste local path or URL…"
+								placeholder={t("modals.attachment.linkPlaceholder")}
 								disabled={isSaving}
 								className="h-10 w-full rounded-lg border border-white/10 bg-black/20 pl-3 pr-16 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50"
 							/>
@@ -279,7 +289,7 @@ export const EditAttachmentModal = ({
 										onClick={() => setLink("")}
 										disabled={isSaving}
 										className="rounded-md p-1.5 text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-colors disabled:pointer-events-none"
-										title="Remove link"
+										title={t("modals.attachment.removeLink")}
 									>
 										<Trash2 className="h-3.5 w-3.5" />
 									</button>
@@ -299,7 +309,7 @@ export const EditAttachmentModal = ({
 									}}
 									disabled={!link || isSaving}
 									className="rounded-md p-1.5 text-slate-500 hover:bg-white/10 hover:text-white transition-colors disabled:pointer-events-none disabled:opacity-40"
-									title="Copy link"
+									title={t("modals.attachment.copyLink")}
 								>
 									{hasCopied ? (
 										<Check className="h-3.5 w-3.5 text-green-400" />
@@ -350,21 +360,31 @@ export const EditAttachmentModal = ({
 							)}
 						</div>
 						<p className="text-sm font-medium text-slate-300">
-							{isUploading
-								? `Uploading "${uploadingFileName}"…`
-								: atLimit
-									? "Limit reached"
-									: "Drop files or click to browse"}
+							<LocalizedScope lang={lang}>
+								{isUploading
+									? t("modals.attachment.uploading", {
+											name: String(uploadingFileName),
+										})
+									: atLimit
+										? t("modals.attachment.limitReached")
+										: t("modals.attachment.dropOrBrowse")}
+							</LocalizedScope>
 						</p>
 						{!atLimit && !isUploading && (
 							<p className="mt-1 text-xs text-slate-600">
-								JPG, PNG, PDF · max 5 MB each
+								<LocalizedScope lang={lang}>
+									{t("modals.attachment.fileHint")}
+								</LocalizedScope>
 							</p>
 						)}
 					</button>
 
 					{/* Error message */}
-					{error && <p className="text-xs text-red-400">{error}</p>}
+					{error && (
+						<p className="text-xs text-red-400">
+							<LocalizedScope lang={lang}>{t(error)}</LocalizedScope>
+						</p>
+					)}
 
 					{/* Pill list */}
 					{paths.length > 0 && (
@@ -401,7 +421,7 @@ export const EditAttachmentModal = ({
 						disabled={isSaving}
 						className="hidden sm:inline-flex h-10 px-4 text-sm font-medium text-slate-400 hover:text-white"
 					>
-						Cancel
+						<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 					</Button>
 					<Button
 						type="button"
@@ -412,10 +432,14 @@ export const EditAttachmentModal = ({
 						{isSaving ? (
 							<span className="flex items-center gap-2">
 								<LoaderCircle className="h-4 w-4 animate-spin" />
-								Saving…
+								<LocalizedScope lang={lang}>
+									{t("common.saving")}
+								</LocalizedScope>
 							</span>
 						) : (
-							"Save Changes"
+							<LocalizedScope lang={lang}>
+								{t("common.saveChanges")}
+							</LocalizedScope>
 						)}
 					</Button>
 				</DialogFooter>
@@ -431,6 +455,7 @@ interface FilePillProps {
 }
 
 function FilePill({ path, onRemove, disabled }: FilePillProps) {
+	const { t } = useT();
 	const name = getFileName(path);
 	const url = getPublicUrl(path);
 
@@ -444,10 +469,12 @@ function FilePill({ path, onRemove, disabled }: FilePillProps) {
 					onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
 					disabled={disabled}
 					className="shrink-0 rounded-full p-0.5 text-slate-500 hover:text-indigo-400 transition-colors disabled:pointer-events-none"
-					title="Open file"
+					title={t("modals.attachment.openFile")}
 				>
 					<ExternalLink className="h-3 w-3" />
-					<span className="sr-only">Open {name}</span>
+					<span className="sr-only">
+						{t("modals.attachment.openName", { name })}
+					</span>
 				</button>
 			)}
 			<button
@@ -455,10 +482,12 @@ function FilePill({ path, onRemove, disabled }: FilePillProps) {
 				onClick={() => onRemove(path)}
 				disabled={disabled}
 				className="shrink-0 rounded-full p-0.5 text-slate-500 hover:text-red-400 transition-colors disabled:pointer-events-none"
-				title="Remove"
+				title={t("modals.attachment.remove")}
 			>
 				<X className="h-3 w-3" />
-				<span className="sr-only">Remove {name}</span>
+				<span className="sr-only">
+					{t("modals.attachment.removeName", { name })}
+				</span>
 			</button>
 		</div>
 	);

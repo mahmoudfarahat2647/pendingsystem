@@ -19,6 +19,7 @@ import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
+import { useT } from "@/hooks/useT";
 import { trySelectRowsByVin } from "@/lib/ag-grid-helpers";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
@@ -27,6 +28,7 @@ import { useBookingModals } from "./useBookingModals";
 import { useBookingPageActions } from "./useBookingPageActions";
 
 export default function BookingPage() {
+	const { t } = useT();
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 
 	// Draft session for undo/redo
@@ -246,9 +248,9 @@ export default function BookingPage() {
 				onReasonChange={setReorderReason}
 				onCancel={closeReorder}
 				onConfirm={() => handleConfirmReorder(reorderReason, resetReorder)}
-				placeholder="e.g., Wrong part, Customer cancelled"
-				helperText="This will send the selected items back to the Orders view."
-				srDescription="Provide a reason why this order is being sent back for reordering."
+				placeholder={t("modals.reorder.placeholderWrongPart")}
+				helperText={t("modals.reorder.helperBackToOrders")}
+				srDescription={t("modals.reorder.srDescription")}
 			/>
 
 			<BookingCalendarModal
@@ -278,9 +280,11 @@ export default function BookingPage() {
 				onConfirm={async () => {
 					await handleConfirmDelete(closeDeleteConfirm);
 				}}
-				title="Delete Bookings"
-				description={`Are you sure you want to delete ${selectedRows.length} selected booking(s)?`}
-				confirmText="Delete"
+				title={t("modals.stageConfirm.bookingDeleteTitle")}
+				description={t("modals.stageConfirm.bookingDeleteDescription", {
+					count: selectedRows.length,
+				})}
+				confirmText={t("modals.stageConfirm.delete")}
 			/>
 		</div>
 	);

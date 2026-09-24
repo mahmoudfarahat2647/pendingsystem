@@ -87,6 +87,18 @@ A chassis-level safety gate in front of every route into **Call List** (issue `#
 - **Notifications**: new `release_followup` `AppNotification` type, one per normalized VIN, `managedKey = release_followup:{vin}:{dueISO}`. Reaches `notificationSlice.checkNotifications` via `ordersQueryAdapter.getReleaseFollowUps()` (store never touches React Query directly). The dropdown's `X` — and "Clear All" — snooze a `release_followup` notification another two months instead of permanently dismissing it; every other notification type keeps its existing dismiss behavior. Click-through reuses `resolveNotificationStage`.
 - Migration: `supabase/migrations/20260920_add_release_follow_ups.sql` (applied directly to the live project).
 
+### Arabic (AR) Language (i18n)
+
+Epic `#300`, delivered in five waves (`#301` foundation, `#302` Sidebar, `#303` Notifications, `#304` Settings, `#305` action modals). Arabic is a **text-only** translation: the page layout stays LTR and pixel-identical in both languages.
+
+- **Dictionaries**: `src/i18n/dictionaries/en.ts` is the source of truth (namespaces `common`, `sidebar`, `notifications`, `settings`, `modals`); `ar.ts` is typed as `Dictionary`, so a missing/extra key fails `type-check`, and `src/test/i18n/dictionaries.parity.test.ts` enforces key parity at runtime.
+- **Lookup**: `translate(lang, key, params)` (`src/lib/i18n/translate.ts`) — pure, `{param}` interpolation, English fallback. Components use `useT()` (`src/hooks/useT.ts`) → `{ t, lang, dir }`. The language lives in the persisted Zustand `language` field (`uiSlice`, default `"en"`), switched by the EN|AR `LanguageToggle` in the Settings header.
+- **Scoping**: wrap translated **leaf text** in `LocalizedScope` (adds `lang="ar" dir="rtl"` + the IBM Plex Sans Arabic `font-arabic` class in AR). Never wrap flex/grid layout containers; `<html>` stays `lang="en"` with no global `dir`. Attributes (`placeholder`, `title`, `aria-label`) just take `t(...)`.
+- **Rules**: stage names stay English inside Arabic text (e.g. "إفراج إلى Call List"); user content (notes, reasons, reminder subjects, quick-template text, links, file names, VINs) is never translated; toasts stay English; Western digits.
+- **Action modals (Wave 5)**: `ConfirmDialog` (default Confirm/Cancel + every page caller's title/description/confirmText), `FreezeReasonModal`, `ArchiveReasonModal`, `ReorderReasonDialog` (+ callers' placeholder/helper text), `ReleaseConfirmationModal`, `UnfreezeMoveDialog`, `DuplicateOrderWarningModal`, `EditNoteModal`, `EditReminderModal`, `EditAttachmentModal`. Guards are untouched: the release word stays `release` (`RELEASE_CONFIRMATION_WORD`), ConfirmDialog's type-to-confirm word (`yes` on Commit) stays English, and the freeze/archive/reorder reason requirement is unchanged. `EditAttachmentModal` stores its inline validation error as a `TranslationKey` so it follows a language switch. AR render tests: `src/test/i18n/actionModals.i18n.test.tsx`.
+- **Not translated** (out of epic scope): grids, page toolbars, Header, search, booking calendars, order form.
+- Full doc: `docs/features/i18n.md`.
+
 ### App Shell
 `src/app/layout.tsx` -> `src/app/(app)/layout.tsx` -> `AppShell` (Sidebar + Header + error boundary). All application routes live under `src/app/(app)/`.
 

@@ -2,6 +2,7 @@
 
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -31,6 +32,7 @@ import {
 	useQuickTemplatesQuery,
 	useRemoveQuickTemplateMutation,
 } from "@/hooks/queries/useQuickTemplatesQuery";
+import { useT } from "@/hooks/useT";
 
 interface EditNoteModalProps {
 	open: boolean;
@@ -52,6 +54,7 @@ export const EditNoteModal = ({
 	stage,
 	sourceTag,
 }: EditNoteModalProps) => {
+	const { t, lang } = useT();
 	const { data: noteTemplates = [] } = useQuickTemplatesQuery("note", stage);
 	const addMutation = useAddQuickTemplateMutation("note", stage);
 	const removeMutation = useRemoveQuickTemplateMutation("note", stage);
@@ -101,9 +104,15 @@ export const EditNoteModal = ({
 			<DialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden">
 				<DialogHeader className="px-6 py-4 flex flex-row items-center justify-between border-b border-white/5 space-y-0 relative">
 					<div className="flex-1 flex justify-start"></div>
-					<DialogTitle className="text-lg font-medium">Notes</DialogTitle>
+					<DialogTitle className="text-lg font-medium">
+						<LocalizedScope lang={lang}>
+							{t("modals.note.title")}
+						</LocalizedScope>
+					</DialogTitle>
 					<DialogDescription className="sr-only">
-						Add, edit, or remove notes for this row.
+						<LocalizedScope lang={lang}>
+							{t("modals.note.srDescription")}
+						</LocalizedScope>
 					</DialogDescription>
 					<div className="flex-1" />
 				</DialogHeader>
@@ -114,7 +123,9 @@ export const EditNoteModal = ({
 						<div className="space-y-2">
 							<div className="flex items-center justify-between">
 								<h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
-									EXISTING NOTES
+									<LocalizedScope lang={lang}>
+										{t("modals.note.existingNotes")}
+									</LocalizedScope>
 								</h4>
 								{isHistoryLocked && content && (
 									<AlertDialog>
@@ -123,7 +134,7 @@ export const EditNoteModal = ({
 												variant="ghost"
 												size="icon"
 												className="h-6 w-6 text-gray-500 hover:text-renault-yellow hover:bg-renault-yellow/10"
-												title="Edit History"
+												title={t("modals.note.editHistory")}
 											>
 												<Pencil className="h-3 w-3" />
 											</Button>
@@ -131,22 +142,29 @@ export const EditNoteModal = ({
 										<AlertDialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-sm">
 											<AlertDialogHeader>
 												<AlertDialogTitle className="text-sm">
-													Edit existing notes?
+													<LocalizedScope lang={lang}>
+														{t("modals.note.editHistoryTitle")}
+													</LocalizedScope>
 												</AlertDialogTitle>
 												<AlertDialogDescription className="text-xs text-gray-400">
-													History should normally be append-only. Are you sure
-													you want to directly edit the past notes?
+													<LocalizedScope lang={lang}>
+														{t("modals.note.editHistoryDescription")}
+													</LocalizedScope>
 												</AlertDialogDescription>
 											</AlertDialogHeader>
 											<AlertDialogFooter>
 												<AlertDialogCancel className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border-none text-xs">
-													No
+													<LocalizedScope lang={lang}>
+														{t("modals.note.no")}
+													</LocalizedScope>
 												</AlertDialogCancel>
 												<AlertDialogAction
 													onClick={() => setIsHistoryLocked(false)}
 													className="bg-renault-yellow text-black hover:bg-renault-yellow/90 text-xs font-bold"
 												>
-													Yes, Unlock
+													<LocalizedScope lang={lang}>
+														{t("modals.note.yesUnlock")}
+													</LocalizedScope>
 												</AlertDialogAction>
 											</AlertDialogFooter>
 										</AlertDialogContent>
@@ -158,7 +176,7 @@ export const EditNoteModal = ({
 									value={content}
 									onChange={(e) => setContent(e.target.value)}
 									readOnly={isHistoryLocked}
-									placeholder="No notes yet..."
+									placeholder={t("modals.note.emptyPlaceholder")}
 									className={`min-h-[100px] border-white/5 text-xs resize-none focus-visible:ring-0 focus-visible:ring-offset-0 scrollbar-thin ${isHistoryLocked ? "bg-transparent text-gray-400 focus-visible:ring-0" : "bg-[#2c2c2e] text-gray-100 focus-visible:ring-1 focus-visible:ring-renault-yellow"}`}
 								/>
 							</div>
@@ -167,18 +185,24 @@ export const EditNoteModal = ({
 						{/* New Note Section */}
 						<div className="space-y-2">
 							<h4 className="text-[10px] font-bold text-renault-yellow uppercase tracking-[0.2em]">
-								ADD NEW NOTE
+								<LocalizedScope lang={lang}>
+									{t("modals.note.addNewNote")}
+								</LocalizedScope>
 							</h4>
 							<div className="relative">
 								<Textarea
 									value={newNote}
 									onChange={(e) => setNewNote(e.target.value)}
-									placeholder={`Type a note for #${sourceTag}...`}
+									placeholder={t("modals.note.newNotePlaceholder", {
+										tag: String(sourceTag),
+									})}
 									className="min-h-[80px] bg-[#2c2c2e] border-white/10 text-gray-100 text-sm resize-none focus-visible:ring-1 focus-visible:ring-renault-yellow focus-visible:ring-offset-0"
 									autoFocus
 								/>
 								<div className="absolute bottom-2 right-2 text-[10px] text-gray-500 font-mono">
-									Auto-tags with #{sourceTag}
+									<LocalizedScope lang={lang}>
+										{t("modals.note.autoTags", { tag: String(sourceTag) })}
+									</LocalizedScope>
 								</div>
 							</div>
 						</div>
@@ -187,7 +211,9 @@ export const EditNoteModal = ({
 						<div className="space-y-3">
 							<div className="flex items-center justify-between">
 								<h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
-									QUICK TEMPLATES
+									<LocalizedScope lang={lang}>
+										{t("modals.shared.quickTemplates")}
+									</LocalizedScope>
 								</h4>
 								{templatesEnabled && (
 									<Button
@@ -197,15 +223,20 @@ export const EditNoteModal = ({
 										className="h-6 px-2 text-renault-yellow hover:text-renault-yellow/80 hover:bg-renault-yellow/10 text-[10px] font-bold"
 									>
 										<Plus className="h-3 w-3 mr-1" />
-										{isAdding ? "CANCEL" : "ADD NEW"}
+										<LocalizedScope lang={lang}>
+											{isAdding
+												? t("modals.note.cancelTemplate")
+												: t("modals.note.addNewTemplate")}
+										</LocalizedScope>
 									</Button>
 								)}
 							</div>
 
 							{!templatesEnabled && (
 								<p className="text-[11px] text-gray-500 italic">
-									Quick templates are unavailable because this record's stage
-									could not be determined.
+									<LocalizedScope lang={lang}>
+										{t("modals.note.templatesUnavailable")}
+									</LocalizedScope>
 								</p>
 							)}
 
@@ -214,7 +245,7 @@ export const EditNoteModal = ({
 									<Input
 										value={newTemplate}
 										onChange={(e) => setNewTemplate(e.target.value)}
-										placeholder="Template text..."
+										placeholder={t("modals.note.templatePlaceholder")}
 										className="h-8 text-xs bg-[#2c2c2e] border-white/10"
 										onKeyDown={(e) => e.key === "Enter" && handleAddTemplate()}
 									/>
@@ -223,7 +254,9 @@ export const EditNoteModal = ({
 										onClick={handleAddTemplate}
 										className="h-8 bg-renault-yellow text-black hover:bg-renault-yellow/90 text-[10px] font-bold"
 									>
-										ADD
+										<LocalizedScope lang={lang}>
+											{t("modals.note.addTemplate")}
+										</LocalizedScope>
 									</Button>
 								</div>
 							)}
@@ -265,13 +298,15 @@ export const EditNoteModal = ({
 						onClick={() => onOpenChange(false)}
 						className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 w-full text-xs font-bold"
 					>
-						CANCEL
+						<LocalizedScope lang={lang}>
+							{t("modals.note.cancel")}
+						</LocalizedScope>
 					</Button>
 					<Button
 						onClick={handleSave}
 						className="bg-renault-yellow hover:bg-renault-yellow/90 text-black font-bold w-full text-xs"
 					>
-						SAVE NOTES
+						<LocalizedScope lang={lang}>{t("modals.note.save")}</LocalizedScope>
 					</Button>
 				</DialogFooter>
 			</DialogContent>
