@@ -43,7 +43,7 @@ export function MoveToMainButton({
 					variant="ghost"
 					aria-label={label}
 					className={cn(
-						"text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 h-8 w-8",
+						"text-emerald-500/80 hover:text-emerald-500 h-8 w-8",
 						className,
 					)}
 					disabled={disabled}

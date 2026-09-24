@@ -208,11 +208,12 @@ export const SearchToolbar = ({
 						onClick={onMoveToMain}
 						disabled={selectedCount === 0 || !isMoveToMainEligible}
 						iconClassName="h-4 w-4"
-						className={
+						className={cn(
+							"transition-colors",
 							isMoveToMainEligible
-								? undefined
-								: "text-gray-600 cursor-not-allowed opacity-50"
-						}
+								? "hover:bg-emerald-500/10"
+								: "text-gray-600 cursor-not-allowed opacity-50",
+						)}
 						tooltip={
 							!isSameSource && selectedCount > 0
 								? disabledReason
