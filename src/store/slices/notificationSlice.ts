@@ -136,6 +136,14 @@ export const createNotificationSlice: StateCreator<
 
 					currentlyDueReminders.push({
 						type: "reminder",
+						titleKey: "notifications.reminderTitle",
+						descriptionKey: "notifications.reminderDescription",
+						params: {
+							date: row.reminder.date,
+							time: row.reminder.time || "",
+							customer: row.customerName,
+							subject: row.reminder.subject,
+						},
 						title: "Reminder Due",
 						description: `Due: ${row.reminder.date} ${row.reminder.time || ""} - ${row.customerName}: ${row.reminder.subject}`,
 						referenceId: row.id,
@@ -161,6 +169,12 @@ export const createNotificationSlice: StateCreator<
 
 						currentlyDueWarranties.push({
 							type: "warranty",
+							titleKey: "notifications.warrantyTitle",
+							descriptionKey: "notifications.warrantyDescription",
+							params: {
+								days: daysRemaining,
+								date: row.endWarranty,
+							},
 							title: "Warranty Expiring",
 							description: `Warranty expires in ${daysRemaining} days (${row.endWarranty})`,
 							referenceId: row.id,
@@ -198,6 +212,12 @@ export const createNotificationSlice: StateCreator<
 
 					currentlyDueFollowUps.push({
 						type: "booking_followup",
+						titleKey: "notifications.bookingFollowUpTitle",
+						descriptionKey: "notifications.bookingFollowUpDescription",
+						params: {
+							customer: row.customerName,
+							vin: row.vin,
+						},
 						title: "Booking Follow-up",
 						description: `${row.customerName} — VIN ${row.vin}`,
 						referenceId: row.id,
@@ -250,9 +270,23 @@ export const createNotificationSlice: StateCreator<
 			const managedKey = `cntr_rdg_warning:${row.id}:${level}`;
 			activeManagedKeys.add(managedKey);
 
+			const titleKey =
+				level === "high"
+					? ("notifications.cntrWarningHighTitle" as const)
+					: ("notifications.cntrWarningEarlyTitle" as const);
+			const descriptionKey = "notifications.cntrWarningDescription" as const;
+			const params = {
+				customer: row.customerName,
+				km: row.cntrRdg.toLocaleString(),
+				vin: row.vin,
+			};
+
 			currentlyDueCntrWarnings.push({
 				type: "cntr_rdg_warning",
 				cntrRdgLevel: level,
+				titleKey,
+				descriptionKey,
+				params,
 				title:
 					level === "high"
 						? "High Risk: CNTR RDG Warning"
@@ -298,6 +332,11 @@ export const createNotificationSlice: StateCreator<
 
 			currentlyDueReleaseFollowUps.push({
 				type: "release_followup",
+				titleKey: "notifications.releaseFollowUpTitle",
+				descriptionKey: "notifications.releaseFollowUpDescription",
+				params: {
+					vin: followUp.vin,
+				},
 				title: "Release Follow-up Due",
 				description: `Warranty chassis VIN ${followUp.vin} may now be past 5,000 km — re-confirm release before moving to Call List.`,
 				// Never fall back to the VIN string here: `referenceId` is
@@ -362,6 +401,9 @@ export const createNotificationSlice: StateCreator<
 						}
 						newNotifications.push({
 							...existing,
+							titleKey: due.titleKey ?? existing.titleKey,
+							descriptionKey: due.descriptionKey ?? existing.descriptionKey,
+							params: due.params ?? existing.params,
 							path: due.path,
 							tabName: due.tabName,
 						});

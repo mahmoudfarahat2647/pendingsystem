@@ -5,9 +5,11 @@ import { Bell, Hash, MapPin, TableProperties, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { computeReleaseFollowUpDueDate } from "@/domain/order/releaseGate";
 import { useUpsertReleaseFollowUpMutation } from "@/hooks/queries/useReleaseFollowUpsQuery";
+import { useT } from "@/hooks/useT";
 import { ORDER_STAGES } from "@/lib/constants";
 import { ORDER_STAGE_TAB_INFO } from "@/lib/orderStage";
 import { cn } from "@/lib/utils";
@@ -77,6 +79,7 @@ export function resolveNotificationStage(
 
 export const NotificationsDropdown = () => {
 	const router = useRouter();
+	const { t, lang } = useT();
 	const [showNotifications, setShowNotifications] = useState(false);
 
 	const notifications = useAppStore((state) => state.notifications);
@@ -175,7 +178,7 @@ export const NotificationsDropdown = () => {
 						? "bg-white/10 text-white border-white/20"
 						: "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10",
 				)}
-				title="Notifications"
+				title={t("notifications.title")}
 			>
 				<motion.div
 					animate={
@@ -215,7 +218,7 @@ export const NotificationsDropdown = () => {
 					<>
 						<button
 							type="button"
-							aria-label="Close notifications"
+							aria-label={t("notifications.close")}
 							tabIndex={0}
 							className="fixed inset-0 z-40"
 							onClick={() => setShowNotifications(false)}
@@ -232,14 +235,20 @@ export const NotificationsDropdown = () => {
 							className="absolute right-0 mt-3 w-80 bg-[#0c0c0e] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
 						>
 							<div className="p-4 border-b border-white/5 flex items-center justify-between">
-								<h3 className="text-sm font-bold text-white">Notifications</h3>
+								<h3 className="text-sm font-bold text-white">
+									<LocalizedScope lang={lang}>
+										{t("notifications.title")}
+									</LocalizedScope>
+								</h3>
 								{notifications.length > 0 && (
 									<button
 										type="button"
 										onClick={dismissAllNotifications}
 										className="text-[10px] text-gray-500 hover:text-white uppercase font-bold transition-colors"
 									>
-										Clear All
+										<LocalizedScope lang={lang}>
+											{t("notifications.clearAll")}
+										</LocalizedScope>
 									</button>
 								)}
 							</div>
@@ -247,7 +256,9 @@ export const NotificationsDropdown = () => {
 								{notifications.length === 0 ? (
 									<div className="p-8 text-center">
 										<p className="text-xs text-gray-500">
-											No notifications yet
+											<LocalizedScope lang={lang}>
+												{t("notifications.empty")}
+											</LocalizedScope>
 										</p>
 									</div>
 								) : (
@@ -284,7 +295,11 @@ export const NotificationsDropdown = () => {
 													<div className="flex-1 space-y-2">
 														<div className="flex items-center justify-between pr-6">
 															<span className="text-[10px] font-bold text-white uppercase tracking-wider group-hover:text-indigo-400 transition-colors">
-																{n.title}
+																<LocalizedScope lang={lang}>
+																	{n.titleKey
+																		? t(n.titleKey, n.params)
+																		: (n.title ?? "")}
+																</LocalizedScope>
 															</span>
 															<span className="text-[9px] text-gray-600 font-mono">
 																{new Date(n.timestamp).toLocaleTimeString([], {
@@ -294,7 +309,11 @@ export const NotificationsDropdown = () => {
 															</span>
 														</div>
 														<p className="text-xs text-gray-400 leading-relaxed font-medium">
-															{n.description}
+															<LocalizedScope lang={lang}>
+																{n.descriptionKey
+																	? t(n.descriptionKey, n.params)
+																	: (n.description ?? "")}
+															</LocalizedScope>
 														</p>
 
 														<div className="flex flex-wrap gap-2 pt-1">
@@ -328,8 +347,8 @@ export const NotificationsDropdown = () => {
 													className="absolute top-2 right-2 p-1.5 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-white/5"
 													title={
 														n.type === "release_followup"
-															? "Snooze for two months"
-															: "Remove notification"
+															? t("notifications.snoozeTwoMonths")
+															: t("notifications.remove")
 													}
 												>
 													<X className="h-3.5 w-3.5" />

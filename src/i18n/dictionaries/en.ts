@@ -33,7 +33,26 @@ export const en = {
 			". Navigating to another tab will discard your changes.",
 		discardAndContinue: "Discard & Continue",
 	},
-	notifications: {},
+	notifications: {
+		title: "Notifications",
+		clearAll: "Clear All",
+		empty: "No notifications yet",
+		close: "Close notifications",
+		snoozeTwoMonths: "Snooze for two months",
+		remove: "Remove notification",
+		reminderTitle: "Reminder Due",
+		reminderDescription: "Due: {date} {time} - {customer}: {subject}",
+		warrantyTitle: "Warranty Expiring",
+		warrantyDescription: "Warranty expires in {days} days ({date})",
+		bookingFollowUpTitle: "Booking Follow-up",
+		bookingFollowUpDescription: "{customer} — VIN {vin}",
+		cntrWarningHighTitle: "High Risk: CNTR RDG Warning",
+		cntrWarningEarlyTitle: "Early Warning: CNTR RDG",
+		cntrWarningDescription: "{customer} — {km} KM (VIN: {vin})",
+		releaseFollowUpTitle: "Release Follow-up Due",
+		releaseFollowUpDescription:
+			"Warranty chassis VIN {vin} may now be past 5,000 km — re-confirm release before moving to Call List.",
+	},
 	settings: {
 		language: {
 			label: "Language",

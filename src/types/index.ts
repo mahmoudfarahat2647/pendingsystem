@@ -1,3 +1,4 @@
+import type { TranslationKey, TranslationParams } from "@/lib/i18n/translate";
 import type { PartEntry, PendingRow } from "@/schemas/order.schema";
 
 export type { PartEntry, PendingRow };
@@ -57,8 +58,11 @@ export interface AppNotification {
 		| "booking_followup"
 		| "cntr_rdg_warning"
 		| "release_followup";
-	title: string;
-	description: string;
+	title?: string;
+	description?: string;
+	titleKey?: TranslationKey;
+	descriptionKey?: TranslationKey;
+	params?: TranslationParams;
 	timestamp: string;
 	isRead: boolean;
 	referenceId: string; // ID of the row it relates to
