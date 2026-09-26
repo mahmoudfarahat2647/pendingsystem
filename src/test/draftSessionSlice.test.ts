@@ -1020,7 +1020,7 @@ describe("draftSessionSlice", () => {
 			);
 		});
 
-		it("clears the checkpoint entirely when the failing command was the last pending command", async () => {
+		it("keeps the persisted-prefix checkpoint when the failing command was the last pending command, so the next save does not replay it", async () => {
 			const REAL_UUID = "dddddddd-eeee-4fff-8000-000000000002";
 			const TEMP_ID = "temp-dddd-eeee-ffff-0000-000000000002";
 
@@ -1059,8 +1059,24 @@ describe("draftSessionSlice", () => {
 			const state = useAppStore.getState().draftSession;
 			expect(state.pendingCommands).toHaveLength(1);
 			expect(state.pendingCommands[0]).toMatchObject({ type: "createRows" });
-			expect(state.saveCheckpoint).toBeNull();
+			// The createRows command already persisted; the checkpoint must keep
+			// pointing past it rather than resetting to 0 (which would replay it).
+			expect(state.saveCheckpoint).toEqual({
+				nextIndex: 1,
+				idMapEntries: [[TEMP_ID, REAL_UUID]],
+			});
 			expect(state.dirty).toBe(true);
+
+			// Retry: nothing is re-executed; the save just finalizes the session.
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(saveOrder).toHaveBeenCalledTimes(2);
+			const afterRetry = useAppStore.getState().draftSession;
+			expect(afterRetry.dirty).toBe(false);
+			expect(afterRetry.pendingCommands).toHaveLength(0);
+			expect(afterRetry.saveCheckpoint).toBeNull();
 		});
 
 		it("is a no-op when there is no active saveCheckpoint", () => {
@@ -1131,8 +1147,22 @@ describe("draftSessionSlice", () => {
 			const afterSkip = useAppStore.getState().draftSession;
 			expect(afterSkip.pendingCommands).toHaveLength(1);
 			expect((afterSkip.pendingCommands[0] as { id: string }).id).toBe(rowA.id);
-			expect(afterSkip.saveCheckpoint).toBeNull(); // was last pending command
+			// rowA already persisted, so the checkpoint stays past it even though
+			// the skipped command was the last pending one.
+			expect(afterSkip.saveCheckpoint).toEqual({
+				nextIndex: 1,
+				idMapEntries: [],
+			});
 			expect(afterSkip.saveBlockedIndex).toBeNull();
+
+			// Retry must not re-apply rowA's patch (it could overwrite a newer edit).
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(saveOrder).toHaveBeenCalledTimes(2);
+			expect(useAppStore.getState().draftSession.dirty).toBe(false);
+			expect(useAppStore.getState().draftSession.saveCheckpoint).toBeNull();
 		});
 	});
 });

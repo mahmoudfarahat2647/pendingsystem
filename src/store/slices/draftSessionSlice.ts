@@ -584,13 +584,17 @@ export const createDraftSessionSlice: StateCreator<
 									idMapEntries: checkpoint.idMapEntries,
 								};
 				} else {
+					// Keep the checkpoint whenever commands before targetIndex already
+					// persisted — even if the skipped command was the last one — so the
+					// next save resumes past them instead of replaying from index 0.
 					const hasRemaining = targetIndex < pendingCommands.length;
-					nextCheckpoint = hasRemaining
-						? {
-								nextIndex: targetIndex,
-								idMapEntries: checkpoint.idMapEntries,
-							}
-						: null;
+					nextCheckpoint =
+						hasRemaining || targetIndex > 0
+							? {
+									nextIndex: targetIndex,
+									idMapEntries: checkpoint.idMapEntries,
+								}
+							: null;
 				}
 
 				return {
