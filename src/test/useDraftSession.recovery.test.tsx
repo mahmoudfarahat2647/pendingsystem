@@ -1,7 +1,11 @@
 import { render } from "@testing-library/react";
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { DraftRecoverySnapshot } from "@/store/slices/draftSessionSlice";
+import { ReleaseGateContext } from "@/hooks/useReleaseGate";
+import type {
+	DraftCommand,
+	DraftRecoverySnapshot,
+} from "@/store/slices/draftSessionSlice";
 
 const toastMocks = vi.hoisted(() => ({
 	custom: vi.fn(),
@@ -31,11 +35,16 @@ const storeMocks = vi.hoisted(() => {
 				isActive: false,
 				dirty: false,
 				saving: false,
-				saveError: null,
-				past: [],
-				future: [],
-				pendingCommands: [],
+				saveError: null as string | null,
+				past: [] as DraftCommand[],
+				future: [] as DraftCommand[],
+				pendingCommands: [] as DraftCommand[],
 				workspaceId: "workspace-under-test",
+				saveCheckpoint: null as {
+					nextIndex: number;
+					idMapEntries: [string, string][];
+				} | null,
+				saveBlockedIndex: null as number | null,
 			},
 			applyCommand: vi.fn(),
 			undoDraft: vi.fn(),
@@ -52,10 +61,12 @@ const storeMocks = vi.hoisted(() => {
 	};
 });
 
-vi.mock("@/store/useStore", () => ({
-	useAppStore: (selector: (state: typeof storeMocks.state) => unknown) =>
-		selector(storeMocks.state),
-}));
+vi.mock("@/store/useStore", () => {
+	const mockStore = (selector: (state: typeof storeMocks.state) => unknown) =>
+		selector(storeMocks.state);
+	mockStore.getState = () => storeMocks.state;
+	return { useAppStore: mockStore };
+});
 
 const adapterMocks = vi.hoisted(() => ({
 	isStageLoaded: vi.fn().mockReturnValue(true),
@@ -172,5 +183,77 @@ describe("useDraftSession recovery toast", () => {
 
 		expect(toastMocks.custom).not.toHaveBeenCalled();
 		expect(localStorage.getItem("pending-sys-draft-v1")).toBeNull();
+	});
+
+	it("does not clear release follow-ups when preflight fails before persisting commands (Issue #317)", async () => {
+		const clearFollowUpsForVins = vi.fn();
+		const vin1 = "VF1RFA00000000001";
+		storeMocks.state.draftSession = {
+			...storeMocks.state.draftSession,
+			isActive: true,
+			dirty: true,
+			saveError: null,
+			saveCheckpoint: null,
+			saveBlockedIndex: null,
+			pendingCommands: [
+				{
+					type: "moveRows",
+					ids: ["row-1"],
+					sourceStage: "main",
+					destinationStage: "call",
+					releaseAuthorization: {
+						fingerprint: "fp1",
+						vins: [vin1],
+						grantedAt: Date.now(),
+					},
+				},
+				{
+					type: "moveRows",
+					ids: ["row-2"],
+					sourceStage: "main",
+					destinationStage: "call",
+					releaseAuthorization: {
+						fingerprint: "stale-fp",
+						vins: ["VF1RFA00000000002"],
+						grantedAt: Date.now(),
+					},
+				},
+			],
+		};
+
+		storeMocks.state.saveDraft = vi.fn().mockImplementation(async () => {
+			storeMocks.state.draftSession = {
+				...storeMocks.state.draftSession,
+				saveError: "Release authorization became stale before save...",
+				saveCheckpoint: { nextIndex: 0, idMapEntries: [] },
+				saveBlockedIndex: 1,
+			};
+		});
+
+		vi.resetModules();
+		const { useDraftSession } = await import("@/hooks/useDraftSession");
+		let capturedSaveDraft: (() => Promise<void>) | undefined;
+		function HarnessComponent() {
+			const { saveDraft } = useDraftSession("orders");
+			capturedSaveDraft = saveDraft;
+			return null;
+		}
+
+		render(
+			<ReleaseGateContext.Provider
+				value={{
+					requestCallRelease: vi.fn(),
+					clearFollowUpsForVins,
+				}}
+			>
+				<HarnessComponent />
+			</ReleaseGateContext.Provider>,
+		);
+
+		await act(async () => {
+			await capturedSaveDraft?.();
+		});
+
+		expect(clearFollowUpsForVins).not.toHaveBeenCalled();
 	});
 });

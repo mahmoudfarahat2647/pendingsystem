@@ -96,6 +96,7 @@ export interface DraftSession {
 		nextIndex: number;
 		idMapEntries: [string, string][];
 	} | null;
+	saveBlockedIndex: number | null;
 }
 
 export interface DraftRecoverySnapshot {
