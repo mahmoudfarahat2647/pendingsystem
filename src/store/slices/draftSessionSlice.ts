@@ -106,6 +106,7 @@ export const createDraftSessionSlice: StateCreator<
 		lastTouchedAt: null,
 		workspaceId: getOrCreateWorkspaceId(),
 		saveCheckpoint: null,
+		saveBlockedIndex: null,
 	};
 
 	return {
@@ -395,6 +396,7 @@ export const createDraftSessionSlice: StateCreator<
 					derivedRowsRevision: allocateDerivedRowsRevision(),
 					dirty: state.draftSession.pendingCommands.length > 1,
 					saveCheckpoint: null,
+					saveBlockedIndex: null,
 				},
 			}));
 
@@ -416,6 +418,7 @@ export const createDraftSessionSlice: StateCreator<
 					derivedRowsRevision: allocateDerivedRowsRevision(),
 					dirty: true,
 					saveCheckpoint: null,
+					saveBlockedIndex: null,
 				},
 			}));
 
@@ -436,7 +439,12 @@ export const createDraftSessionSlice: StateCreator<
 			if (state.dirty === false || state.saving) return;
 
 			set((state) => ({
-				draftSession: { ...state.draftSession, saving: true, saveError: null },
+				draftSession: {
+					...state.draftSession,
+					saving: true,
+					saveError: null,
+					saveBlockedIndex: null,
+				},
 			}));
 
 			const savedCheckpoint = state.saveCheckpoint;
@@ -445,6 +453,7 @@ export const createDraftSessionSlice: StateCreator<
 			);
 			const startIndex = savedCheckpoint?.nextIndex ?? 0;
 			let currentIndex = startIndex;
+			let preflightFailedIndex: number | null = null;
 
 			try {
 				// Re-check every not-yet-persisted Call move against the draft's
@@ -462,7 +471,7 @@ export const createDraftSessionSlice: StateCreator<
 							finalRowsById,
 						)
 					) {
-						currentIndex = i;
+						preflightFailedIndex = i;
 						throw new Error(
 							"Release authorization became stale before save. Retry the Call List move and type release again.",
 						);
@@ -505,26 +514,42 @@ export const createDraftSessionSlice: StateCreator<
 				get()._clearRecovery();
 			} catch (error) {
 				const message = error instanceof Error ? error.message : "Save failed";
-				set((state) => ({
-					draftSession: {
-						...state.draftSession,
-						saving: false,
-						saveError: message,
-						saveCheckpoint: state.draftSession.saveCheckpoint ?? {
-							nextIndex: currentIndex,
-							idMapEntries: [...idMap.entries()],
+				const isPreflightFailure = preflightFailedIndex !== null;
+				const blockedIndex = isPreflightFailure
+					? preflightFailedIndex
+					: currentIndex;
+
+				set((state) => {
+					const checkpoint = isPreflightFailure
+						? (state.draftSession.saveCheckpoint ?? {
+								nextIndex: startIndex,
+								idMapEntries: [...idMap.entries()],
+							})
+						: (state.draftSession.saveCheckpoint ?? {
+								nextIndex: currentIndex,
+								idMapEntries: [...idMap.entries()],
+							});
+
+					return {
+						draftSession: {
+							...state.draftSession,
+							saving: false,
+							saveError: message,
+							saveCheckpoint: checkpoint,
+							saveBlockedIndex: blockedIndex,
 						},
-					},
-				}));
+					};
+				});
 				// Keep all draft state intact for retry
 			}
 		},
 
 		// Removes only the single pending command that saveDraft() is currently stuck on
-		// (the one at saveCheckpoint.nextIndex — e.g. a command with a permanent validation
-		// error that will never succeed on retry), leaving the rest of the draft
-		// (past, future, and every other pending command) untouched. Use discardDraft()
-		// instead if the whole draft should be thrown away.
+		// (the one at saveBlockedIndex, falling back to saveCheckpoint.nextIndex — e.g. a
+		// command with a permanent validation error or stale preflight check that will never
+		// succeed on retry), leaving the rest of the draft (past, future, and every other
+		// pending command) untouched. Use discardDraft() instead if the whole draft should
+		// be thrown away.
 		skipFailedCommand: () => {
 			const state = get().draftSession;
 			const checkpoint = state.saveCheckpoint;
@@ -535,8 +560,8 @@ export const createDraftSessionSlice: StateCreator<
 				return;
 			}
 
-			const failingIndex = checkpoint.nextIndex;
-			if (failingIndex < 0 || failingIndex >= state.pendingCommands.length) {
+			const targetIndex = state.saveBlockedIndex ?? checkpoint.nextIndex;
+			if (targetIndex < 0 || targetIndex >= state.pendingCommands.length) {
 				logger.warn(
 					"skipFailedCommand: saveCheckpoint.nextIndex is out of range; ignoring.",
 				);
@@ -545,10 +570,32 @@ export const createDraftSessionSlice: StateCreator<
 
 			set((state) => {
 				const pendingCommands = [
-					...state.draftSession.pendingCommands.slice(0, failingIndex),
-					...state.draftSession.pendingCommands.slice(failingIndex + 1),
+					...state.draftSession.pendingCommands.slice(0, targetIndex),
+					...state.draftSession.pendingCommands.slice(targetIndex + 1),
 				];
-				const hasRemaining = failingIndex < pendingCommands.length;
+
+				let nextCheckpoint: typeof checkpoint | null;
+				if (targetIndex > checkpoint.nextIndex) {
+					nextCheckpoint =
+						checkpoint.nextIndex === 0 && checkpoint.idMapEntries.length === 0
+							? null
+							: {
+									nextIndex: checkpoint.nextIndex,
+									idMapEntries: checkpoint.idMapEntries,
+								};
+				} else {
+					// Keep the checkpoint whenever commands before targetIndex already
+					// persisted — even if the skipped command was the last one — so the
+					// next save resumes past them instead of replaying from index 0.
+					const hasRemaining = targetIndex < pendingCommands.length;
+					nextCheckpoint =
+						hasRemaining || targetIndex > 0
+							? {
+									nextIndex: targetIndex,
+									idMapEntries: checkpoint.idMapEntries,
+								}
+							: null;
+				}
 
 				return {
 					draftSession: {
@@ -558,12 +605,8 @@ export const createDraftSessionSlice: StateCreator<
 						saving: false,
 						saveError: null,
 						derivedRowsRevision: allocateDerivedRowsRevision(),
-						saveCheckpoint: hasRemaining
-							? {
-									nextIndex: failingIndex,
-									idMapEntries: checkpoint.idMapEntries,
-								}
-							: null,
+						saveCheckpoint: nextCheckpoint,
+						saveBlockedIndex: null,
 					},
 				};
 			});

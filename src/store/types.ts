@@ -15,7 +15,7 @@ import type {
 	DraftSession,
 } from "./slices/draftSessionCommands";
 
-export type { ReportSettings };
+export type { DraftSession, ReportSettings };
 
 export interface NotificationState {
 	notifications: AppNotification[];

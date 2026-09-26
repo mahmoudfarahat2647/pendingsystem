@@ -80,6 +80,7 @@ function resetDraftSession() {
 			lastTouchedAt: null,
 			workspaceId,
 			saveCheckpoint: null,
+			saveBlockedIndex: null,
 		},
 	});
 }
@@ -285,6 +286,172 @@ describe("release-gate draft guard (issue #242 §4)", () => {
 				1,
 			);
 			expect(useAppStore.getState().lastCommandError).toBeNull();
+		});
+	});
+
+	describe("Issue #317: failed release re-check must not skip earlier unsaved commands", () => {
+		it("REGRESSION: preflight failure leaves earlier commands unsaved, keeps saveCheckpoint.nextIndex at 0, sets saveBlockedIndex, and allows skip to preserve earlier commands", async () => {
+			const rowA = createRow("00000000-0000-4000-8000-0000000000a1", "main");
+			const rowB = createRow("00000000-0000-4000-8000-0000000000b2", "main");
+			const rowC = createRow("00000000-0000-4000-8000-0000000000c3", "main");
+			seedStageData({ main: [rowA, rowB, rowC] });
+
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: rowA.id,
+				sourceStage: "main",
+				destinationStage: "main",
+				updates: { status: "Done" },
+				previousValues: { status: "Pending" },
+			});
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: rowB.id,
+				sourceStage: "main",
+				destinationStage: "main",
+				updates: { status: "Done" },
+				previousValues: { status: "Pending" },
+			});
+
+			const staleAuth = {
+				fingerprint: "stale-fingerprint-mismatch",
+				vins: [rowC.vin],
+				grantedAt: Date.now(),
+			};
+			const currentSession = useAppStore.getState().draftSession;
+			useAppStore.setState({
+				draftSession: {
+					...currentSession,
+					pendingCommands: [
+						...currentSession.pendingCommands,
+						{
+							type: "moveRows",
+							ids: [rowC.id],
+							sourceStage: "main",
+							destinationStage: "call",
+							releaseAuthorization: staleAuth,
+						},
+					],
+				},
+			});
+
+			expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(
+				3,
+			);
+
+			const saveOrder = vi.fn().mockResolvedValue(undefined);
+			const bulkUpdateStage = vi.fn().mockResolvedValue(undefined);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(saveOrder).not.toHaveBeenCalled();
+			expect(bulkUpdateStage).not.toHaveBeenCalled();
+			expect(bulkDelete).not.toHaveBeenCalled();
+			expect(useAppStore.getState().draftSession.saveError).toMatch(/stale/i);
+
+			// Under the bug, saveCheckpoint.nextIndex was 2 and saveBlockedIndex was undefined
+			expect(
+				useAppStore.getState().draftSession.saveCheckpoint?.nextIndex,
+			).toBe(0);
+			expect(useAppStore.getState().draftSession.saveBlockedIndex).toBe(2);
+
+			useAppStore.getState().skipFailedCommand();
+
+			const afterSkip = useAppStore.getState().draftSession;
+			expect(afterSkip.pendingCommands).toHaveLength(2);
+			expect(afterSkip.pendingCommands[0]).toMatchObject({ id: rowA.id });
+			expect(afterSkip.pendingCommands[1]).toMatchObject({ id: rowB.id });
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(saveOrder).toHaveBeenCalledTimes(2);
+			expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(
+				0,
+			);
+			expect(useAppStore.getState().draftSession.dirty).toBe(false);
+		});
+
+		it("preflight failure when a checkpoint already exists keeps nextIndex unchanged and sets saveBlockedIndex", async () => {
+			const rowA = createRow("00000000-0000-4000-8000-0000000000a2", "main");
+			const rowB = createRow("00000000-0000-4000-8000-0000000000b3", "main");
+			const rowC = createRow("00000000-0000-4000-8000-0000000000c4", "main");
+			seedStageData({ main: [rowA, rowB, rowC] });
+
+			const staleAuth = {
+				fingerprint: "stale-fingerprint-mismatch",
+				vins: [rowC.vin],
+				grantedAt: Date.now(),
+			};
+
+			useAppStore.setState({
+				draftSession: {
+					...useAppStore.getState().draftSession,
+					isActive: true,
+					dirty: true,
+					// Simulate that command 0 already executed in a previous saveDraft run
+					saveCheckpoint: {
+						nextIndex: 1,
+						idMapEntries: [],
+					},
+					pendingCommands: [
+						{
+							type: "patchRow",
+							id: rowA.id,
+							sourceStage: "main",
+							destinationStage: "main",
+							updates: { status: "Done" },
+							previousValues: { status: "Pending" },
+						},
+						{
+							type: "patchRow",
+							id: rowB.id,
+							sourceStage: "main",
+							destinationStage: "main",
+							updates: { status: "Done" },
+							previousValues: { status: "Pending" },
+						},
+						{
+							type: "moveRows",
+							ids: [rowC.id],
+							sourceStage: "main",
+							destinationStage: "call",
+							releaseAuthorization: staleAuth,
+						},
+					],
+				},
+			});
+
+			const saveOrder = vi.fn().mockResolvedValue(undefined);
+			const bulkUpdateStage = vi.fn().mockResolvedValue(undefined);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			expect(saveOrder).not.toHaveBeenCalled();
+			expect(useAppStore.getState().draftSession.saveError).toMatch(/stale/i);
+			// nextIndex must remain 1 (unchanged)
+			expect(
+				useAppStore.getState().draftSession.saveCheckpoint?.nextIndex,
+			).toBe(1);
+			// saveBlockedIndex points at the stale command (index 2)
+			expect(useAppStore.getState().draftSession.saveBlockedIndex).toBe(2);
+
+			// When skipping, the stale command at index 2 is removed; checkpoint remains at nextIndex 1
+			useAppStore.getState().skipFailedCommand();
+
+			const afterSkip = useAppStore.getState().draftSession;
+			expect(afterSkip.pendingCommands).toHaveLength(2);
+			expect((afterSkip.pendingCommands[0] as { id: string }).id).toBe(rowA.id);
+			expect((afterSkip.pendingCommands[1] as { id: string }).id).toBe(rowB.id);
+			expect(afterSkip.saveCheckpoint?.nextIndex).toBe(1);
+			expect(afterSkip.saveBlockedIndex).toBeNull();
 		});
 	});
 });
