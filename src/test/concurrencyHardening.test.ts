@@ -90,6 +90,7 @@ function resetDraftSession() {
 			lastTouchedAt: null,
 			workspaceId,
 			saveCheckpoint: null,
+			saveBlockedIndex: null,
 		},
 	});
 }

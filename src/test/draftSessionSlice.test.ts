@@ -86,6 +86,7 @@ function resetDraftSession() {
 			lastTouchedAt: null,
 			workspaceId,
 			saveCheckpoint: null,
+			saveBlockedIndex: null,
 		},
 	});
 }
@@ -1084,6 +1085,54 @@ describe("draftSessionSlice", () => {
 			expect(useAppStore.getState().draftSession.pendingCommands).toHaveLength(
 				1,
 			);
+		});
+
+		it("execution failure sets saveBlockedIndex equal to saveCheckpoint.nextIndex, and skipFailedCommand yields same state as before", async () => {
+			const rowA = createRow("00000000-0000-4000-8000-0000000000a3", "orders");
+			const rowB = createRow("00000000-0000-4000-8000-0000000000b4", "orders");
+			seedStageData({ orders: [rowA, rowB] });
+
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: rowA.id,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates: { status: "Done" },
+				previousValues: { status: "Pending" },
+			});
+			useAppStore.getState().applyCommand({
+				type: "patchRow",
+				id: rowB.id,
+				sourceStage: "orders",
+				destinationStage: "orders",
+				updates: { status: "Done" },
+				previousValues: { status: "Pending" },
+			});
+
+			const saveOrder = vi
+				.fn()
+				.mockResolvedValueOnce(undefined) // rowA succeeds
+				.mockRejectedValueOnce(new Error("execution failure at rowB")); // rowB fails
+			const bulkUpdateStage = vi.fn().mockResolvedValue(undefined);
+			const bulkDelete = vi.fn().mockResolvedValue(undefined);
+
+			await useAppStore
+				.getState()
+				.saveDraft({ saveOrder, bulkUpdateStage, bulkDelete });
+
+			const state = useAppStore.getState().draftSession;
+			expect(state.saveError).toBe("execution failure at rowB");
+			expect(state.saveCheckpoint?.nextIndex).toBe(1);
+			expect(state.saveBlockedIndex).toBe(1);
+			expect(state.saveBlockedIndex).toBe(state.saveCheckpoint?.nextIndex);
+
+			useAppStore.getState().skipFailedCommand();
+
+			const afterSkip = useAppStore.getState().draftSession;
+			expect(afterSkip.pendingCommands).toHaveLength(1);
+			expect((afterSkip.pendingCommands[0] as { id: string }).id).toBe(rowA.id);
+			expect(afterSkip.saveCheckpoint).toBeNull(); // was last pending command
+			expect(afterSkip.saveBlockedIndex).toBeNull();
 		});
 	});
 });
