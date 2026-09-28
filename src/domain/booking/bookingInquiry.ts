@@ -1,3 +1,4 @@
+import { normalizeVin } from "@/domain/order/orderWorkflow";
 import type { PendingRow } from "@/types";
 
 /**
@@ -70,3 +71,55 @@ export const isBookedVehicleArchived = (
 	line: Pick<PendingRow, "vin" | "bookingDate">,
 ): boolean =>
 	!index.activeVehicles.has(bookedVehicleKey(line.vin, line.bookingDate));
+
+/**
+ * The local `yyyy-MM-dd` key for a given moment, in the caller's own timezone.
+ *
+ * This is the one "today" helper the header badge uses. `Intl`/`Date` local getters
+ * (not `toISOString`, which is UTC) keep it consistent with how Booking Dates are
+ * written across the app (see `useBookingCalendar`'s `parseLocalDate`).
+ */
+export const toLocalDateKey = (date: Date): string => {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
+};
+
+/**
+ * Counts how many distinct customers are booked on a given local date, among lines
+ * still in the `booking` stage.
+ *
+ * Counts a Booked Customer, not a Booked Vehicle (`bookedVehicleKey`): a customer with
+ * two vehicles booked the same day is two lines but one number the header cares about
+ * would still overcount if grouped by VIN+date alone, since the date is already fixed
+ * here — so grouping collapses to VIN. A blank VIN never merges with another blank VIN;
+ * each such line counts as its own customer, keyed by row id, so unrelated walk-ins
+ * with no VIN on file are never undercounted.
+ *
+ * Every status still counts: a line stays a "booked today" line for as long as it
+ * remains in the `booking` stage on this date, regardless of status text.
+ *
+ * `bookingDate` is expected as a leading `yyyy-MM-dd`; a value with a trailing
+ * timestamp (legacy data) still matches on its date portion. A value that doesn't
+ * start with a parseable date is skipped rather than mis-scored.
+ */
+export const countBookedCustomersOnDate = (
+	lines: readonly PendingRow[],
+	dateKey: string,
+): number => {
+	const customers = new Set<string>();
+
+	for (const line of lines) {
+		if (line.stage !== "booking") continue;
+		const bookingDateKey = line.bookingDate?.slice(0, 10);
+		if (!bookingDateKey || !/^\d{4}-\d{2}-\d{2}$/.test(bookingDateKey))
+			continue;
+		if (bookingDateKey !== dateKey) continue;
+
+		const vin = normalizeVin(line.vin || "");
+		customers.add(vin ? `vin:${vin}` : `id:${line.id}`);
+	}
+
+	return customers.size;
+};

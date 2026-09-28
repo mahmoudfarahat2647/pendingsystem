@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
 	bookedVehicleKey,
 	buildBookingActivityIndex,
+	countBookedCustomersOnDate,
 	isBookedVehicleArchived,
 	isBookingDateActive,
+	toLocalDateKey,
 } from "@/domain/booking/bookingInquiry";
 import type { PendingRow } from "@/types";
 
@@ -12,6 +14,16 @@ const line = (
 	bookingDate: string | undefined,
 	id = `${vin}-${bookingDate}`,
 ): PendingRow => ({ id, vin, bookingDate }) as PendingRow;
+
+const bookingLine = (
+	overrides: Partial<PendingRow> & { id: string },
+): PendingRow =>
+	({
+		vin: "",
+		bookingDate: undefined,
+		stage: "booking",
+		...overrides,
+	}) as PendingRow;
 
 describe("bookedVehicleKey", () => {
 	it("keys a Booked Vehicle by VIN and Booking Date together", () => {
@@ -109,5 +121,96 @@ describe("buildBookingActivityIndex", () => {
 
 		expect(index.activeDates.size).toBe(0);
 		expect(index.activeVehicles.size).toBe(0);
+	});
+});
+
+describe("toLocalDateKey", () => {
+	it("formats a local date as yyyy-MM-dd", () => {
+		expect(toLocalDateKey(new Date(2026, 8, 28))).toBe("2026-09-28");
+	});
+
+	it("pads single-digit months and days", () => {
+		expect(toLocalDateKey(new Date(2026, 0, 5))).toBe("2026-01-05");
+	});
+});
+
+describe("countBookedCustomersOnDate", () => {
+	const TODAY = "2026-09-28";
+
+	it("counts the same VIN with different case or spacing as one customer", () => {
+		const count = countBookedCustomersOnDate(
+			[
+				bookingLine({ id: "1", vin: " vin1 ", bookingDate: TODAY }),
+				bookingLine({ id: "2", vin: "VIN1", bookingDate: TODAY }),
+			],
+			TODAY,
+		);
+
+		expect(count).toBe(1);
+	});
+
+	it("counts two blank-VIN lines as two separate customers", () => {
+		const count = countBookedCustomersOnDate(
+			[
+				bookingLine({ id: "1", vin: "", bookingDate: TODAY }),
+				bookingLine({ id: "2", vin: "", bookingDate: TODAY }),
+			],
+			TODAY,
+		);
+
+		expect(count).toBe(2);
+	});
+
+	it("excludes lines on other dates", () => {
+		const count = countBookedCustomersOnDate(
+			[bookingLine({ id: "1", vin: "VIN1", bookingDate: "2026-09-27" })],
+			TODAY,
+		);
+
+		expect(count).toBe(0);
+	});
+
+	it("excludes lines not in the booking stage", () => {
+		const count = countBookedCustomersOnDate(
+			[
+				bookingLine({
+					id: "1",
+					vin: "VIN1",
+					bookingDate: TODAY,
+					stage: "archive",
+				}),
+			],
+			TODAY,
+		);
+
+		expect(count).toBe(0);
+	});
+
+	it("matches a legacy bookingDate carrying a trailing timestamp", () => {
+		const count = countBookedCustomersOnDate(
+			[
+				bookingLine({
+					id: "1",
+					vin: "VIN1",
+					bookingDate: `${TODAY}T10:00:00Z`,
+				}),
+			],
+			TODAY,
+		);
+
+		expect(count).toBe(1);
+	});
+
+	it("skips a malformed bookingDate rather than mis-scoring it", () => {
+		const count = countBookedCustomersOnDate(
+			[bookingLine({ id: "1", vin: "VIN1", bookingDate: "not-a-date" })],
+			TODAY,
+		);
+
+		expect(count).toBe(0);
+	});
+
+	it("returns 0 for an empty list", () => {
+		expect(countBookedCustomersOnDate([], TODAY)).toBe(0);
 	});
 });
