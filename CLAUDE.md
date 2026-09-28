@@ -313,6 +313,22 @@ After major changes, update this file (`CLAUDE.md`). Keep it up-to-date with the
 - For bug-review and adversarial review workflows: verify each finding is a real issue in the current codebase before proposing any fix. Do not propose fixes for unreachable code, dead paths, or already-compensated issues.
 - After any code edit, run `pnpm run type-check` and `pnpm run lint` on the changed files before declaring the task done. Both must pass cleanly.
 
+### Issue delivery workflow (spec → debate → delegate → debate review → merge)
+
+The standard flow for taking a GitHub issue to `main` (first used on `#332`):
+
+1. **Spec debate**: a read-only `/codex-delegate` pass over the issue. Give Codex the spec plus any gaps you already suspect, and have it confirm or refute each one with `file:line` evidence and look for more. Report the gaps. Change nothing yet.
+2. **Simplify**: the user trims the spec to what's essential. Move edge-case hardening into an explicit **Out of scope** section rather than dropping it silently. UI requests default to minimal and quiet (e.g. a thin muted accent, no fade or glow).
+3. **Update the issue**: rewrite the GitHub issue body with the simplified spec (`gh issue edit <n> --body-file <file>`).
+4. **Implement via a delegate** (`/implement` + `/agy-delegate` or `/codex-delegate`) on a feature branch, never on `main`. The orchestrator owns commits and checks the delegate's result against the brief. If the delegate stalls or times out, the orchestrator finishes the remaining work itself.
+5. **Debate review**: `debate-review --local --base main`. Main reviewer: Opus 5.5 (lane `review-main`). Debate reviewer: Codex on `gpt-6-sol` (lane `review-debate`). Mark new untracked files with `git add -N` first so the review sees them. Show the user the findings and the walkthrough **before** committing.
+6. **Fix, push, merge** (on the user's go-ahead): apply the agreed findings with a regression test, then run `lint` → `type-check` → `test` → `build`. Commit, push, and open a PR that closes the issue. Wait for the Vercel check, then `gh pr merge --squash --delete-branch`.
+
+Notes:
+- Headless `agy` refuses shell commands unless run with `--dangerously-skip-permissions`. Ask the user before every use.
+- `agy` can hang on its own long vitest run. Watch progress (`git status`, log age) and cap test runs, e.g. `timeout 900 pnpm exec vitest run`.
+- Without a `.env.local`, `pnpm run build` fails at "Invalid environment variables" before compiling. To check that the code compiles, build with `SKIP_ENV_VALIDATION=1` plus placeholder `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`. The Vercel preview check is the build with the real environment.
+
 ## Planning
 
 - Keep planning proportional to task complexity. For simple UI additions or single-file changes, skip brainstorming and implement directly.
