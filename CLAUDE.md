@@ -97,6 +97,15 @@ A "Move to Main Sheet" toolbar action on Call List, Booking, Archive, and Global
 - **Draft pages** (Call List, Booking, Archive): wired through each page's `use*PageActions.ts` → `applyCommand`, same as every other draft-session transition (Save persists via the guarded `saveOrder`; undo/redo round-trips).
 - **Global Search**: `getMoveToMainSourceStage(stages)` (`orderStageTransitions.ts`, over `MOVE_TO_MAIN_SOURCE_STAGES`) returns the shared eligible stage or `null` — Orders/Main/Freeze and mixed selections are excluded, and it is re-checked on confirm. Unlike the bulk-stage-only `useBulkUpdateOrderStageMutation`, it saves each row individually through the guarded `useSaveOrderMutation` (`sourceStage` as `expectedCurrentStage`, the existing compare-and-set check) so the note/status/archive-field updates persist together with the stage move. Rows whose live stage no longer matches are skipped without a write, a `null` save result (compare-and-set no-op) counts as skipped, and the toast reports actual moved/skipped/failed counts with unresolved rows left selected.
 
+### Rebook from Archive (issue `#332`)
+
+Booking a line from Archive (Archive toolbar → Booking, or Global Search booking of an archived line) keeps it in Booking, even when its warranty has expired.
+
+- **Flag**: `rebookedFromArchive` (nullable boolean in `orders.metadata`, no DDL). Every path into Booking sets it explicitly: `buildBookingCommands` sets `true` from `archive` and `null` from any other stage; Global Search booking sets `true` for an archived row, `null` for other non-Booking rows, and leaves it untouched for a row already in Booking; the Orders page booking handler and `buildUnfreezeCommands` set `null`. Same-stage Booking edits and `buildRebookingCommands` leave it untouched.
+- **Cleared on exit**: `buildArchivePayload`, `buildFreezePayload`, `buildReorderUpdates` and `buildMoveToMainUpdates` persist `rebookedFromArchive: null`. Global Search Booking → Call is a stage-only bulk write and does not clear it; that's harmless, because the skip rule requires `stage === "booking"` and every entry into Booking resets the flag.
+- **Sweep exemption**: `isProtectedRebook(row)` (`src/domain/order/warranty.ts`, `stage === "booking" && rebookedFromArchive === true`) is checked by both `useWarrantyExpiryMaintenance` and `warrantyMaintenanceService`. The expiry rule itself is shared as `isExpiredWarrantyRow(row)`.
+- **Booking tab only**: flagged rows get a thin muted left accent line (`rebooked-from-archive-row` in `globals.css`, applied through `DataGrid`'s optional `rowClassRules` prop). Flagged rows with an expired warranty also show a small muted "Warranty expired" tag in the BOOKING DATE cell (`BookingDateRenderer`). Booking Inquiry needs no change (ADR 0001).
+
 ### Arabic (AR) Language (i18n)
 
 Epic `#300`, delivered in five waves (`#301` foundation, `#302` Sidebar, `#303` Notifications, `#304` Settings, `#305` action modals). Arabic is a **text-only** translation: the page layout stays LTR and pixel-identical in both languages.

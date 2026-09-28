@@ -1685,6 +1685,7 @@ describe("SearchResultsView", () => {
 				bookingDate: "2026-03-20",
 				bookingNote: "Bulk booking note",
 				noteHistory: "Bulk booking note #booking",
+				rebookedFromArchive: null,
 			},
 			stage: "booking",
 			sourceStage: "main",
@@ -1695,6 +1696,7 @@ describe("SearchResultsView", () => {
 				bookingDate: "2026-03-20",
 				bookingNote: "Bulk booking note",
 				noteHistory: "Bulk booking note #booking",
+				rebookedFromArchive: null,
 			},
 			stage: "booking",
 			sourceStage: "main",
@@ -1705,6 +1707,50 @@ describe("SearchResultsView", () => {
 		await waitFor(() => {
 			expect(screen.queryByTestId("booking-modal")).not.toBeInTheDocument();
 		});
+	});
+
+	it("sets rebookedFromArchive when booking an archived row (#332)", async () => {
+		const archivedRow = createRow({
+			id: "archive-1",
+			stage: "archive",
+			sourceType: "Archive",
+		});
+		mocks.queryData.archive = [archivedRow];
+
+		renderView();
+		await openBookingModal([archivedRow]);
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("booking-modal-confirm"));
+		});
+		await waitFor(() => {
+			expect(mocks.saveMutateAsync).toHaveBeenCalledTimes(1);
+		});
+		expect(mocks.saveMutateAsync.mock.calls[0]?.[0].updates).toHaveProperty(
+			"rebookedFromArchive",
+			true,
+		);
+	});
+
+	it("does not touch rebookedFromArchive when rescheduling a row already in Booking (#332)", async () => {
+		const bookingRow = createRow({
+			id: "booking-1",
+			stage: "booking",
+			sourceType: "Booking",
+			rebookedFromArchive: true,
+		});
+		mocks.queryData.booking = [bookingRow];
+
+		renderView();
+		await openBookingModal([bookingRow]);
+		await act(async () => {
+			fireEvent.click(screen.getByTestId("booking-modal-confirm"));
+		});
+		await waitFor(() => {
+			expect(mocks.saveMutateAsync).toHaveBeenCalledTimes(1);
+		});
+		expect(mocks.saveMutateAsync.mock.calls[0]?.[0].updates).not.toHaveProperty(
+			"rebookedFromArchive",
+		);
 	});
 
 	it("blank status omits bookingStatus but writes noteHistory", async () => {

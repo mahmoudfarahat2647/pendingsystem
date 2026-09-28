@@ -13,6 +13,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 import { ActionCellRenderer } from "../grid/renderers/ActionCellRenderer";
+import { BookingDateRenderer } from "../grid/renderers/BookingDateRenderer";
 import { CntrRdgCellRenderer } from "../grid/renderers/CntrRdgCellRenderer";
 import { CompanyLogoRenderer } from "../grid/renderers/CompanyLogoRenderer";
 import { MobileCellRenderer } from "../grid/renderers/MobileCellRenderer";
@@ -251,6 +252,7 @@ export const getBookingColumns = (
 			field: "bookingDate",
 			width: 130,
 			cellStyle: { color: "#22c55e", fontWeight: 500 },
+			cellRenderer: BookingDateRenderer,
 			valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
 				if (!params.value) return "";
 				try {

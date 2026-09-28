@@ -11,7 +11,10 @@ vi.mock("sonner", () => ({
 
 import type { OrderStage } from "@/domain/order/orderStage";
 import { ORDER_STAGES } from "@/lib/constants";
-import { buildMoveToMainCommands } from "@/lib/orderStageTransitions";
+import {
+	buildBookingCommands,
+	buildMoveToMainCommands,
+} from "@/lib/orderStageTransitions";
 import { getOrdersQueryKey } from "@/lib/queryClient";
 import type { DraftRecoverySnapshot } from "@/store/slices/draftSessionSlice";
 import { useAppStore } from "@/store/useStore";
@@ -281,6 +284,47 @@ describe("draftSessionSlice", () => {
 				status: "Recovered",
 			}),
 		]);
+	});
+
+	describe("Rebook from Archive (#332)", () => {
+		const REBOOK_ID = "00000000-0000-4000-8000-000000000332";
+
+		it("sets rebookedFromArchive on archive→booking, and undo/redo round-trips it", () => {
+			const archived = createRow(REBOOK_ID, "archive", {
+				status: "Archived",
+				noteHistory: "existing note",
+			});
+			seedStageData({ archive: [archived] });
+
+			for (const cmd of buildBookingCommands(
+				[archived],
+				"archive",
+				"2026-10-01",
+				"rebook",
+			)) {
+				expect(useAppStore.getState().applyCommand(cmd)).toBe(true);
+			}
+
+			const state = () => useAppStore.getState();
+			expect(state().getWorkingRows("booking")).toEqual([
+				expect.objectContaining({
+					id: REBOOK_ID,
+					stage: "booking",
+					rebookedFromArchive: true,
+				}),
+			]);
+
+			state().undoDraft();
+			expect(state().getWorkingRows("booking")).toEqual([]);
+			expect(state().getWorkingRows("archive")?.[0]).not.toHaveProperty(
+				"rebookedFromArchive",
+			);
+
+			state().redoDraft();
+			expect(state().getWorkingRows("booking")).toEqual([
+				expect.objectContaining({ id: REBOOK_ID, rebookedFromArchive: true }),
+			]);
+		});
 	});
 
 	describe("Move to Main Sheet (#314)", () => {

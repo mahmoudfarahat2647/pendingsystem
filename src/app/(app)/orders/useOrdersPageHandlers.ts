@@ -327,6 +327,7 @@ export const useOrdersPageHandlers = () => {
 					bookingDate: date,
 					bookingNote: note,
 					noteHistory: newNoteHistory,
+					rebookedFromArchive: null,
 					...(status ? { bookingStatus: status } : {}),
 				},
 				previousValues: {
@@ -334,6 +335,7 @@ export const useOrdersPageHandlers = () => {
 					bookingNote: row.bookingNote,
 					bookingStatus: row.bookingStatus,
 					noteHistory: row.noteHistory,
+					rebookedFromArchive: row.rebookedFromArchive,
 				},
 			};
 		});

@@ -6,6 +6,7 @@ import type {
 	FirstDataRenderedEvent,
 	GridApi,
 	GridReadyEvent,
+	RowClassRules,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
@@ -36,6 +37,7 @@ export interface DataGridProps<T extends { id?: string; vin?: string }> {
 	showFloatingFilters?: boolean;
 	gridStateKey?: string;
 	stage?: string;
+	rowClassRules?: RowClassRules<T>;
 }
 
 function DataGridInner<T extends { id?: string; vin?: string }>({
@@ -53,6 +55,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	showFloatingFilters = false,
 	gridStateKey,
 	stage,
+	rowClassRules,
 }: DataGridProps<T>) {
 	const gridId = useId();
 	const rowIdMapRef = useRef(new WeakMap<object, string>());
@@ -381,6 +384,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				defaultColDef={memoizedDefaultColDef}
 				initialState={initialState}
 				getRowId={getRowId}
+				rowClassRules={rowClassRules}
 				// Event handlers
 				onGridReady={onGridReadyInternal}
 				onFirstDataRendered={onFirstDataRenderedInternal}

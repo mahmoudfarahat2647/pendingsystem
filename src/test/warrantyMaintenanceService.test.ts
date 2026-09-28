@@ -149,4 +149,38 @@ describe("warrantyMaintenanceService", () => {
 		expect(result).toEqual({ archived: 0, errors: 0 });
 		expect(mockSaveOrder).not.toHaveBeenCalled();
 	});
+
+	it("skips a flagged line in Booking but archives flagged lines elsewhere and unflagged Booking lines (#332)", async () => {
+		const protectedRow = makeWarrantyRow({
+			id: "rebooked",
+			stage: "booking",
+			rebookedFromArchive: true,
+		});
+		const unflaggedBooking = makeWarrantyRow({
+			id: "plain-booking",
+			stage: "booking",
+			rebookedFromArchive: null,
+		});
+		const flaggedInCall = makeWarrantyRow({
+			id: "flag-in-call",
+			stage: "call",
+			rebookedFromArchive: true,
+		});
+		mockFetchMappedOrdersByRepairSystem.mockImplementation(
+			async (stage: string) => {
+				if (stage === "booking") return [protectedRow, unflaggedBooking];
+				if (stage === "call") return [flaggedInCall];
+				return [];
+			},
+		);
+
+		const result = await warrantyMaintenanceService.archiveExpiredWarranties();
+
+		expect(result).toEqual({ archived: 2, errors: 0 });
+		const savedIds = mockSaveOrder.mock.calls.map(([arg]) => arg.id);
+		expect(savedIds).toEqual(
+			expect.arrayContaining(["plain-booking", "flag-in-call"]),
+		);
+		expect(savedIds).not.toContain("rebooked");
+	});
 });

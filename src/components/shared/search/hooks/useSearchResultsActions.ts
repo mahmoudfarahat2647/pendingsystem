@@ -149,6 +149,14 @@ export const useSearchResultsActions = ({
 									note,
 									"booking",
 								),
+								// Only set the flag on entry into Booking; rescheduling a
+								// row already in Booking must keep its rebook protection.
+								...(row.stage === "booking"
+									? {}
+									: {
+											rebookedFromArchive:
+												row.stage === "archive" ? true : null,
+										}),
 								...(status ? { bookingStatus: status } : {}),
 							},
 							stage: "booking",

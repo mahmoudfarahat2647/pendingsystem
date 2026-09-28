@@ -161,6 +161,16 @@
 	border-bottom-style: solid;
 }
 
+/* Rebooked from Archive accent line (Booking tab only) */
+.ag-row.rebooked-from-archive-row {
+	box-shadow: inset 2px 0 0 rgb(100 116 139 / 0.55);
+}
+
+.dark .ag-row.rebooked-from-archive-row,
+.ag-theme-alpine-dark .ag-row.rebooked-from-archive-row {
+	box-shadow: inset 2px 0 0 rgb(148 163 184 / 0.55);
+}
+
 /* Checkbox styling */
 .ag-theme-alpine-dark .ag-checkbox-input-wrapper {
 	width: 18px;
