@@ -87,15 +87,13 @@ export const toLocalDateKey = (date: Date): string => {
 };
 
 /**
- * Counts how many distinct customers are booked on a given local date, among lines
+ * Counts how many distinct Booked Vehicles fall on a given local date, among lines
  * still in the `booking` stage.
  *
- * Counts a Booked Customer, not a Booked Vehicle (`bookedVehicleKey`): a customer with
- * two vehicles booked the same day is two lines but one number the header cares about
- * would still overcount if grouped by VIN+date alone, since the date is already fixed
- * here — so grouping collapses to VIN. A blank VIN never merges with another blank VIN;
- * each such line counts as its own customer, keyed by row id, so unrelated walk-ins
- * with no VIN on file are never undercounted.
+ * Groups by normalized VIN, the same identity as `bookedVehicleKey` with the date
+ * already fixed: a customer with two vehicles booked the same day counts as two, not
+ * one. A blank VIN never merges with another blank VIN; each such line counts on its
+ * own, keyed by row id, so unrelated walk-ins with no VIN on file are never undercounted.
  *
  * Every status still counts: a line stays a "booked today" line for as long as it
  * remains in the `booking` stage on this date, regardless of status text.
@@ -104,11 +102,11 @@ export const toLocalDateKey = (date: Date): string => {
  * timestamp (legacy data) still matches on its date portion. A value that doesn't
  * start with a parseable date is skipped rather than mis-scored.
  */
-export const countBookedCustomersOnDate = (
+export const countBookedVehiclesOnDate = (
 	lines: readonly PendingRow[],
 	dateKey: string,
 ): number => {
-	const customers = new Set<string>();
+	const vehicles = new Set<string>();
 
 	for (const line of lines) {
 		if (line.stage !== "booking") continue;
@@ -118,8 +116,8 @@ export const countBookedCustomersOnDate = (
 		if (bookingDateKey !== dateKey) continue;
 
 		const vin = normalizeVin(line.vin || "");
-		customers.add(vin ? `vin:${vin}` : `id:${line.id}`);
+		vehicles.add(vin ? `vin:${vin}` : `id:${line.id}`);
 	}
 
-	return customers.size;
+	return vehicles.size;
 };

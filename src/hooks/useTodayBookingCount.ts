@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
-	countBookedCustomersOnDate,
+	countBookedVehiclesOnDate,
 	toLocalDateKey,
 } from "@/domain/booking/bookingInquiry";
 import { NOTIFICATION_CANDIDATES_QUERY_KEY } from "@/lib/queryClient";
@@ -12,7 +12,8 @@ import { fetchDueNotificationCandidates } from "@/services/notifications/notific
 const TODAY_KEY_CHECK_MS = 60_000;
 
 /**
- * How many customers are booked for today, for the header's Booking icon badge.
+ * How many distinct vehicles (by VIN) are booked for today, for the header's Booking
+ * icon badge. A customer with two vehicles booked the same day counts as two.
  *
  * Reads the same cached query the Header's notification poll already owns
  * (`NOTIFICATION_CANDIDATES_QUERY_KEY`) as a passive second observer: this hook does not
@@ -60,6 +61,6 @@ export function useTodayBookingCount(): number {
 
 	return useMemo(() => {
 		if (todayKey === null || query.data === undefined) return 0;
-		return countBookedCustomersOnDate(query.data, todayKey);
+		return countBookedVehiclesOnDate(query.data, todayKey);
 	}, [query.data, todayKey]);
 }

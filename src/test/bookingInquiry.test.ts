@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	bookedVehicleKey,
 	buildBookingActivityIndex,
-	countBookedCustomersOnDate,
+	countBookedVehiclesOnDate,
 	isBookedVehicleArchived,
 	isBookingDateActive,
 	toLocalDateKey,
@@ -134,11 +134,11 @@ describe("toLocalDateKey", () => {
 	});
 });
 
-describe("countBookedCustomersOnDate", () => {
+describe("countBookedVehiclesOnDate", () => {
 	const TODAY = "2026-09-28";
 
 	it("counts the same VIN with different case or spacing as one customer", () => {
-		const count = countBookedCustomersOnDate(
+		const count = countBookedVehiclesOnDate(
 			[
 				bookingLine({ id: "1", vin: " vin1 ", bookingDate: TODAY }),
 				bookingLine({ id: "2", vin: "VIN1", bookingDate: TODAY }),
@@ -150,7 +150,7 @@ describe("countBookedCustomersOnDate", () => {
 	});
 
 	it("counts two blank-VIN lines as two separate customers", () => {
-		const count = countBookedCustomersOnDate(
+		const count = countBookedVehiclesOnDate(
 			[
 				bookingLine({ id: "1", vin: "", bookingDate: TODAY }),
 				bookingLine({ id: "2", vin: "", bookingDate: TODAY }),
@@ -162,7 +162,7 @@ describe("countBookedCustomersOnDate", () => {
 	});
 
 	it("excludes lines on other dates", () => {
-		const count = countBookedCustomersOnDate(
+		const count = countBookedVehiclesOnDate(
 			[bookingLine({ id: "1", vin: "VIN1", bookingDate: "2026-09-27" })],
 			TODAY,
 		);
@@ -171,7 +171,7 @@ describe("countBookedCustomersOnDate", () => {
 	});
 
 	it("excludes lines not in the booking stage", () => {
-		const count = countBookedCustomersOnDate(
+		const count = countBookedVehiclesOnDate(
 			[
 				bookingLine({
 					id: "1",
@@ -187,7 +187,7 @@ describe("countBookedCustomersOnDate", () => {
 	});
 
 	it("matches a legacy bookingDate carrying a trailing timestamp", () => {
-		const count = countBookedCustomersOnDate(
+		const count = countBookedVehiclesOnDate(
 			[
 				bookingLine({
 					id: "1",
@@ -202,7 +202,7 @@ describe("countBookedCustomersOnDate", () => {
 	});
 
 	it("skips a malformed bookingDate rather than mis-scoring it", () => {
-		const count = countBookedCustomersOnDate(
+		const count = countBookedVehiclesOnDate(
 			[bookingLine({ id: "1", vin: "VIN1", bookingDate: "not-a-date" })],
 			TODAY,
 		);
@@ -211,6 +211,6 @@ describe("countBookedCustomersOnDate", () => {
 	});
 
 	it("returns 0 for an empty list", () => {
-		expect(countBookedCustomersOnDate([], TODAY)).toBe(0);
+		expect(countBookedVehiclesOnDate([], TODAY)).toBe(0);
 	});
 });

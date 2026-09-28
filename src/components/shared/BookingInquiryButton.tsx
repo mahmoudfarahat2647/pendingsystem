@@ -9,7 +9,7 @@ import { BookingInquiryModal } from "./BookingInquiryModal";
 /**
  * Header entry point for the Booking Inquiry.
  *
- * Carries a green count badge of today's booked customers, from `useTodayBookingCount`.
+ * Carries a green count badge of today's booked vehicles, from `useTodayBookingCount`.
  * That hook reads the Header's existing notification-candidate cache rather than issuing
  * its own query, so this button still adds no fetch of its own to every page load. The
  * modal itself is still mounted only while open — `useBookingCalendar` issues its stage
