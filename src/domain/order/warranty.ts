@@ -41,10 +41,37 @@ export function isWarrantyExpired(endWarranty: string): boolean {
 }
 
 export function getEffectiveEndWarranty(row: {
-	endWarranty: string;
-	startWarranty: string;
+	endWarranty?: string | null;
+	startWarranty?: string | null;
 }): string {
 	if (row.endWarranty) return row.endWarranty;
 	if (row.startWarranty) return calculateEndWarranty(row.startWarranty);
 	return "";
+}
+
+export const WARRANTY_REPAIR_SYSTEM = "ضمان";
+
+/**
+ * Returns true if a row is a warranty row (`repairSystem === "ضمان"`)
+ * and its effective warranty end date is past.
+ */
+export function isExpiredWarrantyRow(row: {
+	repairSystem?: string | null;
+	endWarranty?: string | null;
+	startWarranty?: string | null;
+}): boolean {
+	if (row.repairSystem !== WARRANTY_REPAIR_SYSTEM) return false;
+	const effectiveEnd = getEffectiveEndWarranty(row);
+	return Boolean(effectiveEnd && isWarrantyExpired(effectiveEnd));
+}
+
+/**
+ * Returns true if a row in the Booking stage is exempt from the warranty
+ * auto-archive sweep because it was rebooked from Archive.
+ */
+export function isProtectedRebook(row: {
+	stage?: string | null;
+	rebookedFromArchive?: boolean | null;
+}): boolean {
+	return row.stage === "booking" && row.rebookedFromArchive === true;
 }

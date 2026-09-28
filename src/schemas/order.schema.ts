@@ -158,6 +158,10 @@ const PendingRowBaseObject = z.object({
 	// the `previousStage` rollback-destination parameter of
 	// `orderRepository.updateOrdersStage`, which is unrelated.
 	previousStage: z.enum(ORDER_STAGE_VALUES).nullable().optional(),
+	// Exempts a row from the warranty auto-archive sweep while it remains in
+	// the Booking stage after being rebooked from Archive. Nullable so exit
+	// transitions can clear it by persisting `null`.
+	rebookedFromArchive: z.boolean().nullable().optional(),
 	reserved: z.boolean().optional(),
 	reservedAt: z.string().optional(),
 	sourceType: z.string().optional(),

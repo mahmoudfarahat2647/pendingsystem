@@ -163,4 +163,53 @@ describe("useWarrantyExpiryMaintenance", () => {
 		expect(mockFetchMappedOrders).toHaveBeenCalledTimes(4);
 		expect(mockFetchMappedOrders).not.toHaveBeenCalledWith("freeze");
 	});
+
+	it("skips an expired warranty line rebooked from Archive while it is in Booking (#332)", async () => {
+		const protectedRow = makeWarrantyRow({
+			id: "rebooked-1",
+			vin: "VINREBOOK",
+			rebookedFromArchive: true,
+		});
+		const normalRow = makeWarrantyRow({ id: "normal-1", vin: "VINNORMAL" });
+		// Rows come back without `stage` here; the hook must fall back to the
+		// stage being fetched so the skip rule still sees "booking".
+		mockFetchMappedOrders.mockImplementation(async (stage: string) =>
+			stage === "booking"
+				? [
+						{ ...protectedRow, stage: undefined },
+						{ ...normalRow, stage: undefined },
+					]
+				: [],
+		);
+
+		const { result } = renderHook(() => useWarrantyExpiryMaintenance());
+		await act(async () => {
+			await result.current.runMaintenance();
+		});
+
+		expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+		expect(mockMutateAsync).toHaveBeenCalledWith(
+			expect.objectContaining({ id: "normal-1", sourceStage: "booking" }),
+		);
+	});
+
+	it("still archives a flagged expired line once it is outside Booking (#332)", async () => {
+		const row = makeWarrantyRow({
+			id: "stale-flag",
+			stage: "call",
+			rebookedFromArchive: true,
+		});
+		mockFetchMappedOrders.mockImplementation(async (stage: string) =>
+			stage === "call" ? [row] : [],
+		);
+
+		const { result } = renderHook(() => useWarrantyExpiryMaintenance());
+		await act(async () => {
+			await result.current.runMaintenance();
+		});
+
+		expect(mockMutateAsync).toHaveBeenCalledWith(
+			expect.objectContaining({ id: "stale-flag", sourceStage: "call" }),
+		);
+	});
 });

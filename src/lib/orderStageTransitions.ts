@@ -116,6 +116,7 @@ export function buildReorderUpdates(
 	return {
 		noteHistory: newNoteHistory,
 		status: "Reorder",
+		rebookedFromArchive: null,
 		...attachmentUpdates,
 	};
 }
@@ -177,6 +178,7 @@ export function buildBookingCommands(
 				bookingDate: date,
 				bookingNote: note,
 				noteHistory: newNoteHistory,
+				rebookedFromArchive: sourceStage === "archive" ? true : null,
 				...(status ? { bookingStatus: status } : {}),
 			},
 			previousValues: {},
@@ -235,6 +237,7 @@ export function buildUnfreezeCommands(
 				previousStage: null,
 				freezeReason: null,
 				frozenAt: null,
+				rebookedFromArchive: null,
 			},
 			previousValues: {},
 		};
@@ -289,7 +292,7 @@ export function buildMoveToMainUpdates(
 	);
 
 	if (sourceStage !== "archive") {
-		return { noteHistory: newNoteHistory };
+		return { noteHistory: newNoteHistory, rebookedFromArchive: null };
 	}
 
 	newNoteHistory = appendPreviousValueNote(
@@ -304,6 +307,7 @@ export function buildMoveToMainUpdates(
 		status: "Pending",
 		archiveReason: null,
 		archivedAt: null,
+		rebookedFromArchive: null,
 	};
 }
 

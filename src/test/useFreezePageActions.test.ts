@@ -70,6 +70,7 @@ describe("useFreezePageActions", () => {
 				previousStage: null,
 				freezeReason: null,
 				frozenAt: null,
+				rebookedFromArchive: null,
 			},
 			previousValues: {},
 		});

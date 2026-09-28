@@ -28,5 +28,6 @@ export function buildArchivePayload(
 		archiveReason: reason,
 		archivedAt: new Date().toISOString(),
 		noteHistory,
+		rebookedFromArchive: null,
 	};
 }

@@ -48,5 +48,6 @@ export function buildFreezePayload(
 		freezeReason: reason,
 		frozenAt: new Date().toISOString(),
 		noteHistory,
+		rebookedFromArchive: null,
 	};
 }

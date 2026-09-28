@@ -1,6 +1,6 @@
 "use client";
 
-import type { GridApi } from "ag-grid-community";
+import type { GridApi, RowClassRules } from "ag-grid-community";
 import { useEffect, useMemo, useState } from "react";
 import { BookingToolbar } from "@/components/booking/BookingToolbar";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
@@ -160,6 +160,14 @@ export default function BookingPage() {
 		[partStatuses, handleNoteClick, handleReminderClick, handleAttachClick],
 	);
 
+	const rowClassRules = useMemo<RowClassRules<PendingRow>>(
+		() => ({
+			"rebooked-from-archive-row": (params) =>
+				params.data?.rebookedFromArchive === true,
+		}),
+		[],
+	);
+
 	return (
 		<div className="space-y-4 h-full flex flex-col">
 			<InfoLabel data={selectedRows[0] || null} />
@@ -221,6 +229,7 @@ export default function BookingPage() {
 					columnDefs={columns}
 					gridStateKey="booking"
 					stage="booking"
+					rowClassRules={rowClassRules}
 					readOnly={!gridEditPermission || draftSaving}
 					onSelectionChange={setSelectedRows}
 					onCellValueChanged={async (params) => {

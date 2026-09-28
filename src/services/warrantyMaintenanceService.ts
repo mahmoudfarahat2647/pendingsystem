@@ -1,7 +1,8 @@
 import type { OrderStage } from "@/domain/order/orderStage";
 import {
-	getEffectiveEndWarranty,
-	isWarrantyExpired,
+	isExpiredWarrantyRow,
+	isProtectedRebook,
+	WARRANTY_REPAIR_SYSTEM,
 } from "@/domain/order/warranty";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { logger } from "@/lib/logger";
@@ -9,14 +10,12 @@ import { orderService } from "@/services/orderService";
 import type { PendingRow } from "@/types";
 
 const ACTIVE_STAGES = ["orders", "main", "call", "booking"] as const;
-const WARRANTY_REPAIR_SYSTEM = "ضمان";
 const ARCHIVE_REASON = "انتهاء فترة الضمان";
 
-function findExpiredWarrantyRows(rows: PendingRow[]): PendingRow[] {
+export function findExpiredWarrantyRows(rows: PendingRow[]): PendingRow[] {
 	return rows.filter((row) => {
-		if (row.repairSystem !== WARRANTY_REPAIR_SYSTEM) return false;
-		const effectiveEnd = getEffectiveEndWarranty(row);
-		return effectiveEnd && isWarrantyExpired(effectiveEnd);
+		if (isProtectedRebook(row)) return false;
+		return isExpiredWarrantyRow(row);
 	});
 }
 
@@ -50,7 +49,13 @@ export const warrantyMaintenanceService = {
 			// terminal, frozen rows are paused. Neither may be auto-archived by
 			// background maintenance (freeze rows are not fetched via
 			// ACTIVE_STAGES today; this guard is defense-in-depth).
-			if (row.stage === "archive" || row.stage === "freeze") continue;
+			// Rebooked lines from archive are also exempt while in booking.
+			if (
+				row.stage === "archive" ||
+				row.stage === "freeze" ||
+				isProtectedRebook(row)
+			)
+				continue;
 			try {
 				const payload = buildArchivePayload(row, ARCHIVE_REASON);
 				await orderService.saveOrder({

@@ -3,8 +3,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef } from "react";
 import {
-	getEffectiveEndWarranty,
-	isWarrantyExpired,
+	isExpiredWarrantyRow,
+	isProtectedRebook,
 } from "@/domain/order/warranty";
 import { buildArchivePayload } from "@/lib/archivePayloadBuilder";
 import { logger } from "@/lib/logger";
@@ -20,24 +20,19 @@ import { useSaveOrderMutation } from "./queries/useSaveOrderMutation";
 // Run at most once per hour — prevents fetching all stages every 10-second tick.
 const MAINTENANCE_INTERVAL_MS = 60 * 60 * 1000;
 
-// The repair system value that identifies warranty rows.
-const WARRANTY_REPAIR_SYSTEM = "ضمان";
-
 const ACTIVE_STAGES = ["orders", "main", "call", "booking"] as const;
 
 /**
  * Groups rows by VIN. Only includes rows that are warranty rows with expired warranties.
  */
-function getExpiredWarrantyVinGroups(
+export function getExpiredWarrantyVinGroups(
 	rows: PendingRow[],
 ): Map<string, PendingRow[]> {
 	const groups = new Map<string, PendingRow[]>();
 
 	for (const row of rows) {
-		if (row.repairSystem !== WARRANTY_REPAIR_SYSTEM) continue;
-		const effectiveEnd = getEffectiveEndWarranty(row);
-		if (!effectiveEnd) continue;
-		if (!isWarrantyExpired(effectiveEnd)) continue;
+		if (isProtectedRebook(row)) continue;
+		if (!isExpiredWarrantyRow(row)) continue;
 
 		const vin = (row.vin || "").trim().toUpperCase() || "(blank)";
 		if (!groups.has(vin)) {
@@ -91,7 +86,10 @@ export function useWarrantyExpiryMaintenance() {
 		let allRows: PendingRow[] = [];
 		try {
 			const results = await Promise.all(
-				ACTIVE_STAGES.map((stage) => orderService.fetchMappedOrders(stage)),
+				ACTIVE_STAGES.map(async (stage) => {
+					const rows = await orderService.fetchMappedOrders(stage);
+					return rows.map((r) => (r.stage ? r : { ...r, stage }));
+				}),
 			);
 			allRows = results.flat();
 		} catch (error) {
