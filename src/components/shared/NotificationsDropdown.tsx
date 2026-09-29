@@ -179,30 +179,7 @@ export const NotificationsDropdown = () => {
 				className={headerIconButtonClass(showNotifications)}
 				title={t("notifications.title")}
 			>
-				<motion.div
-					animate={
-						unreadCount > 0
-							? {
-									scale: [1, 1.2, 1],
-									rotate: [0, -10, 10, -10, 10, 0],
-								}
-							: {}
-					}
-					transition={{
-						duration: 0.5,
-						repeat: unreadCount > 0 ? Infinity : 0,
-						repeatDelay: 2,
-					}}
-				>
-					<Bell
-						className={cn(
-							"h-5 w-5 transition-colors",
-							unreadCount > 0
-								? "text-renault-yellow drop-shadow-[0_0_8px_rgba(255,204,0,0.5)]"
-								: "text-gray-400",
-						)}
-					/>
-				</motion.div>
+				<Bell className="h-5 w-5" />
 				<HeaderCountBadge
 					count={unreadCount}
 					className="bg-red-500 hover:bg-red-500"
