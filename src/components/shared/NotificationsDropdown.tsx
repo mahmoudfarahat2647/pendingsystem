@@ -194,14 +194,7 @@ export const NotificationsDropdown = () => {
 						repeatDelay: 2,
 					}}
 				>
-					<Bell
-						className={cn(
-							"h-5 w-5 transition-colors",
-							unreadCount > 0
-								? "text-renault-yellow drop-shadow-[0_0_8px_rgba(255,204,0,0.5)]"
-								: "text-gray-400",
-						)}
-					/>
+					<Bell className="h-5 w-5 transition-colors" />
 				</motion.div>
 				<HeaderCountBadge
 					count={unreadCount}
