@@ -27,6 +27,7 @@ import { chromium } from "playwright";
 import {
 	FIXED_DATE_ISO,
 	MANIFEST_FILE,
+	MASK_SELECTORS,
 	SEARCH_TERM,
 	screenshotFileName,
 	VIEWPORTS,
@@ -54,6 +55,7 @@ async function takeShot(page, outPath) {
 		path: outPath,
 		animations: "disabled",
 		caret: "hide",
+		mask: MASK_SELECTORS.map((selector) => page.locator(selector)),
 	});
 }
 
@@ -134,6 +136,21 @@ async function installMocks(context) {
 	});
 }
 
+/**
+ * Navigate to a view, retrying once when the dev server aborts the load
+ * (an in-flight client navigation from the previous view can cancel it).
+ */
+async function gotoView(page, view) {
+	const url = `${BASE_URL}${view.path}`;
+	try {
+		await page.goto(url, { waitUntil: "domcontentloaded" });
+	} catch (error) {
+		if (!String(error?.message).includes("ERR_ABORTED")) throw error;
+		await page.waitForTimeout(1000);
+		await page.goto(url, { waitUntil: "domcontentloaded" });
+	}
+}
+
 /** Wait for the app shell to settle after navigation. */
 async function settle(page, waitFor) {
 	await page
@@ -154,10 +171,14 @@ async function ensureLoggedIn(page) {
 		.waitForLoadState("networkidle", { timeout: 30000 })
 		.catch(() => {});
 	if (page.url().includes("/dashboard")) return;
-	await page.getByLabel("Username").fill(USERNAME);
-	await page.getByLabel("Password").fill(PASSWORD);
-	await page.getByRole("button", { name: "Sign In" }).click();
-	await page.waitForURL("**/dashboard**", { timeout: 30000 });
+	await page.getByLabel("Username", { exact: true }).fill(USERNAME);
+	const password = page.getByLabel("Password", { exact: true });
+	await password.fill(PASSWORD);
+	// Submit from the field: the login background image overlaps the button's
+	// hit area, so a pointer click is intercepted.
+	await password.press("Enter");
+	// First dev-server compile of /dashboard can exceed 30s.
+	await page.waitForURL("**/dashboard**", { timeout: 120000 });
 	await settle(page);
 }
 
@@ -171,14 +192,14 @@ async function ensureDarkDefault(context) {
 }
 
 async function captureRouteView(page, view, outPath) {
-	await page.goto(`${BASE_URL}${view.path}`, { waitUntil: "domcontentloaded" });
+	await gotoView(page, view);
 	await settle(page, "main");
 	assertOnRequestedPath(page, view);
 	await takeShot(page, outPath);
 }
 
 async function captureSearchView(page, view, outPath) {
-	await page.goto(`${BASE_URL}${view.path}`, { waitUntil: "domcontentloaded" });
+	await gotoView(page, view);
 	await settle(page, "main");
 	const search = page.getByPlaceholder("Search system (Cmd+K)...");
 	await search.click();
@@ -194,7 +215,7 @@ async function captureSearchView(page, view, outPath) {
 }
 
 async function captureSettingsView(page, view, outPath) {
-	await page.goto(`${BASE_URL}${view.path}`, { waitUntil: "domcontentloaded" });
+	await gotoView(page, view);
 	await settle(page, "main");
 	const profileButton = page.locator("aside div.border-t button").first();
 	await profileButton.click();
@@ -206,7 +227,7 @@ async function captureSettingsView(page, view, outPath) {
 }
 
 async function captureDialogView(page, view, outPath) {
-	await page.goto(`${BASE_URL}${view.path}`, { waitUntil: "domcontentloaded" });
+	await gotoView(page, view);
 	await settle(page, ".ag-root");
 	const createButton = page.getByLabel("Create order");
 	await createButton.first().click();

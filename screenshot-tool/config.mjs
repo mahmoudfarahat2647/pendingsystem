@@ -9,6 +9,13 @@
 /** Fixed clock injected into the page before any script runs (local noon). */
 export const FIXED_DATE_ISO = "2026-09-15T12:00:00.000";
 
+/**
+ * Regions masked in every shot because the server renders them from the real
+ * clock, which the browser-side frozen clock cannot reach (e.g. the Dashboard
+ * calendar computes "today" with `new Date()` during SSR).
+ */
+export const MASK_SELECTORS = ["div.glass.min-w-\\[180px\\]"];
+
 /** Search term typed into the header global search for the search view. */
 export const SEARCH_TERM = "Baseline";
 
