@@ -17,6 +17,7 @@ import {
 	formatEntry,
 	summarizeResults,
 } from "./diff-utils.mjs";
+import { resolveRestMock, seedStageCountRows } from "./mock-router.mjs";
 import {
 	APP_SETTINGS_MOCK,
 	countSeedRowsByStage,
@@ -179,5 +180,56 @@ describe("diff reporting", () => {
 			}),
 		).toContain("DIFF orders@1440x900");
 		expect(DIFF_THRESHOLD).toBeGreaterThan(0);
+	});
+});
+
+describe("REST/RPC mock dispatch", () => {
+	const BASE = "https://x.supabase.co/rest/v1";
+	const get = (url, accept) => resolveRestMock({ url, method: "GET", accept });
+
+	it("serves seeded rows for stage fetches (no catch-all shadowing)", () => {
+		const response = get(`${BASE}/orders?select=*&stage=eq.main`);
+		const rows = JSON.parse(response.body);
+		expect(rows.length).toBeGreaterThan(0);
+		expect(rows.every((row) => row.stage === "main")).toBe(true);
+		expect(rows[0].order_number).toMatch(/^SEED-/);
+	});
+
+	it("answers the dashboard stage-count RPC from the seed set", () => {
+		const response = resolveRestMock({
+			url: `${BASE}/rpc/get_order_stage_counts`,
+			method: "POST",
+		});
+		const rows = JSON.parse(response.body);
+		expect(Array.isArray(rows)).toBe(true);
+		expect(rows).toEqual(seedStageCountRows());
+		const counts = countSeedRowsByStage();
+		for (const row of rows) {
+			expect(row.row_count).toBe(counts[row.stage]);
+		}
+		const call = rows.find((row) => row.stage === "call");
+		expect(call.call_unique_vehicles).toBeGreaterThan(0);
+	});
+
+	it("serves app settings in object and array forms", () => {
+		const single = JSON.parse(
+			get(`${BASE}/app_settings?select=*`, "application/vnd.pgrst.object+json")
+				.body,
+		);
+		expect(single.models).toEqual(APP_SETTINGS_MOCK.models);
+		const list = JSON.parse(get(`${BASE}/app_settings?select=*`).body);
+		expect(list[0].id).toBe(1);
+	});
+
+	it("returns fixed empty results for any other table or RPC", () => {
+		expect(JSON.parse(get(`${BASE}/order_reminders?select=*`).body)).toEqual(
+			[],
+		);
+		expect(
+			JSON.parse(
+				resolveRestMock({ url: `${BASE}/rpc/anything_else`, method: "POST" })
+					.body,
+			),
+		).toBeNull();
 	});
 });

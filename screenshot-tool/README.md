@@ -37,7 +37,7 @@ renders the page's invalid-token state rather than the reset form.
 
 ## Determinism
 
-- **Fixed data:** the capture script intercepts Supabase (`/rest/v1/*`) and
+- **Fixed data:** the capture script intercepts Supabase (`/rest/v1/**`, including RPCs) and
   the storage/report settings APIs and serves the frozen set in
   `seed-data.mjs` — never live data.
 - **Frozen clock:** `2026-09-15T12:00:00` is injected before any page script

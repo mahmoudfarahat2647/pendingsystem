@@ -32,12 +32,8 @@ import {
 	VIEWPORTS,
 	VIEWS,
 } from "./config.mjs";
-import {
-	APP_SETTINGS_MOCK,
-	filterSeedRowsByUrl,
-	REPORT_SETTINGS_MOCK,
-	STORAGE_STATS_MOCK,
-} from "./seed-data.mjs";
+import { resolveRestMock } from "./mock-router.mjs";
+import { REPORT_SETTINGS_MOCK, STORAGE_STATS_MOCK } from "./seed-data.mjs";
 
 const toolDir = path.dirname(fileURLToPath(import.meta.url));
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
@@ -109,48 +105,18 @@ function determinismInitScript() {
 
 /** Register fixed-data network mocks on a Playwright browser context. */
 async function installMocks(context) {
-	await context.route("**/rest/v1/orders*", async (route) => {
-		const rows = filterSeedRowsByUrl(route.request().url());
-		const headers = {
-			"content-type": "application/json",
-			"content-range": `0-${Math.max(rows.length - 1, 0)}/${rows.length}`,
-		};
-		await route.fulfill({ status: 200, headers, body: JSON.stringify(rows) });
-	});
-	await context.route("**/rest/v1/order_reminders*", async (route) => {
-		await route.fulfill({
-			status: 200,
-			headers: { "content-type": "application/json" },
-			body: "[]",
-		});
-	});
-	await context.route("**/rest/v1/app_settings*", async (route) => {
-		const accept = route.request().headers().accept ?? "";
-		const body = accept.includes("vnd.pgrst.object+json")
-			? { ...APP_SETTINGS_MOCK }
-			: [{ id: 1, ...APP_SETTINGS_MOCK }];
-		await route.fulfill({
-			status: 200,
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify(body),
-		});
-	});
-	// Any other Supabase read returns a fixed empty set so notification,
-	// follow-up, template, and settings queries cannot leak live data.
-	await context.route("**/rest/v1/*", async (route) => {
-		if (route.request().method() !== "GET") {
-			await route.fulfill({
-				status: 200,
-				headers: { "content-type": "application/json" },
-				body: "{}",
-			});
-			return;
-		}
-		await route.fulfill({
-			status: 200,
-			headers: { "content-type": "application/json" },
-			body: "[]",
-		});
+	// One handler for every Supabase REST/RPC path: dispatch is pure (see
+	// mock-router.mjs), so no catch-all can shadow a seeded response and no
+	// request reaches the live project.
+	await context.route("**/rest/v1/**", async (route) => {
+		const request = route.request();
+		await route.fulfill(
+			resolveRestMock({
+				url: request.url(),
+				method: request.method(),
+				accept: request.headers().accept ?? "",
+			}),
+		);
 	});
 	await context.route("**/api/storage-stats*", async (route) => {
 		await route.fulfill({
@@ -207,6 +173,7 @@ async function ensureDarkDefault(context) {
 async function captureRouteView(page, view, outPath) {
 	await page.goto(`${BASE_URL}${view.path}`, { waitUntil: "domcontentloaded" });
 	await settle(page, "main");
+	assertOnRequestedPath(page, view);
 	await takeShot(page, outPath);
 }
 
@@ -257,6 +224,28 @@ async function captureWithPage(page, view, outPath) {
 	return captureRouteView(page, view, outPath);
 }
 
+/** New browser context with the fixed viewport, Dark default, and mocks. */
+async function createCaptureContext(browser, viewport) {
+	const context = await browser.newContext({
+		viewport: { width: viewport.width, height: viewport.height },
+		deviceScaleFactor: 1,
+		reducedMotion: "reduce",
+	});
+	await ensureDarkDefault(context);
+	await context.addInitScript(determinismInitScript);
+	await installMocks(context);
+	return context;
+}
+
+/** Fail the shot if the app redirected away from the requested view. */
+function assertOnRequestedPath(page, view) {
+	const requested = new URL(view.path, BASE_URL).pathname;
+	const actual = new URL(page.url()).pathname;
+	if (actual !== requested) {
+		throw new Error(`expected ${requested} but landed on ${actual}`);
+	}
+}
+
 async function main() {
 	if (!PASSWORD) {
 		fail("SCREENSHOT_PASSWORD is required (local test admin password).");
@@ -282,14 +271,7 @@ async function main() {
 
 	try {
 		for (const viewport of VIEWPORTS) {
-			const context = await browser.newContext({
-				viewport: { width: viewport.width, height: viewport.height },
-				deviceScaleFactor: 1,
-				reducedMotion: "reduce",
-			});
-			await ensureDarkDefault(context);
-			await context.addInitScript(determinismInitScript);
-			await installMocks(context);
+			const context = await createCaptureContext(browser, viewport);
 
 			// Authenticated views share one signed-in page.
 			const authViews = VIEWS.filter((v) => v.auth);
@@ -312,9 +294,13 @@ async function main() {
 			}
 			await page.close();
 
-			// Public views run signed-out so auth pages render their own layout.
+			await context.close();
+
+			// Public views run in a fresh context with no session cookie, so the
+			// auth layout renders its own pages instead of redirecting.
 			const publicViews = VIEWS.filter((v) => !v.auth);
-			const guest = await context.newPage();
+			const guestContext = await createCaptureContext(browser, viewport);
+			const guest = await guestContext.newPage();
 			for (const view of publicViews) {
 				const file = screenshotFileName(view.key, viewport.name);
 				const outPath = path.join(OUTPUT_DIR, file);
@@ -327,7 +313,7 @@ async function main() {
 				}
 			}
 			await guest.close();
-			await context.close();
+			await guestContext.close();
 		}
 	} finally {
 		await browser.close();
