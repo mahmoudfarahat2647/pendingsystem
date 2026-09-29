@@ -1,0 +1,4 @@
+# Fresh capture output and diff images are never committed.
+# Only baseline/ is tracked.
+current/
+diff/
