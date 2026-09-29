@@ -5,6 +5,10 @@ import { Bell, Hash, MapPin, TableProperties, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+	HeaderCountBadge,
+	headerIconButtonClass,
+} from "@/components/shared/HeaderIconButton";
 import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import type { OrderStage } from "@/domain/order/orderStage";
 import { computeReleaseFollowUpDueDate } from "@/domain/order/releaseGate";
@@ -172,12 +176,7 @@ export const NotificationsDropdown = () => {
 				type="button"
 				suppressHydrationWarning
 				onClick={() => setShowNotifications(!showNotifications)}
-				className={cn(
-					"p-2.5 rounded-xl transition-all relative",
-					showNotifications
-						? "bg-white/10 text-white border-white/20"
-						: "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10",
-				)}
+				className={headerIconButtonClass(showNotifications)}
 				title={t("notifications.title")}
 			>
 				<motion.div
@@ -204,13 +203,10 @@ export const NotificationsDropdown = () => {
 						)}
 					/>
 				</motion.div>
-				{unreadCount > 0 && (
-					<div className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-1 bg-red-500 rounded-full border-2 border-[#0a0a0b] flex items-center justify-center">
-						<span className="text-[9px] font-bold text-white leading-none">
-							{unreadCount > 9 ? "9+" : unreadCount}
-						</span>
-					</div>
-				)}
+				<HeaderCountBadge
+					count={unreadCount}
+					className="bg-red-500 hover:bg-red-500"
+				/>
 			</button>
 
 			<AnimatePresence mode="wait">
