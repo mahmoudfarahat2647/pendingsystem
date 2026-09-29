@@ -133,23 +133,7 @@ export default function DashboardPage() {
 				{/* Full Background Image */}
 				<div className="absolute inset-0 bg-[url('/dashboard-car.webp')] bg-cover bg-center" />
 
-				<div className="relative z-20 h-full flex flex-col justify-between p-10">
-					<div className="mt-6">
-						<div className="flex items-center gap-5 mb-3">
-							<div className="w-14 h-14 bg-renault-yellow rounded-2xl flex items-center justify-center shadow-[0_0_25px_rgba(255,204,0,0.4)]">
-								<span className="text-black font-bold text-2xl">R</span>
-							</div>
-							<div>
-								<h1 className="text-4xl font-bold text-white tracking-tight">
-									PENDINGSYSTEM
-								</h1>
-								<p className="text-renault-yellow/90 font-medium tracking-widest text-xs mt-0.5">
-									<span>PENDING SYSTEM</span>
-								</p>
-							</div>
-						</div>
-					</div>
-
+				<div className="relative z-20 h-full flex flex-col justify-end p-10">
 					{/* Bottom Row: Stats Cards + Calendar */}
 					<div className="flex items-end justify-between gap-6">
 						{/* Glass Stats Cards Row - Minimized */}
