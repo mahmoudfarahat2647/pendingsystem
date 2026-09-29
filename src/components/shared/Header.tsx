@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import { BookingInquiryButton } from "./BookingInquiryButton";
+import { headerIconButtonClass } from "./HeaderIconButton";
 import {
 	NOTIFICATION_CHECK_INTERVAL_MS,
 	NOTIFICATION_INITIAL_DELAY_MS,
@@ -474,7 +475,7 @@ export const Header = React.memo(function Header() {
 						suppressHydrationWarning
 						onClick={() => window.location.reload()}
 						aria-label="Refresh page"
-						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
+						className={headerIconButtonClass(false)}
 						title="Refresh Page"
 					>
 						<RefreshCw className="h-5 w-5" />
@@ -490,10 +491,7 @@ export const Header = React.memo(function Header() {
 							disabled={isExporting}
 							aria-label="Export CSV"
 							className={cn(
-								"p-2.5 rounded-xl transition-all border",
-								isExportMenuOpen
-									? "text-white bg-white/10 border-white/20"
-									: "text-gray-400 hover:text-white hover:bg-white/5 border-transparent hover:border-white/10",
+								headerIconButtonClass(isExportMenuOpen),
 								isExporting && "opacity-50 cursor-not-allowed",
 							)}
 							title="Export System Data"

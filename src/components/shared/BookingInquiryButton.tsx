@@ -3,8 +3,8 @@
 import { CalendarSearch } from "lucide-react";
 import { useState } from "react";
 import { useTodayBookingCount } from "@/hooks/useTodayBookingCount";
-import { cn } from "@/lib/utils";
 import { BookingInquiryModal } from "./BookingInquiryModal";
+import { HeaderCountBadge, headerIconButtonClass } from "./HeaderIconButton";
 
 /**
  * Header entry point for the Booking Inquiry.
@@ -37,21 +37,13 @@ export const BookingInquiryButton = () => {
 				}
 				aria-haspopup="dialog"
 				aria-expanded={isOpen}
-				className={cn(
-					"relative p-2.5 rounded-xl transition-all border",
-					isOpen
-						? "text-white bg-white/10 border-white/20"
-						: "text-gray-400 hover:text-white hover:bg-white/5 border-transparent hover:border-white/10",
-				)}
+				className={headerIconButtonClass(isOpen)}
 			>
 				<CalendarSearch className="h-5 w-5" />
-				{todayCount > 0 && (
-					<div className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-1 bg-emerald-500 rounded-full border-2 border-[#0a0a0b] flex items-center justify-center">
-						<span className="text-[9px] font-bold text-white leading-none">
-							{todayCount > 9 ? "9+" : todayCount}
-						</span>
-					</div>
-				)}
+				<HeaderCountBadge
+					count={todayCount}
+					className="bg-emerald-500 hover:bg-emerald-500"
+				/>
 			</button>
 
 			{isOpen && <BookingInquiryModal open={isOpen} onOpenChange={setIsOpen} />}
