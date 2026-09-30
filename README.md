@@ -120,3 +120,5 @@ Files under `docs/` are treated as protected reference material. Update them int
   ```
 
 Husky is configured so `git commit` runs Biome against staged files and retries with `--unsafe` if the safe pass still fails.
+
+The IBM Plex Sans Arabic font used by translated text is bundled in `src/assets/fonts`, so production builds do not need a Google Fonts connection.
