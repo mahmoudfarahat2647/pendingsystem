@@ -32,26 +32,26 @@ export function AuthPageShell({
 			<div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/70 to-transparent dark:from-black/80 dark:via-black/40 dark:to-transparent pointer-events-none -z-10" />
 
 			{/* Card */}
-			<div className="relative z-10 w-full max-w-[380px]">
-				<div className="relative overflow-hidden rounded-[28px] p-8 border bg-white/30 border-white/60 dark:bg-white/[0.04] dark:border-white/20 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all">
+			<div className="relative z-10 w-full max-w-[340px]">
+				<div className="relative overflow-hidden rounded-2xl p-6 border bg-white/30 border-white/60 dark:bg-white/[0.04] dark:border-white/20 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_12px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45)] transition-all">
 					{/* Glass highlight */}
 					<div className="absolute inset-0 bg-gradient-to-b from-white/40 dark:from-white/[0.08] to-transparent pointer-events-none" />
 
 					{/* Logo mark */}
-					<div className="relative z-10 mb-6">
-						<h1 className="text-2xl leading-tight font-bold tracking-wide text-black dark:text-white">
+					<div className="relative z-10 mb-5">
+						<h1 className="text-xl leading-tight font-bold tracking-wide text-black dark:text-white">
 							Eim
 						</h1>
 						<div className="mt-1 w-6 h-[3px] bg-[#FFCC00] rounded-sm shadow-[0_0_10px_rgba(255,204,0,0.4)]" />
 					</div>
 
 					{title && (
-						<h2 className="relative z-10 text-3xl font-bold text-black dark:text-white mb-2">
+						<h2 className="relative z-10 text-2xl font-bold text-black dark:text-white mb-1">
 							{title}
 						</h2>
 					)}
 					{subtitle && (
-						<p className="relative z-10 text-sm text-black/60 dark:text-white/70 mb-8">
+						<p className="relative z-10 text-[13px] text-black/60 dark:text-white/70 mb-6">
 							{subtitle}
 						</p>
 					)}

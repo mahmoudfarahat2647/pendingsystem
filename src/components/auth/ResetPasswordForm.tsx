@@ -74,7 +74,7 @@ export function ResetPasswordForm() {
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 			<div>
 				<label htmlFor="newPassword" className={authLabelClass}>
 					New Password
@@ -96,9 +96,9 @@ export function ResetPasswordForm() {
 						className={authEyeButtonClass}
 					>
 						{showNewPassword ? (
-							<EyeOff size={18} strokeWidth={1.75} />
+							<EyeOff size={16} strokeWidth={1.75} />
 						) : (
-							<Eye size={18} strokeWidth={1.75} />
+							<Eye size={16} strokeWidth={1.75} />
 						)}
 					</button>
 				</div>
@@ -128,9 +128,9 @@ export function ResetPasswordForm() {
 						className={authEyeButtonClass}
 					>
 						{showConfirmPassword ? (
-							<EyeOff size={18} strokeWidth={1.75} />
+							<EyeOff size={16} strokeWidth={1.75} />
 						) : (
-							<Eye size={18} strokeWidth={1.75} />
+							<Eye size={16} strokeWidth={1.75} />
 						)}
 					</button>
 				</div>
@@ -147,7 +147,7 @@ export function ResetPasswordForm() {
 				</div>
 			)}
 
-			<div className="pt-2">
+			<div className="pt-1">
 				<Button
 					type="submit"
 					disabled={isSubmitting}

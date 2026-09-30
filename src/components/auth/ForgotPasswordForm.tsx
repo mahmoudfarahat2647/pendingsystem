@@ -63,7 +63,7 @@ export function ForgotPasswordForm() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 			<div>
 				<label htmlFor="username" className={authLabelClass}>
 					Username
@@ -83,7 +83,7 @@ export function ForgotPasswordForm() {
 				)}
 			</div>
 
-			<div className="pt-2">
+			<div className="pt-1">
 				<Button
 					type="submit"
 					disabled={isSubmitting}
@@ -93,7 +93,7 @@ export function ForgotPasswordForm() {
 				</Button>
 			</div>
 
-			<p className="text-center pt-2">
+			<p className="text-center">
 				<Link href="/login" className={authLinkClass}>
 					Back to login
 				</Link>

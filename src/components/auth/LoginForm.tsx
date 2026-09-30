@@ -67,7 +67,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 			{expired && (
 				<div
 					role="alert"
@@ -118,9 +118,9 @@ export function LoginForm({ expired }: LoginFormProps) {
 						className={authEyeButtonClass}
 					>
 						{showPassword ? (
-							<EyeOff size={18} strokeWidth={1.75} />
+							<EyeOff size={16} strokeWidth={1.75} />
 						) : (
-							<Eye size={18} strokeWidth={1.75} />
+							<Eye size={16} strokeWidth={1.75} />
 						)}
 					</button>
 				</div>
@@ -138,7 +138,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 				</div>
 			)}
 
-			<div className="pt-2">
+			<div className="pt-1">
 				<Button
 					type="submit"
 					disabled={isSubmitting}
@@ -153,7 +153,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 				</Button>
 			</div>
 
-			<p className="text-center pt-2">
+			<p className="text-center">
 				<Link href="/forgot-password" className={authLinkClass}>
 					Forgot Password?
 				</Link>
