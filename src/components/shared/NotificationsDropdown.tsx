@@ -267,7 +267,7 @@ export const NotificationsDropdown = () => {
 													/>
 													<div className="flex-1 space-y-2">
 														<div className="flex items-center justify-between pr-6">
-															<span className="text-[10px] font-bold text-black dark:text-white uppercase tracking-wider group-hover:text-indigo-400 transition-colors">
+															<span className="text-[10px] font-bold text-black dark:text-white uppercase tracking-wider group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
 																<LocalizedScope lang={lang}>
 																	{n.titleKey
 																		? t(n.titleKey, n.params)
@@ -317,7 +317,7 @@ export const NotificationsDropdown = () => {
 														e.stopPropagation();
 														dismissNotification(n);
 													}}
-													className="absolute top-2 right-2 p-1.5 text-gray-500 dark:text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-black/5 dark:hover:bg-white/5"
+													className="absolute top-2 right-2 p-1.5 text-gray-500 dark:text-gray-600 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-black/5 dark:hover:bg-white/5"
 													title={
 														n.type === "release_followup"
 															? t("notifications.snoozeTwoMonths")

@@ -33,12 +33,12 @@ export const CallCustomerCounter = ({
 			<TooltipTrigger asChild>
 				<div
 					className={cn(
-						"flex items-center h-8 px-3 rounded-lg bg-[#1c1c1e] hover:bg-[#2c2c2e] border border-white/5 transition-all duration-300 group cursor-default select-none",
+						"flex items-center h-8 px-3 rounded-lg bg-white dark:bg-[#1c1c1e] hover:bg-gray-100 dark:hover:bg-[#2c2c2e] border border-black/10 dark:border-white/5 transition-all duration-300 group cursor-default select-none",
 						className,
 					)}
 				>
 					<div className="flex items-center gap-2 text-[10px] font-bold tracking-wider uppercase">
-						<div className="flex items-center gap-1.5 text-blue-400 group-hover:text-blue-300 transition-colors">
+						<div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">
 							<span className="font-mono text-xs">{count}</span>
 							<span className="opacity-70 group-hover:opacity-100">
 								{count === 1 ? "Customer" : "Customers"}

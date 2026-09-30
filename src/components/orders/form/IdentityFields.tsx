@@ -87,8 +87,8 @@ export const IdentityFields = ({
 						className={cn(
 							"h-6 w-6 rounded-lg transition-all",
 							isPersonalBulkMode
-								? "bg-indigo-500/20 text-indigo-400"
-								: "text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10",
+								? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400"
+								: "text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-500/10",
 						)}
 						onClick={() => setIsPersonalBulkMode(!isPersonalBulkMode)}
 					>
@@ -106,14 +106,14 @@ export const IdentityFields = ({
 							className="space-y-3 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10"
 						>
 							<div className="space-y-1">
-								<Label className="text-[9px] font-bold text-indigo-400 uppercase ml-1">
+								<Label className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase ml-1">
 									Smart Paste (Name | VIN | Mobile | KM | SAB | Agent)
 								</Label>
 								<Textarea
 									placeholder="Paste single line here..."
 									value={personalBulkText}
 									onChange={(e) => setPersonalBulkText(e.target.value)}
-									className="h-20 resize-none bg-[#0a0a0b]/60 border-white/5 text-[10px] p-2 rounded-lg focus:ring-1 focus:ring-indigo-500/30"
+									className="h-20 resize-none bg-white dark:bg-[#0a0a0b]/60 border-black/10 dark:border-white/5 text-[10px] p-2 rounded-lg focus:ring-1 focus:ring-indigo-500/30"
 								/>
 							</div>
 							<div className="flex gap-2">
@@ -146,7 +146,7 @@ export const IdentityFields = ({
 							    MUST be preserved to eliminate scrolling on standard displays. */}
 							<div className="grid grid-cols-10 gap-3">
 								<div className="col-span-7 space-y-1 group">
-									<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
+									<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-700 dark:group-focus-within:text-slate-300 transition-colors uppercase">
 										Customer
 									</Label>
 									<Input
@@ -156,7 +156,7 @@ export const IdentityFields = ({
 											onFieldChange({ customerName: e.target.value })
 										}
 										className={cn(
-											"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+											"bg-gray-50 dark:bg-[#161618] border-black/10 dark:border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 											getFieldError("customerName") &&
 												"border-red-500/50 ring-1 ring-red-500/20",
 											glowClass,
@@ -169,7 +169,7 @@ export const IdentityFields = ({
 									)}
 								</div>
 								<div className="col-span-3 space-y-1 group">
-									<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
+									<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-700 dark:group-focus-within:text-slate-300 transition-colors uppercase">
 										Company
 									</Label>
 									<div
@@ -184,12 +184,12 @@ export const IdentityFields = ({
 												onFieldChange({ company: e.target.value })
 											}
 											className={cn(
-												"w-full bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all appearance-none outline-none focus:ring-0",
+												"w-full bg-gray-50 dark:bg-[#161618] border-black/10 dark:border-white/5 h-9 text-xs rounded-lg px-3 transition-all appearance-none outline-none focus:ring-0",
 												formData.company === ""
 													? "text-slate-500"
 													: isEditMode
 														? "premium-glow-amber text-amber-500"
-														: "premium-glow-indigo text-indigo-400 font-bold",
+														: "premium-glow-indigo text-indigo-600 dark:text-indigo-400 font-bold",
 											)}
 										>
 											<option value="" disabled>
@@ -221,7 +221,7 @@ export const IdentityFields = ({
 
 							<div className="grid grid-cols-10 gap-3">
 								<div className="col-span-7 space-y-1 group">
-									<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
+									<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-700 dark:group-focus-within:text-slate-300 transition-colors uppercase">
 										VIN Number
 									</Label>
 									<Input
@@ -231,7 +231,7 @@ export const IdentityFields = ({
 											onFieldChange({ vin: e.target.value.toUpperCase() })
 										}
 										className={cn(
-											"bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
+											"bg-gray-50 dark:bg-[#161618] border-black/10 dark:border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
 											getFieldError("vin") &&
 												"border-red-500/50 ring-1 ring-red-500/20",
 											glowClass,
@@ -258,7 +258,7 @@ export const IdentityFields = ({
 											})
 										}
 										className={cn(
-											"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+											"bg-gray-50 dark:bg-[#161618] border-black/10 dark:border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 											getFieldError("cntrRdg") &&
 												"border-red-500/50 ring-1 ring-red-500/20",
 											glowClass,
@@ -282,7 +282,7 @@ export const IdentityFields = ({
 										value={formData.mobile}
 										onChange={(e) => onFieldChange({ mobile: e.target.value })}
 										className={cn(
-											"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+											"bg-gray-50 dark:bg-[#161618] border-black/10 dark:border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 											getFieldError("mobile") &&
 												"border-red-500/50 ring-1 ring-red-500/20",
 											glowClass,
@@ -300,7 +300,7 @@ export const IdentityFields = ({
 											onFieldChange({ acceptedBy: e.target.value })
 										}
 										className={cn(
-											"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+											"bg-gray-50 dark:bg-[#161618] border-black/10 dark:border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 											getFieldError("acceptedBy") &&
 												"border-red-500/50 ring-1 ring-red-500/20",
 											glowClass,
@@ -321,7 +321,7 @@ export const IdentityFields = ({
 											onFieldChange({ sabNumber: e.target.value })
 										}
 										className={cn(
-											"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+											"bg-gray-50 dark:bg-[#161618] border-black/10 dark:border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
 											getFieldError("sabNumber") &&
 												"border-red-500/50 ring-1 ring-red-500/20",
 											glowClass,

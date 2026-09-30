@@ -100,14 +100,14 @@ export const SearchToolbar = ({
 	const isStageActionDisabled = selectedCount === 0 || !isSameSource;
 
 	return (
-		<div className="flex items-center justify-between bg-[#141416] p-2 px-6 border-b border-white/5">
+		<div className="flex items-center justify-between bg-gray-50 dark:bg-[#141416] p-2 px-6 border-b border-black/10 dark:border-white/5">
 			<div className="flex items-center gap-2">
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
 							type="button"
 							size="icon"
-							className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-lg h-8 w-8"
+							className="bg-white dark:bg-[#1c1c1e] hover:bg-gray-100 dark:hover:bg-[#2c2c2e] text-gray-700 dark:text-gray-300 border-none rounded-lg h-8 w-8"
 							onClick={onReserve}
 							disabled={isReserveDisabled}
 						>
@@ -117,7 +117,7 @@ export const SearchToolbar = ({
 					<TooltipContent>Reserve</TooltipContent>
 				</Tooltip>
 
-				<div className="w-px h-6 bg-white/10 mx-1" />
+				<div className="w-px h-6 bg-black/10 dark:bg-white/10 mx-1" />
 
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -128,8 +128,8 @@ export const SearchToolbar = ({
 							className={cn(
 								"h-8 w-8 transition-colors",
 								!isStageActionDisabled
-									? "text-green-500 hover:text-green-400 hover:bg-green-500/10"
-									: "text-gray-600 cursor-not-allowed opacity-50",
+									? "text-green-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-500/10"
+									: "text-gray-500 dark:text-gray-600 cursor-not-allowed opacity-50",
 							)}
 							disabled={isStageActionDisabled}
 							onClick={onBooking}
@@ -148,7 +148,7 @@ export const SearchToolbar = ({
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 h-8 w-8"
 							disabled={isStageActionDisabled}
 							onClick={onArchive}
 						>
@@ -190,7 +190,7 @@ export const SearchToolbar = ({
 								"h-8 w-8 transition-colors",
 								!isStageActionDisabled
 									? "text-orange-500/80 hover:text-orange-500 hover:bg-orange-500/10"
-									: "text-gray-600 cursor-not-allowed opacity-50",
+									: "text-gray-500 dark:text-gray-600 cursor-not-allowed opacity-50",
 							)}
 							disabled={isStageActionDisabled}
 							onClick={onReorder}
@@ -212,7 +212,7 @@ export const SearchToolbar = ({
 							"transition-colors",
 							isMoveToMainEligible
 								? "hover:bg-emerald-500/10"
-								: "text-gray-600 cursor-not-allowed opacity-50",
+								: "text-gray-500 dark:text-gray-600 cursor-not-allowed opacity-50",
 						)}
 						tooltip={
 							!isSameSource && selectedCount > 0
@@ -230,7 +230,7 @@ export const SearchToolbar = ({
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 h-8 w-8"
 							onClick={onExtract}
 						>
 							<Download className="h-4 w-4" />
@@ -248,8 +248,8 @@ export const SearchToolbar = ({
 							className={cn(
 								"h-8 w-8 transition-colors",
 								showFilters
-									? "bg-white/10 text-white"
-									: "text-gray-400 hover:text-white hover:bg-white/5",
+									? "bg-black/10 dark:bg-white/10 text-black dark:text-white"
+									: "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5",
 							)}
 							onClick={onFilterToggle}
 						>
@@ -267,7 +267,7 @@ export const SearchToolbar = ({
 									type="button"
 									variant="ghost"
 									size="icon"
-									className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+									className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 h-8 w-8"
 									disabled={isStageActionDisabled}
 								>
 									<CheckCircle className="h-4 w-4" />
@@ -275,7 +275,7 @@ export const SearchToolbar = ({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
 								align="end"
-								className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
+								className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-black dark:text-white min-w-[160px]"
 							>
 								{partStatuses?.map((status) => {
 									const isHex =
@@ -290,7 +290,7 @@ export const SearchToolbar = ({
 										<DropdownMenuItem
 											key={status.id}
 											onClick={() => onUpdateStatus?.(status.label)}
-											className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
+											className="flex items-center gap-2 focus:bg-black/5 dark:focus:bg-white/5 cursor-pointer"
 										>
 											<div
 												className={cn("w-2 h-2 rounded-full", colorClass)}
@@ -315,7 +315,7 @@ export const SearchToolbar = ({
 					</TooltipContent>
 				</Tooltip>
 
-				<div className="w-px h-6 bg-white/10 mx-1" />
+				<div className="w-px h-6 bg-black/10 dark:bg-white/10 mx-1" />
 
 				<div className="flex items-center gap-1.5 px-2">
 					{SEARCH_SOURCES.map(({ source, dotColor, activeRingColor }) => {
@@ -332,7 +332,7 @@ export const SearchToolbar = ({
 										disabled={!isAvailable}
 										onClick={() => onSourceFilterChange(source)}
 										className={cn(
-											"w-3 h-3 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141416]",
+											"w-3 h-3 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141416]",
 											dotColor,
 											!isAvailable && "opacity-20 cursor-default",
 											isAvailable &&
@@ -353,14 +353,14 @@ export const SearchToolbar = ({
 						<button
 							type="button"
 							onClick={() => onSourceFilterChange(null)}
-							className="text-[10px] text-gray-500 hover:text-gray-300 ml-1 font-bold uppercase tracking-wider focus-visible:outline-none focus-visible:underline"
+							className="text-[10px] text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 ml-1 font-bold uppercase tracking-wider focus-visible:outline-none focus-visible:underline"
 						>
 							Clear
 						</button>
 					)}
 				</div>
 
-				<div className="w-px h-6 bg-white/10 mx-1" />
+				<div className="w-px h-6 bg-black/10 dark:bg-white/10 mx-1" />
 
 				<div className="flex items-center gap-1.5 px-2">
 					{ALLOWED_COMPANIES.map((company) => {
@@ -377,11 +377,11 @@ export const SearchToolbar = ({
 										disabled={!isAvailable}
 										onClick={() => onCompanyFilterChange(company)}
 										className={cn(
-											"flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141416]",
+											"flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/70 focus-visible:ring-offset-1 focus-visible:ring-offset-[#141416]",
 											!isAvailable && "opacity-20 cursor-default",
 											isAvailable &&
 												(isActive
-													? "ring-1 ring-offset-1 ring-offset-[#141416] ring-white/70"
+													? "ring-1 ring-offset-1 ring-offset-[#141416] ring-black/60 dark:ring-white/70"
 													: "opacity-40 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 cursor-pointer"),
 										)}
 									>
@@ -397,7 +397,7 @@ export const SearchToolbar = ({
 							type="button"
 							aria-label="Clear company filter"
 							onClick={onCompanyFilterClear}
-							className="text-[10px] text-gray-500 hover:text-gray-300 ml-1 font-bold uppercase tracking-wider focus-visible:outline-none focus-visible:underline"
+							className="text-[10px] text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 ml-1 font-bold uppercase tracking-wider focus-visible:outline-none focus-visible:underline"
 						>
 							Clear
 						</button>
@@ -421,7 +421,7 @@ export const SearchToolbar = ({
 							type="button"
 							size="icon"
 							variant="ghost"
-							className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+							className="text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 							onClick={onDelete}
 							disabled={isStageActionDisabled}
 						>

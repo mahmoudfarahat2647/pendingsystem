@@ -80,13 +80,13 @@ export function CallListToolbar({
 		useColumnLayoutTracker("call-list");
 
 	return (
-		<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
+		<div className="flex items-center justify-between bg-gray-50 dark:bg-[#141416] p-1.5 rounded-lg border border-black/10 dark:border-white/5">
 			<div className="flex items-center gap-1.5">
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
 							size="icon"
-							className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
+							className="bg-white dark:bg-[#1c1c1e] hover:bg-gray-100 dark:hover:bg-[#2c2c2e] text-gray-700 dark:text-gray-300 border-none rounded-md h-8 w-8"
 							onClick={onExtract}
 						>
 							<Download className="h-3.5 w-3.5" />
@@ -100,7 +100,7 @@ export function CallListToolbar({
 						<Button
 							size="icon"
 							variant="ghost"
-							className="text-gray-400 hover:text-white h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 							onClick={onFilterToggle}
 						>
 							<Filter className="h-3.5 w-3.5" />
@@ -122,7 +122,7 @@ export function CallListToolbar({
 						<Button
 							size="icon"
 							variant="ghost"
-							className="text-gray-400 hover:text-white h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 							onClick={onReserve}
 							disabled={selectedRows.length === 0}
 						>
@@ -139,7 +139,7 @@ export function CallListToolbar({
 								<Button
 									variant="ghost"
 									size="icon"
-									className="text-gray-400 hover:text-white h-8 w-8"
+									className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 									disabled={selectedRows.length === 0}
 								>
 									<CheckCircle className="h-4 w-4" />
@@ -147,7 +147,7 @@ export function CallListToolbar({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
 								align="end"
-								className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
+								className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-black dark:text-white min-w-[160px]"
 							>
 								{partStatuses?.map((status) => {
 									const isHex =
@@ -162,7 +162,7 @@ export function CallListToolbar({
 										<DropdownMenuItem
 											key={status.id}
 											onClick={() => onUpdateStatus(status.label)}
-											className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
+											className="flex items-center gap-2 focus:bg-black/5 dark:focus:bg-white/5 cursor-pointer"
 										>
 											<div
 												className={cn("w-2 h-2 rounded-full", colorClass)}
@@ -178,7 +178,7 @@ export function CallListToolbar({
 					<TooltipContent>Update Status</TooltipContent>
 				</Tooltip>
 
-				<div className="w-px h-5 bg-white/10 mx-1" />
+				<div className="w-px h-5 bg-black/10 dark:bg-white/10 mx-1" />
 
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -215,7 +215,7 @@ export function CallListToolbar({
 						<Button
 							size="icon"
 							variant="ghost"
-							className="text-gray-400 hover:text-white h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 							disabled={selectedRows.length === 0}
 							onClick={onArchive}
 						>
@@ -230,7 +230,7 @@ export function CallListToolbar({
 						<Button
 							size="icon"
 							variant="ghost"
-							className="text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 h-8 w-8"
+							className="text-sky-600 dark:text-sky-400 hover:text-sky-600 dark:hover:text-sky-300 hover:bg-sky-500/10 h-8 w-8"
 							disabled={selectedRows.length === 0}
 							onClick={onFreeze}
 						>
@@ -263,13 +263,13 @@ export function CallListToolbar({
 					isDisabled={isSelectAllByVinDisabled}
 				/>
 				<CallCustomerCounter rows={rowData} />
-				<div className="w-px h-5 bg-white/10 mx-1" />
+				<div className="w-px h-5 bg-black/10 dark:bg-white/10 mx-1" />
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
 							size="icon"
 							variant="ghost"
-							className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+							className="text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 							onClick={onDelete}
 							disabled={selectedRows.length === 0}
 						>

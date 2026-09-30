@@ -20,7 +20,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 		>
 			<button
 				type="button"
-				className={`transition-colors ${data.hasAttachment ? "text-indigo-400" : "text-gray-600 hover:text-gray-400"}`}
+				className={`transition-colors ${data.hasAttachment ? "text-indigo-600 dark:text-indigo-400" : "text-gray-500 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-400"}`}
 				title="Attachment"
 				disabled={isLocked}
 				onClick={(e) => {
@@ -34,7 +34,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 			</button>
 			<button
 				type="button"
-				className={`transition-colors ${getEffectiveNoteHistory(data) ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+				className={`transition-colors ${getEffectiveNoteHistory(data) ? "text-renault-yellow" : "text-gray-500 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-400"}`}
 				title="Note"
 				disabled={isLocked}
 				onClick={(e) => {
@@ -48,7 +48,7 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 			</button>
 			<button
 				type="button"
-				className={`transition-colors ${data.reminder ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+				className={`transition-colors ${data.reminder ? "text-renault-yellow" : "text-gray-500 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-400"}`}
 				title="Reminder"
 				disabled={isLocked}
 				onClick={(e) => {

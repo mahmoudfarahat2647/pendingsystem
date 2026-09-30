@@ -110,12 +110,12 @@ export const PartsSection = ({
 
 	return (
 		<div className="col-span-12 lg:col-span-7 flex flex-col min-h-[300px]">
-			<div className="flex-1 bg-white/[0.01] rounded-2xl border border-white/5 p-4 flex flex-col relative overflow-hidden">
+			<div className="flex-1 bg-black/[0.02] dark:bg-white/[0.01] rounded-2xl border border-black/10 dark:border-white/5 p-4 flex flex-col relative overflow-hidden">
 				{/* Section header */}
 				<div className="flex items-center justify-between mb-4">
 					<div className="flex items-center gap-2">
 						<ClipboardList className="h-3 w-3 text-slate-500" />
-						<h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
+						<h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-600">
 							Components
 						</h3>
 					</div>
@@ -127,8 +127,8 @@ export const PartsSection = ({
 							className={cn(
 								"h-7 w-7 rounded-lg transition-all",
 								isBulkMode
-									? "bg-indigo-500/20 text-indigo-400"
-									: "text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10",
+									? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400"
+									: "text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-500/10",
 							)}
 							onClick={() => setIsBulkMode(!isBulkMode)}
 						>
@@ -142,7 +142,7 @@ export const PartsSection = ({
 								"h-7 px-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
 								isEditMode
 									? "text-amber-500 hover:bg-amber-500/10"
-									: "text-indigo-400 hover:bg-indigo-500/10",
+									: "text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10",
 							)}
 							onClick={onAddPart}
 						>
@@ -168,7 +168,7 @@ export const PartsSection = ({
 										placeholder="Paste your part list here..."
 										value={bulkText}
 										onChange={(e) => setBulkText(e.target.value)}
-										className="relative h-full resize-none bg-[#0a0a0b]/60 border-white/5 text-[10px] font-mono p-3 rounded-xl focus:ring-1 focus:ring-indigo-500/30 placeholder:text-slate-600 custom-scrollbar"
+										className="relative h-full resize-none bg-white dark:bg-[#0a0a0b]/60 border-black/10 dark:border-white/5 text-[10px] font-mono p-3 rounded-xl focus:ring-1 focus:ring-indigo-500/30 placeholder:text-slate-400 dark:placeholder:text-slate-600 custom-scrollbar"
 									/>
 								</div>
 								<div className="flex items-center gap-2">
@@ -187,7 +187,7 @@ export const PartsSection = ({
 											setIsBulkMode(false);
 											setBulkText("");
 										}}
-										className="h-8 px-3 rounded-lg text-slate-500 hover:text-white text-[10px] font-black uppercase"
+										className="h-8 px-3 rounded-lg text-slate-500 hover:text-black dark:hover:text-white text-[10px] font-black uppercase"
 									>
 										Cancel
 									</Button>
@@ -211,10 +211,10 @@ export const PartsSection = ({
 										>
 											<div
 												className={cn(
-													"flex flex-col gap-1 p-1.5 rounded-xl border transition-all hover:bg-white/[0.04]",
+													"flex flex-col gap-1 p-1.5 rounded-xl border transition-all hover:bg-black/[0.03] dark:hover:bg-white/[0.04]",
 													partValidationWarnings[part.id]
 														? "bg-red-500/5 border-red-500/20"
-														: "bg-white/[0.02] border-white/5",
+														: "bg-black/[0.03] dark:bg-white/[0.02] border-black/10 dark:border-white/5",
 													"group/row",
 												)}
 											>
@@ -232,7 +232,7 @@ export const PartsSection = ({
 																);
 															}}
 															className={cn(
-																"bg-white/5 border-white/5 h-8 text-[10px] rounded-lg px-2 focus:ring-1 text-center",
+																"bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/5 h-8 text-[10px] rounded-lg px-2 focus:ring-1 text-center",
 																focusColor,
 															)}
 														/>
@@ -253,7 +253,7 @@ export const PartsSection = ({
 																)
 															}
 															className={cn(
-																"bg-white/5 border-white/5 h-8 text-[10px] font-mono rounded-lg px-2 focus:ring-1",
+																"bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/5 h-8 text-[10px] font-mono rounded-lg px-2 focus:ring-1",
 																focusColor,
 																validationMode === "beast" &&
 																	!part.partNumber.trim() &&
@@ -285,7 +285,7 @@ export const PartsSection = ({
 																}
 															}}
 															className={cn(
-																"bg-white/5 border-white/5 h-8 text-[10px] rounded-lg px-2 focus:ring-1",
+																"bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/5 h-8 text-[10px] rounded-lg px-2 focus:ring-1",
 																focusColor,
 																validationMode === "beast" &&
 																	!part.description.trim() &&
@@ -297,7 +297,7 @@ export const PartsSection = ({
 														type="button"
 														variant="ghost"
 														size="icon"
-														className="h-7 w-7 text-slate-600 hover:text-red-400 opacity-0 group-hover/row:opacity-100 transition-opacity"
+														className="h-7 w-7 text-slate-500 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover/row:opacity-100 transition-opacity"
 														onClick={() => onRemovePart(part.id)}
 													>
 														<X className="h-3.5 w-3.5" />
@@ -306,7 +306,7 @@ export const PartsSection = ({
 
 												{partValidationWarnings[part.id] && (
 													<div className="px-2 pb-1 flex items-center justify-between">
-														<div className="flex items-center gap-1.5 text-red-400">
+														<div className="flex items-center gap-1.5 text-red-600 dark:text-red-400">
 															<AlertCircle className="h-3 w-3" />
 															<span className="text-[9px] font-bold uppercase tracking-tight">
 																{partValidationWarnings[part.id].type ===
@@ -355,9 +355,9 @@ export const PartsSection = ({
 				</div>
 
 				{/* Requester field */}
-				<div className="mt-4 pt-4 border-t border-white/5 w-full">
+				<div className="mt-4 pt-4 border-t border-black/10 dark:border-white/5 w-full">
 					<div className="space-y-1 group">
-						<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase flex items-center gap-1.5">
+						<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-700 dark:group-focus-within:text-slate-300 transition-colors uppercase flex items-center gap-1.5">
 							<User className="h-3 w-3" aria-label="Requester" />
 							Requester
 						</Label>

@@ -125,15 +125,15 @@ export const EditReminderModal = ({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				closeLabel={t("common.close")}
-				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden"
+				className="bg-white dark:bg-[#1c1c1e] text-black dark:text-white border-black/10 dark:border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden"
 			>
-				<DialogHeader className="px-6 py-4 flex flex-row items-center justify-between border-b border-white/5 space-y-0 relative">
+				<DialogHeader className="px-6 py-4 flex flex-row items-center justify-between border-b border-black/10 dark:border-white/5 space-y-0 relative">
 					<div className="flex-1 flex justify-start">
 						<Button
 							variant="ghost"
 							size="icon"
 							onClick={() => setShowDeleteConfirm(true)}
-							className="h-8 w-8 text-gray-500 hover:text-red-400 hover:bg-red-400/10"
+							className="h-8 w-8 text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-400/10"
 							title={t("modals.reminder.clearReminder")}
 						>
 							<Trash2 className="h-4 w-4" />
@@ -156,20 +156,20 @@ export const EditReminderModal = ({
 				<div className="relative">
 					{/* Confirmation Overlay */}
 					{showDeleteConfirm && (
-						<div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-[#1c1c1e]/80 backdrop-blur-sm animate-in fade-in duration-200">
-							<div className="bg-[#2c2c2e] border border-white/10 rounded-xl p-6 shadow-2xl w-full max-w-[280px] text-center space-y-4 animate-in zoom-in-95 duration-200 border-red-500/20">
+						<div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-white dark:bg-[#1c1c1e]/80 backdrop-blur-sm animate-in fade-in duration-200">
+							<div className="bg-gray-100 dark:bg-[#2c2c2e] border border-black/10 dark:border-white/10 rounded-xl p-6 shadow-2xl w-full max-w-[280px] text-center space-y-4 animate-in zoom-in-95 duration-200 border-red-500/20">
 								<div className="flex justify-center">
 									<div className="bg-red-500/10 p-3 rounded-full">
 										<Trash2 className="h-6 w-6 text-red-500" />
 									</div>
 								</div>
 								<div>
-									<h3 className="text-sm font-semibold text-white">
+									<h3 className="text-sm font-semibold text-black dark:text-white">
 										<LocalizedScope lang={lang}>
 											{t("modals.reminder.clearConfirmTitle")}
 										</LocalizedScope>
 									</h3>
-									<p className="text-xs text-gray-400 mt-1">
+									<p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
 										<LocalizedScope lang={lang}>
 											{t("modals.reminder.clearConfirmDescription")}
 										</LocalizedScope>
@@ -179,7 +179,7 @@ export const EditReminderModal = ({
 									<Button
 										variant="ghost"
 										size="sm"
-										className="flex-1 h-9 text-xs bg-[#3c3c3e] hover:bg-[#4c4c4e] text-gray-300"
+										className="flex-1 h-9 text-xs bg-gray-200 dark:bg-[#3c3c3e] hover:bg-gray-300 dark:hover:bg-[#4c4c4e] text-gray-700 dark:text-gray-300"
 										onClick={() => setShowDeleteConfirm(false)}
 									>
 										<LocalizedScope lang={lang}>
@@ -208,7 +208,7 @@ export const EditReminderModal = ({
 						{/* Inputs Section */}
 						<div className="space-y-4">
 							<div className="space-y-2">
-								<Label className="text-xs text-gray-400 uppercase tracking-wider">
+								<Label className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wider">
 									<LocalizedScope lang={lang}>
 										{t("modals.reminder.dateTime")}
 									</LocalizedScope>
@@ -221,7 +221,7 @@ export const EditReminderModal = ({
 							</div>
 
 							<div className="space-y-2">
-								<Label className="text-xs text-gray-400 uppercase tracking-wider">
+								<Label className="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wider">
 									<LocalizedScope lang={lang}>
 										{t("modals.reminder.subject")}
 									</LocalizedScope>
@@ -230,7 +230,7 @@ export const EditReminderModal = ({
 									value={subject}
 									onChange={(e) => setSubject(e.target.value)}
 									placeholder={t("modals.reminder.subjectPlaceholder")}
-									className="bg-[#2c2c2e] border-white/10 text-gray-200 focus-visible:ring-1 focus-visible:ring-renault-yellow focus-visible:ring-offset-0"
+									className="bg-gray-100 dark:bg-[#2c2c2e] border-black/10 dark:border-white/10 text-gray-800 dark:text-gray-200 focus-visible:ring-1 focus-visible:ring-renault-yellow focus-visible:ring-offset-0"
 								/>
 							</div>
 						</div>
@@ -238,7 +238,7 @@ export const EditReminderModal = ({
 						{/* Quick Templates Section */}
 						<div className="space-y-3">
 							<div className="flex items-center justify-between">
-								<h4 className="text-sm font-semibold text-gray-200 uppercase tracking-wider">
+								<h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 uppercase tracking-wider">
 									<LocalizedScope lang={lang}>
 										{t("modals.shared.quickTemplates")}
 									</LocalizedScope>
@@ -261,7 +261,7 @@ export const EditReminderModal = ({
 										value={newTemplate}
 										onChange={(e) => setNewTemplate(e.target.value)}
 										placeholder={t("modals.shared.newTemplatePlaceholder")}
-										className="h-8 text-xs bg-[#2c2c2e] border-white/10"
+										className="h-8 text-xs bg-gray-100 dark:bg-[#2c2c2e] border-black/10 dark:border-white/10"
 										onKeyDown={(e) => e.key === "Enter" && handleAddTemplate()}
 									/>
 									<Button
@@ -284,14 +284,14 @@ export const EditReminderModal = ({
 									>
 										<button
 											type="button"
-											className="w-full text-left px-3 py-2 rounded-md text-xs bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border border-transparent hover:border-white/10 truncate pr-8 transition-colors"
+											className="w-full text-left px-3 py-2 rounded-md text-xs bg-gray-100 dark:bg-[#2c2c2e] hover:bg-gray-200 dark:hover:bg-[#3c3c3e] text-gray-700 dark:text-gray-300 border border-transparent hover:border-black/20 dark:hover:border-white/10 truncate pr-8 transition-colors"
 											onClick={() => handleTemplateClick(template.text)}
 										>
 											{template.text}
 										</button>
 										<button
 											type="button"
-											className="absolute right-1 p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+											className="absolute right-1 p-1 text-gray-500 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
 											onClick={(e) => {
 												e.stopPropagation();
 												removeMutation.mutate(template.id);
@@ -310,7 +310,7 @@ export const EditReminderModal = ({
 					<Button
 						variant="ghost"
 						onClick={() => onOpenChange(false)}
-						className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 w-full"
+						className="bg-gray-100 dark:bg-[#2c2c2e] hover:bg-gray-200 dark:hover:bg-[#3c3c3e] text-gray-700 dark:text-gray-300 w-full"
 					>
 						<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 					</Button>

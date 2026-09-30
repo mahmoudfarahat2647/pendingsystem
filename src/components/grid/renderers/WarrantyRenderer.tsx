@@ -14,7 +14,7 @@ export const WarrantyRenderer = (params: ICellRendererParams<PendingRow>) => {
 
 	return (
 		<div
-			className={`text-xs font-medium ${isExpired ? "text-red-500" : "text-gray-300"}`}
+			className={`text-xs font-medium ${isExpired ? "text-red-500" : "text-gray-700 dark:text-gray-300"}`}
 			title={`Start: ${data.startWarranty}\nEnd: ${data.endWarranty}`}
 		>
 			{remainTime || "N/A"}

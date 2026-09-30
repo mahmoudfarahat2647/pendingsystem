@@ -2,12 +2,14 @@
 
 import { useId } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { useTheme } from "@/hooks/useTheme";
 
 interface CapacityChartProps {
 	data: { name: string; value: number; color: string }[];
 }
 
 const CapacityChart = ({ data }: CapacityChartProps) => {
+	const { theme } = useTheme();
 	const uid = useId();
 	const filterId = `chartDropShadow-${uid}`;
 
@@ -40,7 +42,7 @@ const CapacityChart = ({ data }: CapacityChartProps) => {
 					cornerRadius={4}
 					dataKey="value"
 					stroke="none"
-					filter={`url(#${filterId})`}
+					filter={theme === "white" ? undefined : `url(#${filterId})`}
 				>
 					{data.map((entry, index) => (
 						<Cell key={`cell-${index}`} fill={entry.color} />

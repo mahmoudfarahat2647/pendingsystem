@@ -66,18 +66,18 @@ export const BookingCalendarGrid = ({
 					type="button"
 					aria-label={isInquiry ? "Previous month" : undefined}
 					onClick={() => onMonthChange(subMonths(monthStart, 1))}
-					className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
+					className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-black dark:hover:text-white"
 				>
 					<ChevronLeft className="h-6 w-6" />
 				</button>
-				<h2 className="text-2xl font-light text-white tracking-widest uppercase">
+				<h2 className="text-2xl font-light text-black dark:text-white tracking-widest uppercase">
 					{format(currentMonth, "MMMM yyyy")}
 				</h2>
 				<button
 					type="button"
 					aria-label={isInquiry ? "Next month" : undefined}
 					onClick={() => onMonthChange(addMonths(monthStart, 1))}
-					className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white"
+					className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-black dark:hover:text-white"
 				>
 					<ChevronRight className="h-6 w-6" />
 				</button>
@@ -87,7 +87,7 @@ export const BookingCalendarGrid = ({
 				{["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
 					<div
 						key={day}
-						className="text-center text-[10px] font-medium text-gray-600 uppercase tracking-[0.2em]"
+						className="text-center text-[10px] font-medium text-gray-500 dark:text-gray-600 uppercase tracking-[0.2em]"
 					>
 						{day}
 					</div>
@@ -137,12 +137,12 @@ export const BookingCalendarGrid = ({
 								"relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-300 group",
 								!isCurrentMonth
 									? "text-gray-800"
-									: "text-gray-400 hover:text-white",
+									: "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white",
 								isSelected
 									? searchQuery
-										? "ring-2 ring-emerald-500 text-emerald-400 bg-emerald-500/10"
-										: "ring-1 ring-white/50 text-white bg-white/10"
-									: "hover:bg-white/5",
+										? "ring-2 ring-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+										: "ring-1 ring-black/40 dark:ring-white/50 text-black dark:text-white bg-black/10 dark:bg-white/10"
+									: "hover:bg-black/5 dark:hover:bg-white/5",
 								isSearchMatch && !isSelected && "text-emerald-500 font-bold",
 								isFaded && !isSelected && "opacity-20 pointer-events-none",
 								isActiveCustomerDate &&
@@ -157,7 +157,7 @@ export const BookingCalendarGrid = ({
 									className={cn(
 										"absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full shadow-lg z-20",
 										isArchivedOnlyDay
-											? "bg-transparent text-gray-400 border border-dashed border-gray-500"
+											? "bg-transparent text-gray-600 dark:text-gray-400 border border-dashed border-gray-500"
 											: "bg-renault-yellow text-black border border-[#1c1c1e]",
 									)}
 								>

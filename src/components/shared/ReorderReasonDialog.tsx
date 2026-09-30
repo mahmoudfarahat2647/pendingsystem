@@ -44,7 +44,7 @@ export function ReorderReasonDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				closeLabel={t("common.close")}
-				className="bg-[#1c1c1e] border border-white/10 text-white"
+				className="bg-white dark:bg-[#1c1c1e] border border-black/10 dark:border-white/10 text-black dark:text-white"
 			>
 				<DialogHeader>
 					<DialogTitle className="text-orange-500">
@@ -71,7 +71,7 @@ export function ReorderReasonDialog({
 							placeholder={placeholder}
 							className={cn(
 								FOCUS_CHAMPAGNE_VISIBLE,
-								"bg-white/5 border-white/10 text-white",
+								"bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-black dark:text-white",
 							)}
 						/>
 					</div>
@@ -85,7 +85,7 @@ export function ReorderReasonDialog({
 					<Button
 						variant="outline"
 						onClick={onCancel}
-						className="border-white/20 text-white hover:bg-white/10"
+						className="border-black/20 dark:border-white/20 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
 					>
 						<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 					</Button>

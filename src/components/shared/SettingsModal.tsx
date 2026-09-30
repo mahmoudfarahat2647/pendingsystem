@@ -115,12 +115,12 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				closeLabel={t("settings.modal.close")}
-				className="bg-[#0a0a0b] text-white border-white/10 max-w-5xl p-0 gap-0 overflow-hidden flex h-[80vh] rounded-3xl shadow-2xl"
+				className="bg-white dark:bg-[#0a0a0b] text-black dark:text-white border-black/10 dark:border-white/10 max-w-5xl p-0 gap-0 overflow-hidden flex h-[80vh] rounded-3xl shadow-2xl"
 			>
 				{/* Sidebar Navigation */}
-				<div className="w-64 border-r border-white/5 bg-black/20 flex flex-col">
-					<div className="p-6 flex items-center gap-2 border-b border-white/5">
-						<SettingsIcon className="h-5 w-5 text-gray-400" />
+				<div className="w-64 border-r border-black/10 dark:border-white/5 bg-black/5 dark:bg-black/20 flex flex-col">
+					<div className="p-6 flex items-center gap-2 border-b border-black/10 dark:border-white/5">
+						<SettingsIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
 						<DialogTitle className="font-bold text-lg tracking-tight">
 							<LocalizedScope lang={lang}>
 								{t("settings.modal.title")}
@@ -137,7 +137,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									"w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
 									activeTab === item.id
 										? "bg-renault-yellow text-black font-semibold shadow-lg shadow-renault-yellow/20"
-										: "text-gray-400 hover:bg-white/5 hover:text-white",
+										: "text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-black dark:hover:text-white",
 								)}
 							>
 								<item.icon
@@ -145,7 +145,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 										"h-5 w-5",
 										activeTab === item.id
 											? "text-black"
-											: "text-gray-500 group-hover:text-white",
+											: "text-gray-500 group-hover:text-black dark:group-hover:text-white",
 									)}
 								/>
 								<span className="text-sm">
@@ -154,7 +154,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 							</button>
 						))}
 					</nav>
-					<div className="p-6 border-t border-white/5 space-y-3">
+					<div className="p-6 border-t border-black/10 dark:border-white/5 space-y-3">
 						{!showPasswordPrompt ? (
 							<button
 								type="button"
@@ -214,7 +214,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									}}
 									className={cn(
 										FOCUS_CHAMPAGNE_VISIBLE,
-										"h-9 bg-black/40 border-white/10 text-xs text-center rounded-lg",
+										"h-9 bg-black/5 dark:bg-black/40 border-black/10 dark:border-white/10 text-xs text-center rounded-lg",
 										authError &&
 											"border-red-500/50 placeholder:text-red-400/50",
 									)}
@@ -223,7 +223,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 									<Button
 										variant="ghost"
 										size="sm"
-										className="flex-1 h-7 text-[10px] uppercase font-bold text-gray-400"
+										className="flex-1 h-7 text-[10px] uppercase font-bold text-gray-600 dark:text-gray-400"
 										onClick={() => {
 											setShowPasswordPrompt(false);
 											setPasswordAttempt("");
@@ -247,26 +247,28 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 							</div>
 						)}
 						<div className="flex items-center justify-between pt-2">
-							<div className="text-[10px] font-mono text-gray-700 tracking-widest uppercase">
+							<div className="text-[10px] font-mono text-gray-300 dark:text-gray-700 tracking-widest uppercase">
 								<LocalizedScope lang={lang}>
 									{t("settings.modal.version")}
 								</LocalizedScope>
 							</div>
-							<div className="text-[10px] font-bold text-gray-600">v2.5.0</div>
+							<div className="text-[10px] font-bold text-gray-500 dark:text-gray-600">
+								v2.5.0
+							</div>
 						</div>
 					</div>
 				</div>
 
 				{/* Content Area */}
-				<div className="flex-1 flex flex-col bg-[#1c1c1e]">
-					<header className="p-6 pr-14 flex items-center justify-between border-b border-white/5 h-[73px]">
+				<div className="flex-1 flex flex-col bg-white dark:bg-[#1c1c1e]">
+					<header className="p-6 pr-14 flex items-center justify-between border-b border-black/10 dark:border-white/5 h-[73px]">
 						<div>
 							<h3 className="font-bold text-lg">
 								<LocalizedScope lang={lang}>
 									{t(TAB_HEADINGS[activeTab].title)}
 								</LocalizedScope>
 							</h3>
-							<p className="text-xs text-gray-400">
+							<p className="text-xs text-gray-600 dark:text-gray-400">
 								<LocalizedScope lang={lang}>
 									{t(TAB_HEADINGS[activeTab].description)}
 								</LocalizedScope>

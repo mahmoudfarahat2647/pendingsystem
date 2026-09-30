@@ -92,7 +92,7 @@ export const SearchResultsGrid = ({
 	);
 
 	return (
-		<div className="h-full w-full rounded-xl border border-white/10 overflow-hidden bg-[#141416]/50 shadow-2xl ring-1 ring-white/5">
+		<div className="h-full w-full rounded-xl border border-black/10 dark:border-white/10 overflow-hidden bg-gray-50 dark:bg-[#141416]/50 shadow-2xl ring-1 ring-black/5 dark:ring-white/5">
 			<div className="h-full w-full">
 				<AgGridReact
 					ref={gridRef}

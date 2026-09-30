@@ -23,19 +23,21 @@ export const SearchResultsHeader = ({
 	onBadgeClick,
 }: SearchResultsHeaderProps) => {
 	return (
-		<div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0a0a0b]/50 backdrop-blur-xl">
+		<div className="flex items-center justify-between px-6 py-4 border-b border-black/10 dark:border-white/5 bg-white/70 dark:bg-[#0a0a0b]/50 backdrop-blur-xl">
 			<div className="flex items-center gap-4">
-				<div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/20">
+				<div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500/20">
 					<SearchIcon className="w-5 h-5" />
 				</div>
 				<div>
-					<h2 className="text-lg font-semibold text-white/90">
+					<h2 className="text-lg font-semibold text-black/90 dark:text-white/90">
 						Global Search Results
 					</h2>
-					<div className="flex items-center gap-3 mt-1 text-sm text-gray-400">
-						<span className="text-white font-medium">{resultsCount}</span>{" "}
+					<div className="flex items-center gap-3 mt-1 text-sm text-gray-600 dark:text-gray-400">
+						<span className="text-black dark:text-white font-medium">
+							{resultsCount}
+						</span>{" "}
 						matches for
-						<span className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-xs">
+						<span className="px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-black dark:text-white font-mono text-xs">
 							"{searchTerm}"
 						</span>
 					</div>
@@ -52,10 +54,10 @@ export const SearchResultsHeader = ({
 							onClick={() => onBadgeClick(source)}
 							disabled={isDisabled}
 							className={cn(
-								"flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-300",
+								"flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5 text-xs text-gray-700 dark:text-gray-300",
 								isDisabled
 									? "cursor-default opacity-50"
-									: "cursor-pointer hover:bg-white/10 transition-colors",
+									: "cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition-colors",
 							)}
 						>
 							<span
@@ -69,12 +71,12 @@ export const SearchResultsHeader = ({
 						</button>
 					);
 				})}
-				<div className="w-px h-6 bg-white/10 mx-2" />
+				<div className="w-px h-6 bg-black/10 dark:bg-white/10 mx-2" />
 				<Button
 					onClick={onClearSearch}
 					variant="ghost"
 					size="sm"
-					className="text-gray-400 hover:text-white hover:bg-white/5"
+					className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
 				>
 					<X className="w-4 h-4 mr-2" />
 					Clear Search

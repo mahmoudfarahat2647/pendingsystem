@@ -52,7 +52,7 @@ export const OrderFormModal = ({
 	return (
 		<>
 			<Dialog open={open} onOpenChange={onOpenChange}>
-				<DialogContent className="max-w-4xl p-0 overflow-hidden border border-white/5 bg-[#0c0c0e] text-slate-200 shadow-2xl shadow-black/50">
+				<DialogContent className="max-w-4xl p-0 overflow-hidden border border-black/10 dark:border-white/5 bg-white dark:bg-[#0c0c0e] text-slate-800 dark:text-slate-200 shadow-2xl shadow-black/10 dark:shadow-black/50">
 					<FormHeader
 						isEditMode={isEditMode}
 						isMultiSelection={isMultiSelection}

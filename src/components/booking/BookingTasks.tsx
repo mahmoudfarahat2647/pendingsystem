@@ -44,11 +44,11 @@ export const BookingTasks = () => {
 
 		return {
 			id: task.id,
-			checkboxClassName: `rounded-full border-white/20 ${bgClass}`,
+			checkboxClassName: `rounded-full border-black/20 dark:border-white/20 ${bgClass}`,
 			label: (
 				<div className="flex items-center gap-3 w-full pl-1">
 					<task.icon className={`h-4 w-4 ${task.color} opacity-70`} />
-					<span className="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">
+					<span className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-200 transition-colors">
 						{task.label}
 					</span>
 				</div>
@@ -57,14 +57,14 @@ export const BookingTasks = () => {
 	});
 
 	return (
-		<div className="mt-8 space-y-4 p-6 bg-white/[0.02] rounded-2xl border border-white/5 max-w-lg mx-auto w-full">
+		<div className="mt-8 space-y-4 p-6 bg-black/[0.03] dark:bg-white/[0.02] rounded-2xl border border-black/10 dark:border-white/5 max-w-lg mx-auto w-full">
 			<h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
 				Required Checks
 			</h4>
 			<PlayfulTodolist
 				items={playfulItems}
 				className="w-full space-y-3"
-				itemClassName="flex items-center space-x-3 group cursor-pointer hover:bg-white/[0.02] p-2 rounded-lg transition-colors relative"
+				itemClassName="flex items-center space-x-3 group cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] p-2 rounded-lg transition-colors relative"
 				hideDivider
 			/>
 		</div>

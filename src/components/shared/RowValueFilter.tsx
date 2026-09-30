@@ -56,8 +56,10 @@ export const RowValueFilter = ({
 				value={selectedOptions}
 			>
 				<ComboboxChips
-					className="min-h-8 rounded-md border-white/10 bg-[#1c1c1e] p-1 text-white shadow-none ring-0 focus-within:border-white/20 focus-within:ring-0 dark:not-has-disabled:bg-[#1c1c1e]"
-					startAddon={<Filter className="h-3.5 w-3.5 text-gray-400" />}
+					className="min-h-8 rounded-md border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] p-1 text-black dark:text-white shadow-none ring-0 focus-within:border-black/30 dark:focus-within:border-white/20 focus-within:ring-0 dark:not-has-disabled:bg-[#1c1c1e]"
+					startAddon={
+						<Filter className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+					}
 				>
 					<ComboboxValue>
 						{(selectedValue: RowValueFilterOption[]) => (
@@ -65,7 +67,7 @@ export const RowValueFilter = ({
 								{selectedValue?.map((option) => (
 									<ComboboxChip
 										aria-label={option.label}
-										className="min-h-5 rounded bg-white/10 ps-1.5 text-[10px] text-white/90"
+										className="min-h-5 rounded bg-black/10 dark:bg-white/10 ps-1.5 text-[10px] text-black/90 dark:text-white/90"
 										key={option.value}
 									>
 										{option.label}
@@ -73,7 +75,7 @@ export const RowValueFilter = ({
 								))}
 								<ComboboxChipsInput
 									aria-label={ariaLabel}
-									className="min-w-12 bg-transparent py-0 text-xs text-gray-300 outline-none placeholder:text-gray-500"
+									className="min-w-12 bg-transparent py-0 text-xs text-gray-700 dark:text-gray-300 outline-none placeholder:text-gray-500"
 									disabled={options.length === 0}
 									placeholder={
 										selectedValue.length > 0 ? undefined : placeholder
@@ -84,12 +86,12 @@ export const RowValueFilter = ({
 						)}
 					</ComboboxValue>
 				</ComboboxChips>
-				<ComboboxPopup className="border-white/10 bg-[#1c1c1e] shadow-xl/20">
+				<ComboboxPopup className="border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] shadow-xl/20">
 					<ComboboxEmpty>{emptyText}</ComboboxEmpty>
 					<ComboboxList>
 						{(option: RowValueFilterOption) => (
 							<ComboboxItem
-								className="text-white data-highlighted:bg-white/10 data-highlighted:text-white"
+								className="text-black dark:text-white data-highlighted:bg-black/5 dark:data-highlighted:bg-white/10 data-highlighted:text-black dark:data-highlighted:text-white"
 								key={option.value}
 								value={option}
 							>

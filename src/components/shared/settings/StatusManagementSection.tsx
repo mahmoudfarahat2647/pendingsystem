@@ -78,15 +78,15 @@ export const StatusManagementSection = ({
 			{/* Add New Status */}
 			<div
 				className={cn(
-					"p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4 relative transition-all duration-300",
+					"p-6 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 space-y-4 relative transition-all duration-300",
 					isLocked && "grayscale pointer-events-none opacity-50",
 				)}
 			>
 				{isLocked && (
 					<div className="absolute inset-0 flex items-center justify-center z-20">
-						<div className="px-3 py-1.5 bg-black/80 border border-white/10 rounded-full flex items-center gap-2 shadow-2xl backdrop-blur-sm">
-							<Lock className="h-3 w-3 text-red-400" />
-							<span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">
+						<div className="px-3 py-1.5 bg-black/50 dark:bg-black/80 border border-black/10 dark:border-white/10 rounded-full flex items-center gap-2 shadow-2xl backdrop-blur-sm">
+							<Lock className="h-3 w-3 text-red-600 dark:text-red-400" />
+							<span className="text-[10px] font-bold text-black/50 dark:text-white/40 uppercase tracking-tighter">
 								<LocalizedScope lang={lang}>
 									{t("settings.statuses.editorsLocked")}
 								</LocalizedScope>
@@ -94,7 +94,7 @@ export const StatusManagementSection = ({
 						</div>
 					</div>
 				)}
-				<h4 className="text-sm font-semibold text-white uppercase tracking-wider">
+				<h4 className="text-sm font-semibold text-black dark:text-white uppercase tracking-wider">
 					<LocalizedScope lang={lang}>{title}</LocalizedScope>
 				</h4>
 				<div className="flex gap-4">
@@ -102,7 +102,7 @@ export const StatusManagementSection = ({
 						value={newLabel}
 						onChange={(e) => setNewLabel(e.target.value)}
 						placeholder={t("settings.statuses.labelPlaceholder")}
-						className="h-12 bg-black/40 border-white/10 rounded-xl focus:ring-renault-yellow/50"
+						className="h-12 bg-black/5 dark:bg-black/40 border-black/10 dark:border-white/10 rounded-xl focus:ring-renault-yellow/50"
 						disabled={isLocked}
 					/>
 					<Button
@@ -135,7 +135,7 @@ export const StatusManagementSection = ({
 
 			{/* List of Statuses */}
 			<div className="space-y-4">
-				<h4 className="text-sm font-semibold text-white uppercase tracking-wider px-2">
+				<h4 className="text-sm font-semibold text-black dark:text-white uppercase tracking-wider px-2">
 					<LocalizedScope lang={lang}>{managedTitle}</LocalizedScope>
 				</h4>
 				<div className="grid gap-3">
@@ -148,13 +148,13 @@ export const StatusManagementSection = ({
 							return (
 								<div
 									key={status.id}
-									className="p-4 rounded-2xl bg-white/10 border border-renault-yellow/50 ring-1 ring-renault-yellow/20 space-y-4 animate-in fade-in"
+									className="p-4 rounded-2xl bg-black/10 dark:bg-white/10 border border-renault-yellow/50 ring-1 ring-renault-yellow/20 space-y-4 animate-in fade-in"
 								>
 									<div className="flex gap-4">
 										<Input
 											value={editLabel}
 											onChange={(e) => setEditLabel(e.target.value)}
-											className="h-10 bg-black/40 border-white/10"
+											className="h-10 bg-black/5 dark:bg-black/40 border-black/10 dark:border-white/10"
 											autoFocus
 										/>
 									</div>
@@ -169,7 +169,7 @@ export const StatusManagementSection = ({
 												size="sm"
 												variant="ghost"
 												onClick={cancelEditing}
-												className="hover:bg-white/10 text-gray-400"
+												className="hover:bg-black/5 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400"
 											>
 												<X className="h-4 w-4 mr-1" />
 												<LocalizedScope lang={lang}>
@@ -199,7 +199,7 @@ export const StatusManagementSection = ({
 						return (
 							<div
 								key={status.id}
-								className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
+								className="flex items-center justify-between p-4 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5 hover:border-black/20 dark:hover:border-white/10 transition-all group"
 							>
 								<div className="flex items-center gap-4">
 									<div
@@ -213,11 +213,11 @@ export const StatusManagementSection = ({
 												: status.color,
 										}}
 									/>
-									<span className="font-medium text-gray-200">
+									<span className="font-medium text-gray-800 dark:text-gray-200">
 										{status.label}
 									</span>
 									{usageCount > 0 && (
-										<span className="text-[10px] bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">
+										<span className="text-[10px] bg-black/10 dark:bg-white/10 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">
 											<LocalizedScope lang={lang}>
 												{t("settings.statuses.usedCount", {
 													count: usageCount,
@@ -234,7 +234,7 @@ export const StatusManagementSection = ({
 											size="icon"
 											onClick={() => startEditing(status)}
 											disabled={isLocked}
-											className="h-9 w-9 text-gray-500 hover:text-white hover:bg-white/10 rounded-xl"
+											className="h-9 w-9 text-gray-500 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-xl"
 										>
 											<Pencil className="h-4 w-4" />
 										</Button>
@@ -250,8 +250,8 @@ export const StatusManagementSection = ({
 														className={cn(
 															"h-9 w-9 rounded-xl transition-all",
 															!isDeletable
-																? "text-gray-600 cursor-not-allowed"
-																: "text-gray-500 hover:text-red-400 hover:bg-red-400/10",
+																? "text-gray-500 dark:text-gray-600 cursor-not-allowed"
+																: "text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-400/10",
 														)}
 													>
 														<Trash2 className="h-4 w-4" />

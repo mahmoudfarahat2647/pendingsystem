@@ -74,7 +74,7 @@ export function ReleaseConfirmationModal({
 		>
 			<DialogContent
 				closeLabel={t("common.close")}
-				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden rounded-[10px]"
+				className="bg-white dark:bg-[#1c1c1e] text-black dark:text-white border-black/10 dark:border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden rounded-[10px]"
 			>
 				<DialogDescription className="sr-only">
 					<LocalizedScope lang={lang}>
@@ -87,12 +87,12 @@ export function ReleaseConfirmationModal({
 							<AlertTriangle className="h-3.5 w-3.5 -rotate-45 text-renault-yellow" />
 						</div>
 						<div className="flex-1">
-							<DialogTitle className="text-xl font-semibold leading-tight text-white">
+							<DialogTitle className="text-xl font-semibold leading-tight text-black dark:text-white">
 								<LocalizedScope lang={lang}>
 									{t("modals.release.title")}
 								</LocalizedScope>
 							</DialogTitle>
-							<p className="mt-1 text-sm text-gray-400">
+							<p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
 								<LocalizedScope lang={lang}>
 									{t("modals.release.subtitle")}
 								</LocalizedScope>
@@ -107,7 +107,9 @@ export function ReleaseConfirmationModal({
 									{t("modals.release.vin")}
 								</LocalizedScope>
 							</p>
-							<p className="mt-1 break-all text-[15px] text-gray-100">{vin}</p>
+							<p className="mt-1 break-all text-[15px] text-gray-900 dark:text-gray-100">
+								{vin}
+							</p>
 						</div>
 						<div>
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
@@ -115,7 +117,7 @@ export function ReleaseConfirmationModal({
 									{t("modals.release.mileage")}
 								</LocalizedScope>
 							</p>
-							<p className="release-value-pulse mt-1 text-[15px] text-gray-100">
+							<p className="release-value-pulse mt-1 text-[15px] text-gray-900 dark:text-gray-100">
 								<LocalizedScope lang={lang}>
 									{t("modals.release.mileageValue", {
 										mileage: formattedMileage,
@@ -129,7 +131,7 @@ export function ReleaseConfirmationModal({
 									{t("modals.release.repairSystem")}
 								</LocalizedScope>
 							</p>
-							<p className="release-value-pulse-alt mt-1 text-[15px] text-gray-100">
+							<p className="release-value-pulse-alt mt-1 text-[15px] text-gray-900 dark:text-gray-100">
 								<LocalizedScope lang={lang}>
 									{t("modals.release.warranty")}
 								</LocalizedScope>
@@ -137,12 +139,12 @@ export function ReleaseConfirmationModal({
 						</div>
 					</div>
 
-					<div className="mt-5 border-t border-white/10" />
+					<div className="mt-5 border-t border-black/10 dark:border-white/10" />
 
 					<div className="mt-5">
 						<label
 							htmlFor="release-confirmation-word"
-							className="text-[13px] font-medium text-gray-300"
+							className="text-[13px] font-medium text-gray-700 dark:text-gray-300"
 						>
 							<LocalizedScope lang={lang}>
 								{t("modals.release.enterWord")}
@@ -164,7 +166,7 @@ export function ReleaseConfirmationModal({
 							}}
 							className={cn(
 								FOCUS_CHAMPAGNE_VISIBLE,
-								"mt-2 h-10 w-full rounded-md border border-white/10 bg-[#2c2c2e] px-3 text-white placeholder:text-gray-600",
+								"mt-2 h-10 w-full rounded-md border border-black/10 dark:border-white/10 bg-gray-100 dark:bg-[#2c2c2e] px-3 text-black dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-600",
 							)}
 						/>
 						<p className="mt-2 text-[12px] text-gray-500">
@@ -180,7 +182,7 @@ export function ReleaseConfirmationModal({
 							variant="outline"
 							onClick={onCancel}
 							disabled={pending}
-							className="border-white/20 text-white hover:bg-white/10"
+							className="border-black/20 dark:border-white/20 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
 						>
 							<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 						</Button>

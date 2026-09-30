@@ -15,6 +15,7 @@ import { ClientErrorBoundary } from "@/components/shared/ClientErrorBoundary";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardStatsQuery } from "@/hooks/queries/useDashboardStatsQuery";
 import { useStorageStats } from "@/hooks/useStorageStats";
+import { useTheme } from "@/hooks/useTheme";
 import { formatBytesToMB, usagePercent } from "@/lib/storage-limits";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +24,7 @@ const CapacityChart = dynamic(
 	{
 		ssr: false,
 		loading: () => (
-			<div className="h-full w-full bg-white/5 animate-pulse rounded-full" />
+			<div className="h-full w-full bg-black/5 dark:bg-white/5 animate-pulse rounded-full" />
 		),
 	},
 );
@@ -32,12 +33,14 @@ const DistributionChart = dynamic(
 	{
 		ssr: false,
 		loading: () => (
-			<div className="h-full w-full bg-white/5 animate-pulse rounded-lg" />
+			<div className="h-full w-full bg-black/5 dark:bg-white/5 animate-pulse rounded-lg" />
 		),
 	},
 );
 
 export default function DashboardPage() {
+	const { theme } = useTheme();
+	const white = theme === "white";
 	const { data: statsData, isLoading: isStageLoading } =
 		useDashboardStatsQuery();
 
@@ -93,8 +96,12 @@ export default function DashboardPage() {
 	const pieData = useMemo(() => {
 		if (!storageStats) {
 			return [
-				{ name: "Used", value: 0, color: "#ffffff05" },
-				{ name: "Remaining", value: 100, color: "#ffffff10" },
+				{ name: "Used", value: 0, color: white ? "#00000008" : "#ffffff05" },
+				{
+					name: "Remaining",
+					value: 100,
+					color: white ? "#0000000f" : "#ffffff10",
+				},
 			];
 		}
 
@@ -110,10 +117,10 @@ export default function DashboardPage() {
 			{
 				name: "Remaining",
 				value: Math.max(0, 100 - usedPercent),
-				color: "#ffffff10",
+				color: white ? "#0000000f" : "#ffffff10",
 			},
 		];
-	}, [storageStats]);
+	}, [storageStats, white]);
 
 	const barData = useMemo(
 		() => [
@@ -129,9 +136,9 @@ export default function DashboardPage() {
 	return (
 		<div className="space-y-5 pb-8 max-w-[1400px] mx-auto">
 			{/* Hero Section */}
-			<div className="relative overflow-hidden rounded-3xl bg-black border border-white/5 h-[460px] shadow-xl">
+			<div className="relative overflow-hidden rounded-3xl bg-white dark:bg-black border border-black/10 dark:border-white/5 aspect-[2027/776] dark:aspect-auto dark:h-[460px] shadow-xl">
 				{/* Full Background Image */}
-				<div className="absolute inset-0 bg-[url('/dashboard-car.webp')] bg-cover bg-center" />
+				<div className="absolute inset-0 bg-[url('/hero.png')] dark:bg-[url('/dashboard-car.webp')] bg-cover bg-center" />
 
 				<div className="relative z-20 h-full flex flex-col justify-end p-10">
 					{/* Bottom Row: Stats Cards + Calendar */}
@@ -141,19 +148,19 @@ export default function DashboardPage() {
 							{stats.map((stat) => (
 								<div
 									key={stat.title}
-									className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 relative group hover:bg-white/10 hover:border-white/20 transition-all duration-200"
+									className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-xl p-4 relative group dark:hover:bg-white/10 dark:hover:border-white/20 transition-all duration-200"
 								>
 									<div className="flex justify-between items-start mb-2">
 										<div className="p-1.5 rounded-lg bg-renault-yellow/10 text-renault-yellow">
 											<stat.icon className="w-4 h-4" />
 										</div>
-										<ArrowUpRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-renault-yellow transition-colors" />
+										<ArrowUpRight className="hidden dark:block w-3.5 h-3.5 text-gray-500 group-hover:text-renault-yellow transition-colors" />
 									</div>
 									<div>
-										<p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-0.5">
+										<p className="text-[10px] font-bold text-gray-600 dark:text-gray-400 tracking-widest uppercase mb-0.5">
 											{stat.title}
 										</p>
-										<h3 className="text-2xl font-black text-white">
+										<h3 className="text-2xl font-black text-black dark:text-white">
 											{stat.value}
 										</h3>
 										<p className="text-[10px] text-gray-500">{stat.subtext}</p>
@@ -163,9 +170,9 @@ export default function DashboardPage() {
 						</div>
 
 						{/* Glass Calendar Widget - Absolute Bottom Right */}
-						<div className="absolute bottom-6 right-6 glass rounded-2xl p-3 min-w-[180px] hidden lg:block opacity-80 hover:opacity-100 transition-opacity duration-300">
+						<div className="absolute bottom-6 right-6 dark:glass bg-white border border-black/10 shadow-md dark:shadow-none rounded-2xl p-3 min-w-[180px] hidden lg:block opacity-100 dark:opacity-80 dark:hover:opacity-100 transition-opacity duration-300">
 							<div className="flex items-center justify-between mb-2">
-								<h3 className="text-xs font-semibold text-white">
+								<h3 className="text-xs font-semibold text-black dark:text-white">
 									{calendarData.monthName}
 								</h3>
 								<span className="text-[9px] text-gray-500 font-medium">
@@ -194,7 +201,7 @@ export default function DashboardPage() {
 											className={cn(
 												"w-4 h-4 flex items-center justify-center rounded-full",
 												isValid
-													? "text-gray-500 hover:bg-white/10 cursor-pointer"
+													? "text-gray-500 dark:hover:bg-white/10 dark:cursor-pointer"
 													: "text-transparent",
 												isToday && "bg-renault-yellow text-black font-bold",
 											)}
@@ -215,22 +222,22 @@ export default function DashboardPage() {
 					<ClientErrorBoundary fallbackTitle="Storage Chart Error">
 						<Suspense
 							fallback={
-								<Card className="bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden h-full">
+								<Card className="bg-white dark:bg-[#0c0c0e]/90 backdrop-blur-xl border border-black/10 dark:border-white/5 rounded-xl shadow-2xl relative overflow-hidden h-full">
 									<CardContent className="p-6">
-										<div className="h-[220px] bg-white/5 animate-pulse rounded-lg" />
+										<div className="h-[220px] bg-black/5 dark:bg-white/5 animate-pulse rounded-lg" />
 									</CardContent>
 								</Card>
 							}
 						>
 							{/* Storage Capacity Pie Chart */}
-							<Card className="group bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/10 rounded-xl hover:border-white/20 hover:shadow-[0_0_30px_-5px_var(--renault-yellow)] transition-all duration-500 h-full relative overflow-hidden">
+							<Card className="group bg-white dark:bg-[#0c0c0e]/90 shadow-sm dark:shadow-none backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-xl dark:hover:border-white/20 dark:hover:shadow-[0_0_30px_-5px_var(--renault-yellow)] transition-all duration-500 h-full relative overflow-hidden">
 								{/* Subtle ambient radial glow taking up the whole card background, activated on hover */}
-								<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-renault-yellow/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+								<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-renault-yellow/10 via-transparent to-transparent opacity-0 dark:group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
 								<CardContent className="p-6 relative z-10">
 									<div className="flex items-center gap-2 mb-6">
 										<HardDrive className="w-4 h-4 text-renault-yellow/80 group-hover:text-renault-yellow group-hover:drop-shadow-[0_0_8px_rgba(255,204,0,0.8)] transition-all duration-300" />
-										<h3 className="text-[11px] font-bold text-gray-400 tracking-[0.2em] uppercase">
+										<h3 className="text-[11px] font-bold text-gray-600 dark:text-gray-400 tracking-[0.2em] uppercase">
 											Storage — DB + Files
 										</h3>
 									</div>
@@ -241,14 +248,14 @@ export default function DashboardPage() {
 											{storageStats ? (
 												<>
 													<div className="flex items-center gap-3 group/db cursor-default">
-														<div className="p-2.5 bg-white/5 rounded-lg border border-white/5 group-hover/db:border-renault-yellow/20 group-hover/db:bg-renault-yellow/5 transition-colors duration-300">
+														<div className="p-2.5 bg-black/5 dark:bg-white/5 rounded-lg border border-black/10 dark:border-white/5 group-hover/db:border-renault-yellow/20 group-hover/db:bg-renault-yellow/5 transition-colors duration-300">
 															<Database className="w-4 h-4 text-renault-yellow/70 group-hover/db:text-renault-yellow transition-colors duration-300" />
 														</div>
 														<div>
 															<p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-1">
 																Database
 															</p>
-															<p className="text-gray-300 font-light text-sm font-sans tabular-nums tracking-tight">
+															<p className="text-gray-700 dark:text-gray-300 font-light text-sm font-sans tabular-nums tracking-tight">
 																{storageStats.dbAvailable &&
 																storageStats.dbUsedBytes !== null ? (
 																	`${formatBytesToMB(storageStats.dbUsedBytes)} / 500 MB`
@@ -262,14 +269,14 @@ export default function DashboardPage() {
 													</div>
 
 													<div className="flex items-center gap-3 group/files cursor-default">
-														<div className="p-2.5 bg-white/5 rounded-lg border border-white/5 group-hover/files:border-renault-yellow/20 group-hover/files:bg-renault-yellow/5 transition-colors duration-300">
+														<div className="p-2.5 bg-black/5 dark:bg-white/5 rounded-lg border border-black/10 dark:border-white/5 group-hover/files:border-renault-yellow/20 group-hover/files:bg-renault-yellow/5 transition-colors duration-300">
 															<HardDrive className="w-4 h-4 text-renault-yellow/70 group-hover/files:text-renault-yellow transition-colors duration-300" />
 														</div>
 														<div>
 															<p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-1">
 																Files
 															</p>
-															<p className="text-gray-300 font-light text-sm font-sans tabular-nums tracking-tight">
+															<p className="text-gray-700 dark:text-gray-300 font-light text-sm font-sans tabular-nums tracking-tight">
 																{storageStats.storageAvailable ? (
 																	`${formatBytesToMB(storageStats.storageUsedBytes)} / 1 GB`
 																) : (
@@ -289,8 +296,8 @@ export default function DashboardPage() {
 												</>
 											) : (
 												<div className="space-y-4">
-													<div className="h-10 w-48 bg-white/5 animate-pulse rounded-lg" />
-													<div className="h-10 w-48 bg-white/5 animate-pulse rounded-lg" />
+													<div className="h-10 w-48 bg-black/5 dark:bg-white/5 animate-pulse rounded-lg" />
+													<div className="h-10 w-48 bg-black/5 dark:bg-white/5 animate-pulse rounded-lg" />
 												</div>
 											)}
 										</div>
@@ -298,22 +305,22 @@ export default function DashboardPage() {
 										{/* Right side: Pie Chart with background ambient glow */}
 										<div className="w-[140px] h-[140px] relative flex items-center justify-center shrink-0">
 											{/* High-tech intense radial glow specifically directly behind the pie chart */}
-											<div className="absolute inset-0 bg-renault-yellow/5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
+											<div className="absolute inset-0 bg-renault-yellow/5 rounded-full opacity-0 dark:group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
 
 											{storageLoading ? (
-												<div className="h-[120px] w-[120px] bg-white/5 animate-pulse rounded-full relative z-10" />
+												<div className="h-[120px] w-[120px] bg-black/5 dark:bg-white/5 animate-pulse rounded-full relative z-10" />
 											) : (
 												<div className="relative z-10 w-full h-full flex items-center justify-center">
 													<CapacityChart data={pieData} />
 													<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-														<span className="text-[22px] font-bold text-white font-mono leading-none tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+														<span className="text-[22px] font-bold text-black dark:text-white font-mono leading-none tracking-tighter dark:drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
 															{!storageStats
 																? "—"
 																: storageStats.dataComplete
 																	? `${pieData[0].value.toFixed(0)}%`
 																	: `~${pieData[0].value.toFixed(0)}%`}
 														</span>
-														<span className="text-[9px] text-gray-400 font-medium tracking-widest uppercase mt-0.5">
+														<span className="text-[9px] text-gray-600 dark:text-gray-400 font-medium tracking-widest uppercase mt-0.5">
 															Used
 														</span>
 													</div>
@@ -331,23 +338,23 @@ export default function DashboardPage() {
 					<ClientErrorBoundary fallbackTitle="Distribution Chart Error">
 						<Suspense
 							fallback={
-								<Card className="bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden h-full">
+								<Card className="bg-white dark:bg-[#0c0c0e]/90 backdrop-blur-xl border border-black/10 dark:border-white/5 rounded-xl shadow-2xl relative overflow-hidden h-full">
 									<CardContent className="p-6">
-										<div className="h-[220px] bg-white/5 animate-pulse rounded-lg" />
+										<div className="h-[220px] bg-black/5 dark:bg-white/5 animate-pulse rounded-lg" />
 									</CardContent>
 								</Card>
 							}
 						>
 							{/* Bar Chart Distribution */}
-							<Card className="group bg-[#0c0c0e]/90 backdrop-blur-xl border border-white/10 rounded-xl hover:border-white/20 hover:shadow-[0_0_30px_-5px_var(--renault-yellow)] transition-all duration-500 h-full relative overflow-hidden">
+							<Card className="group bg-white dark:bg-[#0c0c0e]/90 shadow-sm dark:shadow-none backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-xl dark:hover:border-white/20 dark:hover:shadow-[0_0_30px_-5px_var(--renault-yellow)] transition-all duration-500 h-full relative overflow-hidden">
 								{/* Subtle ambient radial glow taking up the whole card background, activated on hover */}
-								<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-renault-yellow/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+								<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-renault-yellow/10 via-transparent to-transparent opacity-0 dark:group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
 								<CardContent className="p-6 relative z-10">
 									<div className="flex items-center justify-between mb-6">
 										<div className="flex items-center gap-2">
 											<Users className="w-4 h-4 text-renault-yellow/80 group-hover:text-renault-yellow group-hover:drop-shadow-[0_0_8px_rgba(255,204,0,0.8)] transition-all duration-300" />
-											<h3 className="text-[11px] font-bold text-gray-400 tracking-[0.2em] uppercase">
+											<h3 className="text-[11px] font-bold text-gray-600 dark:text-gray-400 tracking-[0.2em] uppercase">
 												STAGE DISTRIBUTION
 											</h3>
 										</div>
@@ -355,12 +362,12 @@ export default function DashboardPage() {
 									</div>
 									{isStageLoading ? (
 										<div className="relative">
-											<div className="absolute inset-0 bg-renault-yellow/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
-											<div className="h-[180px] w-full bg-white/5 animate-pulse rounded-lg relative z-10" />
+											<div className="absolute inset-0 bg-renault-yellow/5 rounded-lg opacity-0 dark:group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
+											<div className="h-[180px] w-full bg-black/5 dark:bg-white/5 animate-pulse rounded-lg relative z-10" />
 										</div>
 									) : (
 										<div className="relative">
-											<div className="absolute inset-0 bg-renault-yellow/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
+											<div className="absolute inset-0 bg-renault-yellow/5 rounded-lg opacity-0 dark:group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
 											<div className="h-[180px] w-full relative z-10">
 												<DistributionChart data={barData} />
 											</div>

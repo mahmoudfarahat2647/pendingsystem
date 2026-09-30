@@ -34,7 +34,7 @@ export const FormHeader = ({
 			/>
 			<div
 				className={cn(
-					"relative px-6 py-4 border-b border-white/5 backdrop-blur-md flex items-center justify-between",
+					"relative px-6 py-4 border-b border-black/10 dark:border-white/5 backdrop-blur-md flex items-center justify-between",
 					isEditMode ? "bg-amber-500/10" : "bg-indigo-500/10",
 				)}
 			>
@@ -54,7 +54,7 @@ export const FormHeader = ({
 						)}
 					</div>
 					<div>
-						<DialogTitle className="text-lg font-bold tracking-tight text-white leading-none">
+						<DialogTitle className="text-lg font-bold tracking-tight text-black dark:text-white leading-none">
 							{isEditMode
 								? isMultiSelection
 									? `Bulk Edit (${selectedRowsCount})`
@@ -77,7 +77,7 @@ export const FormHeader = ({
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: -5 }}
 						>
-							<div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/5 backdrop-blur-sm">
+							<div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/[0.03] dark:bg-white/[0.03] border border-black/10 dark:border-white/5 backdrop-blur-sm">
 								<motion.div
 									className={cn(
 										"w-1.5 h-1.5 rounded-full",

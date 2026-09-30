@@ -70,7 +70,7 @@ export function LayoutSaveButton({
 									variant="ghost"
 									size="icon"
 									className={cn(
-										"h-8 w-8 text-gray-400 hover:text-white transition-all",
+										"h-8 w-8 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-all",
 										isPositionDirty &&
 											"text-renault animate-pulse bg-renault/10 hover:bg-renault/20",
 									)}
@@ -83,11 +83,11 @@ export function LayoutSaveButton({
 					</Tooltip>
 					<DropdownMenuContent
 						align="end"
-						className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
+						className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-black dark:text-white min-w-[160px]"
 					>
 						<PopoverTrigger asChild>
 							<DropdownMenuItem
-								className="flex items-center gap-2 focus:bg-white/5 cursor-pointer disabled:opacity-50"
+								className="flex items-center gap-2 focus:bg-black/5 dark:focus:bg-white/5 cursor-pointer disabled:opacity-50"
 								disabled={!isDirty}
 								onSelect={(e) => {
 									e.preventDefault();
@@ -99,7 +99,7 @@ export function LayoutSaveButton({
 							</DropdownMenuItem>
 						</PopoverTrigger>
 						<DropdownMenuItem
-							className="flex items-center gap-2 focus:bg-white/5 cursor-pointer text-blue-400 focus:text-blue-300 disabled:opacity-50"
+							className="flex items-center gap-2 focus:bg-black/5 dark:focus:bg-white/5 cursor-pointer text-blue-600 dark:text-blue-400 focus:text-blue-600 dark:focus:text-blue-300 disabled:opacity-50"
 							disabled={!isDirty}
 							onClick={() => {
 								if (isDirty) {
@@ -112,7 +112,7 @@ export function LayoutSaveButton({
 							<span className="text-xs">Save as Default</span>
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							className="flex items-center gap-2 focus:bg-white/5 cursor-pointer text-red-400 focus:text-red-300"
+							className="flex items-center gap-2 focus:bg-black/5 dark:focus:bg-white/5 cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-300"
 							onClick={() => {
 								onReset();
 								setDropdownOpen(false);
@@ -125,18 +125,18 @@ export function LayoutSaveButton({
 				</DropdownMenu>
 
 				<PopoverContent
-					className="w-64 bg-[#1c1c1e] border-white/10 p-0 shadow-2xl"
+					className="w-64 bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 p-0 shadow-2xl"
 					align="end"
 				>
 					<Card className="border-none bg-transparent shadow-none">
 						<CardHeader className="p-3 pb-2">
-							<CardTitle className="text-sm font-medium text-white flex items-center gap-2">
+							<CardTitle className="text-sm font-medium text-black dark:text-white flex items-center gap-2">
 								<Save className="h-4 w-4 text-renault" />
 								Save Layout?
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="p-3 pt-0">
-							<p className="text-xs text-gray-400">
+							<p className="text-xs text-gray-600 dark:text-gray-400">
 								Are you sure you want to save this column arrangement for this
 								session?
 							</p>
@@ -145,7 +145,7 @@ export function LayoutSaveButton({
 							<Button
 								variant="ghost"
 								size="sm"
-								className="h-7 text-xs text-gray-400 hover:text-white"
+								className="h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
 								onClick={() => setShowConfirm(false)}
 							>
 								<X className="h-3 w-3 mr-1" />

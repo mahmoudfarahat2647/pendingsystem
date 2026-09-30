@@ -214,22 +214,22 @@ export const EditAttachmentModal = ({
 		>
 			<DialogContent
 				hideClose={true}
-				className="overflow-hidden border border-white/10 bg-[#151517] p-0 text-slate-200 shadow-2xl shadow-black/50 sm:max-w-[420px] rounded-2xl"
+				className="overflow-hidden border border-black/10 dark:border-white/10 bg-gray-50 dark:bg-[#151517] p-0 text-slate-800 dark:text-slate-200 shadow-2xl shadow-black/10 dark:shadow-black/50 sm:max-w-[420px] rounded-2xl"
 			>
-				<DialogHeader className="border-b border-white/5 bg-white/[0.02] px-4 py-3">
+				<DialogHeader className="border-b border-black/10 dark:border-white/5 bg-black/[0.03] dark:bg-white/[0.02] px-4 py-3">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-2.5">
 							<div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/10">
-								<Paperclip className="h-4 w-4 text-indigo-400" />
+								<Paperclip className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
 							</div>
-							<DialogTitle className="text-base font-medium text-white">
+							<DialogTitle className="text-base font-medium text-black dark:text-white">
 								<LocalizedScope lang={lang}>
 									{t("modals.attachment.title")}
 								</LocalizedScope>
 							</DialogTitle>
 							<Badge
 								variant="secondary"
-								className="bg-white/5 text-slate-400 text-[11px] font-normal border-0"
+								className="bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-400 text-[11px] font-normal border-0"
 							>
 								{paths.length} / 5
 							</Badge>
@@ -240,7 +240,7 @@ export const EditAttachmentModal = ({
 							size="icon"
 							onClick={handleCancel}
 							disabled={isSaving}
-							className="h-8 w-8 rounded-full text-slate-500 hover:bg-white/10 hover:text-white"
+							className="h-8 w-8 rounded-full text-slate-500 hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white"
 						>
 							<X className="h-4 w-4" />
 							<span className="sr-only">{t("modals.attachment.close")}</span>
@@ -253,12 +253,12 @@ export const EditAttachmentModal = ({
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="min-w-0 space-y-3 p-4 text-sm bg-[#121214]">
+				<div className="min-w-0 space-y-3 p-4 text-sm bg-white dark:bg-[#121214]">
 					{/* External Link */}
 					<div className="space-y-1.5">
 						<label
 							htmlFor="external-link"
-							className="text-xs font-medium text-slate-400"
+							className="text-xs font-medium text-slate-600 dark:text-slate-400"
 						>
 							<LocalizedScope lang={lang}>
 								{t("modals.attachment.externalLink")}
@@ -280,7 +280,7 @@ export const EditAttachmentModal = ({
 								}}
 								placeholder={t("modals.attachment.linkPlaceholder")}
 								disabled={isSaving}
-								className="h-10 w-full rounded-lg border border-white/10 bg-black/20 pl-3 pr-16 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50"
+								className="h-10 w-full rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-black/20 pl-3 pr-16 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50"
 							/>
 							<div className="absolute right-1 flex items-center gap-0.5">
 								{link && (
@@ -288,7 +288,7 @@ export const EditAttachmentModal = ({
 										type="button"
 										onClick={() => setLink("")}
 										disabled={isSaving}
-										className="rounded-md p-1.5 text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-colors disabled:pointer-events-none"
+										className="rounded-md p-1.5 text-slate-500 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:pointer-events-none"
 										title={t("modals.attachment.removeLink")}
 									>
 										<Trash2 className="h-3.5 w-3.5" />
@@ -308,11 +308,11 @@ export const EditAttachmentModal = ({
 										);
 									}}
 									disabled={!link || isSaving}
-									className="rounded-md p-1.5 text-slate-500 hover:bg-white/10 hover:text-white transition-colors disabled:pointer-events-none disabled:opacity-40"
+									className="rounded-md p-1.5 text-slate-500 hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white transition-colors disabled:pointer-events-none disabled:opacity-40"
 									title={t("modals.attachment.copyLink")}
 								>
 									{hasCopied ? (
-										<Check className="h-3.5 w-3.5 text-green-400" />
+										<Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
 									) : (
 										<Copy className="h-3.5 w-3.5" />
 									)}
@@ -325,7 +325,7 @@ export const EditAttachmentModal = ({
 					<button
 						type="button"
 						className={cn(
-							"group relative flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-[#161618] py-7 text-center transition-all",
+							"group relative flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-black/10 dark:border-white/10 bg-gray-50 dark:bg-[#161618] py-7 text-center transition-all",
 							!dropzoneDisabled &&
 								"hover:border-indigo-500/30 hover:bg-indigo-500/5 cursor-pointer",
 							isDragging && "border-indigo-500 bg-indigo-500/10",
@@ -350,16 +350,16 @@ export const EditAttachmentModal = ({
 							onChange={handleFileChange}
 							disabled={dropzoneDisabled}
 						/>
-						<div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10 transition-all group-hover:bg-indigo-500/20 group-hover:ring-indigo-500/30">
+						<div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-black/5 dark:bg-white/5 ring-1 ring-black/10 dark:ring-white/10 transition-all group-hover:bg-indigo-500/20 group-hover:ring-indigo-500/30">
 							{isUploading ? (
-								<LoaderCircle className="h-5 w-5 animate-spin text-indigo-400" />
+								<LoaderCircle className="h-5 w-5 animate-spin text-indigo-600 dark:text-indigo-400" />
 							) : atLimit ? (
-								<Paperclip className="h-5 w-5 text-slate-600" />
+								<Paperclip className="h-5 w-5 text-slate-500 dark:text-slate-600" />
 							) : (
-								<Folder className="h-5 w-5 text-slate-400 transition-colors group-hover:text-indigo-300" />
+								<Folder className="h-5 w-5 text-slate-600 dark:text-slate-400 transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-300" />
 							)}
 						</div>
-						<p className="text-sm font-medium text-slate-300">
+						<p className="text-sm font-medium text-slate-700 dark:text-slate-300">
 							<LocalizedScope lang={lang}>
 								{isUploading
 									? t("modals.attachment.uploading", {
@@ -371,7 +371,7 @@ export const EditAttachmentModal = ({
 							</LocalizedScope>
 						</p>
 						{!atLimit && !isUploading && (
-							<p className="mt-1 text-xs text-slate-600">
+							<p className="mt-1 text-xs text-slate-500 dark:text-slate-600">
 								<LocalizedScope lang={lang}>
 									{t("modals.attachment.fileHint")}
 								</LocalizedScope>
@@ -381,7 +381,7 @@ export const EditAttachmentModal = ({
 
 					{/* Error message */}
 					{error && (
-						<p className="text-xs text-red-400">
+						<p className="text-xs text-red-600 dark:text-red-400">
 							<LocalizedScope lang={lang}>{t(error)}</LocalizedScope>
 						</p>
 					)}
@@ -403,7 +403,7 @@ export const EditAttachmentModal = ({
 					{/* Uploading spinner pill */}
 					{uploadingFileName && (
 						<div className="flex flex-wrap gap-2">
-							<div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs text-indigo-300">
+							<div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs text-indigo-600 dark:text-indigo-300">
 								<LoaderCircle className="h-3 w-3 animate-spin" />
 								<span className="max-w-[160px] truncate">
 									{uploadingFileName}
@@ -413,13 +413,13 @@ export const EditAttachmentModal = ({
 					)}
 				</div>
 
-				<DialogFooter className="border-t border-white/5 bg-[#151517] p-4 sm:justify-between">
+				<DialogFooter className="border-t border-black/10 dark:border-white/5 bg-gray-50 dark:bg-[#151517] p-4 sm:justify-between">
 					<Button
 						type="button"
 						variant="ghost"
 						onClick={handleCancel}
 						disabled={isSaving}
-						className="hidden sm:inline-flex h-10 px-4 text-sm font-medium text-slate-400 hover:text-white"
+						className="hidden sm:inline-flex h-10 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white"
 					>
 						<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 					</Button>
@@ -427,7 +427,7 @@ export const EditAttachmentModal = ({
 						type="button"
 						onClick={handleSave}
 						disabled={isSaving || isUploading}
-						className="w-full sm:w-auto min-w-[120px] h-10 rounded-lg bg-indigo-500 text-sm font-medium text-white hover:bg-indigo-600 disabled:bg-white/5 disabled:text-slate-500"
+						className="w-full sm:w-auto min-w-[120px] h-10 rounded-lg bg-indigo-500 text-sm font-medium text-white hover:bg-indigo-600 disabled:bg-black/5 dark:disabled:bg-white/5 disabled:text-slate-500"
 					>
 						{isSaving ? (
 							<span className="flex items-center gap-2">
@@ -460,7 +460,7 @@ function FilePill({ path, onRemove, disabled }: FilePillProps) {
 	const url = getPublicUrl(path);
 
 	return (
-		<div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 pl-2.5 pr-1.5 py-1.5 text-xs text-slate-300 max-w-[220px]">
+		<div className="inline-flex items-center gap-1.5 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 pl-2.5 pr-1.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 max-w-[220px]">
 			<File className="h-3 w-3 shrink-0 text-slate-500" />
 			<span className="truncate flex-1">{name}</span>
 			{url && (
@@ -468,7 +468,7 @@ function FilePill({ path, onRemove, disabled }: FilePillProps) {
 					type="button"
 					onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
 					disabled={disabled}
-					className="shrink-0 rounded-full p-0.5 text-slate-500 hover:text-indigo-400 transition-colors disabled:pointer-events-none"
+					className="shrink-0 rounded-full p-0.5 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:pointer-events-none"
 					title={t("modals.attachment.openFile")}
 				>
 					<ExternalLink className="h-3 w-3" />
@@ -481,7 +481,7 @@ function FilePill({ path, onRemove, disabled }: FilePillProps) {
 				type="button"
 				onClick={() => onRemove(path)}
 				disabled={disabled}
-				className="shrink-0 rounded-full p-0.5 text-slate-500 hover:text-red-400 transition-colors disabled:pointer-events-none"
+				className="shrink-0 rounded-full p-0.5 text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:pointer-events-none"
 				title={t("modals.attachment.remove")}
 			>
 				<X className="h-3 w-3" />

@@ -33,7 +33,7 @@ export function DuplicateOrderWarningModal({
 		<Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
 			<DialogContent
 				closeLabel={t("common.close")}
-				className="max-w-md bg-[#0c0c0e] border-white/10 text-slate-200"
+				className="max-w-md bg-white dark:bg-[#0c0c0e] border-black/10 dark:border-white/10 text-slate-800 dark:text-slate-200"
 			>
 				<div className="flex flex-col items-center text-center space-y-4 pt-6">
 					<div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
@@ -41,27 +41,31 @@ export function DuplicateOrderWarningModal({
 					</div>
 
 					<div className="space-y-2">
-						<DialogTitle className="text-xl font-semibold text-white">
+						<DialogTitle className="text-xl font-semibold text-black dark:text-white">
 							<LocalizedScope lang={lang}>
 								{t("modals.duplicate.title")}
 							</LocalizedScope>
 						</DialogTitle>
-						<DialogDescription className="text-slate-400">
+						<DialogDescription className="text-slate-600 dark:text-slate-400">
 							<LocalizedScope lang={lang}>
 								{t("modals.duplicate.descriptionBeforeVin")}{" "}
-								<span className="text-white font-mono">{vin}</span>{" "}
+								<span className="text-black dark:text-white font-mono">
+									{vin}
+								</span>{" "}
 								{t("modals.duplicate.descriptionBeforePart")}{" "}
-								<span className="text-white font-mono">{partNumber}</span>{" "}
+								<span className="text-black dark:text-white font-mono">
+									{partNumber}
+								</span>{" "}
 								{t("modals.duplicate.descriptionAfter")}
 							</LocalizedScope>
 						</DialogDescription>
 					</div>
 
-					<div className="bg-white/5 border border-white/10 rounded-lg p-4 w-full text-sm">
+					<div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg p-4 w-full text-sm">
 						<LocalizedScope lang={lang}>
 							{t("modals.duplicate.locatedIn")}
 						</LocalizedScope>
-						<div className="mt-2 text-lg font-semibold text-white">
+						<div className="mt-2 text-lg font-semibold text-black dark:text-white">
 							{stageName}
 						</div>
 					</div>

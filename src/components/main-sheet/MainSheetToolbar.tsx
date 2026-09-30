@@ -86,16 +86,16 @@ export const MainSheetToolbar = ({
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
 
 	return (
-		<div className="flex items-center justify-between bg-[#141416] p-2 rounded-xl border border-white/5">
+		<div className="flex items-center justify-between bg-gray-50 dark:bg-[#141416] p-2 rounded-xl border border-black/10 dark:border-white/5">
 			<div className="flex items-center gap-2">
-				<div className="w-px h-6 bg-white/10 mx-1" />
+				<div className="w-px h-6 bg-black/10 dark:bg-white/10 mx-1" />
 
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
 							type="button"
 							size="icon"
-							className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-lg h-8 w-8"
+							className="bg-white dark:bg-[#1c1c1e] hover:bg-gray-100 dark:hover:bg-[#2c2c2e] text-gray-700 dark:text-gray-300 border-none rounded-lg h-8 w-8"
 							onClick={onReserve}
 							disabled={isLocked || selectedCount === 0}
 						>
@@ -105,7 +105,7 @@ export const MainSheetToolbar = ({
 					<TooltipContent>Reserve</TooltipContent>
 				</Tooltip>
 
-				<div className="w-px h-6 bg-white/10 mx-1" />
+				<div className="w-px h-6 bg-black/10 dark:bg-white/10 mx-1" />
 
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -113,7 +113,7 @@ export const MainSheetToolbar = ({
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 h-8 w-8"
 						>
 							<Send className="h-4 w-4" />
 						</Button>
@@ -127,7 +127,7 @@ export const MainSheetToolbar = ({
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 h-8 w-8"
 						>
 							<Printer className="h-4 w-4" />
 						</Button>
@@ -144,8 +144,8 @@ export const MainSheetToolbar = ({
 							className={cn(
 								"h-8 w-8 transition-colors",
 								isSingleVin && !isLocked
-									? "text-green-500 hover:text-green-400 hover:bg-green-500/10"
-									: "text-gray-600 cursor-not-allowed opacity-50",
+									? "text-green-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-500/10"
+									: "text-gray-500 dark:text-gray-600 cursor-not-allowed opacity-50",
 							)}
 							disabled={isLocked || !isSingleVin}
 							onClick={onBooking}
@@ -168,7 +168,7 @@ export const MainSheetToolbar = ({
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 h-8 w-8"
 							disabled={isLocked || selectedCount === 0}
 							onClick={onArchive}
 						>
@@ -184,7 +184,7 @@ export const MainSheetToolbar = ({
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 h-8 w-8"
+							className="text-sky-600 dark:text-sky-400 hover:text-sky-600 dark:hover:text-sky-300 hover:bg-sky-500/10 h-8 w-8"
 							disabled={isLocked || selectedCount === 0}
 							onClick={onFreeze}
 						>
@@ -232,7 +232,7 @@ export const MainSheetToolbar = ({
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 h-8 w-8"
 							onClick={onExtract}
 						>
 							<Download className="h-4 w-4" />
@@ -247,7 +247,7 @@ export const MainSheetToolbar = ({
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 h-8 w-8"
 							onClick={onFilterToggle}
 						>
 							<Filter className="h-4 w-4" />
@@ -272,7 +272,7 @@ export const MainSheetToolbar = ({
 									type="button"
 									variant="ghost"
 									size="icon"
-									className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+									className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 h-8 w-8"
 									disabled={isLocked || selectedCount === 0}
 								>
 									<CheckCircle className="h-4 w-4" />
@@ -280,7 +280,7 @@ export const MainSheetToolbar = ({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
 								align="end"
-								className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
+								className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-black dark:text-white min-w-[160px]"
 							>
 								{partStatuses?.map((status: PartStatusDef) => {
 									const isHex =
@@ -295,7 +295,7 @@ export const MainSheetToolbar = ({
 										<DropdownMenuItem
 											key={status.id}
 											onClick={() => onUpdateStatus?.(status.label)}
-											className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
+											className="flex items-center gap-2 focus:bg-black/5 dark:focus:bg-white/5 cursor-pointer"
 										>
 											<div
 												className={cn("w-2 h-2 rounded-full", colorClass)}
@@ -316,7 +316,7 @@ export const MainSheetToolbar = ({
 					<TooltipContent>Update Status</TooltipContent>
 				</Tooltip>
 
-				<div className="w-px h-6 bg-white/10 mx-1" />
+				<div className="w-px h-6 bg-black/10 dark:bg-white/10 mx-1" />
 
 				<div className="flex items-center gap-1.5 px-2">
 					{partStatuses?.map((status: PartStatusDef) => {
@@ -340,7 +340,7 @@ export const MainSheetToolbar = ({
 											"w-3 h-3 rounded-full transition-all duration-200 hover:scale-125 hover:shadow-[0_0_8px_rgba(255,255,255,0.2)]",
 											colorClass,
 											activeFilter === status.label
-												? "ring-2 ring-white ring-offset-2 ring-offset-[#141416] scale-110"
+												? "ring-2 ring-black dark:ring-white ring-offset-2 ring-offset-[#141416] scale-110"
 												: "opacity-40 grayscale-[0.5] hover:opacity-100 hover:grayscale-0",
 										)}
 										style={buttonStyle}
@@ -354,7 +354,7 @@ export const MainSheetToolbar = ({
 						<button
 							type="button"
 							onClick={() => onFilterChange?.(null)}
-							className="text-[10px] text-gray-500 hover:text-gray-300 ml-1 font-bold uppercase tracking-wider"
+							className="text-[10px] text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 ml-1 font-bold uppercase tracking-wider"
 						>
 							Clear
 						</button>
@@ -378,8 +378,8 @@ export const MainSheetToolbar = ({
 							className={cn(
 								"h-8 w-8 rounded-lg transition-all duration-200",
 								isLocked
-									? "text-red-500 hover:text-red-400 hover:bg-red-500/10"
-									: "text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10",
+									? "text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10"
+									: "text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10",
 							)}
 							onClick={onLockToggle}
 						>
@@ -401,7 +401,7 @@ export const MainSheetToolbar = ({
 							type="button"
 							size="icon"
 							variant="ghost"
-							className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+							className="text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 							onClick={onDelete}
 							disabled={isLocked || selectedCount === 0}
 						>

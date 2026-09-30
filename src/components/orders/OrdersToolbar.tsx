@@ -93,7 +93,7 @@ export const OrdersToolbar = ({
 
 	return (
 		<div
-			className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5"
+			className="flex items-center justify-between bg-gray-50 dark:bg-[#141416] p-1.5 rounded-lg border border-black/10 dark:border-white/5"
 			suppressHydrationWarning={true}
 		>
 			<div
@@ -138,7 +138,7 @@ export const OrdersToolbar = ({
 				</Tooltip>
 
 				<div
-					className="w-px h-5 bg-white/10 mx-1"
+					className="w-px h-5 bg-black/10 dark:bg-white/10 mx-1"
 					suppressHydrationWarning={true}
 				/>
 
@@ -148,7 +148,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							aria-label="Set all R/DATE to today"
-							className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 h-8 w-8 font-bold"
+							className="text-amber-600 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-500/10 h-8 w-8 font-bold"
 							onClick={onSetAllRDate}
 						>
 							<span className="text-sm font-black leading-none">R</span>
@@ -163,7 +163,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							aria-label="Share to logistics"
-							className="text-gray-400 hover:text-white h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 							onClick={onShareToLogistics}
 							disabled={selectedCount === 0}
 						>
@@ -179,7 +179,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							aria-label="Set link or path"
-							className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 h-8 w-8"
+							className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-500/10 h-8 w-8"
 							onClick={onBulkAttach}
 							disabled={selectedCount === 0}
 						>
@@ -195,7 +195,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							aria-label="Print order"
-							className="text-gray-400 hover:text-white h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 							onClick={onPrint}
 							disabled={selectedCount === 0}
 						>
@@ -211,7 +211,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							aria-label="Archive"
-							className="text-gray-400 hover:text-white h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 							disabled={selectedCount === 0}
 							onClick={onArchive}
 						>
@@ -227,7 +227,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							aria-label="Freeze"
-							className="text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 h-8 w-8"
+							className="text-sky-600 dark:text-sky-400 hover:text-sky-600 dark:hover:text-sky-300 hover:bg-sky-500/10 h-8 w-8"
 							disabled={selectedCount === 0}
 							onClick={onFreeze}
 						>
@@ -246,8 +246,8 @@ export const OrdersToolbar = ({
 							className={cn(
 								"h-8 w-8 transition-colors",
 								selectedCount > 0
-									? "text-green-500 hover:text-green-400 hover:bg-green-500/10"
-									: "text-gray-600 cursor-not-allowed opacity-50",
+									? "text-green-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-500/10"
+									: "text-gray-500 dark:text-gray-600 cursor-not-allowed opacity-50",
 							)}
 							disabled={selectedCount === 0}
 							onClick={onBooking}
@@ -286,7 +286,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							aria-label="Extract"
-							className="text-gray-400 hover:text-white h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 							onClick={onExtract}
 						>
 							<Download className="h-3.5 w-3.5" />
@@ -301,7 +301,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							aria-label="Set label"
-							className="text-gray-400 hover:text-white h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 							onClick={onReserve}
 							disabled={selectedCount === 0}
 						>
@@ -317,7 +317,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							aria-label="Toggle filters"
-							className="text-gray-400 hover:text-white h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 							onClick={onFilterToggle}
 						>
 							<Filter className="h-3.5 w-3.5" />
@@ -335,7 +335,7 @@ export const OrdersToolbar = ({
 				/>
 
 				<div
-					className="w-px h-5 bg-white/10 mx-1"
+					className="w-px h-5 bg-black/10 dark:bg-white/10 mx-1"
 					suppressHydrationWarning={true}
 				/>
 
@@ -347,7 +347,7 @@ export const OrdersToolbar = ({
 									variant="ghost"
 									size="icon"
 									aria-label="Update part status"
-									className="text-gray-400 hover:text-white h-8 w-8"
+									className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 									disabled={selectedCount === 0}
 								>
 									<CheckCircle className="h-4 w-4" />
@@ -355,7 +355,7 @@ export const OrdersToolbar = ({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
 								align="end"
-								className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
+								className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-black dark:text-white min-w-[160px]"
 							>
 								{partStatuses.map((status) => {
 									const isHex =
@@ -370,7 +370,7 @@ export const OrdersToolbar = ({
 										<DropdownMenuItem
 											key={status.id}
 											onClick={() => onUpdateStatus?.(status.label)}
-											className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
+											className="flex items-center gap-2 focus:bg-black/5 dark:focus:bg-white/5 cursor-pointer"
 										>
 											<div
 												className={cn("w-2 h-2 rounded-full", colorClass)}
@@ -422,7 +422,7 @@ export const OrdersToolbar = ({
 							size="icon"
 							variant="ghost"
 							aria-label="Delete"
-							className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+							className="text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
 							onClick={onDelete}
 							disabled={selectedCount === 0}
 						>

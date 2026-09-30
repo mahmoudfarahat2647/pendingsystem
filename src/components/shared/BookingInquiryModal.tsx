@@ -75,7 +75,7 @@ export const BookingInquiryModal = ({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				hideClose={true}
-				className="bg-[#1c1c1e] text-gray-300 border-white/5 p-0 gap-0 overflow-hidden flex h-[min(620px,85vh)] rounded-2xl sm:rounded-2xl shadow-2xl font-sans w-fit max-w-[95vw]"
+				className="bg-white dark:bg-[#1c1c1e] text-gray-700 dark:text-gray-300 border-black/10 dark:border-white/5 p-0 gap-0 overflow-hidden flex h-[min(620px,85vh)] rounded-2xl sm:rounded-2xl shadow-2xl font-sans w-fit max-w-[95vw]"
 			>
 				<DialogHeader className="sr-only">
 					<DialogTitle>Booking Inquiry</DialogTitle>
@@ -83,7 +83,7 @@ export const BookingInquiryModal = ({
 
 				<div className="flex-1 flex min-w-0 min-h-0 overflow-x-auto">
 					{/* Column 1: Calendar */}
-					<div className="w-[400px] shrink-0 p-8 flex flex-col bg-[#1c1c1e] border-r border-white/5 overflow-y-auto custom-scrollbar">
+					<div className="w-[400px] shrink-0 p-8 flex flex-col bg-white dark:bg-[#1c1c1e] border-r border-black/10 dark:border-white/5 overflow-y-auto custom-scrollbar">
 						{isLoadingBookings ? (
 							<div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-500">
 								<Loader2 className="h-6 w-6 animate-spin" />
@@ -108,7 +108,7 @@ export const BookingInquiryModal = ({
 								<button
 									type="button"
 									onClick={retryBookingLoad}
-									className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+									className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-4 py-2 text-xs text-gray-700 dark:text-gray-300 transition-colors hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white"
 								>
 									Retry
 								</button>
@@ -129,9 +129,9 @@ export const BookingInquiryModal = ({
 					</div>
 
 					{/* Column 2: Customers booked on the selected day */}
-					<div className="w-[280px] min-w-[220px] min-h-0 bg-[#1c1c1e] border-r border-white/5 flex flex-col">
+					<div className="w-[280px] min-w-[220px] min-h-0 bg-white dark:bg-[#1c1c1e] border-r border-black/10 dark:border-white/5 flex flex-col">
 						{isLoadingBookings || isUnavailable ? (
-							<div className="flex-1 p-6 text-xs text-gray-700 italic">
+							<div className="flex-1 p-6 text-xs text-gray-300 dark:text-gray-700 italic">
 								{isLoadingBookings ? "Loading…" : "Unavailable"}
 							</div>
 						) : (
@@ -146,7 +146,7 @@ export const BookingInquiryModal = ({
 					</div>
 
 					{/* Column 3: Details of the selected customer */}
-					<div className="w-[320px] shrink-0 min-h-0 bg-[#1c1c1e] flex flex-col">
+					<div className="w-[320px] shrink-0 min-h-0 bg-white dark:bg-[#1c1c1e] flex flex-col">
 						<BookingSidebarHeader
 							selectedRows={[]}
 							preBookingStatus=""

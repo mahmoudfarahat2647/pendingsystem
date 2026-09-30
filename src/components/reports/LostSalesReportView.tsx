@@ -86,14 +86,16 @@ function SectionChart({ data }: SectionChartProps) {
 						const value = typeof point.value === "number" ? point.value : 0;
 						const modelLabel = models.join(" / ") || null;
 						return (
-							<div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-3 text-xs text-gray-200 shadow-2xl">
-								<p className="font-semibold text-white">
+							<div className="bg-white dark:bg-black/60 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs text-gray-800 dark:text-gray-200 shadow-2xl">
+								<p className="font-semibold text-black dark:text-white">
 									{description || name}
 								</p>
 								{modelLabel && (
-									<p className="text-[10px] text-gray-400 mt-1">{modelLabel}</p>
+									<p className="text-[10px] text-gray-600 dark:text-gray-400 mt-1">
+										{modelLabel}
+									</p>
 								)}
-								<p className="mt-2 text-gray-300">
+								<p className="mt-2 text-gray-700 dark:text-gray-300">
 									Count:{" "}
 									<span className="font-bold text-renault-yellow">{value}</span>
 								</p>
@@ -186,17 +188,17 @@ interface KpiCardProps {
 
 function KpiCard({ label, value, icon }: KpiCardProps) {
 	return (
-		<Card className="bg-[#0c0c0e]/90 border-white/10 hover:bg-white/5 hover:border-renault-yellow/20 transition-all duration-300 group cursor-default">
+		<Card className="bg-white dark:bg-[#0c0c0e]/90 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 hover:border-renault-yellow/20 transition-all duration-300 group cursor-default">
 			<CardContent className="p-3">
 				<div className="flex items-center gap-3">
 					<div className="p-2 rounded-lg bg-renault-yellow/10 text-renault-yellow group-hover:bg-renault-yellow/20 group-hover:scale-110 transition-all duration-300">
 						{icon}
 					</div>
 					<div>
-						<p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase group-hover:text-gray-300 transition-colors">
+						<p className="text-[10px] font-bold text-gray-600 dark:text-gray-400 tracking-widest uppercase group-hover:text-gray-800 dark:group-hover:text-gray-300 transition-colors">
 							{label}
 						</p>
-						<p className="text-2xl font-black text-white group-hover:text-renault-yellow transition-colors">
+						<p className="text-2xl font-black text-black dark:text-white group-hover:text-renault-yellow transition-colors">
 							{value.toLocaleString()}
 						</p>
 					</div>
@@ -218,11 +220,11 @@ interface SectionCardProps {
 
 function SectionCard({ title, icon, children }: SectionCardProps) {
 	return (
-		<Card className="bg-[#0c0c0e]/90 border-white/10">
+		<Card className="bg-white dark:bg-[#0c0c0e]/90 border-black/10 dark:border-white/10">
 			<CardContent className="p-4">
 				<div className="flex items-center gap-2 mb-3">
 					<div className="text-renault-yellow">{icon}</div>
-					<h3 className="text-sm font-bold text-white tracking-wide uppercase">
+					<h3 className="text-sm font-bold text-black dark:text-white tracking-wide uppercase">
 						{title}
 					</h3>
 				</div>
@@ -240,11 +242,11 @@ function PartsTable({ rows }: { rows: PartDemand[] }) {
 	return (
 		<section
 			aria-label="Parts demand table"
-			className="overflow-x-auto overflow-y-auto max-h-[180px] mt-4 rounded-md border border-white/5 custom-scrollbar"
+			className="overflow-x-auto overflow-y-auto max-h-[180px] mt-4 rounded-md border border-black/10 dark:border-white/5 custom-scrollbar"
 		>
-			<table className="w-full border-collapse text-xs text-gray-300">
-				<thead className="sticky top-0 bg-[#0c0c0e]/95 backdrop-blur-sm z-10 shadow-sm shadow-black/50">
-					<tr className="border-b border-white/10">
+			<table className="w-full border-collapse text-xs text-gray-700 dark:text-gray-300">
+				<thead className="sticky top-0 bg-white dark:bg-[#0c0c0e]/95 backdrop-blur-sm z-10 shadow-sm shadow-black/10 dark:shadow-black/50">
+					<tr className="border-b border-black/10 dark:border-white/10">
 						<th className="text-left py-3 px-4 text-renault-yellow font-bold uppercase tracking-wider">
 							#
 						</th>
@@ -269,24 +271,24 @@ function PartsTable({ rows }: { rows: PartDemand[] }) {
 					{rows.map((part, idx) => (
 						<tr
 							key={part.partNumber}
-							className="border-b border-white/5 even:bg-white/[0.02] hover:bg-white/[0.08] transition-colors cursor-default"
+							className="border-b border-black/10 dark:border-white/5 even:bg-black/[0.02] dark:even:bg-white/[0.02] hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors cursor-default"
 						>
 							<td className="py-2.5 px-4 text-gray-500 font-medium">
 								{idx + 1}
 							</td>
-							<td className="py-2.5 px-4 font-mono text-white/80">
+							<td className="py-2.5 px-4 font-mono text-black/80 dark:text-white/80">
 								{part.partNumber}
 							</td>
-							<td className="py-2.5 px-4 text-gray-300 max-w-[260px] truncate">
+							<td className="py-2.5 px-4 text-gray-700 dark:text-gray-300 max-w-[260px] truncate">
 								{part.description || "—"}
 							</td>
-							<td className="py-2.5 px-4 text-right text-white font-semibold">
+							<td className="py-2.5 px-4 text-right text-black dark:text-white font-semibold">
 								{part.orderCount.toLocaleString()}
 							</td>
-							<td className="py-2.5 px-4 text-right text-gray-400">
+							<td className="py-2.5 px-4 text-right text-gray-600 dark:text-gray-400">
 								{part.totalQuantity.toLocaleString()}
 							</td>
-							<td className="py-2.5 px-4 text-gray-400 max-w-[120px] truncate">
+							<td className="py-2.5 px-4 text-gray-600 dark:text-gray-400 max-w-[120px] truncate">
 								{part.models.filter(Boolean).join(" / ") || "—"}
 							</td>
 						</tr>
@@ -307,7 +309,10 @@ function LoadingSkeleton() {
 			{/* KPI skeletons */}
 			<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 				{[0, 1, 2, 3].map((i) => (
-					<Card key={i} className="bg-[#0c0c0e]/90 border-white/10">
+					<Card
+						key={i}
+						className="bg-white dark:bg-[#0c0c0e]/90 border-black/10 dark:border-white/10"
+					>
 						<CardContent className="p-5">
 							<div className="flex items-center gap-3">
 								<Skeleton className="w-8 h-8 rounded-lg" />
@@ -322,7 +327,7 @@ function LoadingSkeleton() {
 			</div>
 
 			{/* Chart skeleton */}
-			<Card className="bg-[#0c0c0e]/90 border-white/10">
+			<Card className="bg-white dark:bg-[#0c0c0e]/90 border-black/10 dark:border-white/10">
 				<CardContent className="p-6">
 					<Skeleton className="h-4 w-48 mb-6 rounded" />
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -423,7 +428,7 @@ export function LostSalesReportView({
 						<ModelsPieChart data={modelsChartData} />
 					</div>
 				</div>
-				<div className="border-t border-white/10 mt-3" />
+				<div className="border-t border-black/10 dark:border-white/10 mt-3" />
 				<PartsTable rows={topParts.slice(0, 10)} />
 			</SectionCard>
 		</div>

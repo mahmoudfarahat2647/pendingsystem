@@ -57,7 +57,7 @@ export function ReportExportMenu({
 	const [pptxLoading, setPptxLoading] = useState(false);
 
 	const buttonClassName =
-		"border-white/10 text-gray-300 hover:text-white hover:bg-white/10 bg-white/5 gap-2 text-xs";
+		"border-black/10 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 bg-black/5 dark:bg-white/5 gap-2 text-xs";
 
 	async function handleExcel(): Promise<void> {
 		if (excelLoading) return;

@@ -9,7 +9,11 @@ export default function ResetPasswordPage() {
 			subtitle="Enter and confirm your new password"
 		>
 			<Suspense
-				fallback={<div className="text-gray-400 text-sm">Loading...</div>}
+				fallback={
+					<div className="text-gray-600 dark:text-gray-400 text-sm">
+						Loading...
+					</div>
+				}
 			>
 				<ResetPasswordForm />
 			</Suspense>
