@@ -29,7 +29,6 @@ const BARE_DARK_LITERALS = [
 /** Intentionally dark in both themes, or converted in a later PR. */
 const EXEMPT = [
 	"src/components/shared/Sidebar.tsx", // black in both themes (reference design)
-	"src/components/auth/", // PR 4
 	"src/app/global-error.tsx", // catastrophic-error fallback, outside providers
 	"src/hooks/useDraftSession.tsx", // self-contained dark recovery toast
 	"src/app/mobile-order/", // always Dark

@@ -69,15 +69,15 @@ export function LoginForm({ expired }: LoginFormProps) {
 					</p>
 				</div>
 			)}
-			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
-				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+			<fieldset className="border border-[#B38F00]/60 dark:border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
+				<legend className="text-[#8A6D00] dark:text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
 					Username
 				</legend>
 				<input
 					id="username"
 					type="text"
 					autoComplete="off"
-					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
+					className="w-full bg-transparent text-black dark:text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:black] dark:[&:-webkit-autofill]:[WebkitTextFillColor:white]"
 					aria-label="Username"
 					{...register("username")}
 				/>
@@ -86,8 +86,8 @@ export function LoginForm({ expired }: LoginFormProps) {
 				<p className="text-red-400 text-xs -mt-4">{errors.username.message}</p>
 			)}
 
-			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
-				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+			<fieldset className="border border-[#B38F00]/60 dark:border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
+				<legend className="text-[#8A6D00] dark:text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
 					Password
 				</legend>
 				<div className="flex items-center">
@@ -95,7 +95,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 						id="password"
 						type={showPassword ? "text" : "password"}
 						autoComplete="new-password"
-						className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
+						className="w-full bg-transparent text-black dark:text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:black] dark:[&:-webkit-autofill]:[WebkitTextFillColor:white]"
 						aria-label="Password"
 						{...register("password")}
 					/>
@@ -104,7 +104,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 						tabIndex={-1}
 						aria-label={showPassword ? "Hide password" : "Show password"}
 						onClick={() => setShowPassword((v) => !v)}
-						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#FFCC00]/35 hover:text-[#FFCC00] transition-colors duration-150 outline-none"
+						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#8A6D00]/50 dark:text-[#FFCC00]/35 hover:text-[#6B5500] dark:hover:text-[#FFCC00] transition-colors duration-150 outline-none"
 					>
 						{showPassword ? (
 							<EyeOff size={16} strokeWidth={1.75} />
@@ -145,7 +145,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 			<p className="text-center text-sm pt-4">
 				<Link
 					href="/forgot-password"
-					className="text-[#FFCC00] hover:text-[#FFCC00]/80 transition-colors"
+					className="text-[#8A6D00] dark:text-[#FFCC00] hover:text-[#6B5500] dark:hover:text-[#FFCC00]/80 transition-colors"
 				>
 					Forgot Password?
 				</Link>

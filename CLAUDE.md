@@ -106,6 +106,17 @@ Booking a line from Archive (Archive toolbar → Booking, or Global Search booki
 - **Sweep exemption**: `isProtectedRebook(row)` (`src/domain/order/warranty.ts`, `stage === "booking" && rebookedFromArchive === true`) is checked by both `useWarrantyExpiryMaintenance` and `warrantyMaintenanceService`. The expiry rule itself is shared as `isExpiredWarrantyRow(row)`.
 - **Booking tab only**: flagged rows get a thin muted left accent line (`rebooked-from-archive-row` in `globals.css`, applied through `DataGrid`'s optional `rowClassRules` prop). Flagged rows with an expired warranty also show a small muted "Warranty expired" tag in the BOOKING DATE cell (`BookingDateRenderer`). Booking Inquiry needs no change (ADR 0001).
 
+### Theme (Dark / White)
+
+Two themes, Dark (original, default) and White. Spec `.github/specs/white-theme.md` (`#340`, tracking `#352`); full doc `docs/features/theme.md`.
+
+- **Preference**: browser-local `pending-sys-theme` (`dark` | `white`), never in Zustand. Invalid/missing/throwing storage → Dark. `src/lib/theme.ts` (`readTheme`, `writeTheme`, `applyThemeClass`, `THEME_INIT_SCRIPT`, `isAlwaysDarkPath`) and `useTheme()` (`src/hooks/useTheme.ts`).
+- **Mechanism**: the `dark` class on `<html>`; White = class absent, using the light `:root` tokens. The root layout keeps `class="dark"` and an inline pre-paint script removes it for a saved `white` choice (no flash, also on auth pages). Switching updates `<html>` in place with no remount.
+- **`/mobile-order` is always Dark** (pre-paint skip, `ForceDarkTheme` on client navigation, cross-tab handler and `ThemedToaster` respect `isAlwaysDarkPath`).
+- **AG Grid**: `getGridTheme(theme)` (`src/lib/ag-grid-setup.ts`) passed as a prop to `DataGrid`/`SearchResultsGrid`; never key/remount on theme.
+- **Dark-safety rule (RESTRICTED)**: Dark values stay verbatim under `dark:`; the White value is the default (`bg-[#0c0c0e]` → `bg-white dark:bg-[#0c0c0e]`). No unconditional edits to shared primitives or global CSS (scope White-only CSS with `:root:not(.dark)`). `text-white` on coloured buttons stays. `src/test/whiteThemeDarkSafety.test.ts` scans `src` for bare dark-only literals (exempt: `Sidebar.tsx`, `global-error.tsx`, `useDraftSession.tsx`, `/mobile-order`).
+- **Design**: sidebar stays black in both themes; White dashboard hero is `public/hero.png` (aspect-box, never cropped) and stat tiles/calendar are non-interactive in White; `StatusRenderer` shows a tinted chip in White without touching stored colours; toasts follow the theme; Settings → Theme is translated EN/AR (`settings.theme.*`).
+
 ### Arabic (AR) Language (i18n)
 
 Epic `#300`, delivered in five waves (`#301` foundation, `#302` Sidebar, `#303` Notifications, `#304` Settings, `#305` action modals). Arabic is a **text-only** translation: the page layout stays LTR and pixel-identical in both languages.
@@ -251,7 +262,7 @@ The Supabase MCP server is active in this project. Claude can directly query tab
 ## Known Constraints
 
 - Authentication uses Better Auth (username+password only, admin-only, 8-hour sessions).
-- Theme customization tab in Settings is a placeholder only.
+- The Settings Theme tab offers Dark / White only (no system option, no custom colour presets). See [Theme](#theme-dark--white).
 - Some legacy Zustand stage arrays remain in the store for compatibility; do not expand that pattern.
 - FREEZE stage transitions are now guarded by compare-and-set (single-row and bulk, including the batched rollback path) and realtime sync reacts to `UPDATE`/`DELETE` as well as `INSERT` — delivered by `#202` (2026-09-14). End-to-end verification and rollout-order check (`#204`) completed 2026-09-15; the FREEZE feature is complete with no open tickets. See [FREEZE Workflow](#freeze-workflow).
 
