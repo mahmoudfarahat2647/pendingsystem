@@ -13,6 +13,7 @@ import {
 	authSubmitClass,
 } from "@/components/auth/authStyles";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
 	type ForgotPasswordFormData,
 	ForgotPasswordFormSchema,
@@ -50,12 +51,12 @@ export function ForgotPasswordForm() {
 					role="alert"
 					className="bg-green-500/10 border border-green-500/20 rounded-lg p-4"
 				>
-					<p className="text-green-400 text-sm">
+					<p className="text-green-700 dark:text-green-400 text-sm">
 						If that username exists, a reset link has been sent to the
 						associated email address.
 					</p>
 				</div>
-				<Link href="/login" className={`block text-center ${authLinkClass}`}>
+				<Link href="/login" className={cn("block text-center", authLinkClass)}>
 					Back to login
 				</Link>
 			</div>
@@ -74,7 +75,6 @@ export function ForgotPasswordForm() {
 						type="text"
 						autoComplete="username"
 						className={authInputClass}
-						aria-label="Username"
 						{...register("username")}
 					/>
 				</div>

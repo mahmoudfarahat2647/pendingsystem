@@ -40,7 +40,7 @@ export function ResetPasswordForm() {
 	if (!token) {
 		return (
 			<div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-				<p className="text-red-400 text-sm">
+				<p className="text-red-600 dark:text-red-400 text-sm">
 					Invalid or missing reset token. Please request a new password reset.
 				</p>
 			</div>
@@ -50,7 +50,7 @@ export function ResetPasswordForm() {
 	if (success) {
 		return (
 			<div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-				<p className="text-green-400 text-sm">
+				<p className="text-green-700 dark:text-green-400 text-sm">
 					Password reset successful. Redirecting to login...
 				</p>
 			</div>
@@ -85,7 +85,6 @@ export function ResetPasswordForm() {
 						type={showNewPassword ? "text" : "password"}
 						autoComplete="new-password"
 						className={authInputClass}
-						aria-label="New password"
 						{...register("newPassword")}
 					/>
 					<button
@@ -117,7 +116,6 @@ export function ResetPasswordForm() {
 						type={showConfirmPassword ? "text" : "password"}
 						autoComplete="new-password"
 						className={authInputClass}
-						aria-label="Confirm password"
 						{...register("confirmPassword")}
 					/>
 					<button
@@ -143,7 +141,7 @@ export function ResetPasswordForm() {
 
 			{error && (
 				<div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mt-2">
-					<p className="text-red-400 text-sm">{error}</p>
+					<p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
 				</div>
 			)}
 

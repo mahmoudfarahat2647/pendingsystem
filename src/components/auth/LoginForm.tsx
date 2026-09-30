@@ -73,7 +73,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 					role="alert"
 					className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3"
 				>
-					<p className="text-amber-400 text-sm">
+					<p className="text-amber-700 dark:text-amber-400 text-sm">
 						Your session expired. Please sign in again.
 					</p>
 				</div>
@@ -88,7 +88,6 @@ export function LoginForm({ expired }: LoginFormProps) {
 						type="text"
 						autoComplete="off"
 						className={authInputClass}
-						aria-label="Username"
 						{...register("username")}
 					/>
 				</div>
@@ -107,7 +106,6 @@ export function LoginForm({ expired }: LoginFormProps) {
 						type={showPassword ? "text" : "password"}
 						autoComplete="new-password"
 						className={authInputClass}
-						aria-label="Password"
 						{...register("password")}
 					/>
 					<button
@@ -134,7 +132,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 					role="alert"
 					className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mt-2"
 				>
-					<p className="text-red-400 text-sm">{error}</p>
+					<p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
 				</div>
 			)}
 

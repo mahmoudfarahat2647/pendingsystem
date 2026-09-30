@@ -31,10 +31,11 @@ export function AuthPageShell({
 				className="object-cover -z-10"
 			/>
 			<div className="absolute inset-0 bg-gradient-to-r from-white/40 via-transparent to-transparent dark:from-black/35 dark:via-transparent dark:to-transparent pointer-events-none -z-10" />
+			<div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white/50 dark:from-black/40 to-transparent pointer-events-none -z-10" />
 
 			{/* Card */}
 			<div className="relative z-10 w-full max-w-[340px]">
-				<div className="relative overflow-hidden rounded-2xl p-6 border bg-white/40 border-white/60 dark:bg-white/[0.02] dark:border-white/15 backdrop-blur-md backdrop-saturate-150 shadow-[0_12px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45)] transition-all">
+				<div className="relative overflow-hidden rounded-2xl p-6 border bg-white/40 border-white/60 dark:bg-black/20 dark:border-white/15 backdrop-blur-md backdrop-saturate-150 shadow-[0_12px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45)] transition-all">
 					{/* Glass highlight */}
 					<div className="absolute inset-0 bg-gradient-to-b from-white/20 dark:from-white/[0.05] to-transparent pointer-events-none" />
 
