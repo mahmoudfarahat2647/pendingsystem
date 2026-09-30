@@ -199,9 +199,8 @@ describe("SettingsModal i18n (Wave 4)", () => {
 		await openTab(user, "لون المظهر");
 		expect(screen.getByText("مظهر النظام")).toBeInTheDocument();
 		expect(screen.getByText("إعدادات المظهر")).toBeInTheDocument();
-		expect(
-			screen.getByText("السمات المخصصة وإعدادات الألوان الجاهزة قادمة قريبًا."),
-		).toBeInTheDocument();
+		expect(screen.getByText("داكن")).toBeInTheDocument();
+		expect(screen.getByText("أبيض")).toBeInTheDocument();
 	});
 
 	it("translates the Permission tab in locked and unlocked states", async () => {

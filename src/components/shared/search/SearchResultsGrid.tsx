@@ -11,7 +11,8 @@ import type {
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { useCallback, useMemo, useRef } from "react";
-import { gridTheme } from "@/lib/ag-grid-setup";
+import { useTheme } from "@/hooks/useTheme";
+import { getGridTheme } from "@/lib/ag-grid-setup";
 import type { PendingRow } from "@/types";
 
 interface SearchResultsGridProps {
@@ -45,6 +46,7 @@ export const SearchResultsGrid = ({
 	showFilters = false,
 }: SearchResultsGridProps) => {
 	const gridRef = useRef<AgGridReact<PendingRow>>(null);
+	const { theme } = useTheme();
 
 	// Must stay referentially stable: a new object on every parent render makes
 	// AG Grid re-apply column defaults, which re-fires onModelUpdated and loops
@@ -94,7 +96,7 @@ export const SearchResultsGrid = ({
 			<div className="h-full w-full">
 				<AgGridReact
 					ref={gridRef}
-					theme={gridTheme}
+					theme={getGridTheme(theme)}
 					rowData={rowData}
 					columnDefs={columnDefs}
 					defaultColDef={defaultColDef}

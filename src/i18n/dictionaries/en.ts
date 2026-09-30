@@ -105,7 +105,10 @@ export const en = {
 		},
 		theme: {
 			title: "Appearance Settings",
-			comingSoon: "Custom themes and color presets are coming soon.",
+			description: "Choose how the application looks in this browser.",
+			dark: "Dark",
+			white: "White",
+			savedNote: "Saved in this browser only.",
 		},
 		permission: {
 			allowGridEditing: "Allow Grid Editing",

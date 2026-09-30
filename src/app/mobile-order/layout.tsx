@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { ForceDarkTheme } from "@/components/providers/ForceDarkTheme";
 
 export const metadata: Metadata = {
 	title: "Quick Order",
@@ -11,5 +12,10 @@ export default function MobileOrderLayout({
 }: {
 	children: ReactNode;
 }) {
-	return <>{children}</>;
+	return (
+		<>
+			<ForceDarkTheme />
+			{children}
+		</>
+	);
 }
