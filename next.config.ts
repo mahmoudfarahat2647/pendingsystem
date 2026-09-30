@@ -58,6 +58,7 @@ const nextConfig: NextConfig = {
 	},
 	images: {
 		formats: ["image/avif", "image/webp"],
+		qualities: [75, 90],
 	},
 	// Standalone output for smaller container sizes if needed
 	output:
