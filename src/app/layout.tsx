@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_Arabic } from "next/font/google";
+import localFont from "next/font/local";
 
 import "./globals.css";
 import QueryProvider from "@/components/providers/QueryProvider";
@@ -33,9 +33,21 @@ export const metadata: Metadata = {
  * utility inside scoped translation containers — never globally — so the
  * page layout stays LTR and pixel-identical in both languages.
  */
-const arabicFont = IBM_Plex_Sans_Arabic({
-	subsets: ["arabic"],
-	weight: ["400", "500", "700"],
+const arabicFont = localFont({
+	src: [
+		{
+			path: "../assets/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2",
+			weight: "400",
+		},
+		{
+			path: "../assets/fonts/ibm-plex-sans-arabic-arabic-500-normal.woff2",
+			weight: "500",
+		},
+		{
+			path: "../assets/fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2",
+			weight: "700",
+		},
+	],
 	variable: "--font-arabic",
 	display: "swap",
 });
