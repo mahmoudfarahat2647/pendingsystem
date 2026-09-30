@@ -4,6 +4,7 @@ import { useCallback, useSyncExternalStore } from "react";
 import {
 	applyThemeClass,
 	DEFAULT_THEME,
+	isAlwaysDarkPath,
 	readTheme,
 	THEME_KEY,
 	type Theme,
@@ -20,7 +21,10 @@ const subscribe = (listener: () => void) => {
 	listeners.add(listener);
 	const onStorage = (event: StorageEvent) => {
 		if (event.key === THEME_KEY || event.key === null) {
-			applyThemeClass(readTheme());
+			// Always-dark routes (/mobile-order) keep their forced Dark class.
+			if (!isAlwaysDarkPath(window.location.pathname)) {
+				applyThemeClass(readTheme());
+			}
 			notify();
 		}
 	};
@@ -41,7 +45,7 @@ export const useTheme = () => {
 
 	const setTheme = useCallback((next: Theme) => {
 		writeTheme(next);
-		applyThemeClass(next);
+		if (!isAlwaysDarkPath(window.location.pathname)) applyThemeClass(next);
 		notify();
 	}, []);
 

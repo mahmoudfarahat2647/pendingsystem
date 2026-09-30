@@ -29,4 +29,16 @@ describe("useTheme", () => {
 		expect(getGridTheme("dark")).toBe(gridThemeDark);
 		expect(getGridTheme("white")).toBe(gridThemeWhite);
 	});
+
+	it("keeps /mobile-order Dark when the theme changes in another tab", () => {
+		window.history.pushState({}, "", "/mobile-order");
+		const { result } = renderHook(() => useTheme());
+		window.localStorage.setItem(THEME_KEY, "white");
+		act(() => {
+			window.dispatchEvent(new StorageEvent("storage", { key: THEME_KEY }));
+		});
+		expect(result.current.theme).toBe("white");
+		expect(document.documentElement.classList.contains("dark")).toBe(true);
+		window.history.pushState({}, "", "/");
+	});
 });

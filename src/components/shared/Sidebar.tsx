@@ -158,7 +158,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			suppressHydrationWarning
 			className={cn(
 				"flex flex-col border-r transition-all duration-300 will-change-[width] z-50",
-				"bg-black/80 backdrop-blur-md border-white/10",
+				"bg-black dark:bg-black/80 backdrop-blur-md border-white/10",
 				isCollapsed ? "w-20" : "w-72",
 			)}
 		>
@@ -357,19 +357,19 @@ export const Sidebar = React.memo(function Sidebar() {
 				open={pendingNavigation !== null}
 				onOpenChange={(open) => !open && cancelNavigation()}
 			>
-				<DialogContent className="bg-[#0c0c0e] border-white/10 text-slate-200">
+				<DialogContent className="bg-white dark:bg-[#0c0c0e] border-black/10 dark:border-white/10 text-slate-800 dark:text-slate-200">
 					<DialogTitle className="flex items-center gap-2 text-lg font-bold">
 						<AlertTriangle className="h-5 w-5 text-amber-500" />
 						<LocalizedScope lang={lang}>
 							{t("sidebar.unsavedTitle")}
 						</LocalizedScope>
 					</DialogTitle>
-					<DialogDescription className="text-slate-400 text-sm">
+					<DialogDescription className="text-slate-600 dark:text-slate-400 text-sm">
 						{/* One scope for the whole sentence, VIN isolated as LTR, so
 						    Arabic reads right-to-left across the VIN in order. */}
 						<LocalizedScope lang={lang}>
 							{t("sidebar.unsavedDescriptionBeforeVin")}{" "}
-							<span dir="ltr" className="text-white font-mono">
+							<span dir="ltr" className="text-black dark:text-white font-mono">
 								{currentEditVin}
 							</span>
 							{t("sidebar.unsavedDescriptionAfterVin")}
@@ -379,7 +379,7 @@ export const Sidebar = React.memo(function Sidebar() {
 						<Button
 							variant="ghost"
 							onClick={cancelNavigation}
-							className="text-slate-400 hover:text-white"
+							className="text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white"
 						>
 							<X className="h-4 w-4 mr-2" />
 							<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>

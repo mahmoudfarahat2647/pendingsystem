@@ -30,7 +30,7 @@ export function SidebarUserMenu({ trigger }: SidebarUserMenuProps) {
 			<DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
 			<DropdownMenuContent
 				align="end"
-				className="bg-[#0c0c0e] border-white/10 text-slate-200"
+				className="bg-white dark:bg-[#0c0c0e] border-black/10 dark:border-white/10 text-slate-800 dark:text-slate-200"
 			>
 				<DropdownMenuItem
 					onClick={handleSignOut}

@@ -245,6 +245,15 @@
 	background: rgba(255, 255, 255, 0.2);
 }
 
+/* White theme: light scrollbar thumbs (Dark rules above are untouched) */
+:root:not(.dark) ::-webkit-scrollbar-thumb {
+	background: rgba(0, 0, 0, 0.18);
+}
+
+:root:not(.dark) ::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 0, 0, 0.32);
+}
+
 /* Release-gate modal: alternating (ping-pong) pulse on the two values that
    trigger the gate. Both share one keyframe; the second element is offset by
    half the cycle so exactly one is bright while the other is dimmed. Neutral
