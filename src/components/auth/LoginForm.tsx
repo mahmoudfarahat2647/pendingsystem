@@ -6,6 +6,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import {
+	authEyeButtonClass,
+	authFieldErrorClass,
+	authInputClass,
+	authInputWrapClass,
+	authLabelClass,
+	authLinkClass,
+	authSubmitClass,
+} from "@/components/auth/authStyles";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { type LoginFormData, LoginFormSchema } from "@/schemas/auth.schema";
@@ -69,33 +78,35 @@ export function LoginForm({ expired }: LoginFormProps) {
 					</p>
 				</div>
 			)}
-			<fieldset className="border border-[#B38F00]/60 dark:border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
-				<legend className="text-[#8A6D00] dark:text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+			<div>
+				<label htmlFor="username" className={authLabelClass}>
 					Username
-				</legend>
-				<input
-					id="username"
-					type="text"
-					autoComplete="off"
-					className="w-full bg-transparent text-black dark:text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:black] dark:[&:-webkit-autofill]:[WebkitTextFillColor:white]"
-					aria-label="Username"
-					{...register("username")}
-				/>
-			</fieldset>
-			{errors.username && (
-				<p className="text-red-400 text-xs -mt-4">{errors.username.message}</p>
-			)}
+				</label>
+				<div className={authInputWrapClass}>
+					<input
+						id="username"
+						type="text"
+						autoComplete="off"
+						className={authInputClass}
+						aria-label="Username"
+						{...register("username")}
+					/>
+				</div>
+				{errors.username && (
+					<p className={authFieldErrorClass}>{errors.username.message}</p>
+				)}
+			</div>
 
-			<fieldset className="border border-[#B38F00]/60 dark:border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
-				<legend className="text-[#8A6D00] dark:text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+			<div>
+				<label htmlFor="password" className={authLabelClass}>
 					Password
-				</legend>
-				<div className="flex items-center">
+				</label>
+				<div className={authInputWrapClass}>
 					<input
 						id="password"
 						type={showPassword ? "text" : "password"}
 						autoComplete="new-password"
-						className="w-full bg-transparent text-black dark:text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:black] dark:[&:-webkit-autofill]:[WebkitTextFillColor:white]"
+						className={authInputClass}
 						aria-label="Password"
 						{...register("password")}
 					/>
@@ -104,19 +115,19 @@ export function LoginForm({ expired }: LoginFormProps) {
 						tabIndex={-1}
 						aria-label={showPassword ? "Hide password" : "Show password"}
 						onClick={() => setShowPassword((v) => !v)}
-						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#8A6D00]/50 dark:text-[#FFCC00]/35 hover:text-[#6B5500] dark:hover:text-[#FFCC00] transition-colors duration-150 outline-none"
+						className={authEyeButtonClass}
 					>
 						{showPassword ? (
-							<EyeOff size={16} strokeWidth={1.75} />
+							<EyeOff size={18} strokeWidth={1.75} />
 						) : (
-							<Eye size={16} strokeWidth={1.75} />
+							<Eye size={18} strokeWidth={1.75} />
 						)}
 					</button>
 				</div>
-			</fieldset>
-			{errors.password && (
-				<p className="text-red-400 text-xs -mt-4">{errors.password.message}</p>
-			)}
+				{errors.password && (
+					<p className={authFieldErrorClass}>{errors.password.message}</p>
+				)}
+			</div>
 
 			{error && (
 				<div
@@ -132,7 +143,7 @@ export function LoginForm({ expired }: LoginFormProps) {
 					type="submit"
 					disabled={isSubmitting}
 					aria-label={isSubmitting ? "Signing in" : undefined}
-					className="w-full bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black font-bold h-10 rounded-md transition-all active:scale-[0.98]"
+					className={authSubmitClass}
 				>
 					{isSubmitting ? (
 						<l-mirage size="30" speed="2.5" color="black" />
@@ -142,11 +153,8 @@ export function LoginForm({ expired }: LoginFormProps) {
 				</Button>
 			</div>
 
-			<p className="text-center text-sm pt-4">
-				<Link
-					href="/forgot-password"
-					className="text-[#8A6D00] dark:text-[#FFCC00] hover:text-[#6B5500] dark:hover:text-[#FFCC00]/80 transition-colors"
-				>
+			<p className="text-center pt-2">
+				<Link href="/forgot-password" className={authLinkClass}>
 					Forgot Password?
 				</Link>
 			</p>

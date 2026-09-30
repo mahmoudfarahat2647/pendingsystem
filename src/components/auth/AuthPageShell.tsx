@@ -33,27 +33,25 @@ export function AuthPageShell({
 
 			{/* Card */}
 			<div className="relative z-10 w-full max-w-[380px]">
-				<div className="bg-white/80 dark:bg-[#0A0A0A]/60 border border-black/10 dark:border-white/5 border-t-black/5 dark:border-t-white/10 rounded-3xl px-8 pb-8 pt-10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-all relative overflow-hidden flex flex-col items-center">
-					{/* Outer inner glow effect */}
-					<div className="absolute inset-0 bg-gradient-to-b from-black/[0.02] dark:from-white/[0.04] to-transparent pointer-events-none" />
+				<div className="relative overflow-hidden rounded-[28px] p-8 border bg-white/30 border-white/60 dark:bg-white/[0.04] dark:border-white/20 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all">
+					{/* Glass highlight */}
+					<div className="absolute inset-0 bg-gradient-to-b from-white/40 dark:from-white/[0.08] to-transparent pointer-events-none" />
 
 					{/* Logo mark */}
-					<div className="flex flex-col items-center mb-10 relative z-10 w-full">
-						<div className="relative inline-block">
-							<h1 className="text-[40px] leading-tight font-extrabold tracking-widest text-black dark:text-white">
-								Eim
-							</h1>
-							<div className="absolute -bottom-1 left-0 right-0 h-1 bg-[#FFCC00] rounded-sm shadow-[0_0_10px_rgba(255,204,0,0.4)]"></div>
-						</div>
+					<div className="relative z-10 mb-6">
+						<h1 className="text-2xl leading-tight font-bold tracking-wide text-black dark:text-white">
+							Eim
+						</h1>
+						<div className="mt-1 w-6 h-[3px] bg-[#FFCC00] rounded-sm shadow-[0_0_10px_rgba(255,204,0,0.4)]" />
 					</div>
 
 					{title && (
-						<h2 className="text-xl font-bold text-black/90 dark:text-white/90 mb-1 text-center w-full relative z-10">
+						<h2 className="relative z-10 text-3xl font-bold text-black dark:text-white mb-2">
 							{title}
 						</h2>
 					)}
 					{subtitle && (
-						<p className="text-black/50 dark:text-white/40 text-sm mb-8 text-center w-full relative z-10">
+						<p className="relative z-10 text-sm text-black/60 dark:text-white/70 mb-8">
 							{subtitle}
 						</p>
 					)}
