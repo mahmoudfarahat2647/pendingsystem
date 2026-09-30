@@ -75,11 +75,4 @@ describe("LanguageTab", () => {
 			expect(el).toHaveAttribute("lang", "ar");
 		}
 	});
-
-	it("previews each language with its real dictionary strings", () => {
-		render(<LanguageTab />);
-
-		expect(screen.getByText("Settings · Notifications")).toBeInTheDocument();
-		expect(screen.getByText("الإعدادات · الإشعارات")).toBeInTheDocument();
-	});
 });

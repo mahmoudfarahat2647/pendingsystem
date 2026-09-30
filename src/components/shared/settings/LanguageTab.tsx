@@ -5,7 +5,6 @@ import { useId } from "react";
 import { LocalizedScope } from "@/components/shared/LocalizedScope";
 import { useT } from "@/hooks/useT";
 import type { Language, TranslationKey } from "@/i18n/dictionaries/en";
-import { translate } from "@/lib/i18n/translate";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 
@@ -31,12 +30,6 @@ const OPTIONS: LanguageOption[] = [
 		nativeName: "العربية",
 		nameKey: "settings.language.arabic",
 	},
-];
-
-// Built from the real dictionaries so the preview always matches the app.
-const SAMPLE_KEYS: TranslationKey[] = [
-	"settings.modal.title",
-	"notifications.title",
 ];
 
 /**
@@ -74,9 +67,6 @@ export const LanguageTab = () => {
 					{OPTIONS.map((option) => {
 						const isSelected = option.code === lang;
 						const inputId = `${name}-${option.code}`;
-						const sample = SAMPLE_KEYS.map((key) =>
-							translate(option.code, key),
-						).join(" · ");
 
 						return (
 							<label
@@ -138,12 +128,6 @@ export const LanguageTab = () => {
 											{t(option.nameKey)}
 										</LocalizedScope>
 									</span>
-								</div>
-								<div
-									aria-hidden="true"
-									className="rounded-md border border-black/5 bg-black/[0.03] px-3 py-2 text-xs text-gray-600 dark:border-white/5 dark:bg-black/30 dark:text-gray-400"
-								>
-									<LocalizedScope lang={option.code}>{sample}</LocalizedScope>
 								</div>
 							</label>
 						);
