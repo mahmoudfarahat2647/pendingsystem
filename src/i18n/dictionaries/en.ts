@@ -78,6 +78,7 @@ export const en = {
 			themeColor: "Theme Color",
 			backupReports: "Backup & Reports",
 			permission: "Permission",
+			language: "Language",
 		},
 		sections: {
 			statusTitle: "Status Management",
@@ -89,6 +90,8 @@ export const en = {
 			permissionTitle: "Permissions",
 			permissionDescription:
 				"Control grid editing and stage-move permissions across the app.",
+			languageTitle: "Language",
+			languageDescription: "Choose the language used across the app.",
 		},
 		statuses: {
 			addNewStatus: "Add New Status",
@@ -150,12 +153,13 @@ export const en = {
 		},
 		language: {
 			label: "Language",
+			title: "Interface language",
+			description: "Pick the language for menus, settings and dialogs.",
 			english: "English",
 			arabic: "Arabic",
-			englishShort: "EN",
-			arabicShort: "AR",
-			switchToEnglish: "Switch to English",
-			switchToArabic: "Switch to Arabic",
+			appliesNote: "Changes apply immediately and are saved in this browser.",
+			scopeNote:
+				"Arabic translates the sidebar, notifications, settings and dialogs. Grids, toolbars and order data stay in English.",
 		},
 	},
 	modals: {

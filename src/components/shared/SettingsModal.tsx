@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	Languages,
 	Lock,
 	Palette,
 	PencilLine,
@@ -19,8 +20,8 @@ import { FOCUS_CHAMPAGNE_VISIBLE } from "@/lib/focusStyles";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import BackupReportsTab from "../reports/BackupReportsTab";
-import { LanguageToggle } from "./LanguageToggle";
 import { LocalizedScope } from "./LocalizedScope";
+import { LanguageTab } from "./settings/LanguageTab";
 import { PartStatusTab } from "./settings/PartStatusTab";
 import { PermissionTab } from "./settings/PermissionTab";
 import { ThemeTab } from "./settings/ThemeTab";
@@ -34,7 +35,8 @@ type TabType =
 	| "part-statuses"
 	| "theme-color"
 	| "backup-reports"
-	| "permission";
+	| "permission"
+	| "language";
 
 const TAB_HEADINGS: Record<
 	TabType,
@@ -55,6 +57,10 @@ const TAB_HEADINGS: Record<
 	permission: {
 		title: "settings.sections.permissionTitle",
 		description: "settings.sections.permissionDescription",
+	},
+	language: {
+		title: "settings.sections.languageTitle",
+		description: "settings.sections.languageDescription",
 	},
 };
 
@@ -91,6 +97,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 			label: t("settings.tabs.permission"),
 			icon: PencilLine,
 		},
+		{ id: "language", label: t("settings.tabs.language"), icon: Languages },
 	];
 
 	const handleUnlock = (attempt: string) => {
@@ -274,9 +281,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 								</LocalizedScope>
 							</p>
 						</div>
-						{/* Language switch — intentionally outside the lock gate so anyone can switch.
-						    Header pr-14 keeps it clear of DialogContent's absolute close button. */}
-						<LanguageToggle />
 					</header>
 
 					<div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
@@ -293,6 +297,9 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 						{activeTab === "permission" && (
 							<PermissionTab isLocked={isLocked} />
 						)}
+
+						{/* Not lock-gated on purpose: anyone can switch language. */}
+						{activeTab === "language" && <LanguageTab />}
 					</div>
 				</div>
 			</DialogContent>
