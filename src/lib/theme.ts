@@ -24,11 +24,13 @@ export const readTheme = (): Theme => {
 	}
 };
 
-export const writeTheme = (theme: Theme): void => {
+/** Returns false when storage is blocked or full (the caller keeps the choice in memory). */
+export const writeTheme = (theme: Theme): boolean => {
 	try {
 		window.localStorage.setItem(THEME_KEY, theme);
+		return true;
 	} catch {
-		// Storage blocked (private mode, site data disabled): keep the in-memory choice.
+		return false;
 	}
 };
 

@@ -24,6 +24,8 @@
 		--input: 240 5.9% 90%;
 		--ring: 240 5.9% 10%;
 		--radius: 0.75rem;
+		/* White theme focus accent; .dark redefines it with the original value */
+		--champagne: 42 45% 40%;
 	}
 
 	.dark {
@@ -249,6 +251,20 @@
    to the original #22c55e when this variable is unset, i.e. in Dark) */
 :root:not(.dark) {
 	--grid-positive: #15803d;
+}
+
+/* Custom status colours: plain text in Dark, tinted chip in White. The stored
+   colour arrives as --status-color and is never modified. */
+.status-chip {
+	color: var(--status-color);
+}
+
+:root:not(.dark) .status-chip {
+	color: color-mix(in srgb, var(--status-color) 65%, black);
+	background-color: color-mix(in srgb, var(--status-color) 14%, transparent);
+	border: 1px solid color-mix(in srgb, var(--status-color) 35%, transparent);
+	border-radius: 4px;
+	padding: 2px 6px;
 }
 
 /* White theme: light scrollbar thumbs (Dark rules above are untouched) */

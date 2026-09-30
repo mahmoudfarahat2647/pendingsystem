@@ -84,9 +84,9 @@ export const StatusManagementSection = ({
 			>
 				{isLocked && (
 					<div className="absolute inset-0 flex items-center justify-center z-20">
-						<div className="px-3 py-1.5 bg-black/50 dark:bg-black/80 border border-black/10 dark:border-white/10 rounded-full flex items-center gap-2 shadow-2xl backdrop-blur-sm">
+						<div className="px-3 py-1.5 bg-white/90 dark:bg-black/80 border border-black/10 dark:border-white/10 rounded-full flex items-center gap-2 shadow-2xl backdrop-blur-sm">
 							<Lock className="h-3 w-3 text-red-600 dark:text-red-400" />
-							<span className="text-[10px] font-bold text-black/50 dark:text-white/40 uppercase tracking-tighter">
+							<span className="text-[10px] font-bold text-gray-700 dark:text-white/40 uppercase tracking-tighter">
 								<LocalizedScope lang={lang}>
 									{t("settings.statuses.editorsLocked")}
 								</LocalizedScope>

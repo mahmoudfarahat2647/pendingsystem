@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useTheme } from "@/hooks/useTheme";
 import {
 	getGridTheme,
@@ -40,5 +40,30 @@ describe("useTheme", () => {
 		expect(result.current.theme).toBe("white");
 		expect(document.documentElement.classList.contains("dark")).toBe(true);
 		window.history.pushState({}, "", "/");
+	});
+
+	it("keeps the chosen theme in memory when storage cannot be written", () => {
+		const setItem = vi
+			.spyOn(Storage.prototype, "setItem")
+			.mockImplementation(() => {
+				throw new Error("quota");
+			});
+		const { result } = renderHook(() => useTheme());
+		act(() => result.current.setTheme("white"));
+		expect(result.current.theme).toBe("white");
+		expect(document.documentElement.classList.contains("dark")).toBe(false);
+		setItem.mockRestore();
+		act(() => result.current.setTheme("dark"));
+		expect(result.current.theme).toBe("dark");
+	});
+
+	it("installs a single storage listener however many components subscribe", () => {
+		const add = vi.spyOn(window, "addEventListener");
+		const hooks = Array.from({ length: 5 }, () => renderHook(() => useTheme()));
+		expect(add.mock.calls.filter(([type]) => type === "storage")).toHaveLength(
+			1,
+		);
+		for (const h of hooks) h.unmount();
+		add.mockRestore();
 	});
 });

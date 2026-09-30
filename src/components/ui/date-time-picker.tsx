@@ -123,7 +123,7 @@ export default function DateTimePicker({
 					<Button
 						variant="outline"
 						className={cn(
-							"w-full justify-start text-left font-normal border-black/10 dark:border-white/10 bg-gray-100 dark:bg-[#2c2c2e] text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3c3c3e] hover:text-gray-100",
+							"w-full justify-start text-left font-normal border-black/10 dark:border-white/10 bg-gray-100 dark:bg-[#2c2c2e] text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3c3c3e] hover:text-gray-900 dark:hover:text-gray-100",
 							!date && "text-muted-foreground",
 						)}
 					>

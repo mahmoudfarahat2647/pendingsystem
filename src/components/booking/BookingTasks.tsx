@@ -48,7 +48,7 @@ export const BookingTasks = () => {
 			label: (
 				<div className="flex items-center gap-3 w-full pl-1">
 					<task.icon className={`h-4 w-4 ${task.color} opacity-70`} />
-					<span className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-200 transition-colors">
+					<span className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">
 						{task.label}
 					</span>
 				</div>

@@ -24,7 +24,12 @@ const BARE_DARK_LITERALS = [
 	"text-slate-200",
 	"text-slate-300",
 	"text-slate-400",
+	"text-gray-100",
+	"text-gray-200",
 ];
+
+/** Exact tokens that are intentional White values, not leaked Dark ones. */
+const ALLOWED_TOKENS = new Set(["placeholder:text-slate-400"]);
 
 /** Intentionally dark in both themes, or converted in a later PR. */
 const EXEMPT = [
@@ -41,20 +46,33 @@ const listSourceFiles = (dir: string): string[] =>
 		if (entry.isDirectory()) {
 			return entry.name === "test" ? [] : listSourceFiles(full);
 		}
-		return full.endsWith(".tsx") ? [full] : [];
+		return /\.tsx?$/.test(full) ? [full] : [];
 	});
 
 const CONVERTED_FILES = listSourceFiles(join(process.cwd(), "src"))
 	.map((f) => relative(process.cwd(), f).split(sep).join("/"))
 	.filter((f) => !EXEMPT.some((prefix) => f.startsWith(prefix)));
 
+/**
+ * Finds `literal` as a whole class token, with or without a variant chain
+ * (`hover:`, `group-hover:`, `[&_select]:`, ...). Only a chain that contains
+ * `dark:` is allowed, since that is where Dark values are kept verbatim.
+ */
 const bareTokens = (source: string, literal: string) => {
 	const escaped = literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 	const re = new RegExp(
-		`(?<![\\w:\\[\\]#./%()-])${escaped}(?![\\w\\[\\]/.-])`,
+		`(?<![^\\s"'\`{])([^\\s"'\`{]*?)${escaped}(?![\\w\\[\\]/.-])`,
 		"g",
 	);
-	return source.match(re) ?? [];
+	const hits: string[] = [];
+	for (const match of source.matchAll(re)) {
+		const variants = match[1];
+		if (variants !== "" && !variants.endsWith(":")) continue;
+		if (variants.split(":").includes("dark")) continue;
+		if (ALLOWED_TOKENS.has(match[0])) continue;
+		hits.push(match[0]);
+	}
+	return hits;
 };
 
 describe("White theme dark-safety (converted shell files)", () => {
@@ -133,5 +151,18 @@ describe("Sidebar White redesign keeps Dark verbatim", () => {
 		expect(sidebar).toContain("rounded-r-[28px]");
 		expect(sidebar).toContain("bg-renault-yellow/10");
 		expect(sidebar).toMatch(/bg-renault-yellow dark:hidden/);
+	});
+});
+
+describe("dark-safety guard catches variant-prefixed leaks", () => {
+	it("flags hover:/group-hover:/arbitrary variants but allows dark: chains", () => {
+		const src = `"hover:text-gray-100 group-hover:text-gray-200 [&_select]:bg-[#0c0c0e] dark:hover:text-gray-100 dark:[&_select]:bg-[#0c0c0e]"`;
+		expect(bareTokens(src, "text-gray-100")).toEqual(["hover:text-gray-100"]);
+		expect(bareTokens(src, "text-gray-200")).toEqual([
+			"group-hover:text-gray-200",
+		]);
+		expect(bareTokens(src, "bg-[#0c0c0e]")).toEqual([
+			"[&_select]:bg-[#0c0c0e]",
+		]);
 	});
 });

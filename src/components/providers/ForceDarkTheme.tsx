@@ -1,7 +1,8 @@
 "use client";
 
 import { useLayoutEffect } from "react";
-import { applyThemeClass, readTheme } from "@/lib/theme";
+import { getCurrentTheme } from "@/hooks/useTheme";
+import { applyThemeClass } from "@/lib/theme";
 
 /**
  * Keeps a route Dark regardless of the saved preference (used by
@@ -11,7 +12,7 @@ import { applyThemeClass, readTheme } from "@/lib/theme";
 export function ForceDarkTheme() {
 	useLayoutEffect(() => {
 		applyThemeClass("dark");
-		return () => applyThemeClass(readTheme());
+		return () => applyThemeClass(getCurrentTheme());
 	}, []);
 	return null;
 }

@@ -136,7 +136,7 @@ export const BookingCalendarGrid = ({
 							className={cn(
 								"relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-300 group",
 								!isCurrentMonth
-									? "text-gray-800"
+									? "text-gray-300 dark:text-gray-800"
 									: "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white",
 								isSelected
 									? searchQuery

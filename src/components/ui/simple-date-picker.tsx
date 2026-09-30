@@ -166,7 +166,7 @@ export function SimpleDatePicker({
 						captionLayout="dropdown"
 						startMonth={new Date(2015, 0)}
 						endMonth={new Date(2040, 11)}
-						className="bg-white dark:bg-[#0c0c0e] text-slate-800 dark:text-slate-200 [color-scheme:dark]"
+						className="bg-white dark:bg-[#0c0c0e] text-slate-800 dark:text-slate-200 [color-scheme:light] dark:[color-scheme:dark]"
 						classNames={{
 							months:
 								"flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
@@ -175,7 +175,7 @@ export function SimpleDatePicker({
 								"flex justify-center pt-1 relative items-center text-slate-800 dark:text-slate-200 gap-1",
 							caption_label: "text-sm font-medium hidden",
 							caption_dropdowns:
-								"flex justify-center gap-1 [&_select]:bg-[#0c0c0e] [&_select]:text-slate-200 [&_select]:border [&_select]:border-white/10 [&_select]:rounded-md [&_select]:p-1 [&_select]:px-2 [&_select]:cursor-pointer [&_select]:outline-none [&_select]:text-sm [&_select]:appearance-none [&_select]:hover:bg-white/5 [&_select]:transition-colors [&_option]:bg-[#0c0c0e] [&_option]:text-white",
+								"flex justify-center gap-1 [&_select]:bg-white dark:[&_select]:bg-[#0c0c0e] [&_select]:text-slate-800 dark:[&_select]:text-slate-200 [&_select]:border [&_select]:border-black/10 dark:[&_select]:border-white/10 [&_select]:rounded-md [&_select]:p-1 [&_select]:px-2 [&_select]:cursor-pointer [&_select]:outline-none [&_select]:text-sm [&_select]:appearance-none [&_select]:hover:bg-black/5 dark:[&_select]:hover:bg-white/5 [&_select]:transition-colors [&_option]:bg-white dark:[&_option]:bg-[#0c0c0e] [&_option]:text-black dark:[&_option]:text-white",
 							nav: "space-x-1 flex items-center",
 							nav_button:
 								"h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100 border border-black/10 dark:border-white/10 rounded-md hover:bg-black/5 dark:hover:bg-white/5",
