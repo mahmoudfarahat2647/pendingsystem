@@ -39,11 +39,4 @@ describe("dictionary key parity", () => {
 		assertNonEmpty(en, "");
 		assertNonEmpty(ar, "");
 	});
-
-	it("keeps language codes untranslated", () => {
-		expect(en.settings.language.englishShort).toBe("EN");
-		expect(en.settings.language.arabicShort).toBe("AR");
-		expect(ar.settings.language.englishShort).toBe("EN");
-		expect(ar.settings.language.arabicShort).toBe("AR");
-	});
 });

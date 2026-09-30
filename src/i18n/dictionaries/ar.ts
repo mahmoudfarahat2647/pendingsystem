@@ -78,6 +78,7 @@ export const ar: Dictionary = {
 			themeColor: "لون المظهر",
 			backupReports: "النسخ الاحتياطي والتقارير",
 			permission: "الصلاحيات",
+			language: "اللغة",
 		},
 		sections: {
 			statusTitle: "إدارة الحالات",
@@ -90,6 +91,8 @@ export const ar: Dictionary = {
 			permissionTitle: "إعدادات الصلاحيات",
 			permissionDescription:
 				"تحكّم في صلاحيات تعديل الجدول ونقل السجلات بين المراحل في التطبيق.",
+			languageTitle: "اللغة",
+			languageDescription: "اختر لغة واجهة التطبيق.",
 		},
 		statuses: {
 			addNewStatus: "إضافة حالة جديدة",
@@ -151,12 +154,13 @@ export const ar: Dictionary = {
 		},
 		language: {
 			label: "اللغة",
+			title: "لغة الواجهة",
+			description: "اختر لغة القوائم والإعدادات والنوافذ.",
 			english: "الإنجليزية",
 			arabic: "العربية",
-			englishShort: "EN",
-			arabicShort: "AR",
-			switchToEnglish: "التبديل إلى الإنجليزية",
-			switchToArabic: "التبديل إلى العربية",
+			appliesNote: "تُطبَّق التغييرات فورًا وتُحفظ في هذا المتصفح.",
+			scopeNote:
+				"تُترجم العربية الشريط الجانبي والإشعارات والإعدادات والنوافذ. تبقى الجداول وأشرطة الأدوات وبيانات الطلبات بالإنجليزية.",
 		},
 	},
 	modals: {

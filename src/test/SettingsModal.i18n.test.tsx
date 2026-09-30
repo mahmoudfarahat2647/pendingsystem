@@ -76,6 +76,7 @@ describe("SettingsModal i18n (Wave 4)", () => {
 			"Theme Color",
 			"Backup & Reports",
 			"Permission",
+			"Language",
 		]) {
 			expect(screen.getByRole("button", { name: tab })).toBeInTheDocument();
 		}
@@ -96,6 +97,7 @@ describe("SettingsModal i18n (Wave 4)", () => {
 			"لون المظهر",
 			"النسخ الاحتياطي والتقارير",
 			"الصلاحيات",
+			"اللغة",
 		];
 		const nav = dialog.querySelector("nav");
 		expect(nav).not.toBeNull();
@@ -124,6 +126,37 @@ describe("SettingsModal i18n (Wave 4)", () => {
 		expect(
 			screen.getByPlaceholderText("أدخل اسم الحالة، مثال: In Transit"),
 		).toBeInTheDocument();
+	});
+
+	it("keeps the content header free of any language switch", async () => {
+		const user = userEvent.setup();
+		renderModal();
+
+		await openTab(user, "Language");
+		const header = screen.getByRole("dialog").querySelector("header");
+		expect(header).not.toBeNull();
+		expect(
+			within(header as HTMLElement).queryByRole("radiogroup"),
+		).not.toBeInTheDocument();
+		expect(
+			within(header as HTMLElement).queryByRole("button"),
+		).not.toBeInTheDocument();
+		expect(
+			screen.getByRole("radiogroup", { name: "Language" }),
+		).toBeInTheDocument();
+	});
+
+	it("switches language from the Language tab while Settings is locked", async () => {
+		const user = userEvent.setup();
+		renderModal();
+		expect(useAppStore.getState().isLocked).toBe(true);
+
+		await openTab(user, "Language");
+		await user.click(screen.getByRole("radio", { name: "العربية, Arabic" }));
+
+		expect(useAppStore.getState().language).toBe("ar");
+		expect(screen.getByRole("dialog", { name: "الإعدادات" })).toBeVisible();
+		expect(screen.getByText("اختر لغة واجهة التطبيق.")).toBeInTheDocument();
 	});
 
 	it("translates the password prompt, including the incorrect-password state", async () => {
