@@ -158,12 +158,13 @@ export const Sidebar = React.memo(function Sidebar() {
 			suppressHydrationWarning
 			className={cn(
 				"flex flex-col border-r transition-all duration-300 will-change-[width] z-50",
-				"bg-black dark:bg-black/80 backdrop-blur-md border-white/10",
+				"bg-[#1f2328] dark:bg-black/80 backdrop-blur-md border-white/10",
+				"rounded-r-[28px] overflow-hidden border-r-0 dark:rounded-none dark:overflow-visible dark:border-r",
 				isCollapsed ? "w-20" : "w-72",
 			)}
 		>
 			{/* Logo */}
-			<div className="flex items-center h-20 px-6 border-b border-white/10">
+			<div className="flex items-center h-20 px-6 border-b border-transparent dark:border-white/10">
 				{!isCollapsed ? (
 					<div className="flex flex-col">
 						<Link
@@ -222,18 +223,28 @@ export const Sidebar = React.memo(function Sidebar() {
 									className={cn(
 										"flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
 										isActive
-											? "bg-renault-yellow text-black font-bold shadow-[0_0_20px_rgba(255,204,0,0.2)]"
-											: "text-gray-400 hover:text-white hover:bg-white/5",
+											? "bg-renault-yellow/10 ring-1 ring-inset ring-renault-yellow/50 text-white font-semibold dark:bg-renault-yellow dark:ring-0 dark:text-black dark:font-bold dark:shadow-[0_0_20px_rgba(255,204,0,0.2)]"
+											: "text-gray-300 dark:text-gray-400 hover:text-white hover:bg-white/5",
 										isCollapsed && "justify-center px-2",
 									)}
 									title={isCollapsed ? label : undefined}
 									onClick={(e) => handleNavigation(item.href, e)}
 								>
+									{/* White theme: yellow accent pill on the active tab */}
+									{isActive && (
+										<span
+											aria-hidden="true"
+											className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-renault-yellow dark:hidden"
+										/>
+									)}
+
 									{/* Icon */}
 									<div
 										className={cn(
 											"relative z-10 transition-transform duration-200",
-											isActive ? "scale-110" : "group-hover:scale-110",
+											isActive
+												? "scale-110 text-renault-yellow dark:text-inherit"
+												: "group-hover:scale-110",
 										)}
 									>
 										{item.icon}
@@ -255,7 +266,7 @@ export const Sidebar = React.memo(function Sidebar() {
 											className={cn(
 												"ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border relative z-10",
 												isActive
-													? "bg-black/20 border-black/10 text-black"
+													? "bg-renault-yellow/20 border-renault-yellow/30 text-renault-yellow dark:bg-black/20 dark:border-black/10 dark:text-black"
 													: "bg-renault-yellow/10 border-renault-yellow/20 text-renault-yellow",
 											)}
 										>
@@ -285,7 +296,7 @@ export const Sidebar = React.memo(function Sidebar() {
 
 			{/* User Profile */}
 			<div
-				className="border-t border-white/10 p-4 bg-black/20"
+				className="border-t border-white/10 p-4 bg-transparent dark:bg-black/20"
 				suppressHydrationWarning
 			>
 				<div className="w-full flex items-center gap-2">
@@ -309,7 +320,7 @@ export const Sidebar = React.memo(function Sidebar() {
 							<span className="text-xs font-bold text-renault-yellow">
 								{userInitials || "U"}
 							</span>
-							<div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full"></div>
+							<div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#1f2328] dark:border-black rounded-full"></div>
 						</div>
 						{!isCollapsed && (
 							<div className="flex-1 min-w-0">

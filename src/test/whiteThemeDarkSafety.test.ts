@@ -108,3 +108,27 @@ describe("White theme grid cell contrast", () => {
 		}
 	});
 });
+
+describe("Sidebar White redesign keeps Dark verbatim", () => {
+	const sidebar = readFileSync(
+		join(process.cwd(), "src/components/shared/Sidebar.tsx"),
+		"utf8",
+	);
+
+	it("keeps the original Dark container and active-tab classes under dark:", () => {
+		expect(sidebar).toContain("dark:bg-black/80");
+		expect(sidebar).toContain("dark:bg-renault-yellow");
+		expect(sidebar).toContain("dark:text-black");
+		expect(sidebar).toContain("dark:font-bold");
+		expect(sidebar).toContain("dark:shadow-[0_0_20px_rgba(255,204,0,0.2)]");
+		expect(sidebar).toContain("dark:rounded-none");
+		expect(sidebar).toContain("dark:border-r");
+	});
+
+	it("uses the charcoal rounded shell and yellow accent pill only in White", () => {
+		expect(sidebar).toContain("bg-[#1f2328]");
+		expect(sidebar).toContain("rounded-r-[28px]");
+		expect(sidebar).toContain("bg-renault-yellow/10");
+		expect(sidebar).toMatch(/bg-renault-yellow dark:hidden/);
+	});
+});
