@@ -5,6 +5,14 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import {
+	authEyeButtonClass,
+	authFieldErrorClass,
+	authInputClass,
+	authInputWrapClass,
+	authLabelClass,
+	authSubmitClass,
+} from "@/components/auth/authStyles";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -32,7 +40,7 @@ export function ResetPasswordForm() {
 	if (!token) {
 		return (
 			<div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-				<p className="text-red-400 text-sm">
+				<p className="text-red-600 dark:text-red-400 text-sm">
 					Invalid or missing reset token. Please request a new password reset.
 				</p>
 			</div>
@@ -42,7 +50,7 @@ export function ResetPasswordForm() {
 	if (success) {
 		return (
 			<div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-				<p className="text-green-400 text-sm">
+				<p className="text-green-700 dark:text-green-400 text-sm">
 					Password reset successful. Redirecting to login...
 				</p>
 			</div>
@@ -66,18 +74,17 @@ export function ResetPasswordForm() {
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-			<fieldset className="border border-[#B38F00]/60 dark:border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
-				<legend className="text-[#8A6D00] dark:text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+			<div>
+				<label htmlFor="newPassword" className={authLabelClass}>
 					New Password
-				</legend>
-				<div className="flex items-center">
+				</label>
+				<div className={authInputWrapClass}>
 					<input
 						id="newPassword"
 						type={showNewPassword ? "text" : "password"}
 						autoComplete="new-password"
-						className="w-full bg-transparent text-black dark:text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:black] dark:[&:-webkit-autofill]:[WebkitTextFillColor:white]"
-						aria-label="New password"
+						className={authInputClass}
 						{...register("newPassword")}
 					/>
 					<button
@@ -85,7 +92,7 @@ export function ResetPasswordForm() {
 						tabIndex={-1}
 						aria-label={showNewPassword ? "Hide password" : "Show password"}
 						onClick={() => setShowNewPassword((v) => !v)}
-						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#8A6D00]/50 dark:text-[#FFCC00]/35 hover:text-[#6B5500] dark:hover:text-[#FFCC00] transition-colors duration-150 outline-none"
+						className={authEyeButtonClass}
 					>
 						{showNewPassword ? (
 							<EyeOff size={16} strokeWidth={1.75} />
@@ -94,24 +101,21 @@ export function ResetPasswordForm() {
 						)}
 					</button>
 				</div>
-			</fieldset>
-			{errors.newPassword && (
-				<p className="text-red-400 text-xs -mt-4">
-					{errors.newPassword.message}
-				</p>
-			)}
+				{errors.newPassword && (
+					<p className={authFieldErrorClass}>{errors.newPassword.message}</p>
+				)}
+			</div>
 
-			<fieldset className="border border-[#B38F00]/60 dark:border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
-				<legend className="text-[#8A6D00] dark:text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+			<div>
+				<label htmlFor="confirmPassword" className={authLabelClass}>
 					Confirm Password
-				</legend>
-				<div className="flex items-center">
+				</label>
+				<div className={authInputWrapClass}>
 					<input
 						id="confirmPassword"
 						type={showConfirmPassword ? "text" : "password"}
 						autoComplete="new-password"
-						className="w-full bg-transparent text-black dark:text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:black] dark:[&:-webkit-autofill]:[WebkitTextFillColor:white]"
-						aria-label="Confirm password"
+						className={authInputClass}
 						{...register("confirmPassword")}
 					/>
 					<button
@@ -119,7 +123,7 @@ export function ResetPasswordForm() {
 						tabIndex={-1}
 						aria-label={showConfirmPassword ? "Hide password" : "Show password"}
 						onClick={() => setShowConfirmPassword((v) => !v)}
-						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#8A6D00]/50 dark:text-[#FFCC00]/35 hover:text-[#6B5500] dark:hover:text-[#FFCC00] transition-colors duration-150 outline-none"
+						className={authEyeButtonClass}
 					>
 						{showConfirmPassword ? (
 							<EyeOff size={16} strokeWidth={1.75} />
@@ -128,24 +132,24 @@ export function ResetPasswordForm() {
 						)}
 					</button>
 				</div>
-			</fieldset>
-			{errors.confirmPassword && (
-				<p className="text-red-400 text-xs -mt-4">
-					{errors.confirmPassword.message}
-				</p>
-			)}
+				{errors.confirmPassword && (
+					<p className={authFieldErrorClass}>
+						{errors.confirmPassword.message}
+					</p>
+				)}
+			</div>
 
 			{error && (
 				<div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mt-2">
-					<p className="text-red-400 text-sm">{error}</p>
+					<p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
 				</div>
 			)}
 
-			<div className="pt-2">
+			<div className="pt-1">
 				<Button
 					type="submit"
 					disabled={isSubmitting}
-					className="w-full bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black font-bold h-10 rounded-md transition-all active:scale-[0.98]"
+					className={authSubmitClass}
 				>
 					{isSubmitting ? "Resetting..." : "Reset Password"}
 				</Button>

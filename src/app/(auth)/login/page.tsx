@@ -8,7 +8,7 @@ interface LoginPageProps {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
 	const params = await searchParams;
 	return (
-		<AuthPageShell>
+		<AuthPageShell title="Welcome back" subtitle="Sign in to your workspace.">
 			<LoginForm expired={params.expired === "1"} />
 		</AuthPageShell>
 	);
