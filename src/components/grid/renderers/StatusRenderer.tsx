@@ -52,7 +52,9 @@ export const StatusRenderer = (params: StatusRendererProps) => {
 	return (
 		<span
 			className={`text-[10px] uppercase tracking-wider font-semibold ${
-				isReorder ? "text-[#d4a017]" : "text-gray-600 dark:text-gray-400"
+				isReorder
+					? "text-[#a16207] dark:text-[#d4a017]"
+					: "text-gray-600 dark:text-gray-400"
 			}`}
 		>
 			{value}

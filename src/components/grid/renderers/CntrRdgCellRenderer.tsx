@@ -6,6 +6,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTheme } from "@/hooks/useTheme";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 import { CntrRdgAlertIcon } from "./CntrRdgAlertIcon";
@@ -14,6 +15,7 @@ export const CntrRdgCellRenderer = (
 	params: ICellRendererParams<PendingRow>,
 ) => {
 	const data = params.data;
+	const { theme } = useTheme();
 
 	const warningNotification = useAppStore((state) =>
 		data
@@ -32,7 +34,15 @@ export const CntrRdgCellRenderer = (
 	}
 
 	const level = warningNotification.cntrRdgLevel;
-	const iconColor = level === "high" ? "#ef4444" : "#eab308";
+	// White uses darker shades for contrast on a white grid; Dark is unchanged.
+	const iconColor =
+		theme === "white"
+			? level === "high"
+				? "#dc2626"
+				: "#a16207"
+			: level === "high"
+				? "#ef4444"
+				: "#eab308";
 	const tooltipText =
 		level === "high"
 			? "High Risk: CNTR RDG approaching 100,000 KM limit"

@@ -9,7 +9,7 @@ export const MobileCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 	return (
 		<div
 			className="flex items-center gap-1.5 h-full"
-			style={{ color: "#22c55e" }}
+			style={{ color: "var(--grid-positive, #22c55e)" }}
 		>
 			<Phone className="h-3.5 w-3.5 shrink-0" />
 			<span>{mobile}</span>

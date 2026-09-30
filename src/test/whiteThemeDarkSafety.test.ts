@@ -89,3 +89,22 @@ describe("White theme dark-safety (converted shell files)", () => {
 		expect(css).toContain(":root:not(.dark) ::-webkit-scrollbar-thumb");
 	});
 });
+
+describe("White theme grid cell contrast", () => {
+	it("green cell colours read a White-only CSS variable and fall back to the Dark value", () => {
+		const css = readFileSync(
+			join(process.cwd(), "src/app/globals.css"),
+			"utf8",
+		);
+		expect(css).toMatch(/:root:not\(\.dark\)\s*\{\s*--grid-positive: #15803d;/);
+		for (const file of [
+			"src/components/shared/GridConfig.tsx",
+			"src/components/grid/renderers/MobileCellRenderer.tsx",
+			"src/app/(app)/archive/page.tsx",
+		]) {
+			const source = readFileSync(join(process.cwd(), file), "utf8");
+			expect(source, file).toContain("var(--grid-positive, #22c55e)");
+			expect(source, file).not.toMatch(/color: "#22c55e"/);
+		}
+	});
+});

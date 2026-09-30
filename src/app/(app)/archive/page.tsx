@@ -129,7 +129,7 @@ export default function ArchivePage() {
 				width: 120,
 				cellStyle: (params: { value: unknown }): CellStyle =>
 					params.value
-						? { color: "#22c55e", fontWeight: 500 }
+						? { color: "var(--grid-positive, #22c55e)", fontWeight: 500 }
 						: { color: "#6b7280" },
 				valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
 					if (!params.value) return "N/A";

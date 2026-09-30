@@ -251,7 +251,7 @@ export const getBookingColumns = (
 			headerName: "BOOKING DATE",
 			field: "bookingDate",
 			width: 130,
-			cellStyle: { color: "#22c55e", fontWeight: 500 },
+			cellStyle: { color: "var(--grid-positive, #22c55e)", fontWeight: 500 },
 			cellRenderer: BookingDateRenderer,
 			valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
 				if (!params.value) return "";
@@ -300,7 +300,7 @@ export const getCallColumns = (
 			.slice(2)
 			.map((col) =>
 				col.field === "mobile"
-					? { ...col, cellStyle: { color: "#22c55e" } }
+					? { ...col, cellStyle: { color: "var(--grid-positive, #22c55e)" } }
 					: col,
 			),
 		{
@@ -544,7 +544,8 @@ export const getGlobalSearchWorkspaceColumns = (
 			},
 			cellStyle: (params: { data?: PendingRow }) => {
 				const source = params.data?.sourceType;
-				if (source === "Booking") return { color: "#22c55e", fontWeight: 500 };
+				if (source === "Booking")
+					return { color: "var(--grid-positive, #22c55e)", fontWeight: 500 };
 				if (source === "Archive")
 					return { color: "#6b7280", opacity: 0.5, fontWeight: 700 };
 				return { color: "#6b7280" };

@@ -245,6 +245,12 @@
 	background: rgba(255, 255, 255, 0.2);
 }
 
+/* White theme: darker "positive" green for grid cells (inline styles fall back
+   to the original #22c55e when this variable is unset, i.e. in Dark) */
+:root:not(.dark) {
+	--grid-positive: #15803d;
+}
+
 /* White theme: light scrollbar thumbs (Dark rules above are untouched) */
 :root:not(.dark) ::-webkit-scrollbar-thumb {
 	background: rgba(0, 0, 0, 0.18);
