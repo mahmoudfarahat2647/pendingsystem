@@ -205,10 +205,10 @@ export const NotificationsDropdown = () => {
 							initial={{ opacity: 0, y: 10, scale: 0.95 }}
 							animate={{ opacity: 1, y: 0, scale: 1 }}
 							exit={{ opacity: 0, y: 10, scale: 0.95 }}
-							className="absolute right-0 mt-3 w-80 bg-[#0c0c0e] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
+							className="absolute right-0 mt-3 w-80 bg-white dark:bg-[#0c0c0e] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
 						>
-							<div className="p-4 border-b border-white/5 flex items-center justify-between">
-								<h3 className="text-sm font-bold text-white">
+							<div className="p-4 border-b border-black/10 dark:border-white/5 flex items-center justify-between">
+								<h3 className="text-sm font-bold text-black dark:text-white">
 									<LocalizedScope lang={lang}>
 										{t("notifications.title")}
 									</LocalizedScope>
@@ -217,7 +217,7 @@ export const NotificationsDropdown = () => {
 									<button
 										type="button"
 										onClick={dismissAllNotifications}
-										className="text-[10px] text-gray-500 hover:text-white uppercase font-bold transition-colors"
+										className="text-[10px] text-gray-500 hover:text-black dark:hover:text-white uppercase font-bold transition-colors"
 									>
 										<LocalizedScope lang={lang}>
 											{t("notifications.clearAll")}
@@ -240,7 +240,7 @@ export const NotificationsDropdown = () => {
 											<div
 												key={n.id}
 												className={cn(
-													"group relative flex border-b border-white/5 bg-[#0c0c0e] hover:bg-white/[0.04] transition-all",
+													"group relative flex border-b border-black/10 dark:border-white/5 bg-white dark:bg-[#0c0c0e] hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition-all",
 													!n.isRead && "bg-indigo-500/5",
 												)}
 											>
@@ -267,21 +267,21 @@ export const NotificationsDropdown = () => {
 													/>
 													<div className="flex-1 space-y-2">
 														<div className="flex items-center justify-between pr-6">
-															<span className="text-[10px] font-bold text-white uppercase tracking-wider group-hover:text-indigo-400 transition-colors">
+															<span className="text-[10px] font-bold text-black dark:text-white uppercase tracking-wider group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
 																<LocalizedScope lang={lang}>
 																	{n.titleKey
 																		? t(n.titleKey, n.params)
 																		: (n.title ?? "")}
 																</LocalizedScope>
 															</span>
-															<span className="text-[9px] text-gray-600 font-mono">
+															<span className="text-[9px] text-gray-500 dark:text-gray-600 font-mono">
 																{new Date(n.timestamp).toLocaleTimeString([], {
 																	hour: "2-digit",
 																	minute: "2-digit",
 																})}
 															</span>
 														</div>
-														<p className="text-xs text-gray-400 leading-relaxed font-medium">
+														<p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
 															<LocalizedScope lang={lang}>
 																{n.descriptionKey
 																	? t(n.descriptionKey, n.params)
@@ -290,21 +290,21 @@ export const NotificationsDropdown = () => {
 														</p>
 
 														<div className="flex flex-wrap gap-2 pt-1">
-															<div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
+															<div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5">
 																<TableProperties className="h-2.5 w-2.5 text-gray-500" />
-																<span className="text-[9px] text-gray-400 font-bold uppercase">
+																<span className="text-[9px] text-gray-600 dark:text-gray-400 font-bold uppercase">
 																	{n.tabName}
 																</span>
 															</div>
-															<div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
+															<div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5">
 																<Hash className="h-2.5 w-2.5 text-gray-500" />
-																<span className="text-[9px] text-gray-400 font-mono">
+																<span className="text-[9px] text-gray-600 dark:text-gray-400 font-mono">
 																	{n.trackingId}
 																</span>
 															</div>
-															<div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
+															<div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5">
 																<MapPin className="h-2.5 w-2.5 text-gray-500" />
-																<span className="text-[9px] text-gray-400 font-mono uppercase">
+																<span className="text-[9px] text-gray-600 dark:text-gray-400 font-mono uppercase">
 																	{n.vin}
 																</span>
 															</div>
@@ -317,7 +317,7 @@ export const NotificationsDropdown = () => {
 														e.stopPropagation();
 														dismissNotification(n);
 													}}
-													className="absolute top-2 right-2 p-1.5 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-white/5"
+													className="absolute top-2 right-2 p-1.5 text-gray-500 dark:text-gray-600 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all rounded-md hover:bg-black/5 dark:hover:bg-white/5"
 													title={
 														n.type === "release_followup"
 															? t("notifications.snoozeTwoMonths")

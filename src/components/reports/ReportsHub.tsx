@@ -17,8 +17,8 @@ export function ReportsHub() {
 	return (
 		<div className="space-y-3 pb-4 max-w-[1400px] mx-auto">
 			{/* Filters */}
-			<div className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/10">
-				<span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+			<div className="flex items-center gap-4 p-3 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10">
+				<span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-widest">
 					Filters
 				</span>
 				<ReportFilters
@@ -37,7 +37,7 @@ export function ReportsHub() {
 
 			{/* Error state */}
 			{isError && (
-				<div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-400">
+				<div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-600 dark:text-red-400">
 					Failed to load report data. Please try again.
 				</div>
 			)}

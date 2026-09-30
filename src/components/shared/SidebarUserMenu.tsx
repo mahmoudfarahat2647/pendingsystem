@@ -30,11 +30,11 @@ export function SidebarUserMenu({ trigger }: SidebarUserMenuProps) {
 			<DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
 			<DropdownMenuContent
 				align="end"
-				className="bg-[#0c0c0e] border-white/10 text-slate-200"
+				className="bg-white dark:bg-[#0c0c0e] border-black/10 dark:border-white/10 text-slate-800 dark:text-slate-200"
 			>
 				<DropdownMenuItem
 					onClick={handleSignOut}
-					className="cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10"
+					className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-300 focus:bg-red-500/10"
 				>
 					<LogOut className="h-4 w-4 mr-2" />
 					<LocalizedScope lang={lang}>{t("sidebar.signOut")}</LocalizedScope>

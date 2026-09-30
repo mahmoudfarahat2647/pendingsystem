@@ -26,7 +26,7 @@ export function SelectAllByVinButton({
 					variant="ghost"
 					aria-label="Select all rows for this VIN"
 					className={cn(
-						"h-8 w-8 text-gray-400 hover:text-white",
+						"h-8 w-8 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white",
 						isDisabled && "opacity-50 cursor-not-allowed",
 					)}
 					onClick={onSelectAllByVin}

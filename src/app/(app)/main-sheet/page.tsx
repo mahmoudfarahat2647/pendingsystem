@@ -194,7 +194,7 @@ export default function MainSheetPage() {
 				<Card className="flex-1 flex flex-col border-none bg-transparent shadow-none">
 					<CardContent className="p-0 flex-1 flex flex-col space-y-4">
 						{!isSheetLocked && (
-							<div className="flex items-center justify-between px-4 py-2 bg-green-900/30 border border-green-500/30 rounded-t-lg text-green-400 text-sm">
+							<div className="flex items-center justify-between px-4 py-2 bg-green-900/30 border border-green-500/30 rounded-t-lg text-green-600 dark:text-green-400 text-sm">
 								<div className="flex items-center gap-2">
 									<Unlock className="h-4 w-4" />
 									<span>Sheet is unlocked - Editing enabled</span>
@@ -258,7 +258,7 @@ export default function MainSheetPage() {
 						{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}
 						<div
 							role="presentation"
-							className={`flex-1 min-h-[500px] border border-white/10 rounded-xl ${
+							className={`flex-1 min-h-[500px] border border-black/10 dark:border-white/10 rounded-xl ${
 								scrollDir === "horizontal"
 									? "overflow-x-auto overflow-y-hidden"
 									: "overflow-hidden"

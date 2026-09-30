@@ -251,7 +251,7 @@ export const getBookingColumns = (
 			headerName: "BOOKING DATE",
 			field: "bookingDate",
 			width: 130,
-			cellStyle: { color: "#22c55e", fontWeight: 500 },
+			cellStyle: { color: "var(--grid-positive, #22c55e)", fontWeight: 500 },
 			cellRenderer: BookingDateRenderer,
 			valueFormatter: (params: ValueFormatterParams<PendingRow>) => {
 				if (!params.value) return "";
@@ -300,7 +300,7 @@ export const getCallColumns = (
 			.slice(2)
 			.map((col) =>
 				col.field === "mobile"
-					? { ...col, cellStyle: { color: "#22c55e" } }
+					? { ...col, cellStyle: { color: "var(--grid-positive, #22c55e)" } }
 					: col,
 			),
 		{
@@ -388,7 +388,7 @@ const SearchHeaderCheckbox = ({
 				type="checkbox"
 				checked={state === true}
 				onChange={(e) => onChange?.(e.target.checked)}
-				className="w-4 h-4 rounded border-white/20 bg-white/5 checked:bg-indigo-500 focus:ring-0 focus:ring-offset-0"
+				className="w-4 h-4 rounded border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5 checked:bg-indigo-500 focus:ring-0 focus:ring-offset-0"
 			/>
 		</div>
 	);
@@ -415,7 +415,7 @@ const SearchCheckboxRenderer = (params: ICellRendererParams<PendingRow>) => {
 				type="checkbox"
 				checked={selected}
 				onChange={handleChange}
-				className="w-4 h-4 rounded border-white/20 bg-white/5 checked:bg-indigo-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+				className="w-4 h-4 rounded border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5 checked:bg-indigo-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
 			/>
 		</div>
 	);
@@ -471,17 +471,23 @@ export const getGlobalSearchWorkspaceColumns = (
 				const source = params.value;
 				let colorClass = "bg-gray-500/10 text-gray-500 border-gray-500/20";
 				if (source === "Main Sheet")
-					colorClass = "bg-indigo-500/10 text-indigo-400 border-indigo-500/20";
+					colorClass =
+						"bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20";
 				if (source === "Orders")
-					colorClass = "bg-orange-500/10 text-orange-400 border-orange-500/20";
+					colorClass =
+						"bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20";
 				if (source === "Booking")
-					colorClass = "bg-purple-500/10 text-purple-400 border-purple-500/20";
+					colorClass =
+						"bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
 				if (source === "Call")
-					colorClass = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+					colorClass =
+						"bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
 				if (source === "Archive")
-					colorClass = "bg-slate-500/10 text-slate-400 border-slate-500/20";
+					colorClass =
+						"bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20";
 				if (source === "Freeze")
-					colorClass = "bg-sky-500/10 text-sky-400 border-sky-500/20";
+					colorClass =
+						"bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20";
 
 				return (
 					<div className="flex items-center h-full w-full">
@@ -538,7 +544,8 @@ export const getGlobalSearchWorkspaceColumns = (
 			},
 			cellStyle: (params: { data?: PendingRow }) => {
 				const source = params.data?.sourceType;
-				if (source === "Booking") return { color: "#22c55e", fontWeight: 500 };
+				if (source === "Booking")
+					return { color: "var(--grid-positive, #22c55e)", fontWeight: 500 };
 				if (source === "Archive")
 					return { color: "#6b7280", opacity: 0.5, fontWeight: 700 };
 				return { color: "#6b7280" };

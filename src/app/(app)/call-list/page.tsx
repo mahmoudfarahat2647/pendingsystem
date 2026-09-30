@@ -206,7 +206,7 @@ export default function CallListPage() {
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}
 			<div
 				role="presentation"
-				className={`flex-1 min-h-[500px] border border-white/10 rounded-xl mt-4 ${
+				className={`flex-1 min-h-[500px] border border-black/10 dark:border-white/10 rounded-xl mt-4 ${
 					scrollDir === "horizontal"
 						? "overflow-x-auto overflow-y-hidden"
 						: "overflow-hidden"

@@ -31,12 +31,14 @@ export const BookingSidebarCustomerList = ({
 }: BookingSidebarCustomerListProps) => {
 	return (
 		<div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-			<h4 className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-4 sticky top-0 bg-[#1c1c1e] py-2 z-10">
+			<h4 className="text-[10px] font-bold text-gray-500 dark:text-gray-600 uppercase tracking-widest mb-4 sticky top-0 bg-white dark:bg-[#1c1c1e] py-2 z-10">
 				{searchQuery ? "Search Results" : "Customers"}
 			</h4>
 			<div className="space-y-2">
 				{sidebarGroupedBookings.length === 0 ? (
-					<p className="text-xs text-gray-700 italic">No bookings found.</p>
+					<p className="text-xs text-gray-300 dark:text-gray-700 italic">
+						No bookings found.
+					</p>
 				) : (
 					sidebarGroupedBookings.map((booking) => {
 						const isArchived =
@@ -51,8 +53,8 @@ export const BookingSidebarCustomerList = ({
 								className={cn(
 									"w-full text-left p-3 rounded-lg border transition-all duration-200 group flex items-center justify-between",
 									selectedBookingId === booking.id
-										? "bg-white/5 border-white/10 text-white"
-										: "border-transparent hover:bg-white/[0.02] text-gray-500",
+										? "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-black dark:text-white"
+										: "border-transparent hover:bg-black/[0.02] dark:hover:bg-white/[0.02] text-gray-500",
 								)}
 							>
 								<span className="text-sm font-medium truncate">
@@ -66,12 +68,12 @@ export const BookingSidebarCustomerList = ({
 									)}
 								</span>
 								{isArchived && (
-									<span className="ml-2 shrink-0 rounded border border-dashed border-gray-600 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-gray-500">
+									<span className="ml-2 shrink-0 rounded border border-dashed border-gray-300 dark:border-gray-600 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-gray-500">
 										Archived
 									</span>
 								)}
 								{searchQuery && booking.bookingDate && (
-									<span className="text-[9px] font-mono text-gray-600">
+									<span className="text-[9px] font-mono text-gray-500 dark:text-gray-600">
 										{safeFormatDate(booking.bookingDate, "MMM d")}
 									</span>
 								)}

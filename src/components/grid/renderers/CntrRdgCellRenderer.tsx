@@ -32,7 +32,12 @@ export const CntrRdgCellRenderer = (
 	}
 
 	const level = warningNotification.cntrRdgLevel;
-	const iconColor = level === "high" ? "#ef4444" : "#eab308";
+	// Icon draws in currentColor; White uses darker shades for contrast on a
+	// white grid, Dark keeps the original colours.
+	const iconColorClass =
+		level === "high"
+			? "text-[#dc2626] dark:text-[#ef4444]"
+			: "text-[#a16207] dark:text-[#eab308]";
 	const tooltipText =
 		level === "high"
 			? "High Risk: CNTR RDG approaching 100,000 KM limit"
@@ -43,7 +48,9 @@ export const CntrRdgCellRenderer = (
 			<TooltipTrigger asChild>
 				<span className="flex items-center gap-2 px-1">
 					{displayValue}
-					<CntrRdgAlertIcon color={iconColor} />
+					<span className={iconColorClass}>
+						<CntrRdgAlertIcon color="currentColor" />
+					</span>
 				</span>
 			</TooltipTrigger>
 			<TooltipContent>

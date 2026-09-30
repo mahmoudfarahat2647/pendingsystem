@@ -19,14 +19,14 @@ export const PermissionTab = ({ isLocked }: PermissionTabProps) => {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+			<div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10">
 				<div className="space-y-1">
-					<Label className="text-sm font-semibold text-white">
+					<Label className="text-sm font-semibold text-black dark:text-white">
 						<LocalizedScope lang={lang}>
 							{t("settings.permission.allowGridEditing")}
 						</LocalizedScope>
 					</Label>
-					<p className="text-xs text-gray-400">
+					<p className="text-xs text-gray-600 dark:text-gray-400">
 						<LocalizedScope lang={lang}>
 							{t("settings.permission.description")}
 						</LocalizedScope>
@@ -40,14 +40,14 @@ export const PermissionTab = ({ isLocked }: PermissionTabProps) => {
 				/>
 			</div>
 
-			<div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+			<div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10">
 				<div className="space-y-1">
-					<Label className="text-sm font-semibold text-white">
+					<Label className="text-sm font-semibold text-black dark:text-white">
 						<LocalizedScope lang={lang}>
 							{t("settings.permission.allowMoveToMain")}
 						</LocalizedScope>
 					</Label>
-					<p className="text-xs text-gray-400">
+					<p className="text-xs text-gray-600 dark:text-gray-400">
 						<LocalizedScope lang={lang}>
 							{t("settings.permission.allowMoveToMainDescription")}
 						</LocalizedScope>
@@ -62,7 +62,7 @@ export const PermissionTab = ({ isLocked }: PermissionTabProps) => {
 			</div>
 
 			{isLocked && (
-				<p className="text-xs text-gray-600 text-center">
+				<p className="text-xs text-gray-500 dark:text-gray-600 text-center">
 					<LocalizedScope lang={lang}>
 						{t("settings.permission.unlockHint")}
 					</LocalizedScope>

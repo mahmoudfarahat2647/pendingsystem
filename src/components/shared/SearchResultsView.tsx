@@ -90,7 +90,7 @@ export const SearchResultsView = () => {
 	if (!searchTerm) return null;
 
 	return (
-		<div className="flex flex-col h-full bg-[#0a0a0b] text-white">
+		<div className="flex flex-col h-full bg-white dark:bg-[#0a0a0b] text-black dark:text-white">
 			<SearchResultsHeader
 				searchTerm={searchTerm}
 				resultsCount={filteredResults.length}
@@ -158,11 +158,11 @@ export const SearchResultsView = () => {
 					/>
 				) : (
 					<div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-						<div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
-							<SearchIcon className="w-8 h-8 text-gray-600" />
+						<div className="w-16 h-16 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center">
+							<SearchIcon className="w-8 h-8 text-gray-500 dark:text-gray-600" />
 						</div>
 						<div>
-							<h3 className="text-lg font-medium text-white/80">
+							<h3 className="text-lg font-medium text-black/80 dark:text-white/80">
 								No results found
 							</h3>
 							<p className="text-sm text-gray-500 mt-1 max-w-xs">
@@ -172,7 +172,7 @@ export const SearchResultsView = () => {
 						<Button
 							onClick={() => setSearchTerm("")}
 							variant="outline"
-							className="mt-4 border-white/10 hover:bg-white/5"
+							className="mt-4 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
 						>
 							Clear Search Input
 						</Button>
@@ -217,7 +217,7 @@ export const SearchResultsView = () => {
 					if (!open) setReorderReason("");
 				}}
 			>
-				<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
+				<DialogContent className="bg-white dark:bg-[#1c1c1e] border border-black/10 dark:border-white/10 text-black dark:text-white">
 					<DialogHeader>
 						<DialogTitle className="text-orange-500">
 							Reorder - Reason Required
@@ -232,7 +232,7 @@ export const SearchResultsView = () => {
 								placeholder="e.g., Customer called back, error on main sheet"
 								className={cn(
 									FOCUS_CHAMPAGNE_VISIBLE,
-									"bg-white/5 border-white/10 text-white",
+									"bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-black dark:text-white",
 								)}
 							/>
 						</div>
@@ -244,7 +244,7 @@ export const SearchResultsView = () => {
 								setShowReorderModal(false);
 								setReorderReason("");
 							}}
-							className="border-white/20 text-white hover:bg-white/10"
+							className="border-black/20 dark:border-white/20 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
 						>
 							Cancel
 						</Button>

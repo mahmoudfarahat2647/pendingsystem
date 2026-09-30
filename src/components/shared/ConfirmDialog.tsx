@@ -163,7 +163,7 @@ export const ConfirmDialog = ({
 								</div>
 
 								<div className="text-center space-y-2.5">
-									<DialogTitle className="text-[17px] font-bold tracking-tight text-white leading-snug">
+									<DialogTitle className="text-[17px] font-bold tracking-tight text-black dark:text-white leading-snug">
 										<LocalizedScope lang={lang}>{title}</LocalizedScope>
 									</DialogTitle>
 									<DialogDescription
@@ -183,7 +183,7 @@ export const ConfirmDialog = ({
 										>
 											<LocalizedScope lang={lang}>
 												{t("modals.confirm.typeToConfirmBefore")}{" "}
-												<strong className="text-white">
+												<strong className="text-black dark:text-white">
 													"{requireTypeToConfirm}"
 												</strong>{" "}
 												{t("modals.confirm.typeToConfirmAfter")}
@@ -205,7 +205,7 @@ export const ConfirmDialog = ({
 													onOpenChange(false);
 												}
 											}}
-											className="w-full h-10 px-3 rounded-lg bg-white/5 border border-white/10 text-white text-[13px] placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all"
+											className="w-full h-10 px-3 rounded-lg bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-black dark:text-white text-[13px] placeholder:text-black/30 dark:placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-black/20 dark:focus:ring-white/20 transition-all"
 											placeholder={requireTypeToConfirm}
 										/>
 									</div>
@@ -220,7 +220,7 @@ export const ConfirmDialog = ({
 									<Button
 										variant="ghost"
 										onClick={() => onOpenChange(false)}
-										className="flex-1 h-10 rounded-xl text-[13px] font-medium active:scale-95 transition-all duration-150 hover:bg-white/10 hover:text-white"
+										className="flex-1 h-10 rounded-xl text-[13px] font-medium active:scale-95 transition-all duration-150 hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white"
 										style={{
 											color: "rgba(255,255,255,0.85)",
 											background: "rgba(255,255,255,0.08)",
@@ -238,7 +238,7 @@ export const ConfirmDialog = ({
 											onOpenChange(false);
 										}}
 										disabled={isConfirmDisabled}
-										className="flex-1 h-10 rounded-xl text-[13px] font-bold text-white border-0 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+										className="flex-1 h-10 rounded-xl text-[13px] font-bold text-black dark:text-white border-0 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
 										style={{
 											background: cfg.btnGradient,
 											boxShadow: isConfirmDisabled ? "none" : cfg.btnGlow,

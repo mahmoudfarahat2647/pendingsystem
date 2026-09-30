@@ -276,7 +276,7 @@ export const Header = React.memo(function Header() {
 	};
 
 	return (
-		<header className="flex items-center justify-between h-20 px-8 border-b border-white/5 bg-transparent shrink-0">
+		<header className="flex items-center justify-between h-20 px-8 border-b border-black/10 dark:border-white/5 bg-transparent shrink-0">
 			{/* Left: Optional space */}
 			<div className="flex items-center gap-4" />
 
@@ -286,9 +286,9 @@ export const Header = React.memo(function Header() {
 					ref={searchWrapperRef}
 					className={cn(
 						"relative flex items-center rounded-2xl transition-all duration-300",
-						"bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10",
+						"bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 hover:bg-black/5 dark:hover:bg-white/10",
 						isSearchFocused &&
-							"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
+							"bg-white dark:bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
 					)}
 				>
 					<Search className="absolute left-4 h-5 w-5 text-gray-500" />
@@ -314,7 +314,7 @@ export const Header = React.memo(function Header() {
 								setIsSearchFocused(false);
 							}
 						}}
-						className="w-full pl-12 pr-12 py-3 bg-transparent text-sm text-white placeholder:text-gray-600 outline-none"
+						className="w-full pl-12 pr-12 py-3 bg-transparent text-sm text-black dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-600 outline-none"
 					/>
 					<div className="absolute right-4 flex items-center gap-2">
 						{hasSearchInput && (
@@ -325,12 +325,12 @@ export const Header = React.memo(function Header() {
 									setSearchTerm("");
 								}}
 								aria-label="Clear search"
-								className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+								className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
 							>
 								<X className="h-3 w-3" />
 							</button>
 						)}
-						<kbd className="hidden sm:inline-flex h-6 items-center gap-1 rounded border border-white/10 bg-white/5 px-2 font-mono text-[10px] font-medium text-gray-400 opacity-100">
+						<kbd className="hidden sm:inline-flex h-6 items-center gap-1 rounded border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-2 font-mono text-[10px] font-medium text-gray-600 dark:text-gray-400 opacity-100">
 							<span className="text-xs">⌘</span>K
 						</kbd>
 					</div>
@@ -357,16 +357,16 @@ export const Header = React.memo(function Header() {
 									left: dropdownRect.left,
 									width: dropdownRect.width,
 								}}
-								className="z-[9999] rounded-xl border border-white/10 bg-[#1A1A1A] shadow-xl shadow-black/50 overflow-hidden"
+								className="z-[9999] rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1A1A1A] shadow-xl shadow-black/10 dark:shadow-black/50 overflow-hidden"
 							>
-								<div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
+								<div className="flex items-center justify-between px-3 py-2 border-b border-black/10 dark:border-white/5">
 									<span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">
 										Recent Searches
 									</span>
 									<button
 										type="button"
 										onClick={clearAll}
-										className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+										className="text-[10px] text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 transition-colors"
 									>
 										Clear all
 									</button>
@@ -381,15 +381,15 @@ export const Header = React.memo(function Header() {
 													setSearchTerm(term);
 													addSearch(term);
 												}}
-												className="flex-1 flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors text-left"
+												className="flex-1 flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
 											>
-												<Clock className="h-3.5 w-3.5 text-gray-600 shrink-0" />
+												<Clock className="h-3.5 w-3.5 text-gray-500 dark:text-gray-600 shrink-0" />
 												<span className="truncate">{term}</span>
 											</button>
 											<button
 												type="button"
 												onClick={() => removeSearch(term)}
-												className="pr-3 opacity-0 group-hover:opacity-100 text-gray-600 hover:text-gray-300 transition-all"
+												className="pr-3 opacity-0 group-hover:opacity-100 text-gray-500 dark:text-gray-600 hover:text-gray-800 dark:hover:text-gray-300 transition-all"
 												aria-label={`Remove ${term}`}
 											>
 												<X className="h-3 w-3" />
@@ -406,7 +406,7 @@ export const Header = React.memo(function Header() {
 			{/* Right: Actions */}
 			<div className="flex items-center gap-3 ml-8">
 				{/* Undo / Redo / Save Button Group */}
-				<div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/5">
+				<div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 rounded-xl p-1 border border-black/10 dark:border-white/5">
 					<button
 						type="button"
 						suppressHydrationWarning
@@ -416,14 +416,14 @@ export const Header = React.memo(function Header() {
 						className={cn(
 							"p-2 rounded-lg transition-all",
 							canUndo
-								? "text-gray-400 hover:text-white hover:bg-white/10"
-								: "text-gray-700 cursor-not-allowed",
+								? "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10"
+								: "text-gray-300 dark:text-gray-700 cursor-not-allowed",
 						)}
 						title="Undo (Ctrl+Z)"
 					>
 						<Undo2 className="h-4 w-4" />
 					</button>
-					<div className="w-px h-4 bg-white/10" />
+					<div className="w-px h-4 bg-black/10 dark:bg-white/10" />
 					<button
 						type="button"
 						suppressHydrationWarning
@@ -433,14 +433,14 @@ export const Header = React.memo(function Header() {
 						className={cn(
 							"p-2 rounded-lg transition-all",
 							canRedo
-								? "text-gray-400 hover:text-white hover:bg-white/10"
-								: "text-gray-700 cursor-not-allowed",
+								? "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10"
+								: "text-gray-300 dark:text-gray-700 cursor-not-allowed",
 						)}
 						title="Redo (Ctrl+Y)"
 					>
 						<Redo2 className="h-4 w-4" />
 					</button>
-					<div className="w-px h-4 bg-white/10" />
+					<div className="w-px h-4 bg-black/10 dark:bg-white/10" />
 					<button
 						type="button"
 						suppressHydrationWarning
@@ -450,8 +450,8 @@ export const Header = React.memo(function Header() {
 						className={cn(
 							"p-2 rounded-lg transition-all",
 							dirty && !saving
-								? "text-gray-400 hover:text-white hover:bg-white/10"
-								: "text-gray-700 cursor-not-allowed",
+								? "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10"
+								: "text-gray-300 dark:text-gray-700 cursor-not-allowed",
 						)}
 						title={
 							saving
@@ -500,16 +500,16 @@ export const Header = React.memo(function Header() {
 						</button>
 
 						{isExportMenuOpen && (
-							<div className="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-[#1A1A1A] p-1.5 shadow-xl shadow-black/50 z-50">
+							<div className="absolute right-0 mt-2 w-56 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1A1A1A] p-1.5 shadow-xl shadow-black/10 dark:shadow-black/50 z-50">
 								{ALLOWED_COMPANIES.map((company) => (
 									<button
 										key={company}
 										type="button"
 										onClick={() => handleExport(company)}
-										className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-left"
+										className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors text-left"
 									>
 										<span>Export {company} Data</span>
-										<span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/5 text-gray-400">
+										<span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-400">
 											CSV
 										</span>
 									</button>

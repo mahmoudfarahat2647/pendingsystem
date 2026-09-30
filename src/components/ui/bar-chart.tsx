@@ -484,7 +484,7 @@ function TooltipBox({
 		>
 			<motion.div
 				animate={{ scale: 1, opacity: 1, x: 0 }}
-				className="min-w-[140px] overflow-hidden rounded-lg bg-[#0c0c0e]/90 text-white shadow-lg backdrop-blur-md border border-white/10"
+				className="min-w-[140px] overflow-hidden rounded-lg bg-white dark:bg-[#0c0c0e]/90 text-black dark:text-white shadow-lg backdrop-blur-md border border-black/10 dark:border-white/10"
 				initial={{ scale: 0.85, opacity: 0, x: shouldFlipX ? 20 : -20 }}
 				key={flipKey}
 				style={{ transformOrigin }}

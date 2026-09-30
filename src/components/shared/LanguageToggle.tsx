@@ -38,7 +38,7 @@ export const LanguageToggle = () => {
 	const setLanguage = useAppStore((s) => s.setLanguage);
 
 	return (
-		<fieldset className="m-0 flex min-w-0 items-center gap-0.5 rounded-lg border border-white/10 bg-black/40 p-0.5">
+		<fieldset className="m-0 flex min-w-0 items-center gap-0.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-black/40 p-0.5">
 			<legend className="sr-only">{t("settings.language.label")}</legend>
 			{OPTIONS.map((option) => {
 				const active = lang === option.code;
@@ -55,7 +55,7 @@ export const LanguageToggle = () => {
 							"h-7 min-w-11 rounded-md px-2 text-[11px] font-bold uppercase tracking-wider transition-colors",
 							active
 								? "bg-renault-yellow text-black shadow-lg shadow-renault-yellow/20"
-								: "text-gray-400 hover:bg-white/5 hover:text-white",
+								: "text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-black dark:hover:text-white",
 						)}
 					>
 						{t(option.shortKey)}

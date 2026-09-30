@@ -30,7 +30,7 @@ export const BookingSidebarFooter = ({
 	const resolvedStatus = preBookingStatus.trim() ? preBookingStatus : undefined;
 
 	return (
-		<div className="p-6 bg-[#1c1c1e] border-t border-white/5">
+		<div className="p-6 bg-white dark:bg-[#1c1c1e] border-t border-black/10 dark:border-white/5">
 			<Button
 				onClick={() => {
 					onConfirm(selectedDateKey, bookingNote, resolvedStatus);
@@ -41,7 +41,7 @@ export const BookingSidebarFooter = ({
 				className={cn(
 					"h-12 w-full rounded-xl font-bold transition-all text-xs tracking-widest uppercase",
 					selectedRowsLength === 0 || searchQuery
-						? "bg-gray-900 border-white/5 text-gray-700 shadow-none pointer-events-none"
+						? "bg-gray-100 dark:bg-gray-900 border-black/10 dark:border-white/5 text-gray-300 dark:text-gray-700 shadow-none pointer-events-none"
 						: "bg-renault-yellow hover:bg-renault-yellow/90 text-black shadow-[0_0_20px_rgba(255,206,0,0.2)]",
 				)}
 			>

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 
 import "./globals.css";
-import { Toaster } from "sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
+import { ThemedToaster } from "@/components/providers/ThemedToaster";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 
 const APP_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -50,7 +51,7 @@ const arabicFont = IBM_Plex_Sans_Arabic({
  * - (app) - Full layout with Sidebar/Header for application pages
  *
  * This layout only provides:
- * - Dark theme enforcement
+ * - Dark default + saved-theme pre-paint script
  * - React Query provider
  * - Toast notifications
  */
@@ -61,13 +62,17 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" className="dark" suppressHydrationWarning>
+			<head>
+				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: static constant, no user input; must run before first paint */}
+				<script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+			</head>
 			<body
 				className={`font-sans ${arabicFont.variable}`}
 				suppressHydrationWarning
 			>
 				<QueryProvider>
 					{children}
-					<Toaster position="bottom-right" richColors />
+					<ThemedToaster />
 				</QueryProvider>
 			</body>
 		</html>

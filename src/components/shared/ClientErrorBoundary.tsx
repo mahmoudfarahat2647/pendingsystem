@@ -41,12 +41,12 @@ export class ClientErrorBoundary extends Component<Props, State> {
 						<AlertTriangle className="w-8 h-8 text-red-500" />
 					</div>
 					<div className="text-center">
-						<h3 className="text-lg font-semibold text-white mb-1">
+						<h3 className="text-lg font-semibold text-black dark:text-white mb-1">
 							{isChunkError
 								? "Connection Interrupted"
 								: this.props.fallbackTitle || "Component Error"}
 						</h3>
-						<p className="text-sm text-gray-400 font-mono max-w-md break-words mb-4">
+						<p className="text-sm text-gray-600 dark:text-gray-400 font-mono max-w-md break-words mb-4">
 							{isChunkError
 								? "A new version of the app is available or the connection was lost. Please refresh to continue."
 								: this.state.error?.message || "An unknown error occurred"}
@@ -56,7 +56,7 @@ export class ClientErrorBoundary extends Component<Props, State> {
 								<button
 									type="button"
 									onClick={() => window.location.reload()}
-									className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm transition-colors border border-white/20"
+									className="px-4 py-2 bg-black/10 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-black dark:text-white rounded-lg text-sm transition-colors border border-black/20 dark:border-white/20"
 								>
 									Refresh Page
 								</button>
@@ -66,7 +66,7 @@ export class ClientErrorBoundary extends Component<Props, State> {
 									onClick={() =>
 										this.setState({ hasError: false, error: null })
 									}
-									className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm transition-colors"
+									className="px-4 py-2 bg-black/5 dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 text-black dark:text-white rounded-lg text-sm transition-colors"
 								>
 									Try Again
 								</button>

@@ -28,19 +28,19 @@ export const VINLineCounter = ({ rows, className }: VINLineCounterProps) => {
 			<TooltipTrigger asChild>
 				<div
 					className={cn(
-						"flex items-center h-8 px-3 rounded-lg bg-[#1c1c1e] hover:bg-[#2c2c2e] border border-white/5 transition-all duration-300 group cursor-default select-none",
+						"flex items-center h-8 px-3 rounded-lg bg-white dark:bg-[#1c1c1e] hover:bg-gray-100 dark:hover:bg-[#2c2c2e] border border-black/10 dark:border-white/5 transition-all duration-300 group cursor-default select-none",
 						className,
 					)}
 				>
 					<div className="flex items-center gap-2 text-[10px] font-bold tracking-wider uppercase">
-						<div className="flex items-center gap-1.5 text-emerald-500 group-hover:text-emerald-400 transition-colors">
+						<div className="flex items-center gap-1.5 text-emerald-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
 							<span className="font-mono text-xs">{counts.vins}</span>
 							<span className="opacity-70 group-hover:opacity-100">VIN</span>
 						</div>
 
-						<div className="w-px h-3 bg-white/10 group-hover:bg-white/20 transition-colors" />
+						<div className="w-px h-3 bg-black/10 dark:bg-white/10 group-hover:bg-black/10 dark:group-hover:bg-white/20 transition-colors" />
 
-						<div className="flex items-center gap-1.5 text-indigo-400 group-hover:text-indigo-300 transition-colors">
+						<div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
 							<span className="font-mono text-xs">{counts.lines}</span>
 							<span className="opacity-70 group-hover:opacity-100">Lines</span>
 						</div>

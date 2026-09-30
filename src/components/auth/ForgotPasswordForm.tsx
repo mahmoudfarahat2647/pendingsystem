@@ -49,7 +49,7 @@ export function ForgotPasswordForm() {
 				</div>
 				<Link
 					href="/login"
-					className="block text-center text-sm text-[#FFCC00]/80 hover:text-[#FFCC00] transition-colors"
+					className="block text-center text-sm text-[#8A6D00]/90 dark:text-[#FFCC00]/80 hover:text-[#6B5500] dark:hover:text-[#FFCC00] transition-colors"
 				>
 					Back to login
 				</Link>
@@ -59,15 +59,15 @@ export function ForgotPasswordForm() {
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
-				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+			<fieldset className="border border-[#B38F00]/60 dark:border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
+				<legend className="text-[#8A6D00] dark:text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
 					Username
 				</legend>
 				<input
 					id="username"
 					type="text"
 					autoComplete="username"
-					className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
+					className="w-full bg-transparent text-black dark:text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:black] dark:[&:-webkit-autofill]:[WebkitTextFillColor:white]"
 					aria-label="Username"
 					{...register("username")}
 				/>
@@ -89,7 +89,7 @@ export function ForgotPasswordForm() {
 			<p className="text-center text-sm pt-4">
 				<Link
 					href="/login"
-					className="text-[#FFCC00] hover:text-[#FFCC00]/80 transition-colors"
+					className="text-[#8A6D00] dark:text-[#FFCC00] hover:text-[#6B5500] dark:hover:text-[#FFCC00]/80 transition-colors"
 				>
 					Back to login
 				</Link>

@@ -1,4 +1,5 @@
 import type { ICellRendererParams } from "ag-grid-community";
+import type React from "react";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 interface StatusRendererProps extends ICellRendererParams<PendingRow> {
@@ -17,12 +18,16 @@ export const StatusRenderer = (params: StatusRendererProps) => {
 	if (statusDef) {
 		const isCssColor =
 			statusDef.color?.startsWith("#") || statusDef.color?.startsWith("rgb");
-		const textStyle = isCssColor ? { color: statusDef.color } : undefined;
+		// `.status-chip` (globals.css) renders the plain colour in Dark and a
+		// tinted chip in White; the stored colour itself is never modified.
+		const textStyle = isCssColor
+			? ({ "--status-color": statusDef.color } as React.CSSProperties)
+			: undefined;
 
 		return (
 			<span
 				className={`text-[10px] uppercase tracking-wider font-semibold leading-none ${
-					isCssColor ? "" : "text-gray-400"
+					isCssColor ? "status-chip" : "text-gray-600 dark:text-gray-400"
 				}`}
 				style={textStyle}
 				title={value}
@@ -37,7 +42,9 @@ export const StatusRenderer = (params: StatusRendererProps) => {
 	return (
 		<span
 			className={`text-[10px] uppercase tracking-wider font-semibold ${
-				isReorder ? "text-[#d4a017]" : "text-gray-400"
+				isReorder
+					? "text-[#a16207] dark:text-[#d4a017]"
+					: "text-gray-600 dark:text-gray-400"
 			}`}
 		>
 			{value}

@@ -67,8 +67,8 @@ export function ResetPasswordForm() {
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
-				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+			<fieldset className="border border-[#B38F00]/60 dark:border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
+				<legend className="text-[#8A6D00] dark:text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
 					New Password
 				</legend>
 				<div className="flex items-center">
@@ -76,7 +76,7 @@ export function ResetPasswordForm() {
 						id="newPassword"
 						type={showNewPassword ? "text" : "password"}
 						autoComplete="new-password"
-						className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
+						className="w-full bg-transparent text-black dark:text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:black] dark:[&:-webkit-autofill]:[WebkitTextFillColor:white]"
 						aria-label="New password"
 						{...register("newPassword")}
 					/>
@@ -85,7 +85,7 @@ export function ResetPasswordForm() {
 						tabIndex={-1}
 						aria-label={showNewPassword ? "Hide password" : "Show password"}
 						onClick={() => setShowNewPassword((v) => !v)}
-						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#FFCC00]/35 hover:text-[#FFCC00] transition-colors duration-150 outline-none"
+						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#8A6D00]/50 dark:text-[#FFCC00]/35 hover:text-[#6B5500] dark:hover:text-[#FFCC00] transition-colors duration-150 outline-none"
 					>
 						{showNewPassword ? (
 							<EyeOff size={16} strokeWidth={1.75} />
@@ -101,8 +101,8 @@ export function ResetPasswordForm() {
 				</p>
 			)}
 
-			<fieldset className="border border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
-				<legend className="text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
+			<fieldset className="border border-[#B38F00]/60 dark:border-[#FFCC00]/40 rounded-lg px-2 pb-1.5 pt-0 focus-within:border-[#FFCC00] transition-colors">
+				<legend className="text-[#8A6D00] dark:text-[#FFCC00] text-[11px] px-1.5 font-medium ml-1 bg-transparent tracking-wide">
 					Confirm Password
 				</legend>
 				<div className="flex items-center">
@@ -110,7 +110,7 @@ export function ResetPasswordForm() {
 						id="confirmPassword"
 						type={showConfirmPassword ? "text" : "password"}
 						autoComplete="new-password"
-						className="w-full bg-transparent text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:white]"
+						className="w-full bg-transparent text-black dark:text-white text-sm px-2 py-0 h-7 outline-none border-none focus:outline-none focus:ring-0 [&:-webkit-autofill]:transition-colors [&:-webkit-autofill]:duration-[5000s] [&:-webkit-autofill]:[WebkitTextFillColor:black] dark:[&:-webkit-autofill]:[WebkitTextFillColor:white]"
 						aria-label="Confirm password"
 						{...register("confirmPassword")}
 					/>
@@ -119,7 +119,7 @@ export function ResetPasswordForm() {
 						tabIndex={-1}
 						aria-label={showConfirmPassword ? "Hide password" : "Show password"}
 						onClick={() => setShowConfirmPassword((v) => !v)}
-						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#FFCC00]/35 hover:text-[#FFCC00] transition-colors duration-150 outline-none"
+						className="flex-shrink-0 flex items-center p-1 bg-transparent border-none cursor-pointer text-[#8A6D00]/50 dark:text-[#FFCC00]/35 hover:text-[#6B5500] dark:hover:text-[#FFCC00] transition-colors duration-150 outline-none"
 					>
 						{showConfirmPassword ? (
 							<EyeOff size={16} strokeWidth={1.75} />

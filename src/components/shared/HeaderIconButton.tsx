@@ -6,8 +6,8 @@ export function headerIconButtonClass(active: boolean) {
 	return cn(
 		"relative inline-flex items-center justify-center rounded-full p-2 transition-all",
 		active
-			? "text-white bg-white/10"
-			: "text-gray-400 hover:text-white hover:bg-white/5",
+			? "text-black dark:text-white bg-black/10 dark:bg-white/10"
+			: "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5",
 	);
 }
 
@@ -23,7 +23,7 @@ export function HeaderCountBadge({ count, className }: HeaderCountBadgeProps) {
 	return (
 		<Badge
 			className={cn(
-				"absolute -top-1 -right-1 px-1.5 py-0 text-xs leading-4 text-white border-2 border-[#0a0a0b] pointer-events-none",
+				"absolute -top-1 -right-1 px-1.5 py-0 text-xs leading-4 text-white border-2 border-white dark:border-[#0a0a0b] pointer-events-none",
 				className,
 			)}
 		>

@@ -12,8 +12,9 @@ import { AgGridReact } from "ag-grid-react";
 import { memo, useCallback, useEffect, useId, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { usePendingSearchSelection } from "@/hooks/usePendingSearchSelection";
+import { useTheme } from "@/hooks/useTheme";
 import { tryJumpToRow } from "@/lib/ag-grid-helpers";
-import { gridTheme } from "@/lib/ag-grid-setup";
+import { getGridTheme } from "@/lib/ag-grid-setup";
 import { logger } from "@/lib/logger";
 import { useLiveGridStore } from "@/store/useLiveGridStore";
 import { useAppStore } from "@/store/useStore";
@@ -77,6 +78,8 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 
 	// Performance monitoring
 	useGridPerformance(gridApiRef.current);
+
+	const { theme } = useTheme();
 
 	// Grid State Persistence logic
 	const saveGridState = useAppStore((state) => state.saveGridState);
@@ -378,7 +381,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 		// biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures Ctrl+C events bubbling from AG Grid; AG Grid owns all real a11y/focus management
 		<div role="presentation" style={style} onKeyDown={handleKeyDown}>
 			<AgGridReact<T>
-				theme={gridTheme}
+				theme={getGridTheme(theme)}
 				rowData={rowData}
 				columnDefs={memoizedColDefs}
 				defaultColDef={memoizedDefaultColDef}

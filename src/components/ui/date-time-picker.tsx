@@ -123,7 +123,7 @@ export default function DateTimePicker({
 					<Button
 						variant="outline"
 						className={cn(
-							"w-full justify-start text-left font-normal border-white/10 bg-[#2c2c2e] text-gray-200 hover:bg-[#3c3c3e] hover:text-gray-100",
+							"w-full justify-start text-left font-normal border-black/10 dark:border-white/10 bg-gray-100 dark:bg-[#2c2c2e] text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3c3c3e] hover:text-gray-900 dark:hover:text-gray-100",
 							!date && "text-muted-foreground",
 						)}
 					>
@@ -141,7 +141,7 @@ export default function DateTimePicker({
 						)}
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent className="p-0 w-fit border-white/10 bg-[#1c1c1e] text-white">
+				<PopoverContent className="p-0 w-fit border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-black dark:text-white">
 					<Calendar
 						mode="single"
 						selected={date}
@@ -162,19 +162,19 @@ export default function DateTimePicker({
 					<SelectTrigger
 						className={cn(
 							FOCUS_CHAMPAGNE,
-							"w-[62px] border-white/10 bg-[#2c2c2e] text-gray-200",
+							"w-[62px] border-black/10 dark:border-white/10 bg-gray-100 dark:bg-[#2c2c2e] text-gray-800 dark:text-gray-200",
 						)}
 					>
 						<SelectValue />
 					</SelectTrigger>
-					<SelectContent className="bg-[#1c1c1e] border-white/10 text-gray-200">
+					<SelectContent className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-gray-800 dark:text-gray-200">
 						{Array.from({ length: 12 }, (_, i) => {
 							const h = i + 1;
 							return (
 								<SelectItem
 									key={h}
 									value={h.toString().padStart(2, "0")}
-									className="focus:bg-[#2c2c2e] focus:text-white"
+									className="focus:bg-gray-100 dark:focus:bg-[#2c2c2e] focus:text-black dark:focus:text-white"
 								>
 									{h.toString().padStart(2, "0")}
 								</SelectItem>
@@ -183,23 +183,23 @@ export default function DateTimePicker({
 					</SelectContent>
 				</Select>
 
-				<span className="text-gray-400">:</span>
+				<span className="text-gray-600 dark:text-gray-400">:</span>
 
 				<Select value={time.m} onValueChange={(v) => handleTimeChange("m", v)}>
 					<SelectTrigger
 						className={cn(
 							FOCUS_CHAMPAGNE,
-							"w-[70px] border-white/10 bg-[#2c2c2e] text-gray-200",
+							"w-[70px] border-black/10 dark:border-white/10 bg-gray-100 dark:bg-[#2c2c2e] text-gray-800 dark:text-gray-200",
 						)}
 					>
 						<SelectValue />
 					</SelectTrigger>
-					<SelectContent className="bg-[#1c1c1e] border-white/10 text-gray-200">
+					<SelectContent className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-gray-800 dark:text-gray-200">
 						{["00", "15", "30", "45"].map((m) => (
 							<SelectItem
 								key={m}
 								value={m}
-								className="focus:bg-[#2c2c2e] focus:text-white"
+								className="focus:bg-gray-100 dark:focus:bg-[#2c2c2e] focus:text-black dark:focus:text-white"
 							>
 								{m}
 							</SelectItem>
@@ -214,15 +214,15 @@ export default function DateTimePicker({
 					<SelectTrigger
 						className={cn(
 							FOCUS_CHAMPAGNE,
-							"w-[70px] border-white/10 bg-[#2c2c2e] text-gray-200",
+							"w-[70px] border-black/10 dark:border-white/10 bg-gray-100 dark:bg-[#2c2c2e] text-gray-800 dark:text-gray-200",
 						)}
 					>
 						<SelectValue />
 					</SelectTrigger>
-					<SelectContent className="bg-[#1c1c1e] border-white/10 text-gray-200">
+					<SelectContent className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-gray-800 dark:text-gray-200">
 						<SelectItem
 							value="AM"
-							className="focus:bg-[#2c2c2e] focus:text-white"
+							className="focus:bg-gray-100 dark:focus:bg-[#2c2c2e] focus:text-black dark:focus:text-white"
 						>
 							<TextScope lang={lang}>
 								{translate(lang, "modals.reminder.am")}
@@ -230,7 +230,7 @@ export default function DateTimePicker({
 						</SelectItem>
 						<SelectItem
 							value="PM"
-							className="focus:bg-[#2c2c2e] focus:text-white"
+							className="focus:bg-gray-100 dark:focus:bg-[#2c2c2e] focus:text-black dark:focus:text-white"
 						>
 							<TextScope lang={lang}>
 								{translate(lang, "modals.reminder.pm")}

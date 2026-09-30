@@ -48,23 +48,23 @@ export const ColorPicker = ({
 					disabled={disabled}
 					variant="outline"
 					className={cn(
-						"w-[80px] h-10 px-2 justify-between border-white/10 bg-black/40 hover:bg-white/5",
+						"w-[80px] h-10 px-2 justify-between border-black/10 dark:border-white/10 bg-black/5 dark:bg-black/40 hover:bg-black/5 dark:hover:bg-white/5",
 						disabled && "opacity-50 cursor-not-allowed",
 					)}
 				>
 					<div
-						className="w-5 h-5 rounded-full border border-white/10 shadow-sm"
+						className="w-5 h-5 rounded-full border border-black/10 dark:border-white/10 shadow-sm"
 						style={{ backgroundColor: color }}
 					/>
-					<div className="text-[10px] text-gray-400 font-mono">
+					<div className="text-[10px] text-gray-600 dark:text-gray-400 font-mono">
 						{color.replace("#", "")}
 					</div>
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-64 p-3 bg-[#18181b] border-white/10 space-y-3">
+			<PopoverContent className="w-64 p-3 bg-gray-50 dark:bg-[#18181b] border-black/10 dark:border-white/10 space-y-3">
 				<div className="space-y-3">
 					<div className="flex items-center justify-between">
-						<h4 className="text-xs font-medium text-gray-400">
+						<h4 className="text-xs font-medium text-gray-600 dark:text-gray-400">
 							<LocalizedScope lang={lang}>
 								{t("settings.statuses.selectColor")}
 							</LocalizedScope>
@@ -72,12 +72,12 @@ export const ColorPicker = ({
 						<Input
 							value={color}
 							onChange={(e) => onChange(e.target.value)}
-							className="h-6 w-20 text-[10px] bg-black/40 border-white/10 px-1 py-0 font-mono text-center"
+							className="h-6 w-20 text-[10px] bg-black/5 dark:bg-black/40 border-black/10 dark:border-white/10 px-1 py-0 font-mono text-center"
 						/>
 					</div>
 
 					{/* Custom Color Input */}
-					<div className="relative h-10 w-full rounded-lg overflow-hidden border border-white/10">
+					<div className="relative h-10 w-full rounded-lg overflow-hidden border border-black/10 dark:border-white/10">
 						<input
 							type="color"
 							value={color}
@@ -93,9 +93,9 @@ export const ColorPicker = ({
 								key={preset}
 								type="button"
 								className={cn(
-									"w-7 h-7 rounded-md border border-white/5 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/20",
+									"w-7 h-7 rounded-md border border-black/10 dark:border-white/5 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20",
 									color.toLowerCase() === preset.toLowerCase() &&
-										"ring-2 ring-white border-transparent",
+										"ring-2 ring-black dark:ring-white border-transparent",
 								)}
 								style={{ backgroundColor: preset }}
 								onClick={() => onChange(preset)}

@@ -39,14 +39,14 @@ export const FormFooter = ({
 	onCancel,
 }: FormFooterProps) => {
 	return (
-		<DialogFooter className="px-6 py-4 bg-white/[0.01] border-t border-white/5">
+		<DialogFooter className="px-6 py-4 bg-black/[0.02] dark:bg-white/[0.01] border-t border-black/10 dark:border-white/5">
 			<div className="flex items-center justify-between w-full">
 				{/* Left side: cancel + warranty status */}
 				<div className="flex items-center gap-3">
 					<Button
 						type="button"
 						variant="ghost"
-						className="h-9 px-4 rounded-lg text-[10px] font-bold text-slate-500 hover:text-white transition-all uppercase tracking-widest"
+						className="h-9 px-4 rounded-lg text-[10px] font-bold text-slate-500 hover:text-black dark:hover:text-white transition-all uppercase tracking-widest"
 						onClick={onCancel}
 					>
 						Cancel
@@ -120,7 +120,7 @@ export const FormFooter = ({
 									</TooltipTrigger>
 									<TooltipContent
 										side="top"
-										className="bg-[#1c1c1f] border-white/10 text-orange-200 text-[10px] p-2 max-w-[200px]"
+										className="bg-white dark:bg-[#1c1c1f] border-black/10 dark:border-white/10 text-orange-200 text-[10px] p-2 max-w-[200px]"
 									>
 										Vehicle exceeds 100,000 KM limitation.
 									</TooltipContent>

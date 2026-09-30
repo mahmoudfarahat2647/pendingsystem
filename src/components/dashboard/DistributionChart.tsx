@@ -1,13 +1,23 @@
 "use client";
 
 import { useId } from "react";
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import {
+	Bar,
+	BarChart,
+	LabelList,
+	ResponsiveContainer,
+	Tooltip,
+	XAxis,
+} from "recharts";
+import { useTheme } from "@/hooks/useTheme";
 
 interface DistributionChartProps {
 	data: { name: string; value: number }[];
 }
 
 const DistributionChart = ({ data }: DistributionChartProps) => {
+	const { theme } = useTheme();
+	const white = theme === "white";
 	const uid = useId();
 	const filterId = `distributionChartDropShadow-${uid}`;
 
@@ -40,10 +50,13 @@ const DistributionChart = ({ data }: DistributionChartProps) => {
 					dy={10}
 				/>
 				<Tooltip
-					cursor={{ fill: "rgba(255,255,255,0.05)" }}
+					cursor={{
+						fill: white ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.05)",
+					}}
 					contentStyle={{
-						backgroundColor: "#0a0a0b",
-						borderColor: "rgba(255,255,255,0.1)",
+						backgroundColor: white ? "#ffffff" : "#0a0a0b",
+						borderColor: white ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)",
+						color: white ? "#0a0a0b" : undefined,
 						borderRadius: "8px",
 					}}
 				/>
@@ -53,8 +66,18 @@ const DistributionChart = ({ data }: DistributionChartProps) => {
 					radius={[4, 4, 0, 0]}
 					barSize={20}
 					stroke="none"
-					filter={`url(#${filterId})`}
-				/>
+					filter={white ? undefined : `url(#${filterId})`}
+				>
+					{white && (
+						<LabelList
+							dataKey="value"
+							position="top"
+							fill="#0a0a0b"
+							fontSize={12}
+							fontWeight={700}
+						/>
+					)}
+				</Bar>
 			</BarChart>
 		</ResponsiveContainer>
 	);

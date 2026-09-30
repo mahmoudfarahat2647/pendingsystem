@@ -37,13 +37,13 @@ export function FreezeToolbar({
 		useColumnLayoutTracker("freeze");
 
 	return (
-		<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
+		<div className="flex items-center justify-between bg-gray-50 dark:bg-[#141416] p-1.5 rounded-lg border border-black/10 dark:border-white/5">
 			<div className="flex items-center gap-1.5">
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
 							size="icon"
-							className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
+							className="bg-white dark:bg-[#1c1c1e] hover:bg-gray-100 dark:hover:bg-[#2c2c2e] text-gray-700 dark:text-gray-300 border-none rounded-md h-8 w-8"
 							onClick={onExtract}
 						>
 							<Download className="h-3.5 w-3.5" />
@@ -57,7 +57,7 @@ export function FreezeToolbar({
 						<Button
 							size="icon"
 							variant="ghost"
-							className="text-gray-400 hover:text-white h-8 w-8"
+							className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white h-8 w-8"
 							onClick={onFilterToggle}
 						>
 							<Filter className="h-3.5 w-3.5" />
@@ -74,14 +74,14 @@ export function FreezeToolbar({
 					onReset={resetLayout}
 				/>
 
-				<div className="w-px h-5 bg-white/10 mx-1" />
+				<div className="w-px h-5 bg-black/10 dark:bg-white/10 mx-1" />
 
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
 							size="icon"
 							variant="ghost"
-							className="text-sky-400/80 hover:text-sky-400 h-8 w-8"
+							className="text-sky-600/80 dark:text-sky-400/80 hover:text-sky-600 dark:hover:text-sky-400 h-8 w-8"
 							onClick={onMoveTo}
 							disabled={selectedRows.length === 0 || !onMoveTo}
 						>

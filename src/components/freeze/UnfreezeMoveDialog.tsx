@@ -103,7 +103,7 @@ export function UnfreezeMoveDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				closeLabel={t("common.close")}
-				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden"
+				className="bg-white dark:bg-[#1c1c1e] text-black dark:text-white border-black/10 dark:border-white/10 sm:max-w-lg p-0 gap-0 overflow-hidden"
 			>
 				<DialogHeader className="px-6 pt-6 pb-4 text-left">
 					<DialogTitle>
@@ -113,7 +113,7 @@ export function UnfreezeMoveDialog({
 								: t("modals.unfreeze.moveMany", { count: rowCount })}
 						</LocalizedScope>
 					</DialogTitle>
-					<DialogDescription className="text-gray-400">
+					<DialogDescription className="text-gray-600 dark:text-gray-400">
 						<LocalizedScope lang={lang}>
 							{rowCount === 1
 								? t("modals.unfreeze.descriptionOne")
@@ -124,10 +124,12 @@ export function UnfreezeMoveDialog({
 
 				<div className="px-6 pb-5 flex items-center gap-3">
 					<div className="flex items-center gap-2 shrink-0">
-						<div className="rounded-lg bg-[#2c2c2e] border border-white/10 p-2.5">
-							<Snowflake className="h-5 w-5 text-sky-400" />
+						<div className="rounded-lg bg-gray-100 dark:bg-[#2c2c2e] border border-black/10 dark:border-white/10 p-2.5">
+							<Snowflake className="h-5 w-5 text-sky-600 dark:text-sky-400" />
 						</div>
-						<span className="font-semibold text-white">Freeze</span>
+						<span className="font-semibold text-black dark:text-white">
+							Freeze
+						</span>
 					</div>
 					<ArrowRight className="h-5 w-5 text-gray-500 shrink-0" />
 					<Select
@@ -138,12 +140,12 @@ export function UnfreezeMoveDialog({
 							aria-label={t("modals.unfreeze.destinationAria")}
 							className={cn(
 								FOCUS_CHAMPAGNE,
-								"flex-1 h-11 bg-[#2c2c2e] border-white/10 text-white",
+								"flex-1 h-11 bg-gray-100 dark:bg-[#2c2c2e] border-black/10 dark:border-white/10 text-black dark:text-white",
 							)}
 						>
 							<SelectValue />
 						</SelectTrigger>
-						<SelectContent className="bg-[#1c1c1e] border-white/10 text-white">
+						<SelectContent className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-black dark:text-white">
 							{UNFREEZE_DESTINATIONS.map((stage) => (
 								<SelectItem key={stage} value={stage}>
 									{getStageDisplayName(stage)}
@@ -154,9 +156,9 @@ export function UnfreezeMoveDialog({
 				</div>
 
 				<div className="px-6 pb-6 flex items-start gap-3">
-					<ShieldCheck className="h-5 w-5 text-gray-400 mt-0.5 shrink-0" />
+					<ShieldCheck className="h-5 w-5 text-gray-600 dark:text-gray-400 mt-0.5 shrink-0" />
 					<div>
-						<p className="text-sm font-medium text-white">
+						<p className="text-sm font-medium text-black dark:text-white">
 							<LocalizedScope lang={lang}>
 								{t(originMessage.key, originMessage.params)}
 							</LocalizedScope>
@@ -169,11 +171,11 @@ export function UnfreezeMoveDialog({
 					</div>
 				</div>
 
-				<DialogFooter className="px-6 py-4 border-t border-white/10 gap-3 sm:justify-end">
+				<DialogFooter className="px-6 py-4 border-t border-black/10 dark:border-white/10 gap-3 sm:justify-end">
 					<Button
 						variant="outline"
 						onClick={onCancel}
-						className="border-white/20 text-white hover:bg-white/10"
+						className="border-black/20 dark:border-white/20 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
 					>
 						<LocalizedScope lang={lang}>{t("common.cancel")}</LocalizedScope>
 					</Button>

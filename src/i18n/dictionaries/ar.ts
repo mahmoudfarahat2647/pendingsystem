@@ -106,7 +106,10 @@ export const ar: Dictionary = {
 		},
 		theme: {
 			title: "إعدادات المظهر",
-			comingSoon: "السمات المخصصة وإعدادات الألوان الجاهزة قادمة قريبًا.",
+			description: "اختر مظهر التطبيق في هذا المتصفح.",
+			dark: "داكن",
+			white: "أبيض",
+			savedNote: "يُحفظ في هذا المتصفح فقط.",
 		},
 		permission: {
 			allowGridEditing: "السماح بتعديل الجدول",

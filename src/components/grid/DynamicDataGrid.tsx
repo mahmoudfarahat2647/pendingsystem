@@ -9,11 +9,14 @@ import type { DataGridProps } from "./DataGrid";
 
 // Skeleton loader for grid
 const GridSkeleton = () => (
-	<div className="w-full h-full p-4 space-y-4 bg-[#0c0c0e] border border-white/[0.08] rounded-xl overflow-hidden">
+	<div className="w-full h-full p-4 space-y-4 bg-white dark:bg-[#0c0c0e] border border-black/10 dark:border-white/[0.08] rounded-xl overflow-hidden">
 		{/* Header skeleton */}
 		<div className="flex gap-2 mb-6">
 			{Array.from({ length: 6 }).map((_, i) => (
-				<Skeleton key={`header-${i}`} className="h-8 flex-1 bg-white/5" />
+				<Skeleton
+					key={`header-${i}`}
+					className="h-8 flex-1 bg-black/5 dark:bg-white/5"
+				/>
 			))}
 		</div>
 		{/* Row skeletons */}
@@ -23,7 +26,7 @@ const GridSkeleton = () => (
 					{Array.from({ length: 6 }).map((_, j) => (
 						<Skeleton
 							key={`cell-${i}-${j}`}
-							className="h-10 flex-1 bg-white/5"
+							className="h-10 flex-1 bg-black/5 dark:bg-white/5"
 						/>
 					))}
 				</div>

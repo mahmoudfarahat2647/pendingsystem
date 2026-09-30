@@ -103,9 +103,9 @@ export const EditNoteModal = ({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				closeLabel={t("common.close")}
-				className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden"
+				className="bg-white dark:bg-[#1c1c1e] text-black dark:text-white border-black/10 dark:border-white/10 sm:max-w-md p-0 gap-0 overflow-hidden"
 			>
-				<DialogHeader className="px-6 py-4 flex flex-row items-center justify-between border-b border-white/5 space-y-0 relative">
+				<DialogHeader className="px-6 py-4 flex flex-row items-center justify-between border-b border-black/10 dark:border-white/5 space-y-0 relative">
 					<div className="flex-1 flex justify-start"></div>
 					<DialogTitle className="text-lg font-medium">
 						<LocalizedScope lang={lang}>
@@ -142,21 +142,21 @@ export const EditNoteModal = ({
 												<Pencil className="h-3 w-3" />
 											</Button>
 										</AlertDialogTrigger>
-										<AlertDialogContent className="bg-[#1c1c1e] text-white border-white/10 sm:max-w-sm">
+										<AlertDialogContent className="bg-white dark:bg-[#1c1c1e] text-black dark:text-white border-black/10 dark:border-white/10 sm:max-w-sm">
 											<AlertDialogHeader>
 												<AlertDialogTitle className="text-sm">
 													<LocalizedScope lang={lang}>
 														{t("modals.note.editHistoryTitle")}
 													</LocalizedScope>
 												</AlertDialogTitle>
-												<AlertDialogDescription className="text-xs text-gray-400">
+												<AlertDialogDescription className="text-xs text-gray-600 dark:text-gray-400">
 													<LocalizedScope lang={lang}>
 														{t("modals.note.editHistoryDescription")}
 													</LocalizedScope>
 												</AlertDialogDescription>
 											</AlertDialogHeader>
 											<AlertDialogFooter>
-												<AlertDialogCancel className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border-none text-xs">
+												<AlertDialogCancel className="bg-gray-100 dark:bg-[#2c2c2e] hover:bg-gray-200 dark:hover:bg-[#3c3c3e] text-gray-700 dark:text-gray-300 border-none text-xs">
 													<LocalizedScope lang={lang}>
 														{t("modals.note.no")}
 													</LocalizedScope>
@@ -180,7 +180,7 @@ export const EditNoteModal = ({
 									onChange={(e) => setContent(e.target.value)}
 									readOnly={isHistoryLocked}
 									placeholder={t("modals.note.emptyPlaceholder")}
-									className={`min-h-[100px] border-white/5 text-xs resize-none focus-visible:ring-0 focus-visible:ring-offset-0 scrollbar-thin ${isHistoryLocked ? "bg-transparent text-gray-400 focus-visible:ring-0" : "bg-[#2c2c2e] text-gray-100 focus-visible:ring-1 focus-visible:ring-renault-yellow"}`}
+									className={`min-h-[100px] border-black/10 dark:border-white/5 text-xs resize-none focus-visible:ring-0 focus-visible:ring-offset-0 scrollbar-thin ${isHistoryLocked ? "bg-transparent text-gray-600 dark:text-gray-400 focus-visible:ring-0" : "bg-gray-100 dark:bg-[#2c2c2e] text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-renault-yellow"}`}
 								/>
 							</div>
 						</div>
@@ -199,7 +199,7 @@ export const EditNoteModal = ({
 									placeholder={t("modals.note.newNotePlaceholder", {
 										tag: String(sourceTag),
 									})}
-									className="min-h-[80px] bg-[#2c2c2e] border-white/10 text-gray-100 text-sm resize-none focus-visible:ring-1 focus-visible:ring-renault-yellow focus-visible:ring-offset-0"
+									className="min-h-[80px] bg-gray-100 dark:bg-[#2c2c2e] border-black/10 dark:border-white/10 text-gray-900 dark:text-gray-100 text-sm resize-none focus-visible:ring-1 focus-visible:ring-renault-yellow focus-visible:ring-offset-0"
 									autoFocus
 								/>
 								<div className="absolute bottom-2 right-2 text-[10px] text-gray-500 font-mono">
@@ -249,7 +249,7 @@ export const EditNoteModal = ({
 										value={newTemplate}
 										onChange={(e) => setNewTemplate(e.target.value)}
 										placeholder={t("modals.note.templatePlaceholder")}
-										className="h-8 text-xs bg-[#2c2c2e] border-white/10"
+										className="h-8 text-xs bg-gray-100 dark:bg-[#2c2c2e] border-black/10 dark:border-white/10"
 										onKeyDown={(e) => e.key === "Enter" && handleAddTemplate()}
 									/>
 									<Button
@@ -272,7 +272,7 @@ export const EditNoteModal = ({
 									>
 										<Button
 											variant="secondary"
-											className="w-full justify-start text-[11px] h-9 bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border border-transparent hover:border-white/10 truncate pr-8"
+											className="w-full justify-start text-[11px] h-9 bg-gray-100 dark:bg-[#2c2c2e] hover:bg-gray-200 dark:hover:bg-[#3c3c3e] text-gray-700 dark:text-gray-300 border border-transparent hover:border-black/20 dark:hover:border-white/10 truncate pr-8"
 											onClick={() => handleTemplateClick(template.text)}
 										>
 											{template.text}
@@ -280,7 +280,7 @@ export const EditNoteModal = ({
 										<Button
 											variant="ghost"
 											size="icon"
-											className="absolute right-1 h-6 w-6 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+											className="absolute right-1 h-6 w-6 text-gray-500 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
 											onClick={(e) => {
 												e.stopPropagation();
 												removeMutation.mutate(template.id);
@@ -299,7 +299,7 @@ export const EditNoteModal = ({
 					<Button
 						variant="ghost"
 						onClick={() => onOpenChange(false)}
-						className="bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 w-full text-xs font-bold"
+						className="bg-gray-100 dark:bg-[#2c2c2e] hover:bg-gray-200 dark:hover:bg-[#3c3c3e] text-gray-700 dark:text-gray-300 w-full text-xs font-bold"
 					>
 						<LocalizedScope lang={lang}>
 							{t("modals.note.cancel")}
