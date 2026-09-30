@@ -22,7 +22,7 @@ export function AuthPageShell({
 	return (
 		<div className="min-h-screen flex items-center justify-start relative px-4 sm:px-12 md:px-24 xl:px-48">
 			<Image
-				src="/login-background.webp"
+				src="/login-background-city.webp"
 				alt="Background"
 				fill
 				priority
