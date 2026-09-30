@@ -74,7 +74,10 @@ describe("White theme dark-safety (converted shell files)", () => {
 		);
 		expect(page).toContain("bg-[url('/hero.png')]");
 		expect(page).toContain("dark:bg-[url('/dashboard-car.webp')]");
-		expect(page).toContain("dark:h-[460px]");
+		// Same fixed 460px hero in both themes, so the dashboard fits one screen.
+		expect(page).toContain(" h-[460px] ");
+		expect(page).not.toContain("aspect-[2027/776]");
+		expect(page).toContain("dark:bg-cover dark:bg-center");
 		// Decorative tiles/calendar must not look actionable in White.
 		expect(page).toContain("hidden dark:block");
 		expect(page).toContain("dark:cursor-pointer");

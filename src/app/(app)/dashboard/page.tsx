@@ -136,9 +136,9 @@ export default function DashboardPage() {
 	return (
 		<div className="space-y-5 pb-8 max-w-[1400px] mx-auto">
 			{/* Hero Section */}
-			<div className="relative overflow-hidden rounded-3xl bg-white dark:bg-black border border-black/10 dark:border-white/5 aspect-[2027/776] dark:aspect-auto dark:h-[460px] shadow-xl">
+			<div className="relative overflow-hidden rounded-3xl bg-[#eceef1] dark:bg-black border border-black/10 dark:border-white/5 h-[460px] shadow-xl">
 				{/* Full Background Image */}
-				<div className="absolute inset-0 bg-[url('/hero.png')] dark:bg-[url('/dashboard-car.webp')] bg-cover bg-center" />
+				<div className="absolute inset-0 bg-[url('/hero.png')] dark:bg-[url('/dashboard-car.webp')] bg-[length:100%_auto] bg-top bg-no-repeat dark:bg-cover dark:bg-center" />
 
 				<div className="relative z-20 h-full flex flex-col justify-end p-10">
 					{/* Bottom Row: Stats Cards + Calendar */}
