@@ -119,7 +119,7 @@ Two themes, Dark (original, default) and White. Spec `.github/specs/white-theme.
 
 ### Header To-Do List (issue `#360`)
 
-A system-wide to-do list behind a list icon in the header, between Booking Inquiry and Export, separate from the notification bell. Full doc: `docs/features/todos.md`.
+A system-wide to-do list behind a list icon in the header, between Export and Booking Inquiry, separate from the notification bell. Full doc: `docs/features/todos.md`.
 
 - **Task:** a title, an optional note, a due date (a plain local `date`) and an optional `HH:mm` time. Tasks have no tab or order link.
 - **Blue badge:** counts open tasks due today plus overdue ones (`countDueTodos`). It rolls over at midnight through `useTodayKey`.

@@ -482,10 +482,6 @@ export const Header = React.memo(function Header() {
 						<RefreshCw className="h-5 w-5" />
 					</button>
 
-					<BookingInquiryButton />
-
-					<TodoButton />
-
 					<div ref={exportDropdownRef} className="relative">
 						<button
 							type="button"
@@ -520,6 +516,10 @@ export const Header = React.memo(function Header() {
 							</div>
 						)}
 					</div>
+
+					<TodoButton />
+
+					<BookingInquiryButton />
 
 					<div className="relative">
 						<NotificationsDropdown />
