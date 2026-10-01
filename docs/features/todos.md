@@ -6,7 +6,7 @@ The icon sits between the Export button and the Booking Inquiry button. The head
 
 ## Behaviour
 
-- **Task fields:** a title (1–200 characters), an optional note (up to 1000 characters), a due date and an optional time (`HH:mm`, 24h). Tasks are not linked to a tab or an order.
+- **Task fields:** a title (1–200 characters), an optional note (up to 1000 characters), a due date and an optional time, picked as hour, minute and AM/PM like the order reminder, and stored as 24h `HH:mm`. Tasks are not linked to a tab or an order.
 - **Blue badge** on the header icon: the number of open tasks due today plus overdue ones. It shows `9+` above 9. It rolls over at local midnight; the day is re-checked every 60s and on focus or visibility change.
 - **Panel** (Radix `Popover`) has three tabs:
   - **Today & overdue**

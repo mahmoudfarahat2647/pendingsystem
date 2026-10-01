@@ -154,6 +154,37 @@ describe("TodoPanel interactions", () => {
 		expect(service.update).not.toHaveBeenCalled();
 	});
 
+	it("shows times as AM/PM and keeps storing 24h", async () => {
+		service.update.mockReturnValue(new Promise(() => {}));
+		const user = renderButton([
+			makeTodo({ id: ID_A, title: "Call", dueDate: today, dueTime: "14:30" }),
+		]);
+		await user.click(trigger());
+		expect(await screen.findByText(/2:30 PM/)).toBeInTheDocument();
+
+		await user.click(screen.getByRole("button", { name: 'Edit "Call"' }));
+		const dialog = await screen.findByRole("dialog", { name: /Edit task/ });
+		expect(
+			within(dialog).getByRole("combobox", { name: "Hour" }),
+		).toHaveTextContent("02");
+		expect(
+			within(dialog).getByRole("combobox", { name: "Minute" }),
+		).toHaveTextContent("30");
+		expect(
+			within(dialog).getByRole("combobox", { name: "AM or PM" }),
+		).toHaveTextContent("PM");
+
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+		await waitFor(() =>
+			expect(service.update).toHaveBeenCalledWith(ID_A, {
+				title: "Call",
+				note: null,
+				dueDate: today,
+				dueTime: "14:30",
+			}),
+		);
+	});
+
 	it("creates a task from the dialog and returns focus to the button", async () => {
 		service.create.mockReturnValue(new Promise(() => {}));
 		const user = renderButton([]);

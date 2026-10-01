@@ -32,8 +32,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { toLocalDateKey } from "@/domain/booking/bookingInquiry";
 import {
 	addDaysToDateKey,
+	fromTwelveHour,
 	getNextSundayKey,
+	type Meridiem,
 	type Todo,
+	type TwelveHourTime,
+	toTwelveHour,
 } from "@/domain/todo/todo";
 import type { TodoEditPatch } from "@/hooks/queries/useTodosQuery";
 import { cn } from "@/lib/utils";
@@ -44,11 +48,14 @@ import {
 } from "@/schemas/todo.schema";
 import { dateKeyToLocalDate } from "./todoFormat";
 
-const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+const HOURS = Array.from({ length: 12 }, (_, i) =>
+	String(i + 1).padStart(2, "0"),
+);
 const MINUTES = Array.from({ length: 12 }, (_, i) =>
 	String(i * 5).padStart(2, "0"),
 );
-const DEFAULT_TIME = { h: "09", m: "00" };
+const MERIDIEMS: Meridiem[] = ["AM", "PM"];
+const DEFAULT_TIME: TwelveHourTime = { h: "09", m: "00", ampm: "AM" };
 
 const FIELD_CLASS =
 	"bg-gray-100 dark:bg-[#2c2c2e] border-black/10 dark:border-white/10 text-gray-800 dark:text-gray-200";
@@ -91,7 +98,7 @@ export function TodoFormDialog({
 	const [note, setNote] = useState("");
 	const [dueDate, setDueDate] = useState("");
 	const [hasTime, setHasTime] = useState(false);
-	const [time, setTime] = useState(DEFAULT_TIME);
+	const [time, setTime] = useState<TwelveHourTime>(DEFAULT_TIME);
 	const [calendarOpen, setCalendarOpen] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [todayKey, setTodayKey] = useState(() => toLocalDateKey(new Date()));
@@ -108,8 +115,7 @@ export function TodoFormDialog({
 			setNote(todo.note ?? "");
 			setDueDate(todo.dueDate);
 			setHasTime(todo.dueTime !== null);
-			const [h, m] = (todo.dueTime ?? "09:00").split(":");
-			setTime({ h, m });
+			setTime(todo.dueTime ? toTwelveHour(todo.dueTime) : DEFAULT_TIME);
 		} else {
 			setTitle("");
 			setNote("");
@@ -132,7 +138,7 @@ export function TodoFormDialog({
 			title,
 			note,
 			dueDate,
-			dueTime: hasTime ? `${time.h}:${time.m}` : null,
+			dueTime: hasTime ? fromTwelveHour(time) : null,
 		});
 		if (!parsed.success) {
 			setError(
@@ -314,6 +320,26 @@ export function TodoFormDialog({
 										{MINUTES.map((m) => (
 											<SelectItem key={m} value={m}>
 												{m}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+								<Select
+									value={time.ampm}
+									onValueChange={(ampm) =>
+										setTime((t) => ({ ...t, ampm: ampm as Meridiem }))
+									}
+								>
+									<SelectTrigger
+										aria-label="AM or PM"
+										className={cn(FIELD_CLASS, "w-[76px]")}
+									>
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-gray-800 dark:text-gray-200">
+										{MERIDIEMS.map((value) => (
+											<SelectItem key={value} value={value}>
+												{value}
 											</SelectItem>
 										))}
 									</SelectContent>

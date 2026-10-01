@@ -99,3 +99,38 @@ export function getNextSundayKey(key: string): string {
 	const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
 	return addDaysToDateKey(key, weekday === 0 ? 7 : 7 - weekday);
 }
+
+export type Meridiem = "AM" | "PM";
+
+export interface TwelveHourTime {
+	/** "01"–"12" */
+	h: string;
+	/** "00"–"59" */
+	m: string;
+	ampm: Meridiem;
+}
+
+/** Stored 24h `HH:mm` → 12h parts for the AM/PM picker. */
+export function toTwelveHour(time24: string): TwelveHourTime {
+	const [hours, minutes] = time24.split(":").map(Number);
+	const ampm: Meridiem = hours >= 12 ? "PM" : "AM";
+	const h12 = hours % 12 === 0 ? 12 : hours % 12;
+	return {
+		h: String(h12).padStart(2, "0"),
+		m: String(minutes).padStart(2, "0"),
+		ampm,
+	};
+}
+
+/** 12h picker parts → stored 24h `HH:mm` (12 AM is 00, 12 PM is 12). */
+export function fromTwelveHour({ h, m, ampm }: TwelveHourTime): string {
+	const h12 = Number(h) % 12;
+	const hours = ampm === "PM" ? h12 + 12 : h12;
+	return `${String(hours).padStart(2, "0")}:${m}`;
+}
+
+/** Stored 24h `HH:mm` → display text such as "2:30 PM". */
+export function formatTwelveHour(time24: string): string {
+	const { h, m, ampm } = toTwelveHour(time24);
+	return `${Number(h)}:${m} ${ampm}`;
+}
