@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode, TextareaHTMLAttributes } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EditNoteModal } from "@/components/shared/EditNoteModal";
 import type { QuickTemplate } from "@/services/quickTemplatesService";
 
@@ -139,6 +139,13 @@ describe("EditNoteModal", () => {
 		mockUseQuickTemplatesQuery.mockReset();
 		mockUseAddQuickTemplateMutation.mockReset();
 		mockUseRemoveQuickTemplateMutation.mockReset();
+		// 15/01/2026 08:30 UTC = 10:30 Africa/Cairo
+		vi.useFakeTimers({ toFake: ["Date"] });
+		vi.setSystemTime(new Date(Date.UTC(2026, 0, 15, 8, 30)));
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
 	});
 
 	it("composes multiple templates without inline tags and saves with one trailing tag", async () => {
@@ -170,7 +177,7 @@ describe("EditNoteModal", () => {
 		await user.click(screen.getByRole("button", { name: "SAVE NOTES" }));
 
 		expect(onSave).toHaveBeenCalledWith(
-			"Existing history #orders\nTemplate A\nTemplate B #booking",
+			"Existing history #orders\nTemplate A\nTemplate B #booking 15/01/2026 10:30",
 		);
 		expect(onOpenChange).toHaveBeenCalledWith(false);
 	});
@@ -195,7 +202,7 @@ describe("EditNoteModal", () => {
 		);
 		await user.click(screen.getByRole("button", { name: "SAVE NOTES" }));
 
-		expect(onSave).toHaveBeenCalledWith("Call customer #note");
+		expect(onSave).toHaveBeenCalledWith("Call customer #note 15/01/2026 10:30");
 	});
 
 	it("calls addMutation.mutate with trimmed text when Add button clicked", async () => {
