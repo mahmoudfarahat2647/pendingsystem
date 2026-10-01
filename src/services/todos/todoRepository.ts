@@ -88,13 +88,13 @@ export function createTodoRepository(
 			return mapTodoRow(data);
 		},
 
+		/**
+		 * Idempotent: deleting a task that is already gone (e.g. another admin
+		 * deleted it first) succeeds, since the desired end state already holds.
+		 */
 		async remove(id: string): Promise<void> {
-			const { error, count } = await getClient()
-				.from("todos")
-				.delete({ count: "exact" })
-				.eq("id", id);
+			const { error } = await getClient().from("todos").delete().eq("id", id);
 			if (error) throw new Error(error.message);
-			if ((count ?? 0) === 0) throw new TodoNotFoundError(id);
 		},
 	};
 }

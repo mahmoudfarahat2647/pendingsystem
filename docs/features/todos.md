@@ -56,6 +56,10 @@ The icon sits between the Export button and the Booking Inquiry button. The head
 - **Rollback is per task.** A failed create, update or delete rolls back only the task it touched, never a snapshot of the whole list. One failure therefore cannot undo another task's pending or successful change.
   - Update rollback compares fields one by one, not by object reference. React Query's structural sharing copies objects inside `setQueryData`, so a reference check would never match.
 - **Refetch timing.** The list refetches only after the last pending todo mutation settles.
+- **No stale reads during a save.** The list fetch (`listTodosWhenIdle`) never applies a server response while any todo mutation is pending, because that snapshot can predate the write and would undo an optimistic change or drop a new task. It waits until every pending mutation settles, then reads again. This covers the 60-second poll, window focus and reconnect.
+- **Robust success handlers.** A successful create inserts the saved task even if its temporary row is gone; a successful delete removes the task even if something re-added it.
+- **Edits send only changed fields** (`diffTodoEdit`, against the task as it was when the dialog opened), so an edit never overwrites another admin's change to a field you didn't touch. Saving with no changes sends nothing.
+- **Idempotent delete.** Deleting a task another admin already deleted succeeds (`204`) instead of showing an error and bringing it back.
 - **Per-task guard.** `useTodoActions()` exposes `toggleTodo`, `editTodo` and `deleteTodo`. Each returns `false` and starts nothing when:
   - the task already has a pending update or delete. This is read synchronously from the mutation cache, so a double-click cannot slip through; or
   - the task is temporary, meaning its create has not finished yet.

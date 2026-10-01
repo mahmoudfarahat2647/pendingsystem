@@ -128,7 +128,8 @@ A system-wide to-do list behind a list icon in the header, between Export and Bo
 - **Concurrency** (`src/hooks/queries/useTodosQuery.ts`):
   - A failed mutation rolls back only the task it touched. Never restore a whole-list snapshot here.
   - Update rollback compares fields, not references, because structural sharing copies objects.
-  - The list refetches only after the last pending todo mutation settles.
+  - The list refetches only after the last pending todo mutation settles. The list `queryFn` (`listTodosWhenIdle`) also never applies a server response while any todo mutation is pending: it waits for them to settle, then reads again. That covers polling, window focus and reconnect, not just the settle-time refetch. Create/delete `onSuccess` insert/remove the task even if the cache changed underneath.
+  - Edits send only the fields the user changed (`diffTodoEdit`), and deleting an already-deleted task succeeds (idempotent `DELETE`).
   - `useTodoActions()` guards each task: `toggleTodo`, `editTodo` and `deleteTodo` do nothing for a temporary task, or for a task with a pending update or delete. The guard reads the mutation cache synchronously. Different tasks stay independent.
 - **UI:** `src/components/shared/todos/`. `TodoButton` owns the add/edit dialog state, so the dialog outlives the Radix `Popover` panel. The panel closes on Escape and focus returns to the button. The panel is English only, like the rest of the Header.
 

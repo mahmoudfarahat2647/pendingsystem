@@ -11,7 +11,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { countDueTodos, type Todo } from "@/domain/todo/todo";
+import { countDueTodos, diffTodoEdit, type Todo } from "@/domain/todo/todo";
 import {
 	type TodoEditPatch,
 	useTodoActions,
@@ -53,7 +53,11 @@ export function TodoButton() {
 	const handleSubmit = useCallback(
 		(values: TodoEditPatch) => {
 			if (formState?.mode === "edit") {
-				return editTodo(formState.todo.id, values);
+				// Diff against the task as it was when the dialog opened, so
+				// untouched fields are never sent.
+				const patch = diffTodoEdit(formState.todo, values);
+				if (Object.keys(patch).length === 0) return true;
+				return editTodo(formState.todo.id, patch);
 			}
 			createTodo(values);
 			return true;

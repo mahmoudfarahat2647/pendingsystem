@@ -125,6 +125,12 @@ export function TodoFormDialog({
 		}
 	}, [open, mode, todo]);
 
+	// A stored minute outside the 5-minute steps (e.g. saved through the API)
+	// stays visible and selectable instead of leaving the select blank.
+	const minuteOptions = MINUTES.includes(time.m)
+		? MINUTES
+		: [...MINUTES, time.m].sort();
+
 	const quickDates = [
 		{ label: "Today", key: todayKey },
 		{ label: "Tomorrow", key: addDaysToDateKey(todayKey, 1) },
@@ -317,7 +323,7 @@ export function TodoFormDialog({
 										<SelectValue />
 									</SelectTrigger>
 									<SelectContent className="bg-white dark:bg-[#1c1c1e] border-black/10 dark:border-white/10 text-gray-800 dark:text-gray-200">
-										{MINUTES.map((m) => (
+										{minuteOptions.map((m) => (
 											<SelectItem key={m} value={m}>
 												{m}
 											</SelectItem>

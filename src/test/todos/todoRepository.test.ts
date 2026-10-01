@@ -82,14 +82,23 @@ describe("createTodoRepository", () => {
 		expect(sent).not.toHaveProperty("done_at");
 	});
 
-	it("throws TodoNotFoundError when no row was updated or deleted", async () => {
-		const missing = fakeClient({ data: null, error: null, count: 0 });
+	it("throws TodoNotFoundError when no row was updated", async () => {
+		const missing = fakeClient({ data: null, error: null });
 		const repo = createTodoRepository(() => missing.client);
 		await expect(repo.update(dbRow.id, { title: "x" })).rejects.toBeInstanceOf(
 			TodoNotFoundError,
 		);
-		await expect(repo.remove(dbRow.id)).rejects.toBeInstanceOf(
-			TodoNotFoundError,
-		);
+	});
+
+	it("treats deleting an already-deleted task as success", async () => {
+		const missing = fakeClient({ data: null, error: null, count: 0 });
+		const repo = createTodoRepository(() => missing.client);
+		await expect(repo.remove(dbRow.id)).resolves.toBeUndefined();
+	});
+
+	it("still fails a delete on a database error", async () => {
+		const broken = fakeClient({ error: { message: "db down" } });
+		const repo = createTodoRepository(() => broken.client);
+		await expect(repo.remove(dbRow.id)).rejects.toThrow("db down");
 	});
 });

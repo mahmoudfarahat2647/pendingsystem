@@ -109,7 +109,7 @@ export function TodoPanel({
 				aria-label={activeTab.label}
 				className="max-h-[400px] overflow-y-auto custom-scrollbar p-2"
 			>
-				{isLoading ? (
+				{isLoading || todayKey === null ? (
 					<p className="px-2 py-6 text-center text-xs text-gray-500">
 						Loading tasks…
 					</p>

@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TodoButton } from "@/components/shared/todos/TodoButton";
+import { TodoPanel } from "@/components/shared/todos/TodoPanel";
 import { toLocalDateKey } from "@/domain/booking/bookingInquiry";
 import type { Todo } from "@/domain/todo/todo";
 import { TODOS_QUERY_KEY } from "@/lib/queryClient";
@@ -174,15 +175,47 @@ describe("TodoPanel interactions", () => {
 			within(dialog).getByRole("combobox", { name: "AM or PM" }),
 		).toHaveTextContent("PM");
 
+		// Saving without changes sends nothing and closes the dialog.
 		await user.click(within(dialog).getByRole("button", { name: "Save" }));
 		await waitFor(() =>
-			expect(service.update).toHaveBeenCalledWith(ID_A, {
-				title: "Call",
-				note: null,
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+		);
+		expect(service.update).not.toHaveBeenCalled();
+	});
+
+	it("sends only the fields the user changed", async () => {
+		service.update.mockReturnValue(new Promise(() => {}));
+		const user = renderButton([
+			makeTodo({
+				id: ID_A,
+				title: "Cal",
+				note: "keep",
 				dueDate: today,
 				dueTime: "14:30",
 			}),
+		]);
+		await user.click(trigger());
+		await user.click(await screen.findByRole("button", { name: 'Edit "Cal"' }));
+		const dialog = await screen.findByRole("dialog", { name: /Edit task/ });
+
+		await user.type(within(dialog).getByLabelText("Title"), "l");
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+		await waitFor(() =>
+			expect(service.update).toHaveBeenCalledWith(ID_A, { title: "Call" }),
 		);
+	});
+
+	it("keeps a stored minute outside the 5-minute steps visible", async () => {
+		const user = renderButton([
+			makeTodo({ id: ID_A, title: "Odd", dueDate: today, dueTime: "14:37" }),
+		]);
+		await user.click(trigger());
+		await user.click(await screen.findByRole("button", { name: 'Edit "Odd"' }));
+		const dialog = await screen.findByRole("dialog", { name: /Edit task/ });
+		expect(
+			within(dialog).getByRole("combobox", { name: "Minute" }),
+		).toHaveTextContent("37");
 	});
 
 	it("creates a task from the dialog and returns focus to the button", async () => {
@@ -263,5 +296,27 @@ describe("TodoPanel interactions", () => {
 		expect(
 			within(row).getByRole("button", { name: 'Delete "Saving"' }),
 		).toBeDisabled();
+	});
+});
+
+describe("TodoPanel before today's date is known", () => {
+	it("shows a loading state instead of an empty list", () => {
+		render(
+			<TodoPanel
+				todos={[
+					makeTodo({ id: ID_A, title: "Overdue", dueDate: "2026-01-01" }),
+				]}
+				todayKey={null}
+				isLoading={false}
+				isError={false}
+				isTodoBusy={() => false}
+				onAdd={() => {}}
+				onToggle={() => {}}
+				onEdit={() => {}}
+				onDelete={() => {}}
+			/>,
+		);
+		expect(screen.getByText("Loading tasks…")).toBeInTheDocument();
+		expect(screen.queryByText("Nothing due today.")).not.toBeInTheDocument();
 	});
 });

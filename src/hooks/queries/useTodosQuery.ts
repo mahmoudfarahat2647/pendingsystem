@@ -42,7 +42,7 @@ export interface TodoEditPatch {
 
 type UpdateVariables =
 	| { id: string; kind: "toggle"; isDone: boolean }
-	| { id: string; kind: "edit"; patch: TodoEditPatch };
+	| { id: string; kind: "edit"; patch: Partial<TodoEditPatch> };
 
 interface DeleteVariables {
 	id: string;
@@ -81,10 +81,46 @@ function replaceTodo(todos: Todo[] | undefined, id: string, next: Todo) {
 	return (todos ?? []).map((todo) => (todo.id === id ? next : todo));
 }
 
+function hasPendingTodoMutation(queryClient: QueryClient): boolean {
+	return queryClient.isMutating({ mutationKey: TODO_MUTATION_KEY }) > 0;
+}
+
+/** Resolves once no todo mutation is pending. */
+function waitForTodoMutationsToSettle(queryClient: QueryClient) {
+	return new Promise<void>((resolve) => {
+		if (!hasPendingTodoMutation(queryClient)) {
+			resolve();
+			return;
+		}
+		const unsubscribe = queryClient.getMutationCache().subscribe(() => {
+			if (!hasPendingTodoMutation(queryClient)) {
+				unsubscribe();
+				resolve();
+			}
+		});
+	});
+}
+
+/**
+ * Lists tasks, but never lets a server snapshot replace the cache while a todo
+ * mutation is pending: that snapshot can predate the write and would undo the
+ * optimistic change (or drop a temporary task). Such a response is discarded;
+ * the read waits for every pending mutation to settle, then fetches again.
+ * This covers every automatic read (polling, window focus, reconnect, mount).
+ */
+async function listTodosWhenIdle(queryClient: QueryClient): Promise<Todo[]> {
+	for (;;) {
+		await waitForTodoMutationsToSettle(queryClient);
+		const todos = await todoService.list();
+		if (!hasPendingTodoMutation(queryClient)) return todos;
+	}
+}
+
 export function useTodosQuery() {
+	const queryClient = useQueryClient();
 	return useQuery({
 		queryKey: TODOS_QUERY_KEY,
-		queryFn: () => todoService.list(),
+		queryFn: () => listTodosWhenIdle(queryClient),
 		refetchInterval: 60_000,
 		refetchOnWindowFocus: true,
 	});
@@ -127,10 +163,15 @@ export function useCreateTodoMutation() {
 			return { tempId: optimistic.id };
 		},
 		onSuccess: (created, _input, context) => {
-			if (!context) return;
-			queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, (old) =>
-				replaceTodo(old, context.tempId, created),
-			);
+			queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, (old = []) => {
+				const withoutTemp = context
+					? old.filter((todo) => todo.id !== context.tempId)
+					: old;
+				// Insert even if the temporary row is already gone.
+				return withoutTemp.some((todo) => todo.id === created.id)
+					? replaceTodo(withoutTemp, created.id, created)
+					: [...withoutTemp, created];
+			});
 		},
 		onError: (_error, _input, context) => {
 			if (context) {
@@ -218,6 +259,11 @@ export function useDeleteTodoMutation() {
 			);
 			return { previous };
 		},
+		onSuccess: (_result, variables) => {
+			queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, (old = []) =>
+				old.filter((todo) => todo.id !== variables.id),
+			);
+		},
 		onError: (_error, variables, context) => {
 			const previous = context?.previous;
 			if (previous) {
@@ -283,7 +329,7 @@ export function useTodoActions() {
 	);
 
 	const editTodo = useCallback(
-		(id: string, patch: TodoEditPatch) => {
+		(id: string, patch: Partial<TodoEditPatch>) => {
 			if (!canMutate(id)) return false;
 			update({ id, kind: "edit", patch });
 			return true;

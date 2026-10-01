@@ -17,6 +17,27 @@ export interface Todo {
 	updatedAt: string;
 }
 
+export type TodoEditableFields = Pick<
+	Todo,
+	"title" | "note" | "dueDate" | "dueTime"
+>;
+
+/**
+ * Only the fields the user actually changed, so saving an edit never sends
+ * (and overwrites) a field another admin may have changed meanwhile.
+ */
+export function diffTodoEdit(
+	original: TodoEditableFields,
+	next: TodoEditableFields,
+): Partial<TodoEditableFields> {
+	const patch: Partial<TodoEditableFields> = {};
+	if (next.title !== original.title) patch.title = next.title;
+	if (next.note !== original.note) patch.note = next.note;
+	if (next.dueDate !== original.dueDate) patch.dueDate = next.dueDate;
+	if (next.dueTime !== original.dueTime) patch.dueTime = next.dueTime;
+	return patch;
+}
+
 export const TEMPORARY_TODO_ID_PREFIX = "temp-";
 
 const DATE_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;

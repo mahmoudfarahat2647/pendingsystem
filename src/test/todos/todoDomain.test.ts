@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	addDaysToDateKey,
 	countDueTodos,
+	diffTodoEdit,
 	formatTwelveHour,
 	fromTwelveHour,
 	getNextSundayKey,
@@ -102,5 +103,28 @@ describe("12-hour time helpers", () => {
 	it("formats a display label", () => {
 		expect(formatTwelveHour("14:30")).toBe("2:30 PM");
 		expect(formatTwelveHour("00:05")).toBe("12:05 AM");
+	});
+});
+
+describe("diffTodoEdit", () => {
+	const base = {
+		title: "Call",
+		note: null,
+		dueDate: "2026-10-01",
+		dueTime: "14:30",
+	};
+
+	it("returns only changed fields", () => {
+		expect(diffTodoEdit(base, { ...base, title: "Call back" })).toEqual({
+			title: "Call back",
+		});
+		expect(diffTodoEdit(base, { ...base, dueTime: null, note: "x" })).toEqual({
+			dueTime: null,
+			note: "x",
+		});
+	});
+
+	it("returns an empty patch when nothing changed", () => {
+		expect(diffTodoEdit(base, { ...base })).toEqual({});
 	});
 });

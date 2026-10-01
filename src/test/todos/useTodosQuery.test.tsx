@@ -310,4 +310,95 @@ describe("useTodoActions", () => {
 		await act(async () => remove.reject(new Error("boom")));
 		await waitFor(() => expect(cached().some((t) => t.id === ID_A)).toBe(true));
 	});
+
+	it("does not let a refresh undo a pending toggle, and refreshes after it settles", async () => {
+		const { queryClient, hook, cached, setServerList } = setup();
+		await waitFor(() => expect(hook.result.current.query.isSuccess).toBe(true));
+		const toggle = deferred<Todo>();
+		service.update.mockReturnValue(toggle.promise);
+
+		act(() => {
+			hook.result.current.actions.toggleTodo(ID_A, true);
+		});
+		await waitFor(() =>
+			expect(cached().find((t) => t.id === ID_A)?.isDone).toBe(true),
+		);
+		const listCallsBefore = service.list.mock.calls.length;
+
+		// The server still has the old value while the toggle is in flight.
+		void queryClient.refetchQueries({ queryKey: TODOS_QUERY_KEY });
+		await act(() => new Promise((r) => setTimeout(r, 20)));
+		expect(cached().find((t) => t.id === ID_A)?.isDone).toBe(true);
+		// The read waits; it has not even asked the server yet.
+		expect(service.list.mock.calls.length).toBe(listCallsBefore);
+
+		// Once the toggle lands, the deferred read runs and sees new server data.
+		const saved = { ...A, isDone: true };
+		const C = makeTodo({ id: "00000000-0000-4000-8000-00000000000c" });
+		setServerList([saved, B, C]);
+		await act(async () => toggle.resolve(saved));
+		await waitFor(() => expect(cached().map((t) => t.id)).toContain(C.id));
+		expect(cached().find((t) => t.id === ID_A)?.isDone).toBe(true);
+	});
+
+	it("inserts a created task even if its temporary row was removed, while another task is pending", async () => {
+		const { queryClient, hook, cached, setServerList } = setup([B]);
+		await waitFor(() => expect(hook.result.current.query.isSuccess).toBe(true));
+		const create = deferred<Todo>();
+		service.create.mockReturnValue(create.promise);
+		service.update.mockReturnValue(new Promise(() => {}));
+
+		act(() => {
+			hook.result.current.actions.createTodo({
+				title: "New",
+				note: null,
+				dueDate: "2026-10-01",
+				dueTime: null,
+			});
+			hook.result.current.actions.toggleTodo(ID_B, true);
+		});
+		await waitFor(() =>
+			expect(cached().some((t) => t.id.startsWith("temp-"))).toBe(true),
+		);
+
+		// Simulate the temporary row being dropped by some other cache write.
+		queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, (old = []) =>
+			old.filter((t) => !t.id.startsWith("temp-")),
+		);
+
+		const saved = makeTodo({ id: ID_A, title: "New" });
+		setServerList([saved, B]);
+		await act(async () => create.resolve(saved));
+
+		// B is still pending, so no refetch runs; the task must be there anyway.
+		await waitFor(() =>
+			expect(cached().find((t) => t.id === ID_A)?.title).toBe("New"),
+		);
+		expect(cached().filter((t) => t.id === ID_A)).toHaveLength(1);
+	});
+
+	it("removes a deleted task on success even if a stale write re-added it", async () => {
+		const { queryClient, hook, cached } = setup();
+		await waitFor(() => expect(hook.result.current.query.isSuccess).toBe(true));
+		const remove = deferred<void>();
+		service.remove.mockReturnValue(remove.promise);
+		service.update.mockReturnValue(new Promise(() => {}));
+
+		act(() => {
+			hook.result.current.actions.deleteTodo(ID_A);
+			hook.result.current.actions.toggleTodo(ID_B, true);
+		});
+		await waitFor(() =>
+			expect(cached().some((t) => t.id === ID_A)).toBe(false),
+		);
+		queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, (old = []) => [
+			...old,
+			A,
+		]);
+
+		await act(async () => remove.resolve());
+		await waitFor(() =>
+			expect(cached().some((t) => t.id === ID_A)).toBe(false),
+		);
+	});
 });
