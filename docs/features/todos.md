@@ -6,7 +6,9 @@ The icon sits between the Export button and the Booking Inquiry button. The head
 
 ## Behaviour
 
-- **Task fields:** a title (1–200 characters), an optional note (up to 1000 characters), a due date and an optional time, picked as hour, minute and AM/PM like the order reminder, and stored as 24h `HH:mm`. Tasks are not linked to a tab or an order.
+- **Task fields:** a title (1–200 characters), an optional note (up to 1000 characters), a due date and an optional time, picked as hour (01–12), minute (5-minute steps) and AM/PM like the order reminder, and stored as 24h `HH:mm`. Tasks are not linked to a tab or an order.
+  - The dialog converts between the stored 24h value and the 12h picker parts: 12 AM is stored as `00:00`, 12 PM as `12:00`. Opening a task for edit shows its stored time in AM/PM, and saving it unchanged sends the same 24h value back.
+  - Times are shown in the panel as AM/PM, for example `Sun 4 Oct · 2:30 PM`.
 - **Blue badge** on the header icon: the number of open tasks due today plus overdue ones. It shows `9+` above 9. It rolls over at local midnight; the day is re-checked every 60s and on focus or visibility change.
 - **Panel** (Radix `Popover`) has three tabs:
   - **Today & overdue**
@@ -19,7 +21,7 @@ The icon sits between the Export button and the Booking Inquiry button. The head
   - Edit and Delete buttons, shown on hover or keyboard focus. Delete asks for confirmation inline.
 - **Add/edit dialog:**
   - The due date is chosen from a calendar only, with quick buttons for Today, Tomorrow and Next Sunday. There is no free-text date entry.
-  - An "Add time" switch adds an optional time.
+  - An "Add time" switch adds an optional time, chosen with Hour, Minute and AM/PM selects (default 09:00 AM).
 - **Shared list:** every admin sees the same list on every device. It refetches every 60s and on window focus.
 - **Language:** English only, like the rest of the Header.
 
@@ -27,7 +29,7 @@ The icon sits between the Export button and the Booking Inquiry button. The head
 
 - **Table:** `public.todos` (migration `supabase/migrations/20261001_add_todos.sql`, applied to the live project).
   - `due_date` is a plain `date` (a local calendar day), so a due date never shifts with timezones.
-  - `due_time` is optional text in `HH:mm` format.
+  - `due_time` is optional text in 24h `HH:mm` format. The 12h display is a UI concern only; nothing 12h is stored or sent to the API.
 - **Access:** RLS is enabled with **no** client policies. The only way in is the authenticated API, which uses the service role:
   - `GET` and `POST /api/todos`
   - `PATCH` and `DELETE /api/todos/[id]`
@@ -41,12 +43,12 @@ The icon sits between the Export button and the Booking Inquiry button. The head
 
 | Layer | File |
 |---|---|
-| Domain (pure) | `src/domain/todo/todo.ts`: `isRealCalendarDate`, `countDueTodos`, `sortTodos`, `getTodoTab`, `isTemporaryTodoId`, quick-date helpers |
+| Domain (pure) | `src/domain/todo/todo.ts`: `isRealCalendarDate`, `countDueTodos`, `sortTodos`, `getTodoTab`, `isTemporaryTodoId`, quick-date helpers, 12-hour time helpers (`toTwelveHour`, `fromTwelveHour`, `formatTwelveHour`, plus the `Meridiem` and `TwelveHourTime` types) |
 | Schemas | `src/schemas/todo.schema.ts`: `CreateTodoSchema` and `UpdateTodoSchema`, shared by the form and the API (both reject impossible dates such as `2026-02-30`) |
 | Repository (server) | `src/services/todos/todoRepository.ts`: `createTodoRepository`, `buildTodoUpdatePatch`, `TodoNotFoundError` |
 | Client service | `src/services/todos/todoService.ts` |
 | Hooks | `src/hooks/queries/useTodosQuery.ts` (`TODOS_QUERY_KEY` is defined in `src/lib/queryClient.ts`), `src/hooks/useTodayKey.ts` |
-| UI | `src/components/shared/todos/`: `TodoButton`, `TodoPanel`, `TodoFormDialog`, `todoFormat.ts` (date-key and due-label formatting) |
+| UI | `src/components/shared/todos/`: `TodoButton`, `TodoPanel`, `TodoFormDialog`, `todoFormat.ts` (date-key and due-label formatting, with the time shown as AM/PM) |
 | Header placement | `src/components/shared/Header.tsx`: `TodoButton` renders after the Export dropdown and before `BookingInquiryButton` |
 
 ## Concurrency rules (`useTodosQuery.ts`)
@@ -68,9 +70,9 @@ The icon sits between the Export button and the Booking Inquiry button. The head
 ## Tests
 
 `src/test/todos/` covers:
-- domain rules and schemas;
+- domain rules and schemas, including the 12-hour helpers (24h ↔ AM/PM conversion for midnight and noon, a round trip over all 24 hours, and the display label);
 - the repository's timestamp rules;
 - API routes: 401, 400, 404 and the happy paths;
 - the hook's rollback and per-task guard;
 - the badge, including midnight rollover;
-- panel and dialog interaction and accessibility.
+- panel and dialog interaction and accessibility, including that times display as AM/PM while an unchanged edit still saves the 24h value.
