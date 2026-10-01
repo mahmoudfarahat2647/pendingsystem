@@ -43,8 +43,8 @@ A to-do list for the whole system, opened from the header's list icon (issue `#3
 | Schemas | `src/schemas/todo.schema.ts`: `CreateTodoSchema` and `UpdateTodoSchema`, shared by the form and the API (both reject impossible dates such as `2026-02-30`) |
 | Repository (server) | `src/services/todos/todoRepository.ts`: `createTodoRepository`, `buildTodoUpdatePatch`, `TodoNotFoundError` |
 | Client service | `src/services/todos/todoService.ts` |
-| Hooks | `src/hooks/queries/useTodosQuery.ts` (`TODOS_QUERY_KEY`), `src/hooks/useTodayKey.ts` |
-| UI | `src/components/shared/todos/`: `TodoButton`, `TodoPanel`, `TodoFormDialog` |
+| Hooks | `src/hooks/queries/useTodosQuery.ts` (`TODOS_QUERY_KEY` is defined in `src/lib/queryClient.ts`), `src/hooks/useTodayKey.ts` |
+| UI | `src/components/shared/todos/`: `TodoButton`, `TodoPanel`, `TodoFormDialog`, `todoFormat.ts` (date-key and due-label formatting) |
 
 ## Concurrency rules (`useTodosQuery.ts`)
 
