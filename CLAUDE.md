@@ -117,6 +117,22 @@ Two themes, Dark (original, default) and White. Spec `.github/specs/white-theme.
 - **Dark-safety rule (RESTRICTED)**: Dark values stay verbatim under `dark:`; the White value is the default (`bg-[#0c0c0e]` → `bg-white dark:bg-[#0c0c0e]`). No unconditional edits to shared primitives or global CSS (scope White-only CSS with `:root:not(.dark)`). `text-white` on coloured buttons stays. `src/test/whiteThemeDarkSafety.test.ts` scans `src` for bare dark-only literals (exempt: `Sidebar.tsx`, `global-error.tsx`, `useDraftSession.tsx`, `/mobile-order`).
 - **Design**: sidebar is charcoal `#1f2328` with rounded right corners and a soft-yellow outlined active tab with a left accent pill in White (Dark unchanged); White dashboard hero is `public/hero.png` in the same fixed 460px frame as Dark (fits one screen, no scroll) and stat tiles/calendar are non-interactive in White; `StatusRenderer` shows a tinted chip in White without touching stored colours; toasts follow the theme; Settings → Theme is translated EN/AR (`settings.theme.*`).
 
+### Header To-Do List (issue `#360`)
+
+A system-wide to-do list behind a list icon in the header, between Export and Booking Inquiry, separate from the notification bell. Full doc: `docs/features/todos.md`.
+
+- **Task:** a title, an optional note, a due date (a plain local `date`) and an optional `HH:mm` time. Tasks have no tab or order link.
+- **Blue badge:** counts open tasks due today plus overdue ones (`countDueTodos`). It rolls over at midnight through `useTodayKey`.
+- **Data:** the `public.todos` table, with RLS enabled and **no** client policies. It is reached only through the authenticated `/api/todos` and `/api/todos/[id]` routes, which use the service role (`src/services/todos/todoRepository.ts`). The form and the API share `src/schemas/todo.schema.ts`, so both reject impossible dates such as Feb 30.
+- **Timestamps:** every update writes `updated_at`. `done_at` changes only when the patch carries `isDone`.
+- **Concurrency** (`src/hooks/queries/useTodosQuery.ts`):
+  - A failed mutation rolls back only the task it touched. Never restore a whole-list snapshot here.
+  - Update rollback compares fields, not references, because structural sharing copies objects.
+  - The list refetches only after the last pending todo mutation settles. The list `queryFn` (`listTodosWhenIdle`) also never applies a server response while any todo mutation is pending: it waits for them to settle, then reads again. That covers polling, window focus and reconnect, not just the settle-time refetch. Create/delete `onSuccess` insert/remove the task even if the cache changed underneath.
+  - Edits send only the fields the user changed (`diffTodoEdit`), and deleting an already-deleted task succeeds (idempotent `DELETE`).
+  - `useTodoActions()` guards each task: `toggleTodo`, `editTodo` and `deleteTodo` do nothing for a temporary task, or for a task with a pending update or delete. The guard reads the mutation cache synchronously. Different tasks stay independent.
+- **UI:** `src/components/shared/todos/`. `TodoButton` owns the add/edit dialog state, so the dialog outlives the Radix `Popover` panel. The panel closes on Escape and focus returns to the button. The panel is English only, like the rest of the Header.
+
 ### Arabic (AR) Language (i18n)
 
 Epic `#300`, delivered in five waves (`#301` foundation, `#302` Sidebar, `#303` Notifications, `#304` Settings, `#305` action modals). Arabic is a **text-only** translation: the page layout stays LTR and pixel-identical in both languages.
@@ -220,6 +236,7 @@ If `SELECT 1` passes but auth still fails, the issue is in `auth.ts` config — 
 | `orders` | All operational rows across all five stages |
 | `order_reminders` | Per-row reminder records |
 | `release_follow_ups` | Chassis-level (VIN-keyed) release-gate follow-up schedule — see [Release Gate](#release-gate-low-mileage-warranty-chassis) |
+| `todos` | System-wide header to-do tasks (service-role only, no client RLS policies) — see [Header To-Do List](#header-to-do-list-issue-360) |
 | `quick_templates` | Saved quick-fill order templates |
 | `report_settings` | Global singleton backup/report configuration |
 | `app_settings` | Application-level settings |
