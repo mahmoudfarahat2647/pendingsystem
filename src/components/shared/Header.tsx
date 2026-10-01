@@ -45,6 +45,7 @@ import {
 	shouldRunNotificationCheck,
 } from "./headerNotificationPolling";
 import { NotificationsDropdown } from "./NotificationsDropdown";
+import { TodoButton } from "./todos/TodoButton";
 
 export const Header = React.memo(function Header() {
 	const queryClient = useQueryClient();
@@ -482,6 +483,8 @@ export const Header = React.memo(function Header() {
 					</button>
 
 					<BookingInquiryButton />
+
+					<TodoButton />
 
 					<div ref={exportDropdownRef} className="relative">
 						<button

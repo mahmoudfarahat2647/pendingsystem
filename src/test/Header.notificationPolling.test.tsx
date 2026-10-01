@@ -67,6 +67,11 @@ vi.mock("@/components/shared/NotificationsDropdown", () => ({
 	NotificationsDropdown: () => <div data-testid="notifications-dropdown" />,
 }));
 
+// The to-do button runs its own `/api/todos` query; keep it out of this test.
+vi.mock("@/components/shared/todos/TodoButton", () => ({
+	TodoButton: () => <div data-testid="todo-button" />,
+}));
+
 describe("Header notification polling", () => {
 	const activeStages: OrderStage[] = ["orders", "main", "call", "booking"];
 
