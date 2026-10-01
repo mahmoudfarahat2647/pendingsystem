@@ -156,6 +156,7 @@ Epic `#300`, delivered in five waves (`#301` foundation, `#302` Sidebar, `#303` 
 - Keep feature code in the existing layout: `app/` routes, `components/` UI, `hooks/` hooks, `services/` Supabase logic, `lib/` utilities, `schemas/` Zod, `store/` Zustand.
 - Feature-specific files live in sub-folders within their top-level directory (e.g., `services/reports/`, `hooks/queries/reports/`, `test/reports/`). The `components/reports/` folder is already self-contained. The store slice and Next.js API routes stay at their top-level locations due to framework and architecture constraints.
 - Use selector-based subscriptions with `useAppStore`, never the bare store without a selector.
+- Note history lines are written by `appendTaggedUserNote` (`src/domain/order/orderWorkflow.ts`) as `<text> #<tag> DD/MM/YYYY HH:mm`, stamped with the note's creation time in fixed **Africa/Cairo** time (`formatNoteTimestamp`), so browser notes and server-written notes (the nightly expired-warranty archive cron) agree. Existing lines are never rewritten (issue `#358`).
 - Booking and Call List actions require part number and description. Commit to Main Sheet also requires an attachment path and Beast Mode validation.
 - Stage pages should mutate operational rows through `useDraftSession()` commands, then persist with `saveDraft()` instead of calling stage mutations directly from the page body.
 

@@ -17,24 +17,53 @@ export const isUuid = (id: string): boolean =>
 	);
 
 /**
- * Appends a tagged note to an existing action note string.
+ * Fixed business time zone for note timestamps, so notes written in the
+ * browser and by server jobs (e.g. the nightly warranty archive) agree.
+ */
+export const NOTE_TIMESTAMP_TIME_ZONE = "Africa/Cairo";
+
+const noteTimestampFormatter = new Intl.DateTimeFormat("en-GB", {
+	timeZone: NOTE_TIMESTAMP_TIME_ZONE,
+	day: "2-digit",
+	month: "2-digit",
+	year: "numeric",
+	hour: "2-digit",
+	minute: "2-digit",
+	hourCycle: "h23",
+});
+
+/**
+ * Formats a note timestamp as `DD/MM/YYYY HH:mm` in Africa/Cairo time.
+ */
+export const formatNoteTimestamp = (date: Date): string => {
+	const parts: Record<string, string> = {};
+	for (const part of noteTimestampFormatter.formatToParts(date)) {
+		parts[part.type] = part.value;
+	}
+	return `${parts.day}/${parts.month}/${parts.year} ${parts.hour}:${parts.minute}`;
+};
+
+/**
+ * Appends a tagged note to an existing action note string, stamped with its
+ * creation time: `<note> #<tag> DD/MM/YYYY HH:mm` (Africa/Cairo).
  * @param existing - The current note string
  * @param note - The new note to append
  * @param tag - The tag to append (e.g. 'archive')
+ * @param at - The note's creation time (defaults to now)
  * @returns The new combined note string
  */
-
 export const appendTaggedUserNote = (
 	existing: string | undefined,
 	note: string,
 	tag: string,
+	at: Date = new Date(),
 ): string => {
 	const trimmedNote = note.trim();
 	if (!trimmedNote) {
 		return existing || "";
 	}
 
-	const taggedNote = `${trimmedNote} #${tag}`;
+	const taggedNote = `${trimmedNote} #${tag} ${formatNoteTimestamp(at)}`;
 	return existing ? `${existing}\n${taggedNote}` : taggedNote;
 };
 

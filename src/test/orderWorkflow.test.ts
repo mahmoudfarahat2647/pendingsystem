@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	appendTaggedUserNote,
 	BLANK_VIN_BUCKET,
@@ -7,6 +7,7 @@ import {
 	filterReservedRows,
 	findSameOrderDuplicateIndices,
 	findSameOrderDuplicates,
+	formatNoteTimestamp,
 	formatVinForDisplay,
 	getEffectiveNoteHistory,
 	getNormalizedVinBuckets,
@@ -849,40 +850,98 @@ describe("isUuid", () => {
 });
 
 describe("appendTaggedUserNote", () => {
+	// 15/01/2026 08:30 UTC = 10:30 Africa/Cairo (winter, UTC+2)
+	const AT = new Date(Date.UTC(2026, 0, 15, 8, 30));
+	const STAMP = "15/01/2026 10:30";
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
 	it("should return the tagged note if existing string is undefined", () => {
-		expect(appendTaggedUserNote(undefined, "new note", "archive")).toBe(
-			"new note #archive",
+		expect(appendTaggedUserNote(undefined, "new note", "archive", AT)).toBe(
+			`new note #archive ${STAMP}`,
 		);
 	});
 
 	it("should return the tagged note if existing string is empty", () => {
-		expect(appendTaggedUserNote("", "new note", "archive")).toBe(
-			"new note #archive",
+		expect(appendTaggedUserNote("", "new note", "archive", AT)).toBe(
+			`new note #archive ${STAMP}`,
 		);
 	});
 
 	it("should append the tagged note to existing string with a newline", () => {
-		expect(appendTaggedUserNote("old note", "new note", "archive")).toBe(
-			"old note\nnew note #archive",
+		expect(appendTaggedUserNote("old note", "new note", "archive", AT)).toBe(
+			`old note\nnew note #archive ${STAMP}`,
 		);
 	});
 
+	it("should leave existing history lines unchanged", () => {
+		expect(
+			appendTaggedUserNote("legacy #booking\nother #note", "new", "freeze", AT),
+		).toBe(`legacy #booking\nother #note\nnew #freeze ${STAMP}`);
+	});
+
 	it("should trim the new note before appending", () => {
-		expect(appendTaggedUserNote("old note", "  new note  ", "archive")).toBe(
-			"old note\nnew note #archive",
+		expect(
+			appendTaggedUserNote("old note", "  new note  ", "archive", AT),
+		).toBe(`old note\nnew note #archive ${STAMP}`);
+	});
+
+	it("should add one trailing tag and timestamp to a multiline note", () => {
+		expect(appendTaggedUserNote("", "line one\nline two", "note", AT)).toBe(
+			`line one\nline two #note ${STAMP}`,
+		);
+	});
+
+	it("should use the current time by default", () => {
+		vi.useFakeTimers({ toFake: ["Date"] });
+		vi.setSystemTime(AT);
+		expect(appendTaggedUserNote(undefined, "new note", "archive")).toBe(
+			`new note #archive ${STAMP}`,
 		);
 	});
 
 	it("should return existing string if new note is empty", () => {
-		expect(appendTaggedUserNote("old note", "", "archive")).toBe("old note");
+		expect(appendTaggedUserNote("old note", "", "archive", AT)).toBe(
+			"old note",
+		);
 	});
 
 	it("should return existing string if new note is only whitespace", () => {
-		expect(appendTaggedUserNote("old note", "   ", "archive")).toBe("old note");
+		expect(appendTaggedUserNote("old note", "   ", "archive", AT)).toBe(
+			"old note",
+		);
 	});
 
 	it("should return empty string if existing is undefined and new note is empty", () => {
-		expect(appendTaggedUserNote(undefined, "", "archive")).toBe("");
+		expect(appendTaggedUserNote(undefined, "", "archive", AT)).toBe("");
+	});
+});
+
+describe("formatNoteTimestamp (Africa/Cairo)", () => {
+	it("zero-pads day, month, hour and minute", () => {
+		expect(formatNoteTimestamp(new Date(Date.UTC(2026, 2, 5, 7, 7)))).toBe(
+			"05/03/2026 09:07",
+		);
+	});
+
+	it("formats 23:59 in Cairo time", () => {
+		expect(formatNoteTimestamp(new Date(Date.UTC(2026, 0, 15, 21, 59)))).toBe(
+			"15/01/2026 23:59",
+		);
+	});
+
+	it("rolls over to the next Cairo day at midnight while UTC is still the previous day", () => {
+		expect(formatNoteTimestamp(new Date(Date.UTC(2026, 0, 15, 22, 0)))).toBe(
+			"16/01/2026 00:00",
+		);
+	});
+
+	it("applies Cairo summer time (UTC+3)", () => {
+		expect(formatNoteTimestamp(new Date(Date.UTC(2026, 6, 1, 12, 0)))).toBe(
+			"01/07/2026 15:00",
+		);
 	});
 });
 

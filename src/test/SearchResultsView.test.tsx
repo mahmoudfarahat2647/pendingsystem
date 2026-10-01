@@ -7,7 +7,7 @@ import {
 	waitFor,
 } from "@testing-library/react";
 import type { ButtonHTMLAttributes } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	SEARCH_SOURCES,
 	type SearchSource,
@@ -15,6 +15,14 @@ import {
 import { ALLOWED_COMPANIES } from "@/domain/order/constants";
 import * as orderWorkflow from "@/domain/order/orderWorkflow";
 import { appendTaggedUserNote } from "@/domain/order/orderWorkflow";
+
+// 15/01/2026 08:30 UTC = 10:30 Africa/Cairo
+const NOTE_STAMP = "15/01/2026 10:30";
+const freezeNoteClock = () => {
+	vi.useFakeTimers({ toFake: ["Date"] });
+	vi.setSystemTime(new Date(Date.UTC(2026, 0, 15, 8, 30)));
+};
+
 import type { PendingRow } from "@/types";
 import {
 	createMockGridApi,
@@ -533,6 +541,10 @@ const openArchiveModal = async (rows: PendingRow[]) => {
 };
 
 describe("SearchResultsView", () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mocks.searchResultsHeaderProps = null;
@@ -1657,6 +1669,7 @@ describe("SearchResultsView", () => {
 	});
 
 	it("books all selected rows and closes the modal on confirm", async () => {
+		freezeNoteClock();
 		const firstRow = createRow({
 			id: "main-1",
 			stage: "main",
@@ -1684,7 +1697,7 @@ describe("SearchResultsView", () => {
 			updates: {
 				bookingDate: "2026-03-20",
 				bookingNote: "Bulk booking note",
-				noteHistory: "Bulk booking note #booking",
+				noteHistory: `Bulk booking note #booking ${NOTE_STAMP}`,
 				rebookedFromArchive: null,
 			},
 			stage: "booking",
@@ -1695,7 +1708,7 @@ describe("SearchResultsView", () => {
 			updates: {
 				bookingDate: "2026-03-20",
 				bookingNote: "Bulk booking note",
-				noteHistory: "Bulk booking note #booking",
+				noteHistory: `Bulk booking note #booking ${NOTE_STAMP}`,
 				rebookedFromArchive: null,
 			},
 			stage: "booking",
@@ -1754,6 +1767,7 @@ describe("SearchResultsView", () => {
 	});
 
 	it("blank status omits bookingStatus but writes noteHistory", async () => {
+		freezeNoteClock();
 		const row = createRow({ id: "main-1", noteHistory: "Old note" });
 		mocks.queryData.main = [row];
 		mocks.bookingConfirmPayload.status = undefined;
@@ -1770,11 +1784,12 @@ describe("SearchResultsView", () => {
 		const payload = mocks.saveMutateAsync.mock.calls[0][0];
 		expect(payload.updates).not.toHaveProperty("bookingStatus");
 		expect(payload.updates.noteHistory).toBe(
-			"Old note\nBulk booking note #booking",
+			`Old note\nBulk booking note #booking ${NOTE_STAMP}`,
 		);
 	});
 
 	it("explicit status includes bookingStatus alongside noteHistory", async () => {
+		freezeNoteClock();
 		const row = createRow({ id: "main-1" });
 		mocks.queryData.main = [row];
 		mocks.bookingConfirmPayload.status = "Delivered";
@@ -1790,7 +1805,9 @@ describe("SearchResultsView", () => {
 		});
 		const payload = mocks.saveMutateAsync.mock.calls[0][0];
 		expect(payload.updates.bookingStatus).toBe("Delivered");
-		expect(payload.updates.noteHistory).toBe("Bulk booking note #booking");
+		expect(payload.updates.noteHistory).toBe(
+			`Bulk booking note #booking ${NOTE_STAMP}`,
+		);
 	});
 
 	it("shows a booking error toast and keeps the modal open when any booking save fails", async () => {
@@ -1841,6 +1858,7 @@ describe("SearchResultsView", () => {
 			await openArchiveModal([row]);
 
 			await act(async () => {
+				freezeNoteClock();
 				fireEvent.click(screen.getByTestId("archive-modal-confirm"));
 			});
 
@@ -1872,6 +1890,7 @@ describe("SearchResultsView", () => {
 	});
 
 	it("does not revive legacy notes when noteHistory was explicitly cleared", async () => {
+		freezeNoteClock();
 		const row = createRow({
 			id: "main-1",
 			stage: "main",
@@ -1910,7 +1929,9 @@ describe("SearchResultsView", () => {
 			expect(savedPayload.updates.noteHistory).not.toContain(
 				"stale legacy data",
 			);
-			expect(savedPayload.updates.noteHistory).toBe("duplicate #archive");
+			expect(savedPayload.updates.noteHistory).toBe(
+				`duplicate #archive ${NOTE_STAMP}`,
+			);
 			await waitFor(() => {
 				expect(screen.queryByTestId("archive-modal")).not.toBeInTheDocument();
 			});

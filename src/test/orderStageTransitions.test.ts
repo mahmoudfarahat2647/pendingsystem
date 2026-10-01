@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	appendTaggedUserNote,
 	getEffectiveNoteHistory,
@@ -17,6 +17,17 @@ import {
 	buildUnfreezeCommands,
 } from "@/lib/orderStageTransitions";
 import type { PendingRow } from "@/types";
+
+// Freeze the clock so note timestamps are deterministic.
+// 15/01/2026 08:30 UTC = 10:30 Africa/Cairo
+const NOTE_STAMP = "15/01/2026 10:30";
+beforeEach(() => {
+	vi.useFakeTimers({ toFake: ["Date"] });
+	vi.setSystemTime(new Date(Date.UTC(2026, 0, 15, 8, 30)));
+});
+afterEach(() => {
+	vi.useRealTimers();
+});
 
 const createMockRow = (overrides: Partial<PendingRow> = {}): PendingRow => ({
 	id: "row-uuid-1",
@@ -277,6 +288,7 @@ describe("buildBookingCommands", () => {
 			"booking",
 		);
 		expect(cmd.updates.noteHistory).toBe(expected);
+		expect(cmd.updates.noteHistory).toBe(`note #booking ${NOTE_STAMP}`);
 	});
 
 	it("includes bookingStatus when status arg is provided", () => {
@@ -307,9 +319,9 @@ describe("buildBookingCommands", () => {
 		// Hardcoded expected date: guards against timezone regressions where
 		// "2025-06-01" would render as the previous day west of UTC.
 		expect(cmd.updates.noteHistory).toContain(
-			"Previous booking: Sun, Jun 1, 2025. #rebooking",
+			`Previous booking: Sun, Jun 1, 2025. #rebooking ${NOTE_STAMP}`,
 		);
-		expect(cmd.updates.noteHistory).toContain("note #booking");
+		expect(cmd.updates.noteHistory).toContain(`note #booking ${NOTE_STAMP}`);
 		expect(cmd.updates.bookingDate).toBe("2025-07-15");
 	});
 
