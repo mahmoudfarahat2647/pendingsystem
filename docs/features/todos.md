@@ -2,6 +2,8 @@
 
 A to-do list for the whole system, opened from the header's list icon (issue `#360`). It is separate from the notification bell. It holds general tasks such as "call customer X next Sunday" or "review the Freeze tab".
 
+The icon sits between the Export button and the Booking Inquiry button. The header order is: Refresh, Export, To-Do List, Booking Inquiry, Notifications.
+
 ## Behaviour
 
 - **Task fields:** a title (1–200 characters), an optional note (up to 1000 characters), a due date and an optional time (`HH:mm`, 24h). Tasks are not linked to a tab or an order.
@@ -45,6 +47,7 @@ A to-do list for the whole system, opened from the header's list icon (issue `#3
 | Client service | `src/services/todos/todoService.ts` |
 | Hooks | `src/hooks/queries/useTodosQuery.ts` (`TODOS_QUERY_KEY` is defined in `src/lib/queryClient.ts`), `src/hooks/useTodayKey.ts` |
 | UI | `src/components/shared/todos/`: `TodoButton`, `TodoPanel`, `TodoFormDialog`, `todoFormat.ts` (date-key and due-label formatting) |
+| Header placement | `src/components/shared/Header.tsx`: `TodoButton` renders after the Export dropdown and before `BookingInquiryButton` |
 
 ## Concurrency rules (`useTodosQuery.ts`)
 
