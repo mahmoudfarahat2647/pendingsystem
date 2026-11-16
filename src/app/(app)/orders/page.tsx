@@ -183,6 +183,7 @@ export default function OrdersPage() {
 						rowData={ordersRowData}
 						onSelectAllByVin={onSelectAllByVin}
 						isSelectAllByVinDisabled={isSelectAllByVinDisabled}
+						gridApi={gridApi}
 					/>
 
 					{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}

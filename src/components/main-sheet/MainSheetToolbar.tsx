@@ -1,5 +1,6 @@
 "use client";
 
+import type { GridApi } from "ag-grid-community";
 import {
 	Archive,
 	Calendar,
@@ -16,6 +17,7 @@ import {
 	Trash2,
 	Unlock,
 } from "lucide-react";
+import { CopyForEmailButton } from "@/components/shared/CopyForEmailButton";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
@@ -32,13 +34,17 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import {
+	EMPTY_SELECTED_ROWS,
+	useCopyForEmailRows,
+} from "@/hooks/useCopyForEmailRows";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 interface MainSheetToolbarProps {
 	isLocked: boolean;
 	selectedCount: number;
-	selectedRows: PendingRow[];
+	selectedRows?: PendingRow[];
 	onBooking: () => void;
 	onArchive: () => void;
 	onFreeze: () => void;
@@ -56,12 +62,13 @@ interface MainSheetToolbarProps {
 	rowData?: PendingRow[];
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
+	gridApi?: GridApi | null;
 }
 
 export const MainSheetToolbar = ({
 	isLocked,
 	selectedCount,
-	selectedRows = [],
+	selectedRows = EMPTY_SELECTED_ROWS,
 	onBooking,
 	onArchive,
 	onFreeze,
@@ -79,9 +86,11 @@ export const MainSheetToolbar = ({
 	rowData = [],
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
+	gridApi,
 }: MainSheetToolbarProps) => {
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("main-sheet");
+	const copyForEmailRows = useCopyForEmailRows(selectedRows, gridApi);
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
 
@@ -363,6 +372,7 @@ export const MainSheetToolbar = ({
 			</div>
 
 			<div className="flex items-center gap-2">
+				<CopyForEmailButton rows={copyForEmailRows} />
 				<SelectAllByVinButton
 					onSelectAllByVin={onSelectAllByVin}
 					isDisabled={isSelectAllByVinDisabled}

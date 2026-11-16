@@ -30,6 +30,7 @@ export const SearchResultsView = () => {
 		searchTerm,
 		setSearchTerm,
 		selectedRows,
+		gridApi,
 		showFilters,
 		setShowFilters,
 		showBookingModal,
@@ -102,6 +103,8 @@ export const SearchResultsView = () => {
 
 			<SearchToolbar
 				selectedCount={selectedRows.length}
+				selectedRows={selectedRows}
+				gridApi={gridApi}
 				isSameSource={isSameSource}
 				disabledReason={disabledReason}
 				onBooking={() => setShowBookingModal(true)}

@@ -1,6 +1,8 @@
 "use client";
 
+import type { GridApi } from "ag-grid-community";
 import { Download, Filter, MoveRight } from "lucide-react";
+import { CopyForEmailButton } from "@/components/shared/CopyForEmailButton";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
@@ -11,6 +13,10 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import {
+	EMPTY_SELECTED_ROWS,
+	useCopyForEmailRows,
+} from "@/hooks/useCopyForEmailRows";
 import type { PendingRow } from "@/types";
 
 export interface FreezeToolbarProps {
@@ -22,19 +28,22 @@ export interface FreezeToolbarProps {
 	isSelectAllByVinDisabled: boolean;
 	/** Opens the "Move to…" unfreeze picker for the current selection. */
 	onMoveTo?: () => void;
+	gridApi?: GridApi | null;
 }
 
 export function FreezeToolbar({
-	selectedRows = [],
+	selectedRows = EMPTY_SELECTED_ROWS,
 	rowData = [],
 	onExtract,
 	onFilterToggle,
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
 	onMoveTo,
+	gridApi,
 }: FreezeToolbarProps) {
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("freeze");
+	const copyForEmailRows = useCopyForEmailRows(selectedRows, gridApi);
 
 	return (
 		<div className="flex items-center justify-between bg-gray-50 dark:bg-[#141416] p-1.5 rounded-lg border border-black/10 dark:border-white/5">
@@ -93,6 +102,7 @@ export function FreezeToolbar({
 			</div>
 
 			<div className="flex items-center gap-1.5">
+				<CopyForEmailButton rows={copyForEmailRows} />
 				<SelectAllByVinButton
 					onSelectAllByVin={onSelectAllByVin}
 					isDisabled={isSelectAllByVinDisabled}
