@@ -12,6 +12,7 @@ export type MockGridApi = Pick<
 	| "selectAllFiltered"
 	| "deselectAllFiltered"
 	| "forEachNodeAfterFilter"
+	| "forEachNodeAfterFilterAndSort"
 	| "forEachNode"
 	| "getSelectedRows"
 	| "refreshHeader"
@@ -44,13 +45,16 @@ export const createMockGridNode = ({
 export const createMockGridApi = ({
 	selectedRows = [],
 	filteredNodes = [],
+	sortedNodes,
 	allNodes,
 }: {
 	selectedRows?: PendingRow[];
 	filteredNodes?: MockGridNode[];
+	sortedNodes?: MockGridNode[];
 	allNodes?: MockGridNode[];
 } = {}): MockGridApi => {
 	const _allNodes = allNodes ?? filteredNodes;
+	const _sortedNodes = sortedNodes ?? filteredNodes;
 	return {
 		selectAllFiltered: vi.fn(),
 		deselectAllFiltered: vi.fn(),
@@ -72,6 +76,11 @@ export const createMockGridApi = ({
 		}),
 		forEachNodeAfterFilter: vi.fn((callback) => {
 			for (const [index, node] of filteredNodes.entries()) {
+				callback(node as IRowNode<PendingRow>, index);
+			}
+		}),
+		forEachNodeAfterFilterAndSort: vi.fn((callback) => {
+			for (const [index, node] of _sortedNodes.entries()) {
 				callback(node as IRowNode<PendingRow>, index);
 			}
 		}),

@@ -1,5 +1,6 @@
 "use client";
 
+import type { GridApi } from "ag-grid-community";
 import {
 	Archive,
 	Calendar,
@@ -12,6 +13,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { CompanyLogo } from "@/components/shared/CompanyLogo";
+import { CopyForEmailButton } from "@/components/shared/CopyForEmailButton";
 import { MoveToMainButton } from "@/components/shared/MoveToMainButton";
 import { RowValueFilter } from "@/components/shared/RowValueFilter";
 import {
@@ -31,13 +33,18 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ALLOWED_COMPANIES } from "@/domain/order/constants";
+import {
+	EMPTY_SELECTED_ROWS,
+	useCopyForEmailRows,
+} from "@/hooks/useCopyForEmailRows";
 import { useT } from "@/hooks/useT";
 import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
-import type { PartStatusDef } from "@/types";
+import type { PartStatusDef, PendingRow } from "@/types";
 
 export interface SearchToolbarProps {
 	selectedCount: number;
+	selectedRows?: PendingRow[];
 	isSameSource: boolean;
 	disabledReason: string;
 	onBooking: () => void;
@@ -64,10 +71,12 @@ export interface SearchToolbarProps {
 	selectedCompanies: string[];
 	onCompanyFilterChange: (company: string) => void;
 	onCompanyFilterClear: () => void;
+	gridApi?: GridApi | null;
 }
 
 export const SearchToolbar = ({
 	selectedCount,
+	selectedRows = EMPTY_SELECTED_ROWS,
 	isSameSource,
 	disabledReason,
 	onBooking,
@@ -94,8 +103,10 @@ export const SearchToolbar = ({
 	selectedCompanies,
 	onCompanyFilterChange,
 	onCompanyFilterClear,
+	gridApi,
 }: SearchToolbarProps) => {
 	const { t } = useT();
+	const copyForEmailRows = useCopyForEmailRows(selectedRows, gridApi);
 	const isReserveDisabled = selectedCount === 0;
 	const isStageActionDisabled = selectedCount === 0 || !isSameSource;
 
@@ -415,6 +426,7 @@ export const SearchToolbar = ({
 			</div>
 
 			<div className="flex items-center gap-2">
+				<CopyForEmailButton rows={copyForEmailRows} />
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button

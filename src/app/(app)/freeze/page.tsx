@@ -133,6 +133,7 @@ export default function FreezePage() {
 				onSelectAllByVin={onSelectAllByVin}
 				isSelectAllByVinDisabled={isSelectAllByVinDisabled}
 				onMoveTo={() => setMoveDialogOpen(true)}
+				gridApi={gridApi}
 			/>
 
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}

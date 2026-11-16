@@ -221,6 +221,7 @@ export default function MainSheetPage() {
 							rowData={filteredRowData}
 							onSelectAllByVin={onSelectAllByVin}
 							isSelectAllByVinDisabled={isSelectAllByVinDisabled}
+							gridApi={gridApi}
 							onLockToggle={() => setIsSheetLocked(!isSheetLocked)}
 							onUpdateStatus={handleUpdatePartStatus}
 							onBooking={openBooking}

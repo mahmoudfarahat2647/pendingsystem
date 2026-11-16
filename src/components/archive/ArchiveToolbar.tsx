@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import type { GridApi } from "ag-grid-community";
 import {
 	Calendar,
 	CheckCircle,
@@ -8,6 +9,7 @@ import {
 	RotateCcw,
 	Trash2,
 } from "lucide-react";
+import { CopyForEmailButton } from "@/components/shared/CopyForEmailButton";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { MoveToMainButton } from "@/components/shared/MoveToMainButton";
 import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
@@ -25,11 +27,15 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import {
+	EMPTY_SELECTED_ROWS,
+	useCopyForEmailRows,
+} from "@/hooks/useCopyForEmailRows";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 export interface ArchiveToolbarProps {
-	selectedRows: PendingRow[];
+	selectedRows?: PendingRow[];
 	partStatuses?: PartStatusDef[];
 	rowData?: PendingRow[];
 	onExtract: () => void;
@@ -42,10 +48,11 @@ export interface ArchiveToolbarProps {
 	onDelete: () => void;
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
+	gridApi?: GridApi | null;
 }
 
 export function ArchiveToolbar({
-	selectedRows = [],
+	selectedRows = EMPTY_SELECTED_ROWS,
 	partStatuses = [],
 	rowData = [],
 	onExtract,
@@ -58,9 +65,11 @@ export function ArchiveToolbar({
 	onDelete,
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
+	gridApi,
 }: ArchiveToolbarProps) {
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("archive");
+	const copyForEmailRows = useCopyForEmailRows(selectedRows, gridApi);
 
 	return (
 		<div className="flex items-center justify-between bg-gray-50 dark:bg-[#141416] p-1.5 rounded-lg border border-black/10 dark:border-white/5">
@@ -187,6 +196,7 @@ export function ArchiveToolbar({
 			</div>
 
 			<div className="flex items-center gap-1.5">
+				<CopyForEmailButton rows={copyForEmailRows} />
 				<SelectAllByVinButton
 					onSelectAllByVin={onSelectAllByVin}
 					isDisabled={isSelectAllByVinDisabled}

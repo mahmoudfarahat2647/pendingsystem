@@ -1,5 +1,6 @@
 "use client";
 
+import type { GridApi } from "ag-grid-community";
 import {
 	Archive,
 	Calendar,
@@ -12,6 +13,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { CallCustomerCounter } from "@/components/shared/CallCustomerCounter";
+import { CopyForEmailButton } from "@/components/shared/CopyForEmailButton";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { MoveToMainButton } from "@/components/shared/MoveToMainButton";
 import { RowValueFilter } from "@/components/shared/RowValueFilter";
@@ -29,12 +31,16 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import {
+	EMPTY_SELECTED_ROWS,
+	useCopyForEmailRows,
+} from "@/hooks/useCopyForEmailRows";
 import type { RowValueFilterOption } from "@/lib/rowValueFilter";
 import { cn } from "@/lib/utils";
 import type { PartStatusDef, PendingRow } from "@/types";
 
 export interface CallListToolbarProps {
-	selectedRows: PendingRow[];
+	selectedRows?: PendingRow[];
 	partStatuses?: PartStatusDef[];
 	rowData?: PendingRow[];
 	repairSystemOptions: RowValueFilterOption[];
@@ -53,10 +59,11 @@ export interface CallListToolbarProps {
 	onDelete: () => void;
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
+	gridApi?: GridApi | null;
 }
 
 export function CallListToolbar({
-	selectedRows = [],
+	selectedRows = EMPTY_SELECTED_ROWS,
 	partStatuses = [],
 	rowData = [],
 	repairSystemOptions,
@@ -75,9 +82,11 @@ export function CallListToolbar({
 	onDelete,
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
+	gridApi,
 }: CallListToolbarProps) {
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("call-list");
+	const copyForEmailRows = useCopyForEmailRows(selectedRows, gridApi);
 
 	return (
 		<div className="flex items-center justify-between bg-gray-50 dark:bg-[#141416] p-1.5 rounded-lg border border-black/10 dark:border-white/5">
@@ -258,6 +267,7 @@ export function CallListToolbar({
 			</div>
 
 			<div className="flex items-center gap-1.5">
+				<CopyForEmailButton rows={copyForEmailRows} />
 				<SelectAllByVinButton
 					onSelectAllByVin={onSelectAllByVin}
 					isDisabled={isSelectAllByVinDisabled}

@@ -1,5 +1,6 @@
 "use client";
 
+import type { GridApi } from "ag-grid-community";
 import {
 	Archive,
 	Calendar,
@@ -17,6 +18,7 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
+import { CopyForEmailButton } from "@/components/shared/CopyForEmailButton";
 import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
 import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
@@ -34,12 +36,16 @@ import {
 } from "@/components/ui/tooltip";
 import { hasMixedVinSelection } from "@/domain/order/orderWorkflow";
 import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
+import {
+	EMPTY_SELECTED_ROWS,
+	useCopyForEmailRows,
+} from "@/hooks/useCopyForEmailRows";
 import { cn } from "@/lib/utils";
 import type { PartStatus, PendingRow } from "@/types";
 
 interface OrdersToolbarProps {
 	selectedCount: number;
-	selectedRows: PendingRow[];
+	selectedRows?: PendingRow[];
 	onAddEdit: () => void;
 	onDelete: () => void;
 	onCommit: () => void;
@@ -59,11 +65,12 @@ interface OrdersToolbarProps {
 	rowData?: PendingRow[];
 	onSelectAllByVin: () => void;
 	isSelectAllByVinDisabled: boolean;
+	gridApi?: GridApi | null;
 }
 
 export const OrdersToolbar = ({
 	selectedCount,
-	selectedRows = [],
+	selectedRows = EMPTY_SELECTED_ROWS,
 	onAddEdit,
 	onDelete,
 	onCommit,
@@ -83,9 +90,11 @@ export const OrdersToolbar = ({
 	rowData = [],
 	onSelectAllByVin,
 	isSelectAllByVinDisabled,
+	gridApi,
 }: OrdersToolbarProps) => {
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
 		useColumnLayoutTracker("orders");
+	const copyForEmailRows = useCopyForEmailRows(selectedRows, gridApi);
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
 	const _isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
 	const hasMixedVins = hasMixedVinSelection(selectedRows);
@@ -410,6 +419,7 @@ export const OrdersToolbar = ({
 				className="flex items-center gap-1.5"
 				suppressHydrationWarning={true}
 			>
+				<CopyForEmailButton rows={copyForEmailRows} />
 				<SelectAllByVinButton
 					onSelectAllByVin={onSelectAllByVin}
 					isDisabled={isSelectAllByVinDisabled}

@@ -42,6 +42,7 @@ export const useSearchResultsState = () => {
 	const masterCheckboxStateRef = useRef<SearchHeaderCheckboxState>(false);
 	const [showFilters, setShowFilters] = useState(false);
 	const gridApiRef = useRef<GridApi<PendingRow> | null>(null);
+	const [gridApi, setGridApi] = useState<GridApi<PendingRow> | null>(null);
 
 	// Toolbar State Logic
 	const selectedStages = useMemo(
@@ -218,6 +219,7 @@ export const useSearchResultsState = () => {
 
 	const handleGridApiReady = useCallback((api: GridApi<PendingRow>) => {
 		gridApiRef.current = api;
+		setGridApi(api);
 	}, []);
 
 	const handleDisplayedRowsChanged = useCallback(
@@ -241,6 +243,7 @@ export const useSearchResultsState = () => {
 
 	const handleGridPreDestroyed = useCallback(() => {
 		gridApiRef.current = null;
+		setGridApi(null);
 		masterCheckboxStateRef.current = false;
 		setMasterCheckboxState(false);
 		setSelectedRows([]);
@@ -398,6 +401,7 @@ export const useSearchResultsState = () => {
 		searchTerm,
 		setSearchTerm,
 		selectedRows,
+		gridApi,
 		showFilters,
 		setShowFilters,
 		showBookingModal,
